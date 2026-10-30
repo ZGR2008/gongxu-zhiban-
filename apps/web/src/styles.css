@@ -1,0 +1,23 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  font-family: Inter, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  color: #18363b;
+  background: #f4f7f5;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  --color-ink: #18363b;
+  --color-muted: #627a7c;
+  --color-canvas: #f4f7f5;
+  --color-surface: #ffffff;
+  --color-line: #dce7e3;
+  --color-brand: #102d34;
+  --color-accent: #168875;
+}
+
+* { box-sizing: border-box; }
+body { min-width: 320px; margin: 0; }
+button { font: inherit; }
+button:focus-visible { outline: 3px solid #69bea9; outline-offset: 3px; }
