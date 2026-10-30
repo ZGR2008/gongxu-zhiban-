@@ -8,20 +8,22 @@
     "build": "tsc -p tsconfig.json",
     "start": "node dist/server.js",
     "typecheck": "tsc --noEmit -p tsconfig.json",
-    "test": "tsc -p tsconfig.test.json && node --test dist/app.test.js",
-    "db:migrate": "tsc -p tsconfig.json && node dist/migrate.js"
+    "test": "tsc -p tsconfig.test.json && node --test \"dist/**/*.test.js\"",
+    "db:migrate": "tsc -p tsconfig.json && node dist/migrate.js",
+    "ai:check": "tsc -p tsconfig.json && node dist/ai/check.js"
   },
   "dependencies": {
     "@fastify/cors": "^10.0.1",
     "dotenv": "^16.4.7",
     "fastify": "^5.2.1",
+    "pdfjs-dist": "5.6.205",
     "pg": "^8.13.3",
+    "typescript": "^5.7.3",
     "zod": "^3.24.2"
   },
   "devDependencies": {
     "@types/node": "^22.13.4",
     "@types/pg": "^8.11.11",
-    "tsx": "^4.19.3",
-    "typescript": "^5.7.3"
+    "tsx": "^4.19.3"
   }
 }

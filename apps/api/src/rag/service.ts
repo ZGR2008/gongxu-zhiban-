@@ -1,5 +1,5 @@
 import type { Pool } from 'pg';
-import { chunkPages } from './chunk.js';
+import { chunkPages, type TextPage } from './chunk.js';
 import { createEmbeddings, type EmbeddingConfig, EmbeddingError } from './embeddings.js';
 import { searchKnowledge } from './search.js';
 
@@ -19,12 +19,16 @@ function modelId(config: EmbeddingConfig) { return `${config.baseUrl}|${config.m
 
 /** Save actual text chunks without requiring an embedding provider. */
 export async function saveText(pool: Pool, ownerId: string, name: string, text: string) {
-  const chunks = chunkPages([{ page: null, text }]);
+  return savePages(pool, ownerId, name, 'text/plain', [{ page: null, text }]);
+}
+
+export async function savePages(pool: Pool, ownerId: string, name: string, mediaType: string, pages: TextPage[]) {
+  const chunks = chunkPages(pages);
   if (!chunks.length || chunks.length > 250) throw new Error('invalid_document');
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
-    const doc = await client.query(`INSERT INTO knowledge_documents(owner_id,name,media_type,status) VALUES ($1,$2,'text/plain','awaiting_embedding') RETURNING id`, [ownerId, name]);
+    const doc = await client.query(`INSERT INTO knowledge_documents(owner_id,name,media_type,status) VALUES ($1,$2,$3,'awaiting_embedding') RETURNING id`, [ownerId, name, mediaType]);
     const id: string = doc.rows[0].id;
     for (let index = 0; index < chunks.length; index++) {
       await client.query(`INSERT INTO knowledge_chunks(document_id,position,page,content) VALUES ($1,$2,$3,$4)`, [id, index, chunks[index].page, chunks[index].content]);

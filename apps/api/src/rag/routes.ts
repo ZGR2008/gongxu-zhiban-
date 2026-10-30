@@ -4,8 +4,9 @@ import { z } from 'zod';
 import type { ProjectStore } from '../project-store.js';
 import { authorizeRequest } from '../project-routes.js';
 import type { EmbeddingConfig } from './embeddings.js';
-import { EmbeddingError, indexDocument, retrieveKnowledge, saveText } from './service.js';
+import { EmbeddingError, indexDocument, retrieveKnowledge, savePages, saveText } from './service.js';
 import { AiError, completeChat, type AiConfig } from '../ai/model.js';
+import { extractPdf, pdfParserAvailable, PdfError } from './pdf.js';
 
 const docInput = z.object({ name: z.string().trim().min(1).max(160), text: z.string().trim().min(1).max(200_000) });
 const queryInput = z.object({ query: z.string().trim().min(1).max(4000) });
@@ -29,7 +30,7 @@ export async function registerKnowledgeRoutes(app: FastifyInstance, store?: Proj
     if (!store || !pool) return reply.code(503).send({ error: 'database_not_configured' });
     const user = await authorizeRequest(request, store); if (!user) return reply.code(401).send({ error: 'unauthorized' });
     const result = await pool.query(`SELECT id,name,media_type AS "mediaType",status,created_at AS "createdAt" FROM knowledge_documents WHERE owner_id=$1 ORDER BY created_at DESC LIMIT 200`, [user.id]);
-    return { documents: result.rows, embeddingConfigured: Boolean(embedding) };
+    return { documents: result.rows, embeddingConfigured: Boolean(embedding), pdfAvailable: await pdfParserAvailable() };
   });
   app.post('/knowledge/text', async (request, reply) => {
     if (!store || !pool) return reply.code(503).send({ error: 'database_not_configured' });
@@ -50,6 +51,21 @@ export async function registerKnowledgeRoutes(app: FastifyInstance, store?: Proj
     try { const result = await indexDocument(pool, user.id, params.data.id, embedding); return result ?? reply.code(404).send({ error: 'not_found' }); }
     catch (error) { if (error instanceof EmbeddingError) return reply.code(502).send({ error: 'embedding_provider_error' }); if (error instanceof Error && error.message === 'invalid_document') return reply.code(400).send({ error: 'invalid_document' }); throw error; }
     finally { release(); }
+  });
+  app.post('/knowledge/pdf', { bodyLimit: 4_200_000 }, async (request, reply) => {
+    if (!store || !pool) return reply.code(503).send({ error: 'database_not_configured' });
+    const user = await authorizeRequest(request, store); if (!user) return reply.code(401).send({ error: 'unauthorized' });
+    const input = z.object({ name: z.string().trim().min(1).max(160), data: z.string().min(1).max(4_000_000).regex(/^[A-Za-z0-9+/]*={0,2}$/) }).strict().safeParse(request.body);
+    if (!input.success || input.data.data.length % 4 !== 0) return reply.code(400).send({ error: 'invalid_input' });
+    const release = acquire(user.id, 'save'); if (!release) return reply.code(429).send({ error: 'knowledge_rate_limited' });
+    try {
+      const pages = await extractPdf(Buffer.from(input.data.data, 'base64'));
+      return reply.code(201).send(await savePages(pool, user.id, input.data.name, 'application/pdf', pages));
+    } catch (error) {
+      if (error instanceof PdfError) return reply.code(error.code === 'pdf_parser_unavailable' ? 503 : 400).send({ error: error.code });
+      if (error instanceof Error && error.message === 'invalid_document') return reply.code(400).send({ error: 'invalid_document' });
+      throw error;
+    } finally { release(); }
   });
   app.post('/knowledge/search', async (request, reply) => {
     if (!store || !pool) return reply.code(503).send({ error: 'database_not_configured' });

@@ -1,10 +1,12 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import Fastify from 'fastify';
+import { readFile } from 'node:fs/promises';
 import { registerKnowledgeRoutes } from './routes.js';
 import type { ProjectStore } from '../project-store.js';
 import type { Pool } from 'pg';
 import type { KnowledgeHit } from './search.js';
+import { pdfParserAvailable } from './pdf.js';
 
 const owner = '00000000-0000-4000-8000-000000000001';
 const hit: KnowledgeHit = { id: '00000000-0000-4000-8000-000000000002', document_id: '00000000-0000-4000-8000-000000000003', document_name: 'source.txt', page: null, content: '可核对的原始内容', distance: 0.1 };
@@ -47,5 +49,21 @@ test('document text and chunks can be stored before embeddings are configured', 
   const index = await app.inject({ method: 'POST', url: `/knowledge/${hit.document_id}/index`, headers: auth });
   assert.equal(index.statusCode, 503);
   assert.equal(index.json().error, 'embedding_not_configured');
+  await app.close();
+});
+
+test('real text PDF is parsed and persisted with page metadata without embeddings', async (context) => {
+  if (!(await pdfParserAvailable())) { context.skip('PDF.js dependency not installed'); return; }
+  const app = Fastify(); const chunks: unknown[][] = [];
+  const client = { query: async (sql: string, values: unknown[] = []) => {
+    if (sql.includes('INSERT INTO knowledge_chunks')) chunks.push(values);
+    return sql.includes('INSERT INTO knowledge_documents') ? { rows: [{ id: hit.document_id }], rowCount: 1 } : { rows: [], rowCount: 0 };
+  }, release: () => {} };
+  const fakePool = { connect: async () => client } as unknown as Pool;
+  await registerKnowledgeRoutes(app, store, fakePool);
+  const bytes = await readFile(new URL('../../test-data/minimal.pdf', import.meta.url));
+  const response = await app.inject({ method: 'POST', url: '/knowledge/pdf', headers: auth, payload: { name: 'example.pdf', data: bytes.toString('base64') } });
+  assert.equal(response.statusCode, 201); assert.equal(response.json().status, 'awaiting_embedding');
+  assert.equal(chunks[0][2], 1); assert.equal(chunks[0][3], 'Software engineering requirements');
   await app.close();
 });
