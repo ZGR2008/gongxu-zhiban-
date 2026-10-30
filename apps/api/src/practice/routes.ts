@@ -3,7 +3,7 @@ import type { Pool } from 'pg';
 import { z } from 'zod';
 import type { ProjectStore } from '../project-store.js';
 import { authorizeRequest } from '../project-routes.js';
-import { AiError, completeChat, type AiConfig, type AiMessage } from '../ai/model.js';
+import { AiError, aiErrorStatus, completeChat, type AiConfig, type AiMessage } from '../ai/model.js';
 import { checkSyntax, parseGeneratedCases } from './validation.js';
 
 const projectParams = z.object({ projectId: z.string().uuid() });
@@ -41,7 +41,7 @@ export async function registerPracticeRoutes(app: FastifyInstance, store?: Proje
   }
   function aiFailure(error: unknown, reply: FastifyReply) {
     if (!(error instanceof AiError)) throw error;
-    return reply.code(error.code === 'ai_timeout' ? 504 : error.code === 'ai_not_configured' ? 503 : 502).send({ error: error.code });
+    return reply.code(aiErrorStatus(error.code)).send({ error: error.code });
   }
 
   app.get('/projects/:projectId/code-reviews', async (request, reply) => {

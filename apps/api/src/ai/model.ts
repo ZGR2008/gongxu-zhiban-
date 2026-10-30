@@ -1,7 +1,15 @@
 export type AiConfig = { baseUrl: string; apiKey: string; model: string; timeoutMs: number };
 export type AiMessage = { role: 'system' | 'user' | 'assistant'; content: string };
 export class AiError extends Error {
-  constructor(public readonly code: 'ai_not_configured' | 'ai_timeout' | 'ai_provider_error') { super(code); }
+  constructor(public readonly code: 'ai_not_configured' | 'ai_timeout' | 'ai_provider_error' | 'ai_auth_error' | 'ai_insufficient_balance' | 'ai_rate_limited') { super(code); }
+}
+
+// Provider credentials are a server-side problem, never an application login failure.
+export function aiErrorStatus(code: AiError['code']): number {
+  if (code === 'ai_not_configured') return 503;
+  if (code === 'ai_timeout') return 504;
+  if (code === 'ai_rate_limited') return 429;
+  return 502;
 }
 
 // Configuration is controlled by the server operator, never by a browser request.
@@ -29,7 +37,14 @@ export async function completeChat(config: AiConfig | undefined, messages: AiMes
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${config.apiKey}` },
       body: JSON.stringify({ model: config.model, messages, temperature: 0.3 }),
     });
-    if (!response.ok || !response.body) throw new AiError('ai_provider_error');
+    if (!response.ok) {
+      // Do not read or expose provider error bodies; they can contain sensitive data.
+      if (response.status === 401 || response.status === 403) throw new AiError('ai_auth_error');
+      if (response.status === 402) throw new AiError('ai_insufficient_balance');
+      if (response.status === 429) throw new AiError('ai_rate_limited');
+      throw new AiError('ai_provider_error');
+    }
+    if (!response.body) throw new AiError('ai_provider_error');
     // Limit the provider response to avoid accepting unbounded bodies.
     const reader = response.body.getReader();
     const chunks: Uint8Array[] = [];

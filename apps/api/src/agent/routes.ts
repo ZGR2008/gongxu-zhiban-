@@ -3,7 +3,7 @@ import type { Pool } from 'pg';
 import { z } from 'zod';
 import type { ProjectStore } from '../project-store.js';
 import { authorizeRequest } from '../project-routes.js';
-import { AiError, completeChat, type AiConfig, type AiMessage } from '../ai/model.js';
+import { AiError, aiErrorStatus, completeChat, type AiConfig, type AiMessage } from '../ai/model.js';
 import { retrieveKnowledge, EmbeddingError } from '../rag/service.js';
 import type { EmbeddingConfig } from '../rag/embeddings.js';
 import type { KnowledgeHit } from '../rag/search.js';
@@ -123,7 +123,7 @@ export async function registerAgentRoutes(app: FastifyInstance, store?: ProjectS
       if (currentTool) await endTool(currentTool,'failed',code);
       if (currentStep) await endStep(currentStep,'failed',code);
       await pool!.query(`UPDATE agent_runs SET status='failed',error_code=$2,finished_at=now() WHERE id=$1`,[runId,code]);
-      const status = code.endsWith('_not_configured') ? 503 : code==='ai_timeout' ? 504 : code==='plan_validation_failed' ? 422 : 502;
+      const status = error instanceof AiError ? aiErrorStatus(error.code) : code.endsWith('_not_configured') ? 503 : code==='plan_validation_failed' ? 422 : 502;
       return reply.code(status).send({error:code,runId});
     }
   });

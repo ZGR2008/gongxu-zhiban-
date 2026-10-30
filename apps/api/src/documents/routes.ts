@@ -2,7 +2,7 @@ import type { FastifyInstance, FastifyRequest } from 'fastify';
 import { z } from 'zod';
 import { authorizeRequest } from '../project-routes.js';
 import type { ProjectStore } from '../project-store.js';
-import { AiError, completeChat, type AiConfig, type AiMessage } from '../ai/model.js';
+import { AiError, aiErrorStatus, completeChat, type AiConfig, type AiMessage } from '../ai/model.js';
 import { documentTypes, type DocumentStore, type DocumentType } from './store.js';
 
 const projectParams = z.object({ projectId: z.string().uuid() });
@@ -55,7 +55,7 @@ export async function registerDocumentRoutes(app: FastifyInstance, projects?: Pr
       return reply.code(201).send({ document });
     } catch (error) {
       if (!(error instanceof AiError)) throw error;
-      return reply.code(error.code === 'ai_timeout' ? 504 : error.code === 'ai_not_configured' ? 503 : 502).send({ error:error.code });
+      return reply.code(aiErrorStatus(error.code)).send({ error:error.code });
     }
   });
   app.get('/projects/:projectId/documents/:id', async (request, reply) => {

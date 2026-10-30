@@ -33,6 +33,17 @@ pnpm dev
 
 配置后可执行 `pnpm --filter @gongxu/api ai:check`，单独发起一次真实模型请求；此检查会产生一次 API 调用，可能计费，不要求数据库或 Embedding 已启动。未配置时不会伪造成功。
 
+连接失败时请根据实际错误处理。`.env.example` 是可提交的配置模板，真实密钥只填写到被 Git 忽略的 `apps/api/.env`；修改配置后须重启后端。不要在聊天、截图或 Git 评论中发送密钥。
+
+| 错误或现象 | 处理方式 |
+| --- | --- |
+| `ai_auth_error` | 模型服务拒绝认证或访问，请检查本地 `AI_API_KEY` 是否有效及服务账号的访问权限；这不会使应用内登录失效。 |
+| `ai_insufficient_balance` | 检查模型服务账号的可用余额。 |
+| `ai_rate_limited` | 稍后重试，并检查模型服务的并发和请求频率限制。 |
+| 数据库连接被拒绝 | 检查 Docker Desktop 是否已启动，再运行 `docker compose up -d`；外部数据库需核对本地 `DATABASE_URL` 对应的服务和端口。 |
+
+模型服务错误只返回分类后的错误码，不向浏览器转发上游原始错误正文、密钥或服务地址。
+
 Embedding 与聊天模型独立：配置 `EMBEDDING_BASE_URL`、`EMBEDDING_MODEL` 及按需 `EMBEDDING_API_KEY`，使用兼容 `/embeddings` 的服务。指向本机回环地址时可以不提供密钥；外部服务要求配置密钥。DeepSeek 聊天接口不会被当成 Embedding 接口。尚未选择或配置向量服务时，仍可保存和分块文本资料。
 
 知识库支持文本、Markdown 和可提取文本的 PDF 的解析、分块及保存；PDF 上限 3 MB、80 页、20 万字符，扫描件不包含可提取文本时会明确报错，暂不支持 OCR。配置 Embedding 服务后可建立向量索引、按账号检索并返回片段来源。PDF 依赖 [PDF.js](https://github.com/mozilla/pdf.js)，部署时应安装锁定的依赖；公开部署前应进一步对 PDF 解析进程进行资源隔离。模型候选是本地运行的 [BGE-small-zh-v1.5](https://huggingface.co/BAAI/bge-small-zh-v1.5)，尚未在本机下载或验证；更换模型或预处理方式时必须重新建立向量索引。Agent 基于已确认需求调用模型，Embedding 已配置时会实际检索知识；未配置时知识检索明确显示“已跳过”，计划标识缺少知识依据。执行步骤和校验结果会记录，计划需用户确认后才创建任务。服务未就绪时会显示真实状态，不提供模拟成功结果。

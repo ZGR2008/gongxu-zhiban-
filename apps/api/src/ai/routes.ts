@@ -2,7 +2,7 @@ import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import { authorizeRequest } from '../project-routes.js';
 import type { ProjectStore } from '../project-store.js';
-import { AiError, completeChat, type AiConfig } from './model.js';
+import { AiError, aiErrorStatus, completeChat, type AiConfig } from './model.js';
 import type { AiGenerationStore } from './store.js';
 
 const paramsSchema = z.object({ projectId: z.string().uuid() });
@@ -53,7 +53,7 @@ export async function registerAiRoutes(app: FastifyInstance, store?: ProjectStor
       return reply.code(201).send({ requirement, model: config.model });
     } catch (error) {
       if (!(error instanceof AiError)) throw error;
-      return reply.code(error.code === 'ai_timeout' ? 504 : error.code === 'ai_not_configured' ? 503 : 502).send({ error: error.code });
+      return reply.code(aiErrorStatus(error.code)).send({ error: error.code });
     }
   });
 }

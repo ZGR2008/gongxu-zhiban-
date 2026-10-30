@@ -5,7 +5,7 @@ import type { ProjectStore } from '../project-store.js';
 import { authorizeRequest } from '../project-routes.js';
 import type { EmbeddingConfig } from './embeddings.js';
 import { EmbeddingError, indexDocument, retrieveKnowledge, savePages, saveText } from './service.js';
-import { AiError, completeChat, type AiConfig } from '../ai/model.js';
+import { AiError, aiErrorStatus, completeChat, type AiConfig } from '../ai/model.js';
 import { extractPdf, pdfParserAvailable, PdfError } from './pdf.js';
 
 const docInput = z.object({ name: z.string().trim().min(1).max(160), text: z.string().trim().min(1).max(200_000) });
@@ -99,7 +99,7 @@ export async function registerKnowledgeRoutes(app: FastifyInstance, store?: Proj
       return { answer: parsed.data.answer, sources: hits.filter((hit) => parsed.data.citations.includes(hit.id)), reason: null };
     } catch (error) {
       if (error instanceof EmbeddingError) return reply.code(502).send({ error: 'embedding_provider_error' });
-      if (error instanceof AiError) return reply.code(error.code === 'ai_timeout' ? 504 : 502).send({ error: error.code });
+      if (error instanceof AiError) return reply.code(aiErrorStatus(error.code)).send({ error: error.code });
       throw error;
     } finally { release(); }
   });

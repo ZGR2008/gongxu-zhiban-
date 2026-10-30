@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import Fastify from 'fastify';
-import { AiError, completeChat, loadAiConfig } from './model.js';
+import { AiError, aiErrorStatus, completeChat, loadAiConfig } from './model.js';
 import { registerAiRoutes } from './routes.js';
 import type { ProjectStore } from '../project-store.js';
 import type { Pool } from 'pg';
@@ -38,6 +38,28 @@ test('timeout is surfaced without pretending a result', async () => {
   await assert.rejects(completeChat({ ...config, timeoutMs: 5 }, [], fake), (e: unknown) => e instanceof AiError && e.code === 'ai_timeout');
 });
 
+test('provider failures are classified without exposing response bodies, secrets, or URLs', async () => {
+  for (const [status, code, httpStatus] of [
+    [401, 'ai_auth_error', 502], [403, 'ai_auth_error', 502],
+    [402, 'ai_insufficient_balance', 502], [429, 'ai_rate_limited', 429],
+    [500, 'ai_provider_error', 502],
+  ] as const) {
+    const sensitive = `provider error ${config.apiKey} ${config.baseUrl}`;
+    await assert.rejects(completeChat(config, [], async () => new Response(sensitive, { status })), (error: unknown) => {
+      assert.ok(error instanceof AiError);
+      assert.equal(error.code, code);
+      assert.equal(aiErrorStatus(error.code), httpStatus);
+      assert.equal(error.message, code);
+      assert.equal(JSON.stringify(error).includes(sensitive), false);
+      return true;
+    });
+  }
+  await assert.rejects(completeChat(config, [], async () => { throw new Error(`network error ${config.apiKey} ${config.baseUrl}`); }),
+    (error: unknown) => error instanceof AiError && error.code === 'ai_provider_error' && error.message === 'ai_provider_error');
+  assert.equal(aiErrorStatus('ai_not_configured'), 503);
+  assert.equal(aiErrorStatus('ai_timeout'), 504);
+});
+
 test('analysis requires authorization and ownership, and persists successful response as draft', async (t) => {
   const saved: string[] = [];
   const store = {
@@ -67,6 +89,13 @@ test('analysis requires authorization and ownership, and persists successful res
   globalThis.fetch = async () => new Response('provider failure', { status: 500 });
   const failed = await app.inject({ method: 'POST', url: path, headers: auth, payload: { idea: '校园项目' } });
   assert.equal(failed.statusCode, 502); assert.equal(failed.body.includes('provider failure'), false);
+  for (const [providerStatus, expectedStatus, code] of [[401, 502, 'ai_auth_error'], [402, 502, 'ai_insufficient_balance'], [429, 429, 'ai_rate_limited']] as const) {
+    globalThis.fetch = async () => new Response('sensitive provider response', { status: providerStatus });
+    const result = await app.inject({ method: 'POST', url: path, headers: auth, payload: { idea: '校园项目' } });
+    assert.equal(result.statusCode, expectedStatus);
+    assert.deepEqual(result.json(), { error: code });
+    assert.equal(result.body.includes('sensitive provider response'), false);
+  }
   assert.deepEqual(saved, ['需求草稿']);
 });
 
