@@ -9,18 +9,41 @@ const requirement='d3d80f1c-5c71-4f7d-b3a6-cd8af99c3e9d';
 const id='22222222-2222-4222-8222-222222222222';
 const auth={authorization:`Bearer ${'a'.repeat(64)}`};
 
-test('missing embedding is a recorded failure, not a fabricated plan', async t => {
-  const writes:{sql:string; values:unknown[]}[]=[];
-  const pool={query:async(sql:string,values:unknown[])=>{writes.push({sql,values});return {rows:sql.includes('RETURNING id')?[{id}]:[]};}} as unknown as Pool;
+test('missing embedding is recorded as skipped and never fakes a tool call', async t => {
+  const writes:{sql:string; values:unknown[]}[]=[]; let plan:unknown; let modelInput='';
+  const pool={query:async(sql:string,values:unknown[])=>{
+    writes.push({sql,values});
+    if (sql.includes("status='awaiting_review'")) plan=JSON.parse(values[1] as string);
+    if (sql.includes('FROM agent_runs WHERE id=')) return {rows:[{id,status:'awaiting_review',plan}]};
+    return {rows:sql.includes('RETURNING id')?[{id}]:[]};
+  }} as unknown as Pool;
   const store={userBySession:async()=>({id:'user'}),getProject:async()=>({id:project}),listRequirements:async()=>[{id:requirement,status:'confirmed',content:'项目需求'}]} as unknown as ProjectStore;
-  const app=Fastify(); await registerAgentRoutes(app,store,pool); t.after(()=>app.close());
+  const app=Fastify(); await registerAgentRoutes(app,store,pool,{baseUrl:'https://test.invalid',apiKey:'test',model:'test',timeoutMs:1000},undefined,{
+    complete:async(_config,messages)=>{modelInput=messages[1].content; return JSON.stringify({tasks:[{key:'t1',stage:'开发',title:'实现',description:'完成代码',deliverable:'源码',dependsOn:[],citations:[]}]});},
+    retrieve:async()=>{throw new Error('must not call');},
+  }); t.after(()=>app.close());
   const url=`/projects/${project}/agent/runs`;
   assert.equal((await app.inject({method:'POST',url,payload:{requirementId:requirement}})).statusCode,401);
   const response=await app.inject({method:'POST',url,headers:auth,payload:{requirementId:requirement}});
-  assert.equal(response.statusCode,503); assert.equal(response.json().error,'embedding_not_configured'); assert.equal(response.json().runId,id);
-  assert.ok(writes.some(w=>w.sql.includes('UPDATE agent_tool_calls') && w.values[1]==='failed'));
-  assert.ok(writes.some(w=>w.sql.includes('UPDATE agent_runs') && w.values[1]==='embedding_not_configured'));
+  assert.equal(response.statusCode,201); assert.equal(response.json().run.status,'awaiting_review');
+  assert.ok(writes.some(w=>w.sql.includes('UPDATE agent_steps') && w.values[1]==='skipped' && String(w.values[2]).includes('缺少知识库依据')));
+  assert.ok(modelInput.includes('未配置 Embedding，检索已跳过'));
+  assert.equal(writes.some(w=>w.sql.includes('INSERT INTO agent_tool_calls') && w.values[1]==='knowledge_search'),false);
   assert.equal(writes.some(w=>w.sql.includes('INSERT INTO tasks')),false);
+});
+
+test('configured embedding provider failure records failed search and does not plan', async t => {
+  const writes:{sql:string;values:unknown[]}[]=[]; let models=0;
+  const pool={query:async(sql:string,values:unknown[])=>{writes.push({sql,values});return {rows:sql.includes('RETURNING id')?[{id}]:[]};}} as unknown as Pool;
+  const store={userBySession:async()=>({id:'user'}),getProject:async()=>({id:project}),listRequirements:async()=>[{id:requirement,status:'confirmed',content:'项目需求'}]} as unknown as ProjectStore;
+  const app=Fastify(); await registerAgentRoutes(app,store,pool,{baseUrl:'https://test.invalid',apiKey:'test',model:'test',timeoutMs:1000},{baseUrl:'https://test.invalid',apiKey:'test',model:'embedding'}, {
+    retrieve:async()=>{throw new Error('provider unavailable');}, complete:async()=>{models++;return '';},
+  }); t.after(()=>app.close());
+  const response=await app.inject({method:'POST',url:`/projects/${project}/agent/runs`,headers:auth,payload:{requirementId:requirement}});
+  assert.equal(response.statusCode,502); assert.equal(models,0);
+  assert.ok(writes.some(w=>w.sql.includes('UPDATE agent_tool_calls') && w.values[1]==='failed'));
+  assert.ok(writes.some(w=>w.sql.includes('UPDATE agent_steps') && w.values[1]==='failed'));
+  assert.ok(writes.some(w=>w.sql.includes("status='failed'") && w.sql.includes('agent_runs')));
 });
 
 test('actual workflow invokes retrieval, retries validation, then awaits human review', async t => {

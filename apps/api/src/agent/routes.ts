@@ -42,7 +42,7 @@ export async function registerAgentRoutes(app: FastifyInstance, store?: ProjectS
   async function startStep(runId: string, stage: string) {
     const r = await pool!.query(`INSERT INTO agent_steps(run_id,stage,status) VALUES ($1,$2,'running') RETURNING id`, [runId, stage]); return r.rows[0].id as string;
   }
-  async function endStep(id: string, status: 'succeeded' | 'failed', summary: string) { await pool!.query(`UPDATE agent_steps SET status=$2,output_summary=$3,finished_at=now() WHERE id=$1`, [id,status,summary.slice(0,15000)]); }
+  async function endStep(id: string, status: 'succeeded' | 'failed' | 'skipped', summary: string) { await pool!.query(`UPDATE agent_steps SET status=$2,output_summary=$3,finished_at=now() WHERE id=$1`, [id,status,summary.slice(0,15000)]); }
   async function startTool(step: string, name: 'knowledge_search'|'validate_plan', input: string) {
     const r = await pool!.query(`INSERT INTO agent_tool_calls(step_id,tool_name,status,input_summary) VALUES ($1,$2,'running',$3) RETURNING id`, [step,name,input.slice(0,1000)]); return r.rows[0].id as string;
   }
@@ -82,12 +82,19 @@ export async function registerAgentRoutes(app: FastifyInstance, store?: ProjectS
     let currentStep: string | undefined; let currentTool: string | undefined;
     try {
       currentStep = await startStep(runId,'knowledge_search');
-      currentTool = await startTool(currentStep,'knowledge_search',requirement.content.slice(0,1000));
-      if (!embedding) throw new WorkflowError('embedding_not_configured');
-      const hits = await search(pool!,access.user.id,requirement.content.slice(0,4000),embedding);
+      let hits: KnowledgeHit[] = [];
+      if (!embedding) {
+        // No tool call occurred: retain a skipped step instead of a fabricated successful call.
+        await endStep(currentStep,'skipped','未配置 Embedding 服务，知识检索已跳过；计划缺少知识库依据。');
+        currentStep=undefined;
+      } else {
+        currentTool = await startTool(currentStep,'knowledge_search',requirement.content.slice(0,1000));
+        hits = await search(pool!,access.user.id,requirement.content.slice(0,4000),embedding);
+        const searchEvidence = hits.map(h => ({ id:h.id, documentId:h.document_id, documentName:h.document_name, page:h.page, excerpt:h.content.slice(0,1200), distance:h.distance }));
+        await endTool(currentTool,'succeeded',JSON.stringify({hits:searchEvidence})); currentTool=undefined;
+        await endStep(currentStep,'succeeded',`实际检索到 ${hits.length} 条知识片段${hits.length ? '' : '；未找到充分依据'}`); currentStep=undefined;
+      }
       const evidence = hits.map(h => ({ id:h.id, documentId:h.document_id, documentName:h.document_name, page:h.page, excerpt:h.content.slice(0,1200), distance:h.distance }));
-      await endTool(currentTool,'succeeded',JSON.stringify({hits:evidence})); currentTool=undefined;
-      await endStep(currentStep,'succeeded',`实际检索到 ${hits.length} 条知识片段${hits.length ? '' : '；未找到充分依据'}`); currentStep=undefined;
       if (!ai) {
         currentStep = await startStep(runId,'plan_1');
         throw new WorkflowError('ai_not_configured');
@@ -96,7 +103,7 @@ export async function registerAgentRoutes(app: FastifyInstance, store?: ProjectS
       let feedback = ''; let accepted = false;
       for (let attempt=1; attempt<=2; attempt++) {
         currentStep = await startStep(runId,`plan_${attempt}`);
-        const raw = await runModel(ai,[{role:'system',content:instructions},{role:'user',content:`确认需求：\n${requirement.content.slice(0,20000)}\n实际检索资料：\n${JSON.stringify(evidence)}\n上次校验反馈：${feedback || '无'}`}]);
+        const raw = await runModel(ai,[{role:'system',content:instructions},{role:'user',content:`确认需求：\n${requirement.content.slice(0,20000)}\n知识检索状态：${embedding ? (hits.length ? '已检索到资料' : '已检索但未找到充分依据') : '未配置 Embedding，检索已跳过，计划缺少知识库依据'}\n实际检索资料：\n${JSON.stringify(evidence)}\n上次校验反馈：${feedback || '无'}`}]);
         await endStep(currentStep,'succeeded',`模型返回 ${raw.length} 字符，待规则校验`); currentStep=undefined;
         currentStep = await startStep(runId,`validate_${attempt}`); currentTool = await startTool(currentStep,'validate_plan',`校验第 ${attempt} 次模型输出`);
         const result = validatePlan(raw,hits.map(h=>h.id));
