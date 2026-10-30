@@ -5,13 +5,15 @@ import { createApp } from './app.js';
 import { PgProjectStore } from './project-store.js';
 import { loadAiConfig } from './ai/model.js';
 import { PgAiGenerationStore } from './ai/store.js';
-import { loadEmbeddingConfig } from './rag/service.js';
+import { resolveEmbeddingConfig } from './rag/service.js';
 
 const config = loadConfig();
+const embedding = resolveEmbeddingConfig();
 const database = config.DATABASE_URL ? new pg.Pool({ connectionString: config.DATABASE_URL, connectionTimeoutMillis: 3000 }) : undefined;
 const app = await createApp({ database, pool: database, projectStore: database ? new PgProjectStore(database) : undefined,
   aiConfig: loadAiConfig(), aiGenerationStore: database ? new PgAiGenerationStore(database) : undefined,
-  embeddingConfig: loadEmbeddingConfig(), corsOrigin: config.CORS_ORIGIN, logger: true });
+  embeddingConfig: embedding.config, corsOrigin: config.CORS_ORIGIN, logger: true });
+if (embedding.invalid) app.log.warn('Embedding configuration is invalid; indexing and retrieval are disabled. Configure an independent embedding provider.');
 
 try {
   await app.listen({ host: config.HOST, port: config.PORT });

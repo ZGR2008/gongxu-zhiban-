@@ -10,6 +10,7 @@
     "dev": "pnpm --parallel --filter @gongxu/api --filter @gongxu/web dev",
     "build": "pnpm -r --if-present build",
     "typecheck": "pnpm -r --if-present typecheck",
-    "test": "pnpm -r --if-present test"
+    "test": "pnpm check:env && pnpm -r --if-present test",
+    "check:env": "node scripts/check-env-templates.mjs"
   }
 }

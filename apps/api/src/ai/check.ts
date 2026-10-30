@@ -8,8 +8,10 @@ if (!config) {
   process.exitCode = 1;
 } else {
   try {
+    const started = Date.now();
     const answer = await completeChat(config, [{ role: 'user', content: '请只回复 OK。' }]);
-    console.log(`模型连接成功：${config.model}；返回：${answer.slice(0, 120)}`);
+    // Report only the check result, never provider text, configuration values or keys.
+    console.log(JSON.stringify({ check: 'real_chat_completion', providerResponded: true, expectedReply: answer.trim() === 'OK', elapsedMs: Date.now() - started }));
   } catch (error) {
     console.error(`模型连接失败：${error instanceof AiError ? error.code : 'unknown_error'}`);
     process.exitCode = 1;

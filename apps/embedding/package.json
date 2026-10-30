@@ -1,0 +1,24 @@
+{
+  "name": "@gongxu/embedding",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/server.js",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "tsc -p tsconfig.test.json && node --test \"dist/**/*.test.js\"",
+    "model:download": "node scripts/download-model.mjs",
+    "check": "tsc -p tsconfig.json && node dist/check.js"
+  },
+  "dependencies": {
+    "@huggingface/transformers": "3.8.1",
+    "dotenv": "^16.4.7",
+    "fastify": "^5.2.1",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.4",
+    "typescript": "^5.7.3"
+  }
+}

@@ -44,9 +44,19 @@ pnpm dev
 
 模型服务错误只返回分类后的错误码，不向浏览器转发上游原始错误正文、密钥或服务地址。
 
-Embedding 与聊天模型独立：配置 `EMBEDDING_BASE_URL`、`EMBEDDING_MODEL` 及按需 `EMBEDDING_API_KEY`，使用兼容 `/embeddings` 的服务。指向本机回环地址时可以不提供密钥；外部服务要求配置密钥。DeepSeek 聊天接口不会被当成 Embedding 接口。尚未选择或配置向量服务时，仍可保存和分块文本资料。
+Embedding 与聊天模型独立：配置 `EMBEDDING_BASE_URL`、`EMBEDDING_MODEL` 及按需 `EMBEDDING_API_KEY`，使用兼容 `/embeddings` 的服务。指向本机回环地址时可以不提供密钥；外部服务要求配置密钥。配置为 DeepSeek 聊天地址时会被拒绝；向量配置错误会禁用检索并在服务端提示，不会阻止其他 API 启动。尚未选择或配置向量服务时，仍可保存和分块文本资料。
 
-知识库支持文本、Markdown 和可提取文本的 PDF 的解析、分块及保存；PDF 上限 3 MB、80 页、20 万字符，扫描件不包含可提取文本时会明确报错，暂不支持 OCR。配置 Embedding 服务后可建立向量索引、按账号检索并返回片段来源。PDF 依赖 [PDF.js](https://github.com/mozilla/pdf.js)，部署时应安装锁定的依赖；公开部署前应进一步对 PDF 解析进程进行资源隔离。模型候选是本地运行的 [BGE-small-zh-v1.5](https://huggingface.co/BAAI/bge-small-zh-v1.5)，尚未在本机下载或验证；更换模型或预处理方式时必须重新建立向量索引。Agent 基于已确认需求调用模型，Embedding 已配置时会实际检索知识；未配置时知识检索明确显示“已跳过”，计划标识缺少知识依据。执行步骤和校验结果会记录，计划需用户确认后才创建任务。服务未就绪时会显示真实状态，不提供模拟成功结果。
+仓库提供可选的 [本地中文向量服务](apps/embedding/README.md)，使用固定版本的 BGE-small-zh-v1.5 ONNX 量化模型，在 CPU 上生成 512 维向量，无需 Docker 或额外 API 密钥。服务单独下载模型、启动和验证：
+
+```sh
+pnpm --filter @gongxu/embedding model:download
+pnpm --filter @gongxu/embedding build
+pnpm --filter @gongxu/embedding start
+```
+
+首次下载模型后，在另一个终端执行 `pnpm --filter @gongxu/embedding check` 检查真实向量生成和中文样例的相似度排序。模型文件有固定哈希校验，默认仅监听本机端口 3010。具体配置和网络镜像选项见该服务 README。
+
+知识库支持文本、Markdown 和可提取文本的 PDF 的解析、分块及保存；PDF 上限 3 MB、80 页、20 万字符，扫描件不包含可提取文本时会明确报错，暂不支持 OCR。配置 Embedding 服务后可建立向量索引、按账号检索并返回片段来源。PDF 依赖 [PDF.js](https://github.com/mozilla/pdf.js)，字体及 CMap 从安装的本地依赖读取；公开部署前应进一步对 PDF 解析进程进行资源隔离。更换向量模型或预处理方式时必须重新建立向量索引。Agent 基于已确认需求调用模型，Embedding 已配置时会实际检索知识；未配置时知识检索明确显示“已跳过”，计划标识缺少知识依据。执行步骤和校验结果会记录，计划需用户确认后才创建任务。服务未就绪时会显示真实状态，不提供模拟成功结果。
 
 代码审查目前的确定性检测仅覆盖 JavaScript/TypeScript 语法，不执行提交的代码；AI 的安全、性能等意见属于待验证建议。生成的测试用例默认未执行，人工修改用例后执行状态会重置。文档草稿读取已确认需求、相关任务和人工测试记录，缺失的 API、代码和部署事实须人工补充。
 
@@ -63,6 +73,8 @@ pnpm test
 ```
 
 上述命令检查现有工程，不代表尚未实现的业务功能已通过测试。
+
+`pnpm test` 会先检查可提交的环境变量模板，要求 API 密钥、令牌和 secret 字段为空；此检查不会读取本地 `.env`，也不打印违规字段值。真实聊天检查只输出状态与耗时，不输出模型原文或配置内容。真实模型、数据库和业务联调需另外运行并记录结果。
 
 ## 竞赛与团队信息
 

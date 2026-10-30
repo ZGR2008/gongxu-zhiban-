@@ -3,6 +3,15 @@ import assert from 'node:assert/strict';
 import { chunkPages } from './chunk.js';
 import { createEmbeddings } from './embeddings.js';
 import { searchKnowledge } from './search.js';
+import { loadEmbeddingConfig, resolveEmbeddingConfig } from './service.js';
+
+test('DeepSeek chat cannot become an embedding provider and bad optional config does not stop startup', () => {
+  const bad = { EMBEDDING_BASE_URL: 'https://api.deepseek.com/v1', EMBEDDING_API_KEY: 'test-secret', EMBEDDING_MODEL: 'chat' };
+  assert.throws(() => loadEmbeddingConfig(bad), /not an embedding service/);
+  assert.deepEqual(resolveEmbeddingConfig(bad), { config: undefined, invalid: true });
+  assert.deepEqual(resolveEmbeddingConfig({}), { config: undefined, invalid: false });
+  assert.equal(loadEmbeddingConfig({ EMBEDDING_BASE_URL: 'http://127.0.0.1:3010/v1', EMBEDDING_MODEL: 'local-model' })?.apiKey, '');
+});
 
 test('chunks retain page and source offsets and overlap without crossing pages', () => {
   const text = '软'.repeat(250);

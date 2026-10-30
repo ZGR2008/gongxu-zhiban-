@@ -2,3 +2,6 @@ packages:
   - 'apps/*'
 allowBuilds:
   esbuild: true
+  onnxruntime-node: true
+  protobufjs: false
+  sharp: true

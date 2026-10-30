@@ -10,8 +10,15 @@ export function loadEmbeddingConfig(env: NodeJS.ProcessEnv = process.env): Embed
   let url: URL;
   try { url = new URL(baseUrl); } catch { throw new Error('Invalid embedding service URL'); }
   if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password || url.search || url.hash) throw new Error('Invalid embedding service URL');
+  if (url.hostname === 'api.deepseek.com') throw new Error('DeepSeek chat is not an embedding service; configure an independent provider');
   if (!apiKey && !['localhost', '127.0.0.1', '[::1]'].includes(url.hostname)) throw new Error('EMBEDDING_API_KEY is required for non-local embedding services');
   return { baseUrl: url.toString().replace(/\/$/, ''), apiKey: apiKey ?? '', model };
+}
+
+/** An optional embedding misconfiguration must not prevent the chat API from starting. */
+export function resolveEmbeddingConfig(env: NodeJS.ProcessEnv = process.env) {
+  try { return { config: loadEmbeddingConfig(env), invalid: false }; }
+  catch { return { config: undefined, invalid: true }; }
 }
 
 // The provider address is included in the identity to avoid mixing vectors from unrelated services.
