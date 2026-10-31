@@ -1,6 +1,16 @@
 # 工序智伴
 
-工序智伴是一款面向软件工程实训的 AI 原生 Web 应用。当前核心版本已在真实 PostgreSQL + pgvector、DeepSeek 和本地中文向量服务上完成一轮完整业务联调，并通过桌面与移动宽度的浏览器检查。支持账号与项目管理、需求版本、AI 需求分析、任务规划、文档知识检索、代码审查、测试用例、文档和成长中心。当前仍处于开发阶段；本地验证不代表已完成线上部署、长期稳定性评估或竞赛交付。详见 [真实集成验证记录](docs/INTEGRATION-REPORT.md)。
+工序智伴是一款面向高职软件工程实训的 AI 原生 Web 应用，用于「传智杯 AI WEB 网页开发挑战赛」备赛。现有需求、Agent、RAG、审查、测试、文档和成长功能保留，本轮重点修复跨项目编辑、长文本截断、向量并发和版本证据问题，并实现“需求条目→任务→测试→人工执行证据”的追踪闭环。
+
+截至2026-11-01本轮验证，使用了真实本地PostgreSQL/pgvector、本地中文向量和桌面浏览器，也使用了明确标识的模型/HTTP替身。**本轮没有发起收费模型调用**，新提示词的真实模型效果、线上部署、长期负载与教学成效仍待验证；此前真实DeepSeek报告只作为历史记录。结果、未运行项和风险见[本轮交付报告](docs/FINAL-REVIEW-2026-11.md)，快速恢复见[启动与验收](docs/STARTUP-AND-VERIFICATION.md)。
+
+新增能力包括：完整原文条目标识和位置、模型建议/人工确认关联分离、用例修订与历史证据、需求变更影响、人工审核入口、可取消的向量检索/索引等待。超过20000字符的生成会明确阻止，完整原文仍可保存，不静默截断；此边界不等于支持任意长度生成。详细规则与安全迁移见[需求追踪及恢复](docs/TRACEABILITY-AND-RECOVERY.md)。
+
+![本轮合成项目的真实数据库追踪界面：建议、审核和人工证据分别展示](docs/screenshots/review-v2/trace-desktop.png)
+
+版本化评测入口为 `pnpm eval:offline`，真实模型三流程对比仍标为待授权；[案例与盲评协议](evaluation/README.md)没有虚构成绩或提升百分比。[竞赛截图逐项检查](docs/CONTEST-ACCEPTANCE-2026-11.md)只采用七张图清晰可见的要求，评分权重、国赛细则及裁切部分为信息不足。
+
+团队信息：参赛者拟报C组，需自行核验每位队员学籍及报名。学生姓名/学校/分工与指导教师尚待真实填写；截图要求1—3名同校学生、教师不超过2名。不得用演示账号作为团队信息。
 
 ## 技术架构
 
@@ -25,7 +35,7 @@
 
 ![深空主题工作台：真实项目概况、实训工具入口和项目列表](docs/screenshots/workspace.png)
 
-工作台的三维星环是独立的装饰场景，支持暂停、拖动和减少动态效果，不参与模型调用。独立预览位于 `/previews/planet-orbit.html`，旧版 CSS/SVG 留在 `/previews/archive/planet-orbit-css-v2.html`。当前三维版通过本地 HTTP 服务加载模块，需要 WebGL2；所有运行资源本地提供，不依赖 CDN。轨道代码适配自 MIT 许可的 [SaturnWebGL](https://github.com/adelmassimo/SaturnWebGL)，使用 Three.js 0.187.0，来源和版权声明见 `apps/web/public/previews/vendor/NOTICE.txt`，前端依赖许可见 `apps/web/public/THIRD-PARTY-LICENSES.txt`。
+工作台的三维星环是独立的装饰场景，在工作台默认静态、主动开启后播放，支持暂停、拖动和减少动态效果，不参与模型调用。独立预览位于 `/previews/planet-orbit.html`，旧版 CSS/SVG 留在 `/previews/archive/planet-orbit-css-v2.html`。当前三维版通过本地 HTTP 服务加载模块，需要 WebGL2；所有运行资源本地提供，不依赖 CDN。轨道代码适配自 MIT 许可的 [SaturnWebGL](https://github.com/adelmassimo/SaturnWebGL)，使用 Three.js 0.187.0，来源和版权声明见 `apps/web/public/previews/vendor/NOTICE.txt`，前端依赖许可见 `apps/web/public/THIRD-PARTY-LICENSES.txt`。
 
 ## 环境准备
 
@@ -55,11 +65,11 @@ Windows 下可使用 `pnpm start:local` 启动本地开发服务并检查状态�
 
 ### AI 与知识检索配置
 
-在仅供服务端读取的 `apps/api/.env` 中配置 `AI_BASE_URL`、`AI_API_KEY`、`AI_MODEL`，以启用兼容 Chat Completions 的真实模型。DeepSeek 配置可使用 `AI_BASE_URL=https://api.deepseek.com` 和 `AI_MODEL=deepseek-flash`，并将自己的密钥填入 `AI_API_KEY`；模型是否对账号可用以实际调用为准。参见 [DeepSeek 官方 API 文档](https://api-docs.deepseek.com/api/create-chat-completion/)。不要将密钥写入前端或提交到 Git。系统显示“已配置”仅代表配置项齐全，不代表服务已经联通。
+在仅供服务端读取的 `apps/api/.env` 中配置 `AI_BASE_URL`、`AI_API_KEY`、`AI_MODEL`，以启用兼容 Chat Completions 的真实模型。DeepSeek可使用其官方API地址，`AI_MODEL`填写自己账号当前可用的模型标识，并将密钥填入 `AI_API_KEY`；本轮没有重新验证提供方模型列表或账号权限。参见 [DeepSeek 官方 API 文档](https://api-docs.deepseek.com/api/create-chat-completion/)。不要将密钥写入前端或提交到 Git。系统显示“已配置”仅代表配置项齐全，不代表服务已经联通。
 
 配置后可执行 `pnpm --filter @gongxu/api ai:check`，单独发起一次真实模型请求；此检查会产生一次 API 调用，可能计费，不要求数据库或 Embedding 已启动。未配置时不会伪造成功。
 
-模型请求支持 `AI_TIMEOUT_MS`（1–120 秒，模板为 90 秒）、`AI_MAX_OUTPUT_TOKENS`（256–16384，默认 4096）及可选的 `AI_REASONING_EFFORT`。DeepSeek 当前默认启用思考模式；本项目的交互实训流程使用 `AI_REASONING_EFFORT=none` 控制等待时间，规划结果仍经过结构、依赖和来源校验。其他服务不支持该参数时留空，后端会省略它。模型报告输出被长度限制截断时，后端返回 `ai_output_truncated`，不会把残缺内容保存为完整草稿。参数行为见 [DeepSeek Chat Completions 文档](https://api-docs.deepseek.com/api/create-chat-completion/)。
+模型请求支持 `AI_TIMEOUT_MS`（1–120 秒，模板为 90 秒）、`AI_MAX_OUTPUT_TOKENS`（256–16384，默认 4096）及可选的 `AI_REASONING_EFFORT`。推理选项的可用值与行为取决于提供方和具体模型；服务不支持该参数时留空，后端会省略它，不把某个模型的默认行为套用于所有模型。规划结果仍经过结构、依赖和来源校验。模型报告输出被长度限制截断时，后端返回 `ai_output_truncated`，不会把残缺内容保存为完整草稿。参数行为需对照提供方文档及获授权的实际调用。
 
 连接失败时请根据实际错误处理。`.env.example` 是可提交的配置模板，真实密钥只填写到被 Git 忽略的 `apps/api/.env`；修改配置后须重启后端。不要在聊天、截图或 Git 评论中发送密钥。
 
@@ -98,6 +108,11 @@ pnpm --filter @gongxu/embedding start
 pnpm build
 pnpm typecheck
 pnpm test
+pnpm test:ui-models
+pnpm test:workbench
+pnpm test:review-package
+pnpm verify:reliability-ui
+pnpm eval:offline
 ```
 
 上述命令检查现有工程，不代表尚未实现的业务功能已通过测试。

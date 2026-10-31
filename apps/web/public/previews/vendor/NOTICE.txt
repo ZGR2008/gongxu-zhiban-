@@ -37,3 +37,8 @@ as an open-source visual component, not claimed as an original AI innovation.
 The previous CSS/SVG preview is retained at ../archive/planet-orbit-css-v2.html.
 The WebGL preview requires a local HTTP server and WebGL2. If unavailable, the
 page presents an explicit message and a link to the earlier preview.
+
+2026-11-01 workbench integration update: the embedded scene starts paused and
+plays only after a user action. Reduced-motion preference keeps it static.
+This changes the host interaction and lifecycle, not the upstream orbit math.
+No additional renderer or runtime dependency was introduced in this update.
