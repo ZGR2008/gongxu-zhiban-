@@ -1,20 +1,14 @@
 import { RequirementTrace } from './components/RequirementTrace';
 import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react';
-import { CodeEditor, RichContent, CopyButton, ModuleGuide, TestCaseCollection } from './components/ContentView';
+import { TestCaseCollection } from './components/ContentView';
 import { useEditGuard, useUnsavedEdit } from './components/EditGuard';
 
 type Api = <T>(path:string, options?:RequestInit)=>Promise<T>;
 type Props = {request:Api;projectId:string;requirements:{id:string;version:number;status:string}[]};
 const errorText = (e:unknown) => e instanceof Error ? e.message : '操作失败，请重试。';
 const fmt = (s:string) => new Date(s).toLocaleString('zh-CN');
-type Finding={code:number;line:number;column:number;message:string};
-type Review={id:string;language:string;code:string;syntaxFindings:Finding[];aiAdvice:string;modelName:string;createdAt:string};
-export function CodeReview({request,projectId}:Props){
- const base=`/projects/${encodeURIComponent(projectId)}/code-reviews`; const [reviews,setReviews]=useState<Review[]>([]); const [selected,setSelected]=useState<Review|null>(null); const [code,setCode]=useState(''); const [language,setLanguage]=useState('typescript'); const [busy,setBusy]=useState(false); const [loading,setLoading]=useState(true); const [error,setError]=useState('');
- const load=useCallback(async()=>{setLoading(true);try{const r=await request<{reviews:Review[]}>(base);setReviews(r.reviews);setSelected(r.reviews[0]||null);}catch(e){setError(errorText(e));}finally{setLoading(false);}},[base,request]); useEffect(()=>{void load()},[load]);
- async function submit(e:FormEvent){e.preventDefault();setBusy(true);setError('');try{const r=await request<{review:Review}>(base,{method:'POST',body:JSON.stringify({language,code})});setReviews(prev=>[r.review,...prev]);setSelected(r.review);}catch(err){setError(errorText(err));}finally{setBusy(false);}}
- return <section className="module-page"><div className="section-heading compact"><div><div className="eyebrow">CODE REVIEW</div><h2>让每一次审查都有依据</h2><p>语法诊断由解析器产生；AI 建议未经运行验证。系统不会执行提交的代码。</p></div></div>{error&&<div className="alert error" role="alert">{error}<button type="button" onClick={()=>void load()}>刷新</button></div>}<div className="module-grid"><div><form className="editor-panel" onSubmit={submit}><h3>提交代码</h3><label htmlFor="code-language">语言</label><select id="code-language" value={language} onChange={e=>setLanguage(e.target.value)}><option value="typescript">TypeScript</option><option value="javascript">JavaScript</option></select><label htmlFor="code-input">代码内容</label><CodeEditor value={code} onChange={setCode} language={language}/><div className="form-actions"><span className="muted-text">最多 50000 字符</span><button className="button primary" disabled={busy||!code.trim()}>{busy?'审查中…':'提交审查'} <span>↗</span></button></div></form><section className="editor-panel"><h3>审查记录</h3>{loading?<p className="muted-text">正在加载…</p>:reviews.length?<ul className="module-list">{reviews.map(r=><li key={r.id}><button type="button" className="run-link" aria-pressed={selected?.id===r.id} onClick={()=>setSelected(r)}><strong>{r.language} · {fmt(r.createdAt)}</strong><small>模型：{r.modelName}</small></button></li>)}</ul>:<p className="muted-text">暂无审查记录。</p>}</section></div><div>{selected?<><section className="editor-panel"><h3>真实语法诊断</h3><p className="muted-text">仅检查语法，不包含类型、安全、性能或运行正确性验证。</p>{selected.syntaxFindings.length?<ul className="finding-list">{selected.syntaxFindings.map((f,i)=><li key={i}>第 {f.line} 行，第 {f.column} 列 · TS{f.code}<p>{f.message}</p></li>)}</ul>:<p className="muted-text">语法检查未报告问题，不代表代码没有其他问题。</p>}</section><section className="editor-panel"><h3>AI 审查建议</h3><p className="muted-text">以下内容未经验证，请结合实际代码和测试判断。</p><RichContent value={selected.aiAdvice}/><div className="result-copy"><CopyButton value={selected.aiAdvice}/></div></section><details className="editor-panel"><summary>查看本次提交的代码</summary><pre className="code-preview">{selected.code}</pre></details></>:<ModuleGuide kind="review"/>}</div></div></section>;
-}
+export {CodeReviewWorkspace as CodeReview} from './components/CodeReviewWorkspace';
+
 type Case={id:string;revision?:number;category:'normal'|'boundary'|'exception';title:string;preconditions:string;steps:string;expected:string;result:'not_run'|'passed'|'failed'|'blocked';executionNote:string;executedAt:string|null;requirementVersionId:string};
 const category:Record<string,string>={normal:'正常',boundary:'边界',exception:'异常'}; const outcomes:Record<string,string>={not_run:'未执行',passed:'通过',failed:'失败',blocked:'阻塞'};
 function CaseEditor({item,base,request,onSaved}:{item:Case;base:string;request:Api;onSaved:(item:Case)=>void}){

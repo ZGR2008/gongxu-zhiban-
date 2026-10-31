@@ -82,7 +82,15 @@ async function scenario(name,work){
   else if(path==='/knowledge/activity')body={activities:[]};
   else if(path==='/knowledge/search'){state.searches++;await new Promise(r=>setTimeout(r,state.searchDelay));body={hits:[{id:RA,document_name:'取消后重试资料',content:'成功检索的合成片段',page:1,distance:0.1}]};}
   else if(path.endsWith('/tasks'))body={tasks:state.tasks};
-  else if(path.endsWith('/code-reviews'))body={reviews:[]};
+  else if(path.endsWith('/code-draft')&&method==='GET'){body={draft:state.codeDraft??null};await new Promise(r=>setTimeout(r,state.codeDraftReadDelay??0));}
+  else if(path.endsWith('/code-draft')&&method==='PUT'){
+   const input=route.request().postDataJSON();state.writes.push({path,body:input});await new Promise(r=>setTimeout(r,state.codeSaveDelay??0));
+   if(state.failSave){status=503;body={error:'database_unavailable'};}else if(state.codeConflict){status=409;body={error:'code_draft_conflict'};}else{state.codeDraft={projectId:A,language:input.language,code:input.code,revision:(state.codeDraft?.revision??0)+1,updatedAt:now};body={draft:state.codeDraft};}
+  }
+  else if(path.endsWith('/code-reviews')&&method==='POST'){
+   const input=route.request().postDataJSON();state.writes.push({path,body:input});await new Promise(r=>setTimeout(r,state.reviewDelay??0));body={review:{id:'new-review',...input,aiAdvice:'新的合成审查建议',syntaxFindings:[],modelName:'fixture',createdAt:now}};state.reviews=[body.review,...(state.reviews??[])];status=201;
+  }
+  else if(path.endsWith('/code-reviews'))body={reviews:state.reviews??[]};
   else {status=404;body={error:'not_found'};}
   await route.fulfill({status,json:body}).catch(()=>{});
  });
@@ -98,6 +106,24 @@ function traceFixture(state){
  state.traceData={version:{id:RA,number:1,current:true},items:[{id:RA,key:'REQ-fixture',position:1,start:0,end:4,text:'审批留档',change:'initial',coverage:{suggested:0,confirmedTasks:1,confirmedCases:1,stale:0,manualEvidence:0}}],links:[{id:'task-link',itemId:RA,taskId:RA,caseId:null,status:'confirmed',origin:'human'},{id:'case-link',itemId:RA,taskId:null,caseId:RB,caseRevision:1,status:'confirmed',origin:'human'}],tasks:[{id:RA,title:'合成审批任务'}],cases:[test],previousItems:[],impact:null,taskTests:[],taskTestHistory:[],scope:'受控浏览器替身，不是业务数据'};
 }
 try{
+ await scenario('code_review_late_reply_preserves_selected_history_and_newer_draft',async(page,state)=>{
+  state.reviewDelay=650;state.reviews=[RA,RB].map((id,i)=>({id,language:'typescript',code:'const old = 0;',syntaxFindings:[],aiAdvice:i?'历史B合成建议':'历史A合成建议',modelName:'fixture',createdAt:now}));
+  state.codeDraft={language:'typescript',code:'const saved = 0;',revision:1,updatedAt:now};await page.goto(`${origin.origin}/projects/${A}/reviews`);await page.locator('#code-input').fill('const submitted = 1;');
+  await page.locator('#code-input').evaluate(input=>{input.form.dispatchEvent(new Event('submit',{bubbles:true,cancelable:true}));input.form.dispatchEvent(new Event('submit',{bubbles:true,cancelable:true}));});await waitFor(()=>state.writes.some(row=>row.path.endsWith('/code-reviews')));
+  await page.locator('.run-link').nth(1).click();await page.locator('#code-input').fill('const newest = 2;');await page.waitForTimeout(800);
+  assert.equal(await page.getByText('历史B合成建议',{exact:true}).count(),1);assert.equal(await page.locator('#code-input').inputValue(),'const newest = 2;');assert.equal(state.writes.filter(row=>row.path.endsWith('/code-reviews')).length,1);assert.equal(state.writes.find(row=>row.path.endsWith('/code-reviews')).body.code,'const submitted = 1;');
+ });
+ await scenario('code_draft_leave_guard_saves_without_invoking_ai',async(page,state)=>{
+  await page.goto(`${origin.origin}/projects/${A}/reviews`);await page.locator('#code-input').fill('const pending = 1;');await page.getByRole('link',{name:'知识库',exact:true}).first().click();const guard=page.getByRole('dialog',{name:'保留未保存的编辑'});await guard.waitFor();await page.keyboard.press('Escape');assert.equal(await page.locator('#code-input').inputValue(),'const pending = 1;');
+  state.failSave=true;await page.getByRole('link',{name:'知识库',exact:true}).first().click();await guard.getByRole('button',{name:'保存并继续'}).click();await guard.getByText(/保存未成功/).waitFor();assert.ok(page.url().endsWith('/reviews'));assert.equal(state.writes.length,1);assert.ok(state.writes[0].path.endsWith('/code-draft'));
+  state.failSave=false;await guard.getByRole('button',{name:'保存并继续'}).click();await page.waitForURL('**/knowledge');assert.equal(state.writes.length,2);assert.ok(state.writes.every(row=>row.path.endsWith('/code-draft')));await page.goto(`${origin.origin}/projects/${A}/reviews`);await page.waitForFunction(()=>document.querySelector('#code-input')?.value==='const pending = 1;');
+ });
+ await scenario('code_draft_save_conflict_and_new_input_never_discard_content',async(page,state)=>{
+  state.codeSaveDelay=650;state.codeDraft={language:'typescript',code:'const original = 0;',revision:1,updatedAt:now};await page.goto(`${origin.origin}/projects/${A}/reviews`);await page.locator('#code-input').fill('const saved = 1;');
+  await page.getByRole('button',{name:'保存代码草稿',exact:true}).click();await waitFor(()=>state.writes.length===1);await page.locator('#code-input').fill('const newer = 2;');await page.waitForTimeout(800);assert.equal(await page.locator('#code-input').inputValue(),'const newer = 2;');assert.equal(state.writes[0].body.code,'const saved = 1;');
+  state.codeSaveDelay=0;state.codeConflict=true;state.codeDraft={language:'typescript',code:'const otherWindow = 3;',revision:3,updatedAt:now};await page.getByRole('button',{name:'保存代码草稿',exact:true}).click();await page.getByText('const otherWindow = 3;', {exact:true}).waitFor();assert.equal(await page.locator('#code-input').inputValue(),'const newer = 2;');
+  await page.getByRole('button',{name:'已核对，以当前输入继续编辑',exact:true}).click();state.codeConflict=false;await page.getByRole('button',{name:'保存代码草稿',exact:true}).click();await waitFor(()=>state.writes.length===3);assert.equal(state.writes[2].body.expectedRevision,3);assert.equal(state.writes[2].body.code,'const newer = 2;');
+ });
  await scenario('knowledge_upload_leave_guard_save_failure_and_success',async(page,state)=>{
   await page.goto(`${origin.origin}/knowledge`);await page.locator('#knowledge-name').fill('待保存合成资料');await page.locator('#knowledge-content').fill('尚未上传的知识正文');
   await page.getByRole('link',{name:'我的项目',exact:true}).first().click();const guard=page.getByRole('dialog',{name:'保留未保存的编辑'});await guard.waitFor();await page.keyboard.press('Escape');assert.equal(await page.locator('#knowledge-content').inputValue(),'尚未上传的知识正文');

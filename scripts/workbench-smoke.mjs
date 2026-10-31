@@ -294,6 +294,7 @@ try {
       ).project.id;
       await chooseProject("/delivery", secondId);
       await page.locator(".delivery-check").first().waitFor();
+      await page.locator('.delivery-grid[aria-busy="false"]').waitFor();
       assert(
         (await page.getByRole("progressbar").getAttribute("aria-valuenow")) ===
           "0",
@@ -310,6 +311,9 @@ try {
         .locator(".wb-project-picker select")
         .selectOption(projectPath.split("/").pop());
       await page.getByText("依据需求 V2", { exact: true }).waitFor();
+      // The version header loads before the independent evidence snapshot.
+      // During that read the progressbar intentionally has no numeric value.
+      await page.locator('.delivery-grid[aria-busy="false"]').waitFor();
       assert(
         (await page
           .getByLabel("测试与证据核对备注", { exact: true })

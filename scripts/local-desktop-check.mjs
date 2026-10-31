@@ -56,8 +56,15 @@ export async function checkLocalDesktop({apiAddress,authorization,projectId,dire
     await page.getByRole('button',{name:/修订记录 展开/}).click();await page.locator('.document-history summary').first().waitFor();assert.equal(await page.locator('.document-history summary').count(),3);
     await page.locator('.document-history summary').first().click();await page.getByRole('region',{name:'历史修订 3'}).waitFor();
     await page.screenshot({path:fileURLToPath(new URL('documents-desktop.png',directory))});
+    stage='real_code_draft_save_without_model';await page.goto(`${origin}/projects/${projectId}/reviews`);await page.getByRole('button',{name:'重新读取草稿',exact:true}).waitFor();
+    await page.locator('#code-input').fill('const localDraftOnly = "合成代码，不执行、不调用模型";');await page.getByRole('link',{name:'我的项目',exact:true}).first().click();
+    await page.getByRole('dialog',{name:'保留未保存的编辑'}).getByRole('button',{name:'保存并继续'}).click();await page.waitForURL('**/projects');
+    await page.goto(`${origin}/projects/${projectId}/reviews`);await page.waitForFunction(()=>document.querySelector('#code-input')?.value.includes('localDraftOnly'));
+    const savedCode=await page.request.get(`${apiAddress}/projects/${projectId}/code-draft`,{headers:{authorization}});assert.equal((await savedCode.json()).draft.code,'const localDraftOnly = "合成代码，不执行、不调用模型";');
+    const reviewList=await page.request.get(`${apiAddress}/projects/${projectId}/code-reviews`,{headers:{authorization}});assert.equal((await reviewList.json()).reviews.length,0);
+    await page.screenshot({path:fileURLToPath(new URL('code-draft-desktop.png',directory))});
     assert.equal(errors.length,0);
-    return {scope:'real_local_http_and_database_synthetic_account_model_fixture',screenshots:8,layouts:['1366x768','1536x864 CSS zoom 125%','1920x1080 CSS zoom 150%'],nativeBrowserMenuZoom:'not_executed',keyboardAndTraceSave:'passed',taskTestPairing:'passed',documentSaveAndHistory:'passed'};
+    return {scope:'real_local_http_and_database_synthetic_account_model_fixture',screenshots:9,layouts:['1366x768','1536x864 CSS zoom 125%','1920x1080 CSS zoom 150%'],nativeBrowserMenuZoom:'not_executed',keyboardAndTraceSave:'passed',taskTestPairing:'passed',documentSaveAndHistory:'passed',codeDraftSaveAndReturnWithoutAi:'passed'};
   }catch(error){console.log(`Desktop failure at ${stage}`);console.log((error.stack??'').split('\n').filter(line=>line.includes('local-desktop-check.mjs')).slice(0,2).join('\n'));await page.screenshot({path:fileURLToPath(new URL('desktop-failed.png',directory))});throw error;}
   finally{await context.close();await browser.close();}
 }

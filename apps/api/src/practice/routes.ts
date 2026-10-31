@@ -11,6 +11,8 @@ import { requirementItems } from '../trace/domain.js';
 const projectParams = z.object({ projectId: z.string().uuid() });
 const caseParams = projectParams.extend({ caseId: z.string().uuid() });
 const reviewBody = z.object({ language: z.enum(['javascript', 'typescript']), code: z.string().min(1).max(50000) }).strict();
+const draftBody=z.object({language:z.enum(['javascript','typescript']),code:z.string().max(50000),expectedRevision:z.number().int().min(0).optional()}).strict();
+const draftFields='project_id AS "projectId",language,code,revision,updated_at AS "updatedAt"';
 const generateBody = z.object({ requirementId: z.string().uuid() }).strict();
 const executionBody = z.object({ result: z.enum(['not_run', 'passed', 'failed', 'blocked']), note: z.string().max(4000).default(''), expectedRevision:z.number().int().positive().optional() }).strict();
 const editBody = z.object({
@@ -50,6 +52,27 @@ export async function registerPracticeRoutes(app: FastifyInstance, store?: Proje
     const exists=await pool!.query('SELECT id FROM practice_test_cases WHERE project_id=$1 AND id=$2',[projectId,id]);
     return exists.rows.length?reply.code(409).send({error:'test_case_changed'}):reply.code(404).send({error:'not_found'});
   }
+
+  app.get('/projects/:projectId/code-draft',async(request,reply)=>{
+    const a=await access(request,reply);if(!a)return;
+    const result=await pool!.query(`SELECT ${draftFields} FROM code_review_drafts WHERE project_id=$1`,[a.projectId]);
+    return {draft:result.rows[0]??null};
+  });
+  app.put('/projects/:projectId/code-draft',async(request,reply)=>{
+    const a=await access(request,reply);if(!a)return;
+    const parsed=draftBody.safeParse(request.body);if(!parsed.success)return reply.code(400).send({error:'invalid_input'});
+    const b=parsed.data;if(b.expectedRevision===undefined)return reply.code(428).send({error:'code_draft_revision_required'});
+    // Atomic insert/update: concurrent editors cannot both replace one revision.
+    // Saving a draft has no AI dependency, code evaluation or external transport.
+    const result=b.expectedRevision===0
+      ?await pool!.query(`INSERT INTO code_review_drafts(project_id,language,code) VALUES($1,$2,$3) ON CONFLICT(project_id) DO NOTHING RETURNING ${draftFields}`,[a.projectId,b.language,b.code])
+      :await pool!.query(`UPDATE code_review_drafts SET
+        revision=revision+CASE WHEN (language,code) IS DISTINCT FROM ($2,$3) THEN 1 ELSE 0 END,
+        updated_at=CASE WHEN (language,code) IS DISTINCT FROM ($2,$3) THEN now() ELSE updated_at END,
+        language=$2,code=$3 WHERE project_id=$1 AND revision=$4 RETURNING ${draftFields}`,[a.projectId,b.language,b.code,b.expectedRevision]);
+    if(!result.rows.length){const current=await pool!.query('SELECT revision FROM code_review_drafts WHERE project_id=$1',[a.projectId]);return reply.code(409).send({error:'code_draft_conflict',currentRevision:current.rows[0]?.revision??0});}
+    return reply.code(b.expectedRevision===0?201:200).send({draft:result.rows[0],scope:'saved_project_draft_no_model'});
+  });
 
   app.get('/projects/:projectId/code-reviews', async (request, reply) => {
     const a = await access(request, reply); if (!a) return;

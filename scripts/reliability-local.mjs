@@ -42,6 +42,18 @@ try{
   const response=await call('POST','/projects',{name:'可靠性回归 · 合成项目',description:'仅用于回归验证，不代表真实学生数据'});assert.equal(response.statusCode,201);project=response.json().project.id;
  });
  const root=`/projects/${project}`;
+ await check('code_draft_concurrency_noop_and_owner_isolation_without_model',async()=>{
+  const url=`${root}/code-draft`;assert.equal((await call('GET',url)).json().draft,null);
+  assert.equal((await call('PUT',url,{language:'typescript',code:'missing revision'})).statusCode,428);
+  let responses=await Promise.all(['const firstA = 1;','const firstB = 1;'].map(code=>call('PUT',url,{language:'typescript',code,expectedRevision:0})));
+  assert.deepEqual(responses.map(row=>row.statusCode).sort(),[201,409]);
+  let saved=(await call('GET',url)).json().draft;assert.equal(saved.revision,1);
+  responses=await Promise.all(['const updateA = 2;','const updateB = 2;'].map(code=>call('PUT',url,{language:'javascript',code,expectedRevision:1})));
+  assert.deepEqual(responses.map(row=>row.statusCode).sort(),[200,409]);saved=(await call('GET',url)).json().draft;assert.equal(saved.revision,2);
+  const noop=await call('PUT',url,{language:saved.language,code:saved.code,expectedRevision:2});assert.equal(noop.statusCode,200);assert.equal(noop.json().draft.revision,2);assert.equal(noop.json().draft.updatedAt,saved.updatedAt);
+  assert.equal((await call('GET',url,undefined,foreign)).statusCode,404);assert.equal((await call('PUT',url,{language:'typescript',code:'foreign',expectedRevision:2},foreign)).statusCode,404);
+  assert.equal((await call('GET',`${root}/code-reviews`)).json().reviews.length,0,'Draft save must not create a model review');
+ });
  await check('confirmed_requirement_and_generated_fixture_cases',async()=>{
   let response=await call('POST',`${root}/requirements`,{content:'需求版本一：审批必须留存记录。'});assert.equal(response.statusCode,201);firstVersion=response.json().requirement.id;
   assert.equal((await call('POST',`${root}/requirements/${firstVersion}/confirm`)).statusCode,200);
