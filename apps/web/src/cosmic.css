@@ -11,6 +11,10 @@
   --gx-dim: #9381ad;
   --gx-purple: #bc78fc;
   --gx-cyan: #70deec;
+  --gx-reading-size: 14px;
+  --gx-support-size: 12px;
+  --gx-control-size: 13px;
+  --gx-motion-fast: 180ms;
   color: var(--gx-text);
   background: var(--gx-bg);
   font-family: 'Inter', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;

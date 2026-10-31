@@ -1,0 +1,220 @@
+{
+  "artifact": "gongxu-zhiban-technical-v3.pdf",
+  "pages": 23,
+  "chapters": [
+    {
+      "number": 1,
+      "title": "工序智伴"
+    },
+    {
+      "number": 2,
+      "title": "问题与产品边界"
+    },
+    {
+      "number": 3,
+      "title": "竞赛要求对照"
+    },
+    {
+      "number": 4,
+      "title": "需求与验收设计"
+    },
+    {
+      "number": 5,
+      "title": "产品功能与路由"
+    },
+    {
+      "number": 6,
+      "title": "系统技术架构"
+    },
+    {
+      "number": 7,
+      "title": "数据模型与增量迁移"
+    },
+    {
+      "number": 8,
+      "title": "Agent的实际执行流程"
+    },
+    {
+      "number": 9,
+      "title": "RAG资料进入知识库"
+    },
+    {
+      "number": 10,
+      "title": "RAG检索与并发控制"
+    },
+    {
+      "number": 11,
+      "title": "需求到任务及测试的追踪"
+    },
+    {
+      "number": 12,
+      "title": "需求变更的影响处理"
+    },
+    {
+      "number": 13,
+      "title": "并发与未保存编辑保护"
+    },
+    {
+      "number": 14,
+      "title": "审查、测试与文档生成"
+    },
+    {
+      "number": 15,
+      "title": "权限、数据与恢复"
+    },
+    {
+      "number": 16,
+      "title": "电脑工作台的阅读与交互"
+    },
+    {
+      "number": 17,
+      "title": "文档编辑与来源状态"
+    },
+    {
+      "number": 18,
+      "title": "实际验证证据"
+    },
+    {
+      "number": 19,
+      "title": "版本化效果评测准备"
+    },
+    {
+      "number": 20,
+      "title": "创新与公开案例借鉴"
+    },
+    {
+      "number": 21,
+      "title": "启动、迁移与交付"
+    },
+    {
+      "number": 22,
+      "title": "剩余工作与验收结论"
+    },
+    {
+      "number": 23,
+      "title": "来源与原创实现说明"
+    }
+  ],
+  "scope": "technical_review_draft_not_official_acceptance",
+  "screenshots": "synthetic_local_account_real_db_model_fixture",
+  "visualReview": "all_rendered_pages_inspected",
+  "sha256": "7d931fd597f050498782917d045f630cf90c761d886471d5e68f6b846bb595b8",
+  "layoutBounds": [
+    {
+      "page": 1,
+      "textCharacters": 379,
+      "outsideSafeBounds": 0
+    },
+    {
+      "page": 2,
+      "textCharacters": 559,
+      "outsideSafeBounds": 0
+    },
+    {
+      "page": 3,
+      "textCharacters": 653,
+      "outsideSafeBounds": 0
+    },
+    {
+      "page": 4,
+      "textCharacters": 526,
+      "outsideSafeBounds": 0
+    },
+    {
+      "page": 5,
+      "textCharacters": 502,
+      "outsideSafeBounds": 0
+    },
+    {
+      "page": 6,
+      "textCharacters": 555,
+      "outsideSafeBounds": 0
+    },
+    {
+      "page": 7,
+      "textCharacters": 710,
+      "outsideSafeBounds": 0
+    },
+    {
+      "page": 8,
+      "textCharacters": 507,
+      "outsideSafeBounds": 0
+    },
+    {
+      "page": 9,
+      "textCharacters": 506,
+      "outsideSafeBounds": 0
+    },
+    {
+      "page": 10,
+      "textCharacters": 509,
+      "outsideSafeBounds": 0
+    },
+    {
+      "page": 11,
+      "textCharacters": 503,
+      "outsideSafeBounds": 0
+    },
+    {
+      "page": 12,
+      "textCharacters": 466,
+      "outsideSafeBounds": 0
+    },
+    {
+      "page": 13,
+      "textCharacters": 499,
+      "outsideSafeBounds": 0
+    },
+    {
+      "page": 14,
+      "textCharacters": 470,
+      "outsideSafeBounds": 0
+    },
+    {
+      "page": 15,
+      "textCharacters": 448,
+      "outsideSafeBounds": 0
+    },
+    {
+      "page": 16,
+      "textCharacters": 330,
+      "outsideSafeBounds": 0
+    },
+    {
+      "page": 17,
+      "textCharacters": 291,
+      "outsideSafeBounds": 0
+    },
+    {
+      "page": 18,
+      "textCharacters": 621,
+      "outsideSafeBounds": 0
+    },
+    {
+      "page": 19,
+      "textCharacters": 546,
+      "outsideSafeBounds": 0
+    },
+    {
+      "page": 20,
+      "textCharacters": 604,
+      "outsideSafeBounds": 0
+    },
+    {
+      "page": 21,
+      "textCharacters": 597,
+      "outsideSafeBounds": 0
+    },
+    {
+      "page": 22,
+      "textCharacters": 597,
+      "outsideSafeBounds": 0
+    },
+    {
+      "page": 23,
+      "textCharacters": 677,
+      "outsideSafeBounds": 0
+    }
+  ],
+  "renderResolutionDpi": 90
+}

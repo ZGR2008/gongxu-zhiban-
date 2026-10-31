@@ -402,6 +402,67 @@ body[data-density='compact'] .content {
 body[data-text-size='large'] .rich-content {
   font-size: 15px;
 }
+body[data-text-size='large'] {
+  --gx-reading-size: 16px;
+  --gx-support-size: 13px;
+  --gx-control-size: 14px;
+}
+/* Core workflows share the existing theme and display preferences. */
+.content .editor-panel :is(p,li),
+.content .case-item p,
+.content .trace-source {
+  font-size: var(--gx-reading-size);
+  line-height: 1.8;
+}
+.content .editor-panel .muted-text,
+.content .trace-detail code,
+.content .run-link small {
+  font-size: var(--gx-support-size);
+  line-height: 1.75;
+}
+.content :is(input,textarea,select),
+.content .run-link strong {
+  font-size: var(--gx-reading-size);
+}
+.content label:not(.sr-only),
+.content .button,
+.content .text-link {
+  font-size: var(--gx-control-size);
+}
+.content .editor-panel h3 {
+  font-size: 17px;
+  line-height: 1.5;
+  font-weight: 600;
+}
+.content :is(input,textarea,select):focus-visible {
+  outline: 2px solid var(--gx-cyan);
+  outline-offset: 2px;
+  border-color: var(--gx-border-bright);
+  box-shadow: 0 0 0 4px rgb(138 43 226 / .12);
+}
+.content .form-actions .button {
+  min-height: 42px;
+  transition: border-color var(--gx-motion-fast), background-color var(--gx-motion-fast), transform var(--gx-motion-fast), box-shadow var(--gx-motion-fast);
+}
+.content .form-actions .button:not(:disabled):hover { transform: translateY(-1px); }
+.content .form-actions .button:not(:disabled):active { transform: translateY(0); }
+.content :is(.case-history,.document-history,.trace-impact) summary {
+  min-height: 36px;
+  padding-block: 7px;
+  line-height: 1.65;
+}
+.content :is(.document-history,.trace-links,.case-history) details[open] > :not(summary) {
+  animation: evidence-reveal var(--gx-motion-fast) ease-out;
+}
+@keyframes evidence-reveal { from { opacity: .25; transform: translateY(3px); } to { opacity: 1; transform: translateY(0); } }
+@media (min-width: 1024px) {
+  .content .trace-layout { grid-template-columns: minmax(240px,27%) minmax(0,1fr); }
+  .content .trace-item-list { position: sticky; top: 106px; max-height: min(680px,calc(100dvh - 132px)); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .content :is(.form-actions .button,input,textarea,select) { transition: none; }
+  .content :is(.document-history,.trace-links,.case-history) details[open] > :not(summary) { animation: none; }
+}
 body[data-text-size='large'] .markdown-editor textarea {
   font-size: 15px;
 }
