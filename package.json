@@ -26,7 +26,8 @@
     "test:review-package": "node --test scripts/review-package.test.mjs",
     "verify:reliability-ui": "node scripts/reliability-browser.mjs",
     "verify:local": "pnpm --filter @gongxu/api build && cd apps/api && node ../../scripts/reliability-local.mjs",
-    "eval:offline": "pnpm --filter @gongxu/api build && node scripts/evaluate-offline.mjs"
+    "eval:offline": "pnpm --filter @gongxu/api build && node scripts/evaluate-offline.mjs",
+    "eval:prepare": "pnpm --filter @gongxu/api build && node scripts/evaluate-prepare.mjs"
   },
   "devDependencies": {
     "playwright": "1.64.1"

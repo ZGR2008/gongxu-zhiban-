@@ -1,6 +1,8 @@
 import {withAbort} from './abortable.js';
 export type AiConfig = { baseUrl: string; apiKey: string; model: string; timeoutMs: number; maxOutputTokens?: number; reasoningEffort?: 'none' | 'low' | 'high' | 'max' };
 export type CompletionOptions={signal?:AbortSignal};
+export type ProviderUsage={inputTokens:number|null;outputTokens:number|null;totalTokens:number|null;cacheHitTokens:number|null;cacheMissTokens:number|null;reasoningTokens:number|null};
+export type ChatCompletion={content:string;usage:ProviderUsage;finishReason:string|null;durationMs:number};
 export type AiMessage = { role: 'system' | 'user' | 'assistant'; content: string };
 export class AiError extends Error {
   constructor(public readonly code: 'ai_not_configured' | 'ai_timeout' | 'ai_cancelled' | 'ai_provider_error' | 'ai_auth_error' | 'ai_insufficient_balance' | 'ai_rate_limited' | 'ai_output_truncated') { super(code); }
@@ -35,7 +37,20 @@ export function loadAiConfig(env: NodeJS.ProcessEnv = process.env): AiConfig | u
 }
 
 export async function completeChat(config: AiConfig | undefined, messages: AiMessage[], fetcher: typeof fetch = fetch, options:CompletionOptions={}): Promise<string> {
+  return (await completeChatWithMetadata(config,messages,fetcher,options)).content;
+}
+
+/** Whitelisted numeric fields only. Missing values stay null; no cost/token estimation. */
+export function providerUsage(value:unknown):ProviderUsage{
+  const source=value&&typeof value==='object'?value as Record<string,unknown>:{};
+  const count=(value:unknown)=>typeof value==='number'&&Number.isSafeInteger(value)&&value>=0?value:null;
+  const details=source.completion_tokens_details&&typeof source.completion_tokens_details==='object'?source.completion_tokens_details as Record<string,unknown>:{};
+  return {inputTokens:count(source.prompt_tokens),outputTokens:count(source.completion_tokens),totalTokens:count(source.total_tokens),cacheHitTokens:count(source.prompt_cache_hit_tokens),cacheMissTokens:count(source.prompt_cache_miss_tokens),reasoningTokens:count(details.reasoning_tokens)};
+}
+
+export async function completeChatWithMetadata(config: AiConfig | undefined, messages: AiMessage[], fetcher: typeof fetch = fetch, options:CompletionOptions={}): Promise<ChatCompletion> {
   if (!config) throw new AiError('ai_not_configured');
+  const started=performance.now();
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), config.timeoutMs);
   const signal=options.signal?AbortSignal.any([controller.signal,options.signal]):controller.signal;
@@ -74,7 +89,9 @@ export async function completeChat(config: AiConfig | undefined, messages: AiMes
     if (choice?.finish_reason === 'length') throw new AiError('ai_output_truncated');
     const content = choice?.message?.content;
     if (typeof content !== 'string' || !content.trim() || content.length > 45_000) throw new AiError('ai_provider_error');
-    return content.trim();
+    const rawReason=choice?.finish_reason;
+    const finishReason=typeof rawReason==='string'&&['stop','length','content_filter','tool_calls','function_call'].includes(rawReason)?rawReason:null;
+    return {content:content.trim(),usage:providerUsage((data as {usage?:unknown})?.usage),finishReason,durationMs:Math.max(0,Math.round(performance.now()-started))};
   } catch (error) {
     if(options.signal?.aborted)throw new AiError('ai_cancelled');
     if (controller.signal.aborted) throw new AiError('ai_timeout');
