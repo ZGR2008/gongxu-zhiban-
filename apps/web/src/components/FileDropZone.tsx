@@ -2,27 +2,25 @@ import { useRef, useState } from 'react';
 import { UiIcon } from './UiIcon';
 
 /** File selection only. Parsing, validation and saving stay in the existing knowledge workflow. */
-export function FileDropZone({ id, onFile }: { id: string; onFile: (file: File) => void }) {
+export function FileDropZone({ id, onFile, selectedFile: file, disabled=false }: { id: string; onFile: (file: File) => void; selectedFile: Pick<File,'name'|'size'> | null; disabled?: boolean }) {
   const input = useRef<HTMLInputElement>(null);
   const depth = useRef(0);
   const [dragging, setDragging] = useState(false);
-  const [file, setFile] = useState<File | null>(null);
   const [message, setMessage] = useState('');
   function select(files: FileList | null) {
-    if (!files?.length) return;
+    if (disabled || !files?.length) return;
     if (files.length !== 1) {
       setMessage('请一次选择一个文件。');
       return;
     }
     setMessage('');
-    setFile(files[0]);
     onFile(files[0]);
   }
   return (
     <div
       className={`file-drop-zone ${dragging ? 'file-drop-zone--active' : ''}`}
       onDragEnter={(event) => {
-        if (!event.dataTransfer.types.includes('Files')) return;
+        if (disabled || !event.dataTransfer.types.includes('Files')) return;
         event.preventDefault();
         depth.current++;
         setDragging(true);
@@ -30,7 +28,7 @@ export function FileDropZone({ id, onFile }: { id: string; onFile: (file: File) 
       onDragOver={(event) => {
         if (!event.dataTransfer.types.includes('Files')) return;
         event.preventDefault();
-        event.dataTransfer.dropEffect = 'copy';
+        event.dataTransfer.dropEffect = disabled ? 'none' : 'copy';
       }}
       onDragLeave={() => {
         depth.current = Math.max(0, depth.current - 1);
@@ -48,8 +46,9 @@ export function FileDropZone({ id, onFile }: { id: string; onFile: (file: File) 
         id={id}
         className="sr-only"
         type="file"
+        disabled={disabled}
         accept=".pdf,.txt,.md,application/pdf,text/plain,text/markdown"
-        onChange={(event) => select(event.target.files)}
+        onChange={(event) => {select(event.target.files);event.target.value='';}}
         aria-describedby={`${id}-help`}
       />
       <span className="file-drop-icon">
@@ -64,7 +63,7 @@ export function FileDropZone({ id, onFile }: { id: string; onFile: (file: File) 
         </p>
         <small id={`${id}-help`}>PDF ≤ 3 MB · TXT / Markdown ≤ 800 KB</small>
       </div>
-      <button type="button" className="file-picker-button" onClick={() => input.current?.click()}>
+      <button type="button" className="file-picker-button" disabled={disabled} onClick={() => input.current?.click()}>
         {file ? '重新选择' : '选择文件'} <span>↗</span>
       </button>
       {message && (

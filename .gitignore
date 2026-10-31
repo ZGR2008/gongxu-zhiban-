@@ -12,3 +12,5 @@ uploads/
 .models/
 .runtime/
 tmp/pdfs/
+tmp/video/
+output/video/*.mp4

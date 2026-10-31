@@ -2,13 +2,29 @@ import { chromium } from 'playwright';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { randomUUID } from 'node:crypto';
 import assert from 'node:assert/strict';
+import {execFileSync} from 'node:child_process';
+import {createRequire} from 'node:module';
+
+// Optional read-only reproduction of a known local historical Knowledge module.
+// Only this browser sees it; no checkout, source overwrite, DB or external calls.
+const knowledgeBaseline=process.argv.find(arg=>arg.startsWith('--knowledge-baseline='))?.split('=')[1];
+let baselineModule;
+if(knowledgeBaseline){
+ if(!/^[a-f0-9]{7,40}$/.test(knowledgeBaseline)||!process.argv.some(arg=>arg.startsWith('--case=knowledge_')))throw Error('Historical reproduction requires a commit hash and Knowledge-only case filter');
+ const ts=createRequire(new URL('../apps/web/package.json',import.meta.url))('typescript');
+ const source=execFileSync('git',['show',`${knowledgeBaseline}:apps/web/src/Modules.tsx`],{cwd:new URL('../',import.meta.url),encoding:'utf8'});
+ baselineModule=ts.transpileModule(source,{compilerOptions:{jsx:ts.JsxEmit.ReactJSX,target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ESNext}}).outputText.replace(/import \{([^}]+)\} from ["'](react(?:\/jsx-runtime)?)["'];/g,(_match,bindings,module)=>{
+  const key=module==='react'?'baselineReact':'baselineJsx',file=module==='react'?'react':'react_jsx-runtime';
+  return `import ${key} from "/node_modules/.vite/deps/${file}.js";const {${bindings.replace(/\bas\b/g,':')}}=${key};`;
+ });
+}
 
 // Controlled UI regression only: all API traffic is intercepted; no model or DB calls.
 const origin = new URL(process.env.SMOKE_WEB_URL || 'http://127.0.0.1:5173');
 if (!['127.0.0.1','localhost','[::1]'].includes(origin.hostname) || origin.username || origin.password || origin.pathname !== '/' || origin.search || origin.hash) throw Error('Loopback origin required');
 const directory = new URL(`../.runtime/reliability-ui-${randomUUID()}/`,import.meta.url);
 await mkdir(directory,{recursive:true});
-const report={scope:'controlled_browser_responses',realDatabase:false,realModel:false,checks:[],startedAt:new Date().toISOString()};
+const report={scope:'controlled_browser_responses',historicalKnowledgeModule:knowledgeBaseline??null,realDatabase:false,realModel:false,checks:[],startedAt:new Date().toISOString()};
 const browser=await chromium.launch({headless:true,channel:process.env.SMOKE_BROWSER_CHANNEL || (process.platform==='win32'?'msedge':undefined)});
 const A='11111111-1111-4111-8111-111111111111', B='22222222-2222-4222-8222-222222222222';
 const RA='aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', RB='bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
@@ -25,6 +41,7 @@ async function scenario(name,work){
  await page.route('**/*',async route=>{
   const url=new URL(route.request().url());
   if(url.origin!==origin.origin) return route.abort();
+  if(baselineModule&&url.pathname==='/src/Modules.tsx')return route.fulfill({contentType:'application/javascript',body:baselineModule});
   if(!url.pathname.startsWith('/api/')) return route.continue();
   const path=url.pathname.slice(4),method=route.request().method();
   let status=200,body={};
@@ -60,7 +77,8 @@ async function scenario(name,work){
   else if(/\/agent\/runs\/[^/]+$/.test(path)){const id=path.split('/').at(-1);state.runCounts[id]=(state.runCounts[id]||0)+1;await new Promise(r=>setTimeout(r,state.runDelay(id)));body={run:state.runs.find(r=>r.id===id),steps:[{id:'s',stage:'plan_1',status:'succeeded',outputSummary:id===RA?'运行A输出':'运行B输出',tools:[]}]};}
   else if(path.endsWith('/trace')){state.traceReads=(state.traceReads??0)+1;status=state.traceStatus??200;body=structuredClone(status===200?(state.traceData??{version:null,items:[],links:[],tasks:[],cases:[],previousItems:[],impact:null}):{error:'trace_refresh_required'});await new Promise(r=>setTimeout(r,state.traceDelay??0));}
   else if(/\/trace\/(links|task-tests)$/.test(path)&&method==='POST'){const input=route.request().postDataJSON();state.writes.push({path,body:input});if(path.endsWith('/links')&&state.traceData){state.traceData.links=state.traceData.links.map(link=>(input.targetKind==='case'?link.caseId:link.taskId)===input.targetId?{...link,status:input.decision,reviewNote:input.note}:link);}body={status:'confirmed'};}
-  else if(path==='/knowledge')body={documents:[],embeddingConfigured:true,pdfAvailable:true};
+  else if(path==='/knowledge'){state.knowledgeReads=(state.knowledgeReads??0)+1;status=state.knowledgeStatus??200;body=status===200?{documents:state.knowledgeDocuments??[],embeddingConfigured:true,pdfAvailable:true}:{error:'database_unavailable'};}
+  else if(path==='/knowledge/text'||path==='/knowledge/pdf'){state.writes.push({path,body:route.request().postDataJSON()});await new Promise(r=>setTimeout(r,state.uploadDelay??0));status=state.failUpload?503:201;body=state.failUpload?{error:'database_unavailable'}:{id:RA,status:'awaiting_embedding',chunks:1};if(state.failKnowledgeAfterUpload)state.knowledgeStatus=503;}
   else if(path==='/knowledge/activity')body={activities:[]};
   else if(path==='/knowledge/search'){state.searches++;await new Promise(r=>setTimeout(r,state.searchDelay));body={hits:[{id:RA,document_name:'取消后重试资料',content:'成功检索的合成片段',page:1,distance:0.1}]};}
   else if(path.endsWith('/tasks'))body={tasks:state.tasks};
@@ -80,6 +98,35 @@ function traceFixture(state){
  state.traceData={version:{id:RA,number:1,current:true},items:[{id:RA,key:'REQ-fixture',position:1,start:0,end:4,text:'审批留档',change:'initial',coverage:{suggested:0,confirmedTasks:1,confirmedCases:1,stale:0,manualEvidence:0}}],links:[{id:'task-link',itemId:RA,taskId:RA,caseId:null,status:'confirmed',origin:'human'},{id:'case-link',itemId:RA,taskId:null,caseId:RB,caseRevision:1,status:'confirmed',origin:'human'}],tasks:[{id:RA,title:'合成审批任务'}],cases:[test],previousItems:[],impact:null,taskTests:[],taskTestHistory:[],scope:'受控浏览器替身，不是业务数据'};
 }
 try{
+ await scenario('knowledge_upload_leave_guard_save_failure_and_success',async(page,state)=>{
+  await page.goto(`${origin.origin}/knowledge`);await page.locator('#knowledge-name').fill('待保存合成资料');await page.locator('#knowledge-content').fill('尚未上传的知识正文');
+  await page.getByRole('link',{name:'我的项目',exact:true}).first().click();const guard=page.getByRole('dialog',{name:'保留未保存的编辑'});await guard.waitFor();await page.keyboard.press('Escape');assert.equal(await page.locator('#knowledge-content').inputValue(),'尚未上传的知识正文');
+  state.failUpload=true;await page.getByRole('link',{name:'我的项目',exact:true}).first().click();await guard.getByRole('button',{name:'保存并继续'}).click();await guard.getByText(/保存未成功/).waitFor();assert.ok(page.url().endsWith('/knowledge'));assert.equal(await page.locator('#knowledge-name').inputValue(),'待保存合成资料');assert.equal(state.writes.length,1);
+  state.failUpload=false;await guard.getByRole('button',{name:'保存并继续'}).click();await page.waitForURL('**/projects');assert.equal(state.writes.length,2);assert.ok(state.writes.every(row=>row.path==='/knowledge/text'));
+ });
+ await scenario('knowledge_upload_single_flight_preserves_new_typing',async(page,state)=>{
+  state.uploadDelay=650;await page.goto(`${origin.origin}/knowledge`);await page.locator('#knowledge-name').fill('本次提交');await page.locator('#knowledge-content').fill('先前提交正文');
+  await page.locator('#knowledge-name').evaluate(input=>{const form=input.form;form.dispatchEvent(new Event('submit',{bubbles:true,cancelable:true}));form.dispatchEvent(new Event('submit',{bubbles:true,cancelable:true}));});await waitFor(()=>state.writes.length>0);
+  await page.locator('#knowledge-name').fill('下一份尚未保存');await page.locator('#knowledge-content').fill('保存期间仍在编辑的新正文');await page.waitForTimeout(900);
+  assert.equal(state.writes.length,1);assert.equal(state.writes[0].body.text,'先前提交正文');assert.equal(await page.locator('#knowledge-name').inputValue(),'下一份尚未保存');assert.equal(await page.locator('#knowledge-content').inputValue(),'保存期间仍在编辑的新正文');
+  await page.getByRole('link',{name:'我的项目',exact:true}).first().click();await page.getByRole('dialog',{name:'保留未保存的编辑'}).getByRole('button',{name:'留在此页'}).click();assert.equal(await page.locator('#knowledge-content').inputValue(),'保存期间仍在编辑的新正文');
+ });
+ await scenario('knowledge_invalid_file_keeps_draft_and_replacement_is_guarded',async(page,state)=>{
+  await page.goto(`${origin.origin}/knowledge`);await page.locator('#knowledge-name').fill('保留原名');await page.locator('#knowledge-content').fill('保留原稿');
+  await page.locator('#knowledge-file').setInputFiles({name:'invalid.exe',mimeType:'application/octet-stream',buffer:Buffer.from('synthetic')});await page.getByRole('alert').filter({hasText:'请选择 PDF、TXT 或 Markdown 文件。'}).waitFor();assert.equal(await page.locator('#knowledge-content').inputValue(),'保留原稿');
+  await page.locator('#knowledge-file').setInputFiles({name:'oversized.pdf',mimeType:'application/pdf',buffer:Buffer.alloc(3_000_001)});await page.getByText(/PDF 文件不能超过 3 MB/).waitFor();assert.equal(await page.locator('#knowledge-name').inputValue(),'保留原名');
+  const replacement={name:'replacement.txt',mimeType:'text/plain',buffer:Buffer.from('显式选择替换后的合成正文')};await page.locator('#knowledge-file').setInputFiles(replacement);const guard=page.getByRole('dialog',{name:'保留未保存的编辑'});await guard.waitFor();await page.keyboard.press('Escape');assert.equal(await page.locator('#knowledge-content').inputValue(),'保留原稿');
+  await page.locator('#knowledge-file').setInputFiles(replacement);await guard.getByRole('button',{name:'放弃并继续'}).click();await page.waitForFunction(()=>document.querySelector('#knowledge-content')?.value==='显式选择替换后的合成正文');assert.equal(await page.locator('#knowledge-name').inputValue(),'replacement.txt');assert.equal(state.writes.length,0);
+ });
+ await scenario('knowledge_file_read_order_and_new_typing_are_protected',async(page,state)=>{
+  await page.addInitScript(()=>{const original=File.prototype.text;File.prototype.text=async function(){await new Promise(r=>setTimeout(r,this.name.startsWith('slow')?650:40));return original.call(this);};});
+  await page.goto(`${origin.origin}/knowledge`);await page.locator('#knowledge-file').setInputFiles({name:'slow-a.txt',mimeType:'text/plain',buffer:Buffer.from('迟到的A')});await page.locator('#knowledge-file').setInputFiles({name:'fast-b.txt',mimeType:'text/plain',buffer:Buffer.from('应保留的B')});await page.waitForTimeout(850);assert.equal(await page.locator('#knowledge-content').inputValue(),'应保留的B');assert.equal(await page.locator('#knowledge-name').inputValue(),'fast-b.txt');
+  await page.locator('#knowledge-file').setInputFiles({name:'slow-c.txt',mimeType:'text/plain',buffer:Buffer.from('读取中的C')});await page.locator('#knowledge-content').fill('文件读取期间的新编辑');const guard=page.getByRole('dialog',{name:'保留未保存的编辑'});await guard.waitFor();await guard.getByRole('button',{name:'留在此页'}).click();assert.equal(await page.locator('#knowledge-content').inputValue(),'文件读取期间的新编辑');assert.equal(state.writes.length,0);
+ });
+ await scenario('knowledge_saved_document_is_not_resubmitted_when_list_refresh_fails',async(page,state)=>{
+  state.failKnowledgeAfterUpload=true;await page.goto(`${origin.origin}/knowledge`);await page.locator('#knowledge-name').fill('已持久化的资料');await page.locator('#knowledge-content').fill('列表刷新失败不等于提交失败');await page.getByRole('button',{name:/保存并分块/}).click();await page.getByText(/数据服务暂不可用/).waitFor();assert.equal(state.writes.length,1);assert.equal(await page.locator('#knowledge-content').inputValue(),'');assert.ok((await page.locator('.alert.success').innerText()).includes('文档已保存'));
+  state.knowledgeStatus=200;await page.getByRole('button',{name:'重新检查',exact:true}).click();await page.waitForTimeout(120);assert.equal(state.writes.length,1);assert.equal(await page.getByRole('button',{name:/保存并分块/}).isDisabled(),true);
+ });
  await scenario('trace_confirming_source_preserves_pair_draft_and_unlocks_pairing',async(page,state)=>{
   traceFixture(state);state.traceData.links[1].status='suggested';await page.goto(`${origin.origin}/projects/${A}/tests`);
   const trace=page.getByRole('region',{name:'需求到验证证据追踪'});
