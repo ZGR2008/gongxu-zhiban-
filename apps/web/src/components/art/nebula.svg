@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 480">
+  <defs>
+    <radialGradient id="cloud">
+      <stop stop-color="#8a2be2" stop-opacity=".75"/>
+      <stop offset=".25" stop-color="#8a2be2" stop-opacity=".63"/>
+      <stop offset=".45" stop-color="#8a2be2" stop-opacity=".4"/>
+      <stop offset=".65" stop-color="#8a2be2" stop-opacity=".16"/>
+      <stop offset=".85" stop-color="#8a2be2" stop-opacity=".03"/>
+      <stop offset="1" stop-color="#8a2be2" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <circle cx="240" cy="240" r="240" fill="url(#cloud)"/>
+</svg>

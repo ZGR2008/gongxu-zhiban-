@@ -1,0 +1,300 @@
+/* First skin preview is intentionally scoped to the Workspace hero. */
+.hero.hero--cosmic {
+  --cosmic-purple: #bc13fe;
+  --cosmic-cyan: #00e5ff;
+  min-height: 392px;
+  isolation: isolate;
+  border: 1px solid rgb(175 112 240 / 24%);
+  border-radius: 20px;
+  background: #0a0614;
+}
+
+.hero--cosmic .hero-copy {
+  flex: 1 1 57%;
+  min-width: 0;
+  padding: 48px 0 44px 44px;
+}
+
+.hero--cosmic .hero-kicker {
+  color: #bba5d4;
+  letter-spacing: 0.16em;
+}
+
+.hero--cosmic .hero-kicker > span {
+  background: var(--cosmic-cyan);
+  box-shadow: 0 0 12px rgb(0 229 255 / 42%);
+}
+
+.hero.hero--cosmic h2 {
+  margin-top: 27px;
+  color: #f5eeff;
+  font-size: clamp(27px, 2.7vw, 40px);
+  line-height: 1.5;
+  letter-spacing: -0.035em;
+}
+
+.hero.hero--cosmic h2 em { color: #d2b3ff; }
+.hero.hero--cosmic p { color: #b9adc9; }
+
+.hero.hero--cosmic .button.primary {
+  min-height: 44px;
+  margin-top: 28px;
+  border: 1px solid rgb(221 175 255 / 36%);
+  border-radius: 10px;
+  color: #fff;
+  background: linear-gradient(112deg, #8a2be2, #a125dd);
+  box-shadow: 0 5px 24px rgb(138 43 226 / 25%);
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+
+.hero.hero--cosmic .button.primary:focus-visible,
+.hero--cosmic .workspace-motion-toggle:focus-visible {
+  outline: 2px solid var(--cosmic-cyan);
+  outline-offset: 4px;
+}
+
+.hero--cosmic .workspace-visual {
+  position: relative;
+  z-index: 0;
+  display: block;
+  flex: 0 0 43%;
+  width: 43%;
+  min-width: 0;
+  overflow: visible;
+}
+
+.workspace-atmosphere {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.workspace-nebula {
+  position: absolute;
+  width: 430px;
+  height: 430px;
+  /* Cache rendered from art/nebula.svg; avoids rerasterizing its glow per frame. */
+  background: url('./art/nebula-cache.png') center / contain no-repeat;
+  opacity: 0.3;
+  animation: gx-nebula-drift 46s ease-in-out infinite alternate;
+}
+
+.workspace-nebula--one {
+  left: -60px;
+  top: -60px;
+}
+
+.workspace-nebula--two {
+  right: -70px;
+  bottom: -60px;
+  width: 360px;
+  height: 360px;
+  opacity: 0.24;
+  animation-duration: 61s;
+  animation-delay: -24s;
+  animation-direction: alternate-reverse;
+}
+
+.workspace-stars {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.workspace-star {
+  fill: #cfb6ff;
+  opacity: 0.55;
+  animation: gx-stars-shimmer 8s ease-in-out infinite alternate;
+}
+
+.workspace-star:nth-child(3n) {
+  fill: #b1e7f3;
+  animation-duration: 13s;
+  animation-delay: -6s;
+}
+
+.workspace-star:nth-child(3n + 1) { animation-duration: 11s; animation-delay: -3s; }
+
+.gx-planet {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: min(100%, 440px);
+  aspect-ratio: 1;
+  transform: translate(-50%, -46%);
+  isolation: isolate;
+  perspective: 900px;
+  pointer-events: none;
+}
+
+.gx-planet__sphere {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 2;
+  width: 51%;
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  /* An image background lets software renderers cache the fixed lighting. */
+  background: url('./art/planet.svg') center / contain no-repeat;
+}
+
+.gx-orbit {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: var(--size);
+  aspect-ratio: 1;
+  color: var(--light);
+  /* Keep the perspective transform separate from the animated rotation. */
+  transform: translate(-50%, -50%) rotateZ(var(--tilt)) rotateX(var(--inclination, 66deg));
+}
+
+.gx-orbit--outer {
+  --size: 94%;
+  --tilt: -24deg;
+  --duration: 44s;
+  --delay: -7s;
+  --direction: normal;
+  --light: #bc13fe;
+  --tail-offset: 10;
+}
+
+.gx-orbit--middle {
+  --size: 81%;
+  --tilt: 16deg;
+  --inclination: 70deg;
+  --duration: 58s;
+  --delay: -19s;
+  --direction: reverse;
+  --light: #00e5ff;
+  --tail-offset: 0;
+}
+
+.gx-orbit--inner {
+  --size: 69%;
+  --tilt: -42deg;
+  --duration: 36s;
+  --delay: -13s;
+  --direction: reverse;
+  --light: #c58aff;
+  --tail-offset: 0;
+}
+
+.gx-orbit--back { z-index: 1; }
+.gx-orbit--front { z-index: 3; }
+.gx-orbit__mask { position: absolute; inset: 0; }
+.gx-orbit--back .gx-orbit__mask { clip-path: inset(0 0 50% 0); }
+.gx-orbit--front .gx-orbit__mask { clip-path: inset(50% 0 0 0); }
+
+.gx-orbit__spin {
+  width: 100%;
+  height: 100%;
+  will-change: transform;
+  animation: gx-orbit-spin var(--duration) linear var(--delay) infinite;
+  animation-direction: var(--direction);
+}
+
+.gx-orbit__spin svg { display: block; width: 100%; height: 100%; }
+.gx-orbit__track { fill: none; stroke: currentColor; stroke-width: 0.8; opacity: 0.32; }
+.gx-orbit__trail { fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-dashoffset: var(--tail-offset); opacity: 0.9; }
+
+.workspace-visual__caption {
+  position: absolute;
+  left: 10px;
+  bottom: 25px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #aa92c4;
+  font: 9px/1.5 ui-monospace, SFMono-Regular, Consolas, monospace;
+  letter-spacing: 0.12em;
+  pointer-events: none;
+}
+
+.workspace-visual__caption > span:first-child {
+  width: 13px;
+  height: 1px;
+  background: #00e5ff;
+}
+
+.workspace-visual__arrow { color: #d1b5ed; }
+
+.hero--cosmic .workspace-motion-toggle {
+  position: absolute;
+  right: 22px;
+  bottom: 19px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 88px;
+  min-height: 32px;
+  padding: 7px 11px;
+  border: 1px solid rgb(185 135 235 / 25%);
+  border-radius: 8px;
+  background: rgb(36 18 57 / 65%);
+  color: #d5c4e8;
+  font-size: 10px;
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+
+.workspace-visual[data-motion='paused'] *,
+.workspace-visual[data-motion='paused'] *::before,
+.workspace-visual[data-motion='paused'] *::after {
+  animation-play-state: paused;
+}
+
+@media (hover: hover) {
+  .hero.hero--cosmic .button.primary:hover,
+  .hero--cosmic .workspace-motion-toggle:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 28px rgb(188 19 254 / 30%);
+  }
+}
+
+@keyframes gx-orbit-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes gx-nebula-drift {
+  from { transform: translate(-8px, 6px) scale(0.95); }
+  to { transform: translate(16px, -12px) scale(1.1); }
+}
+
+@keyframes gx-stars-shimmer {
+  from { opacity: 0.3; }
+  to { opacity: 0.78; }
+}
+
+@media (max-width: 1100px) {
+  .hero--cosmic .hero-copy { padding: 38px 0 38px 30px; }
+  .hero.hero--cosmic h2 { font-size: clamp(25px, 2.5vw, 34px); }
+  .hero--cosmic .workspace-visual { flex-basis: 40%; width: 40%; }
+  .workspace-visual__caption { display: none; }
+}
+
+@media (max-width: 650px) {
+  .hero.hero--cosmic { flex-direction: column; min-height: 0; border-radius: 16px; }
+  .hero--cosmic .hero-copy { flex: none; padding: 30px 24px 0; }
+  .hero.hero--cosmic h2 { margin-top: 20px; font-size: 25px; }
+  .hero.hero--cosmic .button.primary { margin-top: 22px; }
+  .hero--cosmic .workspace-visual { flex: none; width: 100%; height: 260px; }
+  .gx-planet { top: 44%; width: min(100%, 310px); transform: translate(-50%, -50%); }
+  .gx-orbit--inner { display: none; }
+  .workspace-nebula { animation: none; }
+  .workspace-nebula--two { display: none; }
+  .workspace-visual__caption { display: flex; left: 24px; }
+  .hero--cosmic .workspace-motion-toggle { right: 18px; bottom: 14px; min-height: 44px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .workspace-visual *,
+  .workspace-visual *::before,
+  .workspace-visual *::after { animation: none; will-change: auto; }
+  .hero--cosmic .workspace-motion-toggle { display: none; }
+  .hero.hero--cosmic .button.primary { transition: none; }
+  .hero.hero--cosmic .button.primary:hover { transform: none; }
+}

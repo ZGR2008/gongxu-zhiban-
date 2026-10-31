@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { Agent, Knowledge, Growth } from './Modules';
 import { CodeReview, Tests, Documents } from './Practice';
+import { WorkspacePlanet } from './components/WorkspacePlanet';
 
 type Project = { id: string; name: string; description: string; status: string; createdAt: string; updatedAt: string };
 type Requirement = { id: string; version: number; content: unknown; status: string; createdAt: string };
@@ -181,7 +182,15 @@ export default function App() {
       <header className="topbar"><div><div className="eyebrow">WORKSPACE <span>/</span> {projectId ? 'PROJECT' : 'OVERVIEW'}</div><h1>{pageTitle}</h1></div><ConnectionStatus connection={connection} onCheck={() => void checkHealth()} /></header>
       <div className="content">
         {!projectId && !isKnowledge && !isGrowth && <>
-          <section className="hero"><div className="hero-copy"><div className="hero-kicker"><span /> SOFTWARE ENGINEERING · AI</div><h2>让每个想法，<br /><em>走完真正的开发流程。</em></h2><p>从需求到交付，在真实项目中练习软件工程。<br className="desktop-break" />你的每一次思考，都将成为下一步的起点。</p><button type="button" className="button primary" onClick={() => setShowCreate(true)}>创建实训项目 <span>↗</span></button></div><div className="hero-visual" aria-hidden="true"><div className="orbit orbit-one" /><div className="orbit orbit-two" /><div className="orbit-center"><span>✳</span><small>IDEA TO<br />IMPACT</small></div><span className="orbit-label label-one">01 / 需求</span><span className="orbit-label label-two">02 / 规划</span><span className="orbit-label label-three">03 / 实践</span><span className="visual-index">GX—01<br />AI WORKFLOW</span></div></section>
+          <section className={isList ? 'hero' : 'hero hero--cosmic'}>
+            <div className="hero-copy">
+              <div className="hero-kicker"><span /> SOFTWARE ENGINEERING · AI</div>
+              <h2>让每个想法，<br /><em>走完真正的开发流程。</em></h2>
+              <p>从需求到交付，在真实项目中练习软件工程。<br className="desktop-break" />你的每一次思考，都将成为下一步的起点。</p>
+              <button type="button" className="button primary" onClick={() => setShowCreate(true)}>创建实训项目 <span>↗</span></button>
+            </div>
+            {isList ? <div className="hero-visual" aria-hidden="true"><div className="orbit orbit-one" /><div className="orbit orbit-two" /><div className="orbit-center"><span>✳</span><small>IDEA TO<br />IMPACT</small></div><span className="orbit-label label-one">01 / 需求</span><span className="orbit-label label-two">02 / 规划</span><span className="orbit-label label-three">03 / 实践</span><span className="visual-index">GX—01<br />AI WORKFLOW</span></div> : <WorkspacePlanet />}
+          </section>
           <div className="section-heading"><div><div className="eyebrow">YOUR PROJECTS <span>/</span> 实训项目</div><h2>{isList ? '全部项目' : '继续你的实践'}</h2><p>创建项目，将想法一步步转化为可交付的成果。</p></div>{!isList && <a href="/projects" onClick={e => link(e, '/projects')} className="text-link">查看全部 <span>→</span></a>}</div>
         </>}
         {error && <div className="alert error" role="alert"><span>!</span><div><strong>操作未完成</strong><p>{error}</p></div><button type="button" onClick={() => projectId ? void loadDetail(projectId) : void loadProjects()}>重试</button></div>}
