@@ -176,7 +176,7 @@ try{
   const currentCase=(await call('GET',`${root}/test-cases`)).json().cases[0];let interleaved=false;
   const wrapper={connect:async()=>{const client=await pool.connect();return {release:()=>client.release(),query:async(sql,values)=>{
    const result=await client.query(sql,values);
-   if(sql.startsWith('SELECT c.title')&&!interleaved){interleaved=true;await pool.query("UPDATE practice_test_cases SET result='passed',execution_note='合成并发登记，不代表自动执行',executed_at=now() WHERE id=$1 AND project_id=$2",[currentCase.id,project]);}
+   if(sql.includes('FROM practice_test_cases c JOIN projects p')&&!interleaved){interleaved=true;await pool.query("UPDATE practice_test_cases SET result='passed',execution_note='合成并发登记，不代表自动执行',executed_at=now() WHERE id=$1 AND project_id=$2",[currentCase.id,project]);}
    return result;
   }};}};
   const context=await new PgDocumentStore(wrapper).getContext(user,project,secondVersion);assert.equal(interleaved,true);assert.equal(context.testCounts.passed,0);assert.equal(context.snapshot.caseRevision,before.caseRevision);

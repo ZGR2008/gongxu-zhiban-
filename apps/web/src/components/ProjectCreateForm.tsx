@@ -8,10 +8,18 @@ type Api=<T>(path:string,options?:RequestInit)=>Promise<T>;
 export function ProjectCreateForm({request,onCreated,onOpen,onClose}:{request:Api;onCreated:(project:Project)=>void;onOpen:(project:Project)=>void;onClose:()=>void}){
   const [name,setName]=useState(''),[description,setDescription]=useState('');
   const [busy,setBusy]=useState(false),[error,setError]=useState(''),[notice,setNotice]=useState('');
+  const [openAfterCommit,setOpenAfterCommit]=useState<Project|null>(null);
   const fields=useRef({name,description});fields.current={name,description};
   const pending=useRef<Promise<Project|null>|null>(null),mounted=useRef(true),submitting=useRef(false);
   const {protect}=useEditGuard();
   useEffect(()=>{mounted.current=true;return()=>{mounted.current=false;};},[]);
+  // Navigation consults the shared edit guard. Let the successful clear render
+  // first so that guard sees the committed form state, not the previous draft.
+  useEffect(()=>{
+    if(!openAfterCommit)return;
+    setOpenAfterCommit(null);
+    if(mounted.current&&!fields.current.name&&!fields.current.description)onOpen(openAfterCommit);
+  },[openAfterCommit,onOpen]);
 
   function persist():Promise<Project|null>{
     if(pending.current)return pending.current;
@@ -38,8 +46,8 @@ export function ProjectCreateForm({request,onCreated,onOpen,onClose}:{request:Ap
   async function submit(event:FormEvent){
     event.preventDefault();if(submitting.current)return;
     submitting.current=true;
-    try{const project=await persist();await new Promise<void>(resolve=>requestAnimationFrame(()=>resolve()));
-      if(project&&mounted.current&&!fields.current.name&&!fields.current.description)onOpen(project);
+    try{const project=await persist();
+      if(project&&mounted.current&&!fields.current.name&&!fields.current.description)setOpenAfterCommit(project);
     }finally{submitting.current=false;}
   }
   return <section className="editor-panel" aria-labelledby="create-title">

@@ -10,11 +10,13 @@ import {createRequire} from 'node:module';
 // Only this browser sees it; no checkout, source overwrite, DB or external calls.
 const knowledgeBaseline=process.argv.find(arg=>arg.startsWith('--knowledge-baseline='))?.split('=')[1];
 const workspaceBaseline=process.argv.find(arg=>arg.startsWith('--workspace-baseline='))?.split('=')[1];
-const baselineCommit=knowledgeBaseline??workspaceBaseline;
-const baselineSource=workspaceBaseline?'App.tsx':'Modules.tsx';
+const creationBaseline=process.argv.find(arg=>arg.startsWith('--creation-baseline='))?.split('=')[1];
+const baselineCommit=knowledgeBaseline??workspaceBaseline??creationBaseline;
+const baselineSource=workspaceBaseline?'App.tsx':creationBaseline?'components/ProjectCreateForm.tsx':'Modules.tsx';
+const baselineFolder=creationBaseline?'components/':'';
 let baselineModule;
 if(baselineCommit){
- if((knowledgeBaseline&&workspaceBaseline)||!/^[a-f0-9]{7,40}$/.test(baselineCommit)||!process.argv.some(arg=>arg.startsWith(workspaceBaseline?'--case=session_':'--case=knowledge_')))throw Error('Historical reproduction requires a commit hash and matching case filter');
+ if([knowledgeBaseline,workspaceBaseline,creationBaseline].filter(Boolean).length!==1||!/^[a-f0-9]{7,40}$/.test(baselineCommit)||!process.argv.some(arg=>arg.startsWith(workspaceBaseline?'--case=session_':creationBaseline?'--case=project_creat':'--case=knowledge_')))throw Error('Historical reproduction requires a commit hash and matching case filter');
  const ts=createRequire(new URL('../apps/web/package.json',import.meta.url))('typescript');
  const source=execFileSync('git',['show',`${baselineCommit}:apps/web/src/${baselineSource}`],{cwd:new URL('../',import.meta.url),encoding:'utf8'});
  baselineModule=ts.transpileModule(source,{compilerOptions:{jsx:ts.JsxEmit.ReactJSX,target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ESNext}}).outputText.replace(/import \{([^}]+)\} from ["'](react(?:\/jsx-runtime)?)["'];/g,(_match,bindings,module)=>{
@@ -24,7 +26,7 @@ if(baselineCommit){
  // Match Vite's canonical component URLs so React contexts are not instantiated
  // twice by extensionless historical imports versus current transformed imports.
  baselineModule=baselineModule.replace(/(["'])\.\/([^"'\n]+)\1/g,(original,quote,relative)=>{
-  const target=['','.tsx','.ts'].map(suffix=>relative+suffix).find(file=>existsSync(new URL('../apps/web/src/'+file,import.meta.url)));
+  const target=['','.tsx','.ts'].map(suffix=>baselineFolder+relative+suffix).find(file=>existsSync(new URL('../apps/web/src/'+file,import.meta.url)));
   return target?`${quote}/src/${target}${quote}`:original;
  });
 }
@@ -41,7 +43,7 @@ const directory = new URL(`../.runtime/reliability-ui-${randomUUID()}/`,import.m
 await mkdir(directory,{recursive:true});
 const engine=process.argv.find(arg=>arg.startsWith('--engine='))?.slice(9)??'chromium';
 if(!['chromium','firefox','webkit'].includes(engine))throw Error('Unsupported browser engine');
-const report={scope:'controlled_browser_responses',browserEngine:engine,historicalKnowledgeModule:knowledgeBaseline??null,historicalWorkspaceModule:workspaceBaseline??null,realDatabase:false,realModel:false,checks:[],startedAt:new Date().toISOString()};
+const report={scope:'controlled_browser_responses',browserEngine:engine,historicalKnowledgeModule:knowledgeBaseline??null,historicalWorkspaceModule:workspaceBaseline??null,historicalProjectCreationModule:creationBaseline??null,realDatabase:false,realModel:false,checks:[],startedAt:new Date().toISOString()};
 let browser;
 try{
  browser=await ({chromium,firefox,webkit}[engine]).launch({headless:true,timeout:30000,...(engine==='chromium'?{channel:process.env.SMOKE_BROWSER_CHANNEL || (process.platform==='win32'?'msedge':undefined)}:{})});report.browserVersion=browser.version();
@@ -235,6 +237,14 @@ try{
   await page.goBack();const guard=page.getByRole('dialog',{name:'保留未保存的编辑'});await guard.waitFor();await guard.getByRole('button',{name:'留在此页'}).click();assert.ok(page.url().endsWith('/projects'));assert.equal(await page.locator('#name').inputValue(),'返回时仍保留的项目');
   await page.getByRole('button',{name:'关闭',exact:true}).click();await guard.waitFor();await page.keyboard.press('Escape');assert.equal(await page.locator('#name').inputValue(),'返回时仍保留的项目');await page.getByRole('button',{name:'关闭',exact:true}).click();await guard.getByRole('button',{name:'放弃并继续'}).click();await page.locator('#name').waitFor({state:'hidden'});
   await page.getByRole('button',{name:'创建实训项目'}).click();assert.equal(await page.locator('#name').inputValue(),'');
+ });
+ await scenario('project_create_navigation_waits_for_committed_clear_not_a_frame',async(page,state)=>{
+  await page.goto(`${origin.origin}/dashboard`);await page.getByRole('button',{name:'创建实训项目'}).click();await page.locator('#name').fill('保存状态提交后进入 · 合成');
+  // A legal frame/React ordering observed in WebKit is made deterministic here:
+  // the next frame callback runs before React commits the async save result.
+  await page.locator('#name').evaluate(input=>{const original=window.requestAnimationFrame;window.requestAnimationFrame=callback=>{window.requestAnimationFrame=original;queueMicrotask(()=>callback(performance.now()));return 0;};input.form.dispatchEvent(new Event('submit',{bubbles:true,cancelable:true}));});
+  await page.waitForURL('**/projects/*');
+  assert.equal(state.writes.filter(write=>write.path==='/projects').length,1);assert.equal(await page.getByRole('dialog',{name:'保留未保存的编辑'}).count(),0);await page.locator('.detail-heading h2').filter({hasText:'保存状态提交后进入 · 合成'}).waitFor();
  });
  await scenario('session_new_account_cannot_see_previous_project_cache',async(page,state)=>{
   await page.goto(`${origin.origin}/dashboard`);await page.locator('.project-explorer').getByText('受控项目 A',{exact:true}).waitFor();
