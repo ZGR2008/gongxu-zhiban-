@@ -4,6 +4,7 @@ import { authorizeRequest } from '../project-routes.js';
 import type { ProjectStore } from '../project-store.js';
 import { AiError, aiErrorStatus, completeChat, type AiConfig, type AiMessage } from '../ai/model.js';
 import { documentTypes, type DocumentStore, type DocumentType } from './store.js';
+import { requirementGenerationIssue } from '../requirement-content.js';
 
 const projectParams = z.object({ projectId: z.string().uuid() });
 const documentParams = projectParams.extend({ id: z.string().uuid() });
@@ -35,6 +36,8 @@ export async function registerDocumentRoutes(app: FastifyInstance, projects?: Pr
     const requirements = await projects!.listRequirements(ctx.user.id,ctx.project.id);
     const requirement = requirements?.filter(r => r.status === 'confirmed').sort((a,b) => b.version-a.version)[0];
     if (!requirement) return reply.code(409).send({ error:'confirmed_requirement_required' });
+    const boundary = requirementGenerationIssue(requirement.content);
+    if (boundary) return reply.code(413).send(boundary);
     const now=Date.now(); for (const [key,value] of limits) if (value.expires <= now) limits.delete(key);
     const limit=limits.get(ctx.user.id) ?? { count:0, expires:now+60000 };
     if (limit.count >= 5) return reply.code(429).send({ error:'ai_rate_limited' });

@@ -25,7 +25,7 @@ export function createEmbeddingApp(getEngine: () => EmbeddingEngine | undefined,
     if (input.reduce((total, item) => total + item.length, 0) > 32_000) return reply.code(413).send({ error: 'batch_too_large' });
     const engine = getEngine();
     if (engine?.state !== 'ready') return reply.code(503).send({ error: hasFailed() ? 'model_load_failed' : 'model_loading' });
-    if (busy) return reply.code(429).send({ error: 'embedding_busy' });
+    if (busy) return reply.header('Retry-After','1').code(429).send({ error: 'embedding_busy' });
     busy = true;
     try {
       const vectors = await engine.embed(input);

@@ -1,6 +1,7 @@
 import type { Pool } from 'pg';
 import { chunkPages, type TextPage } from './chunk.js';
-import { createEmbeddings, type EmbeddingConfig, EmbeddingError } from './embeddings.js';
+import { createEmbeddings, type EmbeddingConfig, type EmbeddingOptions, EmbeddingError } from './embeddings.js';
+import { aborted } from './embedding-queue.js';
 import { searchKnowledge } from './search.js';
 
 export function loadEmbeddingConfig(env: NodeJS.ProcessEnv = process.env): EmbeddingConfig | undefined {
@@ -46,18 +47,19 @@ export async function savePages(pool: Pool, ownerId: string, name: string, media
 }
 
 /** Build vectors for saved chunks; failed calls leave the text intact. */
-export async function indexDocument(pool: Pool, ownerId: string, id: string, config: EmbeddingConfig) {
+export async function indexDocument(pool: Pool, ownerId: string, id: string, config: EmbeddingConfig, options:EmbeddingOptions={}) {
   const doc = await pool.query(`SELECT id FROM knowledge_documents WHERE id=$1 AND owner_id=$2`, [id, ownerId]);
   if (!doc.rowCount) return null;
   const result = await pool.query(`SELECT id,content FROM knowledge_chunks WHERE document_id=$1 ORDER BY position`, [id]);
   if (!result.rows.length || result.rows.length > 250) throw new Error('invalid_document');
   const vectors: number[][] = [];
   for (let offset = 0; offset < result.rows.length; offset += 32) {
-    vectors.push(...await createEmbeddings(result.rows.slice(offset, offset + 32).map((row) => row.content as string), config));
+    vectors.push(...await createEmbeddings(result.rows.slice(offset, offset + 32).map((row) => row.content as string), config,fetch,options));
   }
   if (vectors.some((vector) => vector.length !== vectors[0].length)) throw new EmbeddingError('Inconsistent embedding dimensions');
   const client = await pool.connect();
   try {
+    if(options.signal?.aborted)throw aborted(options.signal);
     await client.query('BEGIN');
     const owned = await client.query('SELECT id FROM knowledge_documents WHERE id=$1 AND owner_id=$2 FOR UPDATE', [id, ownerId]);
     if (!owned.rowCount) { await client.query('ROLLBACK'); return null; }
@@ -65,14 +67,16 @@ export async function indexDocument(pool: Pool, ownerId: string, id: string, con
       await client.query(`UPDATE knowledge_chunks SET embedding_model=$3,embedding=$4::vector WHERE id=$1 AND document_id=$2`,
         [result.rows[index].id, id, modelId(config), `[${vectors[index].join(',')}]`]);
     }
+    if(options.signal?.aborted)throw aborted(options.signal);
     await client.query(`UPDATE knowledge_documents SET status='ready' WHERE id=$1 AND owner_id=$2`, [id, ownerId]);
     await client.query('COMMIT');
     return { id, chunks: result.rows.length, status: 'ready' };
   } catch (error) { await client.query('ROLLBACK'); throw error; } finally { client.release(); }
 }
 
-export async function retrieveKnowledge(pool: Pool, ownerId: string, question: string, config: EmbeddingConfig) {
-  const [vector] = await createEmbeddings([question], config);
+export async function retrieveKnowledge(pool: Pool, ownerId: string, question: string, config: EmbeddingConfig, options:EmbeddingOptions={}) {
+  const [vector] = await createEmbeddings([question], config,fetch,options);
+  if(options.signal?.aborted)throw aborted(options.signal);
   return searchKnowledge({ query: async (sql, values) => pool.query(sql, values) }, ownerId, modelId(config), vector);
 }
 

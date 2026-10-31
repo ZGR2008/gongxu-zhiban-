@@ -47,7 +47,15 @@ try {
 
     function Start-ProjectService([string]$Name, [int]$Port, [string]$Directory, [string]$Arguments) {
         $metadataPath = Join-Path $runtimeRoot "$Name-process.json"
-        $listener = Get-NetTCPConnection -State Listen -LocalPort $Port -ErrorAction SilentlyContinue
+        # A permission/provider failure is not evidence that a port is unused.
+        try { $listener = Get-NetTCPConnection -State Listen -ErrorAction Stop | Where-Object { $_.LocalPort -eq $Port } | Select-Object -First 1 }
+        catch { throw 'Local listener ownership could not be inspected. Start from a normal Windows user session; no service metadata was replaced.' }
+        if (-not $listener) {
+            $probe = New-Object System.Net.Sockets.TcpClient
+            $portOpen = $false
+            try { $portOpen = $probe.ConnectAsync('127.0.0.1', $Port).Wait(500) -and $probe.Connected } catch { $portOpen = $false } finally { $probe.Dispose() }
+            if ($portOpen) { throw 'The service port is reachable but its owner is not visible. Startup stopped without replacing service metadata.' }
+        }
         if ($listener -and $Name -eq 'api' -and $RestartApi) {
             $owned = $false
             foreach ($candidate in @($metadataPath, (Join-Path $workspaceRoot ".setup\runtime\$Name-process.json"))) {
@@ -67,6 +75,10 @@ try {
         if ($listener) { Write-Output "$Name already has a listener; checking readiness separately."; return }
         $stamp = Get-Date -Format 'yyyyMMdd-HHmmss'
         $service = Start-Process -FilePath $nodeCommand.Source -ArgumentList $Arguments -WorkingDirectory $Directory -WindowStyle Hidden -PassThru -RedirectStandardOutput (Join-Path $runtimeRoot "$Name-$stamp.stdout.log") -RedirectStandardError (Join-Path $runtimeRoot "$Name-$stamp.stderr.log")
+        Start-Sleep -Milliseconds 500
+        $service.Refresh()
+        if ($service.HasExited) { throw 'A service exited during startup. Existing process metadata was preserved; inspect the local service log.' }
+        if (Test-Path -LiteralPath $metadataPath) { Copy-Item -LiteralPath $metadataPath -Destination (Join-Path $runtimeRoot "$Name-process-$stamp.backup.json") }
         [ordered]@{ processId=$service.Id; startedAt=$service.StartTime.ToString('o'); workingDirectory=$Directory } | ConvertTo-Json | Set-Content -LiteralPath $metadataPath -Encoding UTF8
         Write-Output "$Name started; readiness has not yet been confirmed."
     }

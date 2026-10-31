@@ -7,6 +7,7 @@ import type { EmbeddingConfig } from './embeddings.js';
 import { EmbeddingError, indexDocument, retrieveKnowledge, savePages, saveText } from './service.js';
 import { AiError, aiErrorStatus, completeChat, type AiConfig } from '../ai/model.js';
 import { extractPdf, pdfParserAvailable, PdfError } from './pdf.js';
+import { listEmbeddingActivities, openEmbeddingActivity } from './activity.js';
 
 const docInput = z.object({ name: z.string().trim().min(1).max(160), text: z.string().trim().min(1).max(200_000) });
 const queryInput = z.object({ query: z.string().trim().min(1).max(4000) });
@@ -14,6 +15,11 @@ export async function registerKnowledgeRoutes(app: FastifyInstance, store?: Proj
   deps: { retrieve?: typeof retrieveKnowledge; complete?: typeof completeChat } = {}) {
   const retrieve = deps.retrieve ?? retrieveKnowledge;
   const complete = deps.complete ?? completeChat;
+  app.get('/knowledge/activity',async(request,reply)=>{
+    if(!store)return reply.code(503).send({error:'database_not_configured'});
+    const user=await authorizeRequest(request,store);if(!user)return reply.code(401).send({error:'unauthorized'});
+    return {activities:listEmbeddingActivities(user.id)};
+  });
   // Process-local budget; production deployments must also enforce a shared gateway limit.
   const limits = new Map<string, { search: number; index: number; save: number; active: number; expires: number }>();
   function acquire(userId: string, kind: 'search' | 'index' | 'save'): (() => void) | undefined {
@@ -48,8 +54,9 @@ export async function registerKnowledgeRoutes(app: FastifyInstance, store?: Proj
     const params = z.object({ id: z.string().uuid() }).safeParse(request.params);
     if (!params.success) return reply.code(400).send({ error: 'invalid_input' });
     const release = acquire(user.id, 'index'); if (!release) return reply.code(429).send({ error: 'knowledge_rate_limited' });
-    try { const result = await indexDocument(pool, user.id, params.data.id, embedding); return result ?? reply.code(404).send({ error: 'not_found' }); }
-    catch (error) { if (error instanceof EmbeddingError) return reply.code(502).send({ error: 'embedding_provider_error' }); if (error instanceof Error && error.message === 'invalid_document') return reply.code(400).send({ error: 'invalid_document' }); throw error; }
+    const activity=openEmbeddingActivity(user.id,'index',request,reply);
+    try { const result = await indexDocument(pool, user.id, params.data.id, embedding,activity.options); activity.finish(result?undefined:new Error('not_found')); return result ?? reply.code(404).send({ error: 'not_found' }); }
+    catch (error) { activity.finish(error); if (error instanceof EmbeddingError) return reply.code(503).send({ error: error.code }); if (error instanceof Error && error.message === 'invalid_document') return reply.code(400).send({ error: 'invalid_document' }); throw error; }
     finally { release(); }
   });
   app.post('/knowledge/pdf', { bodyLimit: 4_200_000 }, async (request, reply) => {
@@ -73,8 +80,9 @@ export async function registerKnowledgeRoutes(app: FastifyInstance, store?: Proj
     if (!embedding) return reply.code(503).send({ error: 'embedding_not_configured' });
     const input = queryInput.safeParse(request.body); if (!input.success) return reply.code(400).send({ error: 'invalid_input' });
     const release = acquire(user.id, 'search'); if (!release) return reply.code(429).send({ error: 'knowledge_rate_limited' });
-    try { const hits = await retrieve(pool, user.id, input.data.query, embedding); return { hits, hasEvidence: hits.length > 0 }; }
-    catch (error) { if (error instanceof EmbeddingError) return reply.code(502).send({ error: 'embedding_provider_error' }); throw error; }
+    const activity=openEmbeddingActivity(user.id,'search',request,reply);
+    try { const hits = await retrieve(pool, user.id, input.data.query, embedding,activity.options); activity.finish(); return { hits, hasEvidence: hits.length > 0 }; }
+    catch (error) { activity.finish(error); if (error instanceof EmbeddingError) return reply.code(503).send({ error: error.code }); throw error; }
     finally { release(); }
   });
   app.post('/knowledge/answer', async (request, reply) => {
@@ -84,8 +92,10 @@ export async function registerKnowledgeRoutes(app: FastifyInstance, store?: Proj
     if (!ai) return reply.code(503).send({ error: 'ai_not_configured' });
     const input = queryInput.safeParse(request.body); if (!input.success) return reply.code(400).send({ error: 'invalid_input' });
     const release = acquire(user.id, 'search'); if (!release) return reply.code(429).send({ error: 'knowledge_rate_limited' });
+    const activity=openEmbeddingActivity(user.id,'answer',request,reply);
     try {
-      const hits = await retrieve(pool, user.id, input.data.query, embedding);
+      const hits = await retrieve(pool, user.id, input.data.query, embedding,activity.options);
+      activity.finish();
       if (!hits.length) return { answer: null, sources: [], reason: 'no_evidence' };
       const excerpts = hits.map((hit) => ({ id: hit.id, text: hit.content }));
       const raw = await complete(ai, [
@@ -98,6 +108,7 @@ export async function registerKnowledgeRoutes(app: FastifyInstance, store?: Proj
       if (!parsed.success || parsed.data.citations.some((id) => !hits.some((hit) => hit.id === id))) return reply.code(502).send({ error: 'invalid_ai_citations' });
       return { answer: parsed.data.answer, sources: hits.filter((hit) => parsed.data.citations.includes(hit.id)), reason: null };
     } catch (error) {
+      activity.finish(error);
       if (error instanceof EmbeddingError) return reply.code(502).send({ error: 'embedding_provider_error' });
       if (error instanceof AiError) return reply.code(aiErrorStatus(error.code)).send({ error: error.code });
       throw error;
