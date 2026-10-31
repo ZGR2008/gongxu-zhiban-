@@ -41,7 +41,7 @@ test('growth validates requested scope and never derives next actions from histo
 test('task update checks authentication, validates status and owner, then audits atomically', async t => {
   const queries: { sql: string; values?: unknown[] }[] = [];
   let owned = true; let released = 0;
-  const client = { query: async (sql: string, values?: unknown[]) => { queries.push({ sql, values }); return { rows: sql.startsWith('SELECT') && owned ? [{ id: task, projectId: project, title: '任务', status: 'todo' }] : [] }; }, release: () => { released++; } };
+  const client = { query: async (sql: string, values?: unknown[]) => { queries.push({ sql, values }); return { rows: sql.startsWith('SELECT') && owned ? [{ id: task, projectId: project, title: '任务', status: 'todo', requirementVersionId: 'current', currentRequirementId: 'current' }] : [] }; }, release: () => { released++; } };
   const pool = { connect: async () => client } as unknown as Pool;
   const app = Fastify(); await registerGrowthRoutes(app, store, pool); t.after(() => app.close());
   const url = `/projects/${project}/tasks/${task}`;
@@ -53,17 +53,26 @@ test('task update checks authentication, validates status and owner, then audits
   owned = true; queries.length = 0;
   const response = await app.inject({ method: 'PATCH', url, headers: auth, payload: { status: 'done' } });
   assert.equal(response.statusCode, 200); assert.equal(response.json().task.status, 'done');
-  assert.deepEqual(queries.map(q => q.sql.split(' ')[0]), ['BEGIN', 'SELECT', 'UPDATE', 'INSERT', 'COMMIT']);
-  assert.deepEqual(queries[1].values, [task, project, owner]);
-  assert.deepEqual(queries[3].values, [task, project, owner, 'todo', 'done']); assert.equal(released, 2);
+  assert.deepEqual(queries.map(q => q.sql.split(' ')[0]), ['BEGIN', 'SELECT', 'SELECT', 'UPDATE', 'INSERT', 'COMMIT']);
+  assert.equal(queries[1].sql,'SELECT id FROM projects WHERE id=$1 AND owner_id=$2 FOR UPDATE');assert.deepEqual(queries[1].values,[project,owner]);
+  assert.deepEqual(queries[2].values, [task, project, owner]);
+  assert.deepEqual(queries[4].values, [task, project, owner, 'todo', 'done']); assert.equal(released, 2);
 });
 
 test('audit failure rolls back task update and missing database returns 503', async t => {
   const writes: string[] = [];
-  const client = { query: async (sql: string) => { writes.push(sql); if (sql.startsWith('INSERT')) throw new Error('audit failed'); return { rows: sql.startsWith('SELECT') ? [{ id: task, projectId: project, status: 'todo' }] : [] }; }, release: () => {} };
+  const client = { query: async (sql: string) => { writes.push(sql); if (sql.startsWith('INSERT')) throw new Error('audit failed'); return { rows: sql.startsWith('SELECT') ? [{ id: task, projectId: project, status: 'todo',requirementVersionId:'current',currentRequirementId:'current' }] : [] }; }, release: () => {} };
   const app = Fastify(); await registerGrowthRoutes(app, store, { connect: async () => client } as unknown as Pool); t.after(() => app.close());
   assert.equal((await app.inject({ method: 'PATCH', url: `/projects/${project}/tasks/${task}`, headers: auth, payload: { status: 'done' } })).statusCode, 503);
   assert.equal(writes.at(-1), 'ROLLBACK'); assert.ok(!writes.includes('COMMIT'));
   const noDb = Fastify(); await registerGrowthRoutes(noDb); t.after(() => noDb.close());
   assert.equal((await noDb.inject({ url: '/growth', headers: auth })).statusCode, 503);
+});
+
+test('a task from a historical requirement cannot be changed or add an audit event',async t=>{
+  const queries:string[]=[];
+  const client={query:async(sql:string)=>{queries.push(sql);return {rows:sql.startsWith('SELECT')?[{id:task,projectId:project,status:'todo',requirementVersionId:'old',currentRequirementId:'new'}]:[]};},release:()=>{}};
+  const app=Fastify();await registerGrowthRoutes(app,store,{connect:async()=>client} as unknown as Pool);t.after(()=>app.close());
+  const response=await app.inject({method:'PATCH',url:`/projects/${project}/tasks/${task}`,headers:auth,payload:{status:'done'}});
+  assert.equal(response.statusCode,409);assert.equal(response.json().error,'task_requirement_outdated');assert.equal(queries.at(-1),'ROLLBACK');assert.ok(!queries.some(sql=>/^(UPDATE|INSERT)/.test(sql)));
 });

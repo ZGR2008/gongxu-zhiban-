@@ -112,6 +112,10 @@ async function scenario(name,work){
   else if(path==='/knowledge/text'||path==='/knowledge/pdf'){state.writes.push({path,body:route.request().postDataJSON()});await new Promise(r=>setTimeout(r,state.uploadDelay??0));status=state.failUpload?503:201;body=state.failUpload?{error:'database_unavailable'}:{id:RA,status:'awaiting_embedding',chunks:1};if(state.failKnowledgeAfterUpload)state.knowledgeStatus=503;}
   else if(path==='/knowledge/activity')body={activities:[]};
   else if(path==='/knowledge/search'){state.searches++;await new Promise(r=>setTimeout(r,state.searchDelay));body={hits:[{id:RA,document_name:'取消后重试资料',content:'成功检索的合成片段',page:1,distance:0.1}]};}
+  else if(/\/tasks\/[^/]+$/.test(path)&&method==='PATCH'){
+   const input=route.request().postDataJSON();state.writes.push({path,body:input});
+   if(state.taskUpdateConflict){status=409;body={error:'task_requirement_outdated'};}else{state.tasks=state.tasks.map(task=>path.endsWith('/'+task.id)?{...task,status:input.status}:task);body={task:state.tasks.find(task=>path.endsWith('/'+task.id))};}
+  }
   else if(path.endsWith('/tasks'))body={tasks:state.tasks};
   else if(path.endsWith('/code-draft')&&method==='GET'){body={draft:state.codeDraft??null};await new Promise(r=>setTimeout(r,state.codeDraftReadDelay??0));}
   else if(path.endsWith('/code-draft')&&method==='PUT'){
@@ -458,6 +462,15 @@ try{
   await page.goto(`${origin.origin}/projects/${A}/agent`);await page.getByText('当前待开始任务',{exact:true}).waitFor();assert.equal(await page.getByText('历史已完成任务',{exact:true}).count(),0);
   assert.equal(await page.getByLabel('当前待开始任务状态').isEnabled(),true);
   await page.getByLabel('任务来源需求版本').selectOption(RB);await page.getByText('历史已完成任务',{exact:true}).waitFor();assert.equal(await page.getByLabel('历史已完成任务状态').isDisabled(),true);assert.equal(await page.getByText('当前待开始任务',{exact:true}).count(),0);
+ });
+ await scenario('agent_stale_task_write_is_disabled_and_refresh_preserves_review_choice',async(page,state)=>{
+  const old={id:RA,version:1,status:'confirmed',content:'初始确认需求',createdAt:now};state.detailOverride={project:project(A),requirements:[old]};
+  state.runs=[{id:RA,requirementVersionId:RA,status:'awaiting_review',createdAt:now,plan:{tasks:[]},errorCode:null}];state.tasks=[{id:RB,title:'切版前的任务',status:'todo',stage:'开发',description:'只在对应版本更新',deliverable:'合成产物',dependsOn:[],requirementVersionId:RA}];
+  await page.goto(`${origin.origin}/projects/${A}/agent`);await page.locator('#plan-review-note').fill('必须保留的人工审核草稿');state.taskUpdateConflict=true;await page.getByLabel('切版前的任务状态').selectOption('done');await page.getByRole('button',{name:'重新读取项目需求',exact:true}).waitFor();assert.equal(await page.getByLabel('切版前的任务状态').isDisabled(),true);assert.equal(await page.getByLabel('切版前的任务状态').inputValue(),'todo');
+  state.detailOverride={project:project(A),requirements:[{id:RB,version:2,status:'confirmed',content:'其他标签的新确认需求',createdAt:now},old]};
+  await page.getByRole('button',{name:'重新读取项目需求',exact:true}).click();const guard=page.getByRole('dialog',{name:'保留未保存的编辑'});await guard.waitFor();await guard.getByRole('button',{name:'留在此页'}).click();assert.equal(await page.locator('#plan-review-note').inputValue(),'必须保留的人工审核草稿');assert.equal(await page.getByLabel('切版前的任务状态').isDisabled(),true);
+  await page.getByRole('button',{name:'重新读取项目需求',exact:true}).click();await guard.getByRole('button',{name:'放弃并继续'}).click();await page.getByRole('option',{name:'当前需求 V2',exact:true}).waitFor({state:'attached'});assert.equal(await page.getByText('切版前的任务',{exact:true}).count(),0);assert.equal(state.writes.length,1);assert.ok(state.writes[0].path.endsWith('/tasks/'+RB));
+  await page.getByLabel('任务来源需求版本').selectOption(RA);await page.getByText('切版前的任务',{exact:true}).waitFor();assert.equal(await page.getByLabel('切版前的任务状态').isDisabled(),true);
  });
  await scenario('delivery_rechecks_changed_evidence_without_discarding_manual_notes',async(page,state)=>{
   state.detailOverride={project:project(A),requirements:[{id:RA,version:1,status:'confirmed',content:'合成需求',createdAt:now}]};

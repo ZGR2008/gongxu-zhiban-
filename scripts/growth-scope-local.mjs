@@ -12,7 +12,14 @@ import {registerGrowthRoutes} from '../apps/api/dist/growth/routes.js';
 const require=createRequire(new URL('../apps/api/package.json',import.meta.url));require('dotenv').config();
 const config=loadConfig();if(!config.DATABASE_URL||!['localhost','127.0.0.1','[::1]'].includes(new URL(config.DATABASE_URL).hostname))throw Error('Local database required');
 const {Pool}=require('pg'),Fastify=require('fastify'),pool=new Pool({connectionString:config.DATABASE_URL,connectionTimeoutMillis:3000});
-const store=new PgProjectStore(pool),app=Fastify({logger:false});await registerProjectRoutes(app,store);await registerGrowthRoutes(app,store,pool);
+let onTaskProjectLock;
+const growthPool={query:(...args)=>pool.query(...args),connect:async()=>{
+ const client=await pool.connect();return {release:()=>client.release(),query:(sql,...args)=>{
+  if(sql==='SELECT id FROM projects WHERE id=$1 AND owner_id=$2 FOR UPDATE')onTaskProjectLock?.();
+  return client.query(sql,...args);
+ }};
+}};
+const store=new PgProjectStore(pool),app=Fastify({logger:false});await registerProjectRoutes(app,store);await registerGrowthRoutes(app,store,growthPool);
 app.get('/health',async()=>({status:'ok',service:'gongxu-api'}));app.get('/ready',async()=>({status:'ready'}));app.get('/ai/status',async()=>({configured:false}));
 const output=new URL(`../.runtime/growth-scope-local-${randomUUID()}/`,import.meta.url);await mkdir(output,{recursive:true});
 const report={scope:'real_local_database_synthetic_records_no_model',checks:[],startedAt:new Date().toISOString()};let stage='setup',owner,foreign,browser;
@@ -52,6 +59,30 @@ try{
   await page.getByLabel('任务与测试统计范围').selectOption('history');await page.getByRole('heading',{name:'历史任务状态',exact:true}).waitFor();assert.ok((await page.getByRole('region',{name:'审查与测试统计',exact:true}).innerText()).includes('1 / 1 / 0'));
   await page.getByLabel('任务与测试统计范围').selectOption('current');await page.getByRole('heading',{name:'当前版本任务进度',exact:true}).waitFor();assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+2),false);assert.equal(errors,0);
   await page.screenshot({path:fileURLToPath(new URL('growth-current-desktop.png',output))});await context.close();
+ });
+ await check('historical_task_update_is_rejected_without_changing_status_or_events',async()=>{
+  const old=(await pool.query('SELECT id,status FROM tasks WHERE project_id=$1 AND requirement_version_id=$2 ORDER BY id',[a,a1])).rows[0];
+  const response=await call('PATCH',`/projects/${a}/tasks/${old.id}`,{status:'doing'});assert.equal(response.statusCode,409);assert.equal(response.json().error,'task_requirement_outdated');
+  assert.equal((await pool.query('SELECT status FROM tasks WHERE id=$1',[old.id])).rows[0].status,old.status);assert.equal((await pool.query('SELECT count(*)::int AS count FROM task_status_events WHERE task_id=$1',[old.id])).rows[0].count,0);
+  const fresh=(await pool.query('SELECT id FROM tasks WHERE project_id=$1 AND requirement_version_id=$2',[a,a2])).rows[0].id;
+  assert.equal((await call('PATCH',`/projects/${a}/tasks/${fresh}`,{status:'doing'},foreign)).statusCode,404);assert.equal((await call('PATCH',`/projects/${b}/tasks/${fresh}`,{status:'doing'})).statusCode,404);assert.equal((await call('PATCH',`/projects/${a}/tasks/${fresh}`,{status:'doing'})).statusCode,200);
+  assert.equal((await pool.query('SELECT new_status FROM task_status_events WHERE task_id=$1',[fresh])).rows[0].new_status,'doing');
+ });
+ await check('task_waiting_on_confirmation_lock_rechecks_the_committed_requirement',async()=>{
+  const fresh=(await pool.query('SELECT id,status FROM tasks WHERE project_id=$1 AND requirement_version_id=$2',[a,a2])).rows[0];
+  const created=await call('POST',`/projects/${a}/requirements`,{content:'锁竞争后的新确认条件'});assert.equal(created.statusCode,201);const next=created.json().requirement.id;
+  const before=(await pool.query('SELECT count(*)::int AS count FROM task_status_events WHERE task_id=$1',[fresh.id])).rows[0].count;
+  const lock=await pool.connect();let pending,open=false,timer;
+  try{
+   await lock.query('BEGIN');open=true;await lock.query('SELECT id FROM projects WHERE id=$1 FOR UPDATE',[a]);
+   const requested=new Promise((resolve,reject)=>{onTaskProjectLock=resolve;timer=setTimeout(()=>reject(Error('Project lock request not observed')),5000);});
+   pending=call('PATCH',`/projects/${a}/tasks/${fresh.id}`,{status:'done'});await requested;clearTimeout(timer);
+   // Only this new synthetic requirement is changed. The real write is waiting
+   // behind the same project lock used by the application's confirm transaction.
+   await lock.query("UPDATE requirement_versions SET status='confirmed',confirmed_at=now() WHERE id=$1 AND project_id=$2 AND status='draft'",[next,a]);
+   await lock.query('COMMIT');open=false;const response=await pending;assert.equal(response.statusCode,409);assert.equal(response.json().error,'task_requirement_outdated');
+   assert.equal((await pool.query('SELECT status FROM tasks WHERE id=$1',[fresh.id])).rows[0].status,fresh.status);assert.equal((await pool.query('SELECT count(*)::int AS count FROM task_status_events WHERE task_id=$1',[fresh.id])).rows[0].count,before);
+  }finally{onTaskProjectLock=undefined;clearTimeout(timer);if(open)await lock.query('ROLLBACK').catch(()=>{});lock.release();await pending?.catch(()=>{});}
  });
  report.status='passed';
 }catch(error){report.status='failed';report.failedStage=stage;report.errorType=error.constructor.name;console.log(`FAIL ${stage} (${error.constructor.name})`);process.exitCode=1;}

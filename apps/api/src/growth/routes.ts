@@ -92,15 +92,25 @@ export async function registerGrowthRoutes(app: FastifyInstance, store?: Project
       const client = await pool.connect();
       try {
         await client.query('BEGIN');
-        const current = await client.query(`SELECT t.id,t.project_id AS "projectId",t.title,t.status FROM tasks t JOIN projects p ON p.id=t.project_id WHERE t.id=$1 AND t.project_id=$2 AND p.owner_id=$3 FOR UPDATE OF t`, [params.data.taskId, params.data.projectId, user.id]);
+        // Match requirement confirmation's project-first lock order. Check the
+        // version only after acquiring it so a waiting write sees the new commit.
+        const owned = await client.query('SELECT id FROM projects WHERE id=$1 AND owner_id=$2 FOR UPDATE', [params.data.projectId, user.id]);
+        if (!owned.rows.length) { await client.query('ROLLBACK'); return reply.code(404).send({ error: 'not_found' }); }
+        const current = await client.query(`SELECT t.id,t.project_id AS "projectId",t.title,t.status,
+          t.requirement_version_id AS "requirementVersionId",
+          (SELECT id FROM requirement_versions WHERE project_id=$2 AND status='confirmed' ORDER BY version DESC LIMIT 1) AS "currentRequirementId"
+          FROM tasks t JOIN projects p ON p.id=t.project_id WHERE t.id=$1 AND t.project_id=$2 AND p.owner_id=$3 FOR UPDATE OF t`, [params.data.taskId, params.data.projectId, user.id]);
         const task = current.rows[0];
         if (!task) { await client.query('ROLLBACK'); return reply.code(404).send({ error: 'not_found' }); }
+        if (!task.requirementVersionId || task.requirementVersionId !== task.currentRequirementId) {
+          await client.query('ROLLBACK'); return reply.code(409).send({ error: 'task_requirement_outdated' });
+        }
         if (task.status !== body.data.status) {
           await client.query('UPDATE tasks SET status=$2 WHERE id=$1', [task.id, body.data.status]);
           await client.query('INSERT INTO task_status_events(task_id,project_id,actor_id,previous_status,new_status) VALUES($1,$2,$3,$4,$5)', [task.id, params.data.projectId, user.id, task.status, body.data.status]);
           task.status = body.data.status;
         }
-        await client.query('COMMIT'); return { task };
+        await client.query('COMMIT'); return { task: { id: task.id, projectId: task.projectId, title: task.title, status: task.status } };
       } catch (error) { await client.query('ROLLBACK'); throw error; } finally { client.release(); }
     } catch (error) { request.log.error(error, 'task update failed'); return reply.code(503).send({ error: 'database_unavailable' }); }
   });
