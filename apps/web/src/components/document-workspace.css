@@ -1,0 +1,11 @@
+.document-editor-column{min-width:0;display:grid;gap:18px;align-content:start}
+.document-conflict{padding:18px;border:1px solid #e5b76e66;background:#382a2044;border-radius:12px;margin-bottom:18px}
+.document-conflict p,.document-history p{line-height:1.7;color:#d1c4e9}
+.document-remote{max-height:340px;overflow:auto;overflow-wrap:anywhere;border:1px solid #bc13fe33;border-radius:10px;padding:16px;margin:14px 0;background:#0a0614a6;scrollbar-gutter:stable}
+.document-history details{border-top:1px solid #bc13fe33;padding:14px 0}
+.document-history summary{cursor:pointer;line-height:1.6;transition:color .18s ease}
+.document-history summary:hover{color:#d8a7ff}
+.document-history summary:focus-visible,.document-remote:focus-visible{outline:2px solid #00e5ff;outline-offset:4px}
+.module-page--documents textarea:disabled{opacity:.65;cursor:progress}
+.module-page--documents .form-actions{flex-wrap:wrap;gap:12px}
+@media(prefers-reduced-motion:reduce){.document-history summary{transition:none}}

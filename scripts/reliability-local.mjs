@@ -8,6 +8,7 @@ import { registerPracticeRoutes } from '../apps/api/dist/practice/routes.js';
 import { registerTraceRoutes } from '../apps/api/dist/trace/routes.js';
 import { registerAgentRoutes } from '../apps/api/dist/agent/routes.js';
 import { PgDocumentStore } from '../apps/api/dist/documents/store.js';
+import { registerDocumentRoutes } from '../apps/api/dist/documents/routes.js';
 import { loadConfig } from '../apps/api/dist/config.js';
 import { loadEmbeddingConfig,saveText,indexDocument,retrieveKnowledge } from '../apps/api/dist/rag/service.js';
 
@@ -27,6 +28,7 @@ const cases={cases:['normal','boundary','exception'].map(category=>({category,ti
 await registerProjectRoutes(app,store);
 await registerPracticeRoutes(app,store,pool,{baseUrl:'https://example.invalid',apiKey:'test-only-placeholder',model:'controlled-fixture',timeoutMs:1000},{complete:async(_config,messages)=>{const key=messages[1].content.match(/REQ-[a-f0-9]{16}/)?.[0];return JSON.stringify({cases:cases.cases.map(item=>({...item,requirementIds:key?[key]:[]}))});}});
 await registerTraceRoutes(app,store,pool);
+await registerDocumentRoutes(app,store,new PgDocumentStore(pool));
 await registerAgentRoutes(app,store,pool,{baseUrl:'https://example.invalid',apiKey:'test-only-placeholder',model:'controlled-fixture',timeoutMs:1000},undefined,{complete:async(_config,messages)=>JSON.stringify({tasks:[{key:'task1',stage:'开发',title:'合成审批任务',description:'实现审批及留档',deliverable:'可复核的审批记录',dependsOn:[],citations:[],requirementIds:[messages[1].content.match(/REQ-[a-f0-9]{16}/)[0]]}]})});
 app.get('/health',async()=>({status:'ok',service:'gongxu-api'}));app.get('/ready',async()=>{await pool.query('SELECT 1');return {status:'ready'};});app.get('/ai/status',async()=>({configured:false}));
 async function call(method,url,payload,headers=auth){return app.inject({method,url,headers,...(payload===undefined?{}:{payload})});}
@@ -93,6 +95,22 @@ try{
   response=await call('POST',`${otherRoot}/test-cases`,{requirementId:otherRequirement});assert.equal(response.statusCode,201);const otherCase=response.json().cases[0];
   const trace=(await call('GET',`${root}/trace`)).json();
   assert.equal((await call('POST',`${root}/trace/links`,{itemId:trace.items[0].id,targetId:otherCase.id,targetKind:'case',expectedCaseRevision:otherCase.revision,decision:'confirmed',note:'禁止跨项目关联'})).statusCode,404);
+ });
+ await check('document_concurrent_writes_preserve_history_and_reject_stale_revision',async()=>{
+  const docs=new PgDocumentStore(pool);
+  const original=await docs.create(user,project,secondVersion,'readme','合成原文：用于验证并发修订','manual-fixture');assert.equal(original.revision,1);
+  const url=`${root}/documents/${original.id}`;
+  assert.equal((await call('PATCH',url,{content:'没有修订不能写入'})).statusCode,428);
+  const responses=await Promise.all(['并发写入甲','并发写入乙'].map(content=>call('PATCH',url,{content,expectedRevision:1})));
+  assert.deepEqual(responses.map(row=>row.statusCode).sort(),[200,409]);
+  const saved=(await call('GET',url)).json().document;assert.equal(saved.revision,2);assert.ok(['并发写入甲','并发写入乙'].includes(saved.content));
+  let history=(await call('GET',url+'/history')).json();assert.equal(history.history.length,1);assert.equal(history.history[0].content,original.content);assert.equal(history.history[0].revision,1);
+  assert.equal((await call('PATCH',url,{content:saved.content,expectedRevision:2})).json().document.revision,2);
+  assert.equal((await call('PATCH',url,{content:original.content,expectedRevision:2})).json().document.revision,3);
+  history=(await call('GET',url+'/history')).json();assert.deepEqual(history.history.map(row=>row.revision),[2,1]);assert.equal(history.history[0].content,saved.content);
+  assert.equal((await call('GET',url+'/history?beforeRevision=2')).json().history.length,1);
+  for(const suffix of ['', '/history', '/export'])assert.equal((await call('GET',url+suffix,undefined,foreign)).statusCode,404);
+  assert.equal((await call('PATCH',url,{content:'越权覆盖',expectedRevision:3},foreign)).statusCode,404);
  });
  if(process.argv.includes('--browser')){
   await check('real_database_desktop_trace_review_keyboard_and_layout',async()=>{

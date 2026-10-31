@@ -2,16 +2,21 @@ import type { Pool } from 'pg';
 
 export const documentTypes = ['readme', 'requirements', 'design', 'api', 'test_report', 'summary'] as const;
 export type DocumentType = typeof documentTypes[number];
-export type ProjectDocument = { id: string; projectId: string; requirementVersionId: string; type: DocumentType; content: string; modelName: string; createdAt: Date; updatedAt: Date };
+export type ProjectDocument = { id: string; projectId: string; requirementVersionId: string; type: DocumentType; content: string; modelName: string; revision: number; createdAt: Date; updatedAt: Date };
+export type DocumentRevision = { revision: number; content: string; savedAt: Date; recordedAt: Date };
+export class DocumentConflictError extends Error {
+  constructor(public currentRevision: number) { super('document_conflict'); }
+}
 export type DocumentContext = { tasks: { title: string; stage: string; status: string }[]; testCases: { title: string; category: string; result: string; executionNote: string; executedAt: Date | null }[]; testCounts: { total: number; notRun: number; passed: number; failed: number; blocked: number } };
 export interface DocumentStore {
   getContext(userId: string, projectId: string, requirementId: string): Promise<DocumentContext>;
   list(userId: string, projectId: string): Promise<ProjectDocument[]>;
   get(userId: string, projectId: string, id: string): Promise<ProjectDocument | null>;
   create(userId: string, projectId: string, requirementId: string, type: DocumentType, content: string, model: string): Promise<ProjectDocument | null>;
-  update(userId: string, projectId: string, id: string, content: string): Promise<ProjectDocument | null>;
+  update(userId: string, projectId: string, id: string, content: string, expectedRevision: number): Promise<ProjectDocument | null>;
+  history(userId: string, projectId: string, id: string, beforeRevision?: number): Promise<DocumentRevision[]>;
 }
-const fields = `d.id,d.project_id AS "projectId",d.requirement_version_id AS "requirementVersionId",d.type,d.content,d.model_name AS "modelName",d.created_at AS "createdAt",d.updated_at AS "updatedAt"`;
+const fields = `d.id,d.project_id AS "projectId",d.requirement_version_id AS "requirementVersionId",d.type,d.content,d.model_name AS "modelName",d.revision,d.created_at AS "createdAt",d.updated_at AS "updatedAt"`;
 export class PgDocumentStore implements DocumentStore {
   constructor(private pool: Pool) {}
   async getContext(userId: string, projectId: string, requirementId: string): Promise<DocumentContext> {
@@ -35,8 +40,16 @@ export class PgDocumentStore implements DocumentStore {
     const r = await this.pool.query(`INSERT INTO project_documents AS d(project_id,requirement_version_id,type,content,model_name) SELECT p.id,r.id,$4,$5,$6 FROM projects p JOIN requirement_versions r ON r.project_id=p.id WHERE p.owner_id=$1 AND p.id=$2 AND r.id=$3 AND r.status='confirmed' RETURNING ${fields}`, [userId,projectId,requirementId,type,content,model]);
     return r.rows[0] ?? null;
   }
-  async update(userId: string, projectId: string, id: string, content: string) {
-    const r = await this.pool.query(`UPDATE project_documents d SET content=$4,updated_at=now() FROM projects p WHERE d.project_id=p.id AND p.owner_id=$1 AND p.id=$2 AND d.id=$3 RETURNING ${fields}`, [userId,projectId,id,content]);
-    return r.rows[0] ?? null;
+  async update(userId: string, projectId: string, id: string, content: string, expectedRevision: number) {
+    // The comparison and write are one statement; concurrent writers cannot both win.
+    const r = await this.pool.query(`UPDATE project_documents d SET content=$4 FROM projects p WHERE d.project_id=p.id AND p.owner_id=$1 AND p.id=$2 AND d.id=$3 AND d.revision=$5 RETURNING ${fields}`, [userId,projectId,id,content,expectedRevision]);
+    if (r.rows[0]) return r.rows[0];
+    const current = await this.get(userId,projectId,id);
+    if (current) throw new DocumentConflictError(current.revision);
+    return null;
+  }
+  async history(userId: string, projectId: string, id: string, beforeRevision?: number) {
+    const r = await this.pool.query(`SELECT h.revision,h.content,h.saved_at AS "savedAt",h.recorded_at AS "recordedAt" FROM project_document_history h JOIN project_documents d ON d.id=h.document_id JOIN projects p ON p.id=d.project_id WHERE p.owner_id=$1 AND p.id=$2 AND d.id=$3 AND ($4::integer IS NULL OR h.revision<$4) ORDER BY h.revision DESC LIMIT 21`,[userId,projectId,id,beforeRevision??null]);
+    return r.rows;
   }
 }

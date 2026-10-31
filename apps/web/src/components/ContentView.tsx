@@ -68,6 +68,7 @@ export function MarkdownEditor({
   maxLength,
   placeholder,
   required = false,
+  disabled = false,
 }: {
   id: string;
   value: string;
@@ -75,6 +76,7 @@ export function MarkdownEditor({
   maxLength: number;
   placeholder?: string;
   required?: boolean;
+  disabled?: boolean;
 }) {
   const [view, setView] = useState<'edit' | 'preview' | 'split'>('edit');
   const groupId = useId();
@@ -165,6 +167,7 @@ export function MarkdownEditor({
           maxLength={maxLength}
           placeholder={placeholder}
           required={required}
+          disabled={disabled}
           hidden={view === 'preview'}
         />
         {view !== 'edit' && (

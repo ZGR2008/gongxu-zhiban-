@@ -40,6 +40,9 @@ export function EditGuardProvider({ children }: { children: ReactNode }) {
     saving.current = true; setBusy(true); setError('');
     try {
       for (const editor of dirtyEditors()) if (!(await editor.save())) throw new Error('save_failed');
+      // Re-read after the saved state renders: a previous save may not include new edits.
+      await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
+      if (dirtyEditors().length) throw new Error('new_edits');
       saving.current = false; finish(true);
     } catch { setError('保存未成功，已留在当前编辑位置。请检查页面中的错误后重试，或选择留在此页。'); }
     finally { saving.current = false; setBusy(false); }

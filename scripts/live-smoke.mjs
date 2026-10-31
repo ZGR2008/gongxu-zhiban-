@@ -196,7 +196,7 @@ try {
       const document = generated.document;
       ensure(document.requirementVersionId === requirement.id && document.content.includes(`未执行 ${cases.length} 条`), 'document_lacks_actual_test_snapshot');
       const content = `${document.content}\n\n## 联调备注\n这是自动联调记录，未执行借阅项目的代码。`;
-      await request(`/projects/${project.id}/documents/${document.id}`, { method: 'PATCH', token: ownerToken, body: { content } });
+      await request(`/projects/${project.id}/documents/${document.id}`, { method: 'PATCH', token: ownerToken, body: { content, expectedRevision: document.revision } });
       const exported = await request(`/projects/${project.id}/documents/${document.id}/export`, { token: ownerToken, text: true });
       ensure(exported === content, 'document_export_differs_from_saved_edit');
       await request(`/projects/${project.id}/documents/${document.id}`, { token: otherToken, expected: 404 });

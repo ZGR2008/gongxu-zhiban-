@@ -20,7 +20,7 @@ async function scenario(name,work){
  const context=await browser.newContext({viewport:{width:1440,height:950},reducedMotion:'reduce'});
  await context.addInitScript(()=>localStorage.setItem('gongxu_token','controlled-browser-fixture'));
  const page=await context.newPage();page.setDefaultTimeout(6000);
- const state={detailCounts:{},delay:()=>0,makeDetail:id=>detail(id),saveDelay:0,writes:[],failSave:false,errors:[],cases:[],documents:[],detailOverride:null,detailStatus:200,runs:[],runCounts:{},runDelay:()=>0,searchDelay:0,searches:0};
+ const state={detailCounts:{},delay:()=>0,makeDetail:id=>detail(id),saveDelay:0,docSaveDelay:0,docReadDelay:()=>0,docReads:0,docResponse:null,docConflict:false,docHistory:[],writes:[],failSave:false,errors:[],cases:[],documents:[],detailOverride:null,detailStatus:200,runs:[],runCounts:{},runDelay:()=>0,searchDelay:0,searches:0};
  page.on('pageerror',()=>state.errors.push('page_error'));
  await page.route('**/*',async route=>{
   const url=new URL(route.request().url());
@@ -39,11 +39,14 @@ async function scenario(name,work){
    state.writes.push({path,body:route.request().postDataJSON()});
    await new Promise(resolve=>setTimeout(resolve,state.saveDelay));
    if(state.failSave){status=503;body={error:'database_unavailable'};} else body={requirement:{...detail(path.split('/')[2]).requirements[0],id:'cccccccc-cccc-4ccc-8ccc-cccccccccccc',version:2,content:route.request().postDataJSON().content}};
-  } else if(path.endsWith('/documents')) body={documents:state.documents};
+  } else if(path.endsWith('/documents')) {state.docReads++;body={documents:(state.docResponse?state.docResponse(state.docReads):state.documents).map(row=>({revision:1,...row}))};await new Promise(resolve=>setTimeout(resolve,state.docReadDelay(state.docReads)));}
   else if(/\/documents\/[^/]+$/.test(path)&&method==='PATCH'){
    state.writes.push({path,body:route.request().postDataJSON()});
-   if(state.failSave){status=503;body={error:'database_unavailable'};}else{const doc=state.documents.find(row=>path.endsWith('/'+row.id));body={document:{...doc,content:route.request().postDataJSON().content}};}
-  } else if(path.endsWith('/test-cases'))body={cases:state.cases};
+   await new Promise(resolve=>setTimeout(resolve,state.docSaveDelay));
+   if(state.failSave){status=503;body={error:'database_unavailable'};}else if(state.docConflict){status=409;body={error:'document_conflict',currentRevision:2};}else{const doc=state.documents.find(row=>path.endsWith('/'+row.id));body={document:{...doc,revision:(doc.revision||1)+1,content:route.request().postDataJSON().content}};state.documents=state.documents.map(row=>row.id===doc.id?body.document:row);}
+  } else if(/\/documents\/[^/]+\/history$/.test(path))body={history:state.docHistory,nextCursor:null};
+  else if(/\/documents\/[^/]+$/.test(path)&&method==='GET')body={document:state.documents.find(row=>path.endsWith('/'+row.id))};
+  else if(path.endsWith('/test-cases'))body={cases:state.cases};
   else if(path.endsWith('/agent/runs'))body={runs:state.runs};
   else if(/\/agent\/runs\/[^/]+$/.test(path)){const id=path.split('/').at(-1);state.runCounts[id]=(state.runCounts[id]||0)+1;await new Promise(r=>setTimeout(r,state.runDelay(id)));body={run:state.runs.find(r=>r.id===id),steps:[{id:'s',stage:'plan_1',status:'succeeded',outputSummary:id===RA?'运行A输出':'运行B输出',tools:[]}]};}
   else if(path.endsWith('/trace'))body={version:null,items:[],links:[],tasks:[],cases:[],previousItems:[],impact:null};
@@ -89,6 +92,57 @@ try{
   state.failSave=true;await page.getByRole('button',{name:/软件设计文档/}).click();await dialog.getByRole('button',{name:'保存并继续'}).click();
   await dialog.getByRole('alert').waitFor();assert.equal(await page.locator('#doc-content').inputValue(),'文档尚未保存的编辑');
   await dialog.getByRole('button',{name:'放弃并继续'}).click();assert.equal(await page.locator('#doc-content').inputValue(),'设计合成正文');
+ });
+ await scenario('document_late_save_cannot_reselect_previous_document',async(page,state)=>{
+  state.docSaveDelay=1000;
+  state.documents=[{id:RA,type:'readme',content:'文档 A 正文',modelName:'fixture',createdAt:now,requirementVersionId:RA},{id:RB,type:'design',content:'文档 B 正文',modelName:'fixture',createdAt:now,requirementVersionId:RA}];
+  await page.goto(`${origin.origin}/projects/${A}/documents`);await page.locator('#doc-content').fill('只保存给文档 A');
+  await page.getByRole('button',{name:/保存文档/}).click();await waitFor(()=>state.writes.length===1);
+  await page.getByRole('button',{name:/软件设计文档/}).click();await page.getByRole('dialog').getByRole('button',{name:'放弃并继续'}).click();
+  await page.waitForTimeout(1100);
+  assert.equal(await page.getByRole('button',{name:/软件设计文档/}).getAttribute('aria-pressed'),'true');
+  assert.equal(await page.locator('#doc-content').inputValue(),'文档 B 正文');
+  await page.locator('#doc-content').fill('只保存给文档 B');await page.getByRole('button',{name:/保存文档/}).click();await waitFor(()=>state.writes.length===2);
+  assert.ok(state.writes[1].path.endsWith('/'+RB));assert.equal(state.writes[1].body.expectedRevision,1);
+ });
+ await scenario('document_new_typing_during_save_blocks_save_and_leave',async(page,state)=>{
+  state.docSaveDelay=1000;state.documents=[{id:RA,type:'readme',content:'文档原文',modelName:'fixture',createdAt:now,requirementVersionId:RA}];
+  await page.goto(`${origin.origin}/projects/${A}/documents`);await page.locator('#doc-content').fill('正在保存的旧输入');
+  await page.getByRole('button',{name:/保存文档/}).click();await waitFor(()=>state.writes.length===1);await page.locator('#doc-content').fill('保存期间新增的输入必须留下');
+  await page.getByRole('link',{name:'我的项目',exact:true}).first().click();const dialog=page.getByRole('dialog',{name:'保留未保存的编辑'});
+  await dialog.getByRole('button',{name:'保存并继续'}).click();await page.waitForTimeout(1100);
+  assert.ok(page.url().endsWith('/documents'));assert.equal(await page.locator('#doc-content').inputValue(),'保存期间新增的输入必须留下');
+  assert.equal(await dialog.isVisible(),true);assert.equal(state.writes.length,1);
+ });
+ await scenario('document_refresh_is_ordered_and_loading_prevents_editing',async(page,state)=>{
+  state.documents=[{id:RA,type:'readme',content:'初始文档',modelName:'fixture',createdAt:now,requirementVersionId:RA}];
+  await page.goto(`${origin.origin}/projects/${A}/documents`);await page.locator('#doc-content').waitFor();
+  const initialReads=state.docReads; // StrictMode may send an aborted mount read first.
+  state.docResponse=count=>state.documents.map(doc=>({...doc,content:count===initialReads+1?'过期读取':'最新读取'}));
+  state.docReadDelay=count=>count===initialReads+1?650:150;
+  await page.getByRole('button',{name:'刷新文档',exact:true}).click();await waitFor(()=>state.docReads===initialReads+1);assert.equal(await page.locator('#doc-content').isDisabled(),true);
+  await page.getByRole('button',{name:'刷新文档',exact:true}).click();await waitFor(()=>state.docReads===initialReads+2);await page.waitForTimeout(750);
+  assert.equal(await page.locator('#doc-content').inputValue(),'最新读取');assert.equal(await page.locator('#doc-content').isDisabled(),false);
+ });
+ await scenario('document_conflict_preserves_draft_and_explicit_merge_uses_latest_revision',async(page,state)=>{
+  state.documents=[{id:RA,type:'readme',content:'初始文档',revision:1,modelName:'fixture',createdAt:now,requirementVersionId:RA}];
+  await page.goto(`${origin.origin}/projects/${A}/documents`);await page.locator('#doc-content').fill('本地必须保留的修改');
+  state.docConflict=true;state.documents[0]={...state.documents[0],revision:2,content:'另一个标签的修改'};
+  await page.getByRole('button',{name:/保存文档/}).click();await page.getByRole('group',{name:'文档保存冲突'}).waitFor();
+  assert.equal(await page.locator('#doc-content').inputValue(),'本地必须保留的修改');await page.getByRole('button',{name:'查看服务器版本'}).click();
+  await page.getByRole('region',{name:'服务器修订 2'}).waitFor();await page.getByRole('button',{name:'保留我的内容继续合并'}).click();
+  assert.equal(await page.locator('#doc-content').inputValue(),'本地必须保留的修改');state.docConflict=false;
+  await page.locator('#doc-content').fill('人工合并两处修改后的内容');await page.getByRole('button',{name:/保存文档/}).click();await waitFor(()=>state.writes.length===2);
+  assert.equal(state.writes[1].body.expectedRevision,2);await page.getByText('已保存修订 3。',{exact:true}).waitFor();
+ });
+ await scenario('document_history_restore_is_guarded_and_successful_save_allows_navigation',async(page,state)=>{
+  state.documents=[{id:RA,type:'readme',content:'当前正文',revision:2,modelName:'fixture',createdAt:now,requirementVersionId:RA}];state.docHistory=[{revision:1,content:'历史正文',savedAt:now,recordedAt:now}];
+  await page.goto(`${origin.origin}/projects/${A}/documents`);await page.locator('#doc-content').fill('尚未保存的修改');
+  await page.getByRole('button',{name:/修订记录 展开/}).click();await page.locator('.document-history summary').click();await page.getByRole('button',{name:'使用修订 1 编辑'}).click();
+  await page.getByRole('dialog').getByRole('button',{name:'留在此页'}).click();assert.equal(await page.locator('#doc-content').inputValue(),'尚未保存的修改');
+  await page.getByRole('button',{name:'使用修订 1 编辑'}).click();await page.getByRole('dialog').getByRole('button',{name:'放弃并继续'}).click();assert.equal(await page.locator('#doc-content').inputValue(),'历史正文');
+  await page.getByRole('link',{name:'我的项目',exact:true}).first().click();await page.getByRole('dialog').getByRole('button',{name:'保存并继续'}).click();await page.waitForURL('**/projects');
+  assert.equal(state.writes.length,1);assert.equal(state.writes[0].body.content,'历史正文');assert.equal(state.writes[0].body.expectedRevision,2);
  });
  await scenario('test_center_defaults_to_latest_confirmed_version_not_old_passes',async(page,state)=>{
   state.detailOverride={project:project(A),requirements:[{id:RA,version:2,status:'confirmed',content:'新版本',createdAt:now},{id:RB,version:1,status:'confirmed',content:'旧版本',createdAt:now}]};

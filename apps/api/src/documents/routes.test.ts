@@ -15,15 +15,15 @@ const store={userBySession:async()=>({id:'user'}),getProject:async(_u:string,p:s
 test('model generation uses confirmed project context, persists source and supports edit and export', async t=>{
  let saved:ProjectDocument | undefined; let messages='';
  const docs={getContext:async()=>({tasks:[{title:'实现登录',stage:'开发',status:'todo'}],testCases:[{title:'空输入',category:'boundary',result:'not_run',executionNote:'',executedAt:null}],testCounts:{total:1,notRun:1,passed:0,failed:0,blocked:0}}),list:async()=>saved?[saved]:[],get:async()=>saved??null,create:async(_u:string,p:string,r:string,type:string,content:string,model:string)=>{
-   assert.equal(r,requirement); saved={id,projectId:p,requirementVersionId:r,type,content,modelName:model,createdAt:new Date(),updatedAt:new Date()} as ProjectDocument; return saved;
- },update:async(_u:string,_p:string,_id:string,content:string)=>{ if (!saved) return null; saved={...saved,content}; return saved; }} as DocumentStore;
+   assert.equal(r,requirement); saved={id,projectId:p,requirementVersionId:r,type,content,modelName:model,revision:1,createdAt:new Date(),updatedAt:new Date()} as ProjectDocument; return saved;
+ },history:async()=>[],update:async(_u:string,_p:string,_id:string,content:string,revision:number)=>{ if (!saved) return null; assert.equal(revision,saved.revision);saved={...saved,content,revision:revision+1}; return saved; }} as DocumentStore;
  const app=Fastify(); await registerDocumentRoutes(app,store,docs,config,async(_config,m)=>{messages=m.map(x=>x.content).join('\n');return '# 测试报告\n待补充';}); t.after(()=>app.close());
  const url=`/projects/${project}/documents`;
  assert.equal((await app.inject({method:'POST',url:`${url}/generate`,payload:{type:'test_report'}})).statusCode,401);
  const generated=await app.inject({method:'POST',url:`${url}/generate`,headers,payload:{type:'test_report'}});
  assert.equal(generated.statusCode,201); assert.match(messages,/需求内容/); assert.match(messages,/未提供代码/); assert.match(messages,/空输入/); assert.match(messages,/实现登录/);
  assert.match(generated.json().document.content,/未执行 1 条，通过 0 条/); assert.match(generated.json().document.content,/人工登记/); assert.equal(generated.json().document.requirementVersionId,requirement);
- assert.equal((await app.inject({method:'PATCH',url:`${url}/${id}`,headers,payload:{content:'# 人工编辑'}})).statusCode,200);
+ assert.equal((await app.inject({method:'PATCH',url:`${url}/${id}`,headers,payload:{content:'# 人工编辑',expectedRevision:1}})).statusCode,200);
  const exported=await app.inject({method:'GET',url:`${url}/${id}/export`,headers}); assert.equal(exported.body,'# 人工编辑'); assert.match(exported.headers['content-type']!,/text\/markdown/);
  assert.equal((await app.inject({method:'GET',url:`/projects/${other}/documents/${id}`,headers})).statusCode,404);
 });
