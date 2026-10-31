@@ -123,15 +123,19 @@ export async function registerPracticeRoutes(app: FastifyInstance, store?: Proje
     const params = caseParams.safeParse(request.params); const body = editBody.safeParse(request.body);
     if (!params.success || !body.success) return reply.code(400).send({ error: 'invalid_input' });
     const b = body.data;
+    if(!b.expectedRevision)return reply.code(428).send({error:'case_revision_required'});
     // Editing the test invalidates any previous execution outcome.
-    const r = await pool!.query(`UPDATE practice_test_cases SET category=$3,title=$4,preconditions=$5,steps=$6,expected=$7,result='not_run',execution_note='',executor_id=NULL,executed_at=NULL WHERE project_id=$1 AND id=$2 AND ($8::integer IS NULL OR revision=$8) RETURNING ${caseFields}`, [a.projectId, params.data.caseId, b.category, b.title, b.preconditions, b.steps, b.expected,b.expectedRevision??null]);
+    // The history trigger resets outcomes only when definition fields really change.
+    const r = await pool!.query(`UPDATE practice_test_cases SET category=$3,title=$4,preconditions=$5,steps=$6,expected=$7 WHERE project_id=$1 AND id=$2 AND revision=$8 RETURNING ${caseFields}`, [a.projectId, params.data.caseId, b.category, b.title, b.preconditions, b.steps, b.expected,b.expectedRevision]);
     return r.rows[0] ? { case: r.rows[0] } : missingOrChanged(a.projectId,params.data.caseId,reply);
   });
   app.patch('/projects/:projectId/test-cases/:caseId/execution', async (request, reply) => {
     const a = await access(request, reply); if (!a) return;
     const params = caseParams.safeParse(request.params); const body = executionBody.safeParse(request.body);
     if (!params.success || !body.success) return reply.code(400).send({ error: 'invalid_input' });
-    const r = await pool!.query(`UPDATE practice_test_cases SET result=$3,execution_note=$4,executor_id=CASE WHEN $3='not_run' THEN NULL ELSE $5::uuid END,executed_at=CASE WHEN $3='not_run' THEN NULL ELSE now() END WHERE project_id=$1 AND id=$2 AND ($6::integer IS NULL OR revision=$6) RETURNING ${caseFields}`, [a.projectId, params.data.caseId, body.data.result, body.data.note, a.user.id,body.data.expectedRevision??null]);
+    if(!body.data.expectedRevision)return reply.code(428).send({error:'case_revision_required'});
+    if(body.data.result!=='not_run'&&!body.data.note.trim())return reply.code(422).send({error:'execution_evidence_required'});
+    const r = await pool!.query(`UPDATE practice_test_cases SET result=$3,execution_note=$4,executor_id=CASE WHEN $3='not_run' THEN NULL ELSE $5::uuid END,executed_at=CASE WHEN $3='not_run' THEN NULL ELSE now() END WHERE project_id=$1 AND id=$2 AND revision=$6 RETURNING ${caseFields}`, [a.projectId, params.data.caseId, body.data.result, body.data.note, a.user.id,body.data.expectedRevision]);
     return r.rows[0] ? { case: r.rows[0] } : missingOrChanged(a.projectId,params.data.caseId,reply);
   });
 }

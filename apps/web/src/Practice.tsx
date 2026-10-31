@@ -25,6 +25,7 @@ function CaseEditor({item,base,request,onSaved}:{item:Case;base:string;request:A
  useEffect(()=>{const before=previous.current;previous.current=item;setForm(value=>editable(value)===editable(before)?item:value);},[item]);
  function persist(definition:boolean):Promise<boolean>{
   if(pending.current)return pending.current;
+  if(!definition&&form.result!=='not_run'&&!form.executionNote?.trim()){setError('请填写执行说明或证据后再登记结果。记录应说明实际做了什么；未执行请选择“未执行”。');return Promise.resolve(false);}
   setBusy(true);setError('');const snapshot=form;
   const {category,title,preconditions,steps,expected}=snapshot;
   const body=definition?{category,title,preconditions,steps,expected,expectedRevision:snapshot.revision??1}:{result:snapshot.result,note:snapshot.executionNote,expectedRevision:snapshot.revision??1};

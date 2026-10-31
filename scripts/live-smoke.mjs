@@ -185,9 +185,9 @@ try {
       ensure(['normal', 'boundary', 'exception'].every(category => cases.some(item => item.category === category)), 'test_categories_missing');
       ensure(cases.every(item => item.result === 'not_run'), 'generated_tests_claim_executed');
       const item = cases[0];
-      const recorded = await request(`/projects/${project.id}/test-cases/${item.id}/execution`, { method: 'PATCH', token: ownerToken, body: { result: 'blocked', note: '自动联调登记：借阅项目尚未实现，本脚本没有执行用户代码。' } });
+      const recorded = await request(`/projects/${project.id}/test-cases/${item.id}/execution`, { method: 'PATCH', token: ownerToken, body: { result: 'blocked', note: '自动联调登记：借阅项目尚未实现，本脚本没有执行用户代码。',expectedRevision:item.revision } });
       ensure(recorded.case.result === 'blocked' && recorded.case.executorId, 'manual_record_not_saved');
-      const edited = await request(`/projects/${project.id}/test-cases/${item.id}`, { method: 'PATCH', token: ownerToken, body: { category: item.category, title: item.title, preconditions: item.preconditions, steps: `${item.steps}\n联调补充：确认测试环境。`, expected: item.expected } });
+      const edited = await request(`/projects/${project.id}/test-cases/${item.id}`, { method: 'PATCH', token: ownerToken, body: { category: item.category, title: item.title, preconditions: item.preconditions, steps: `${item.steps}\n联调补充：确认测试环境。`, expected: item.expected,expectedRevision:item.revision } });
       ensure(edited.case.result === 'not_run' && edited.case.executorId === null && edited.case.executedAt === null, 'edited_test_kept_stale_result');
     });
 

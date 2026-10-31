@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useRef,useState } from "react";
+import {useEditGuard,useUnsavedEdit} from '../components/EditGuard';
 import { UiIcon, type IconName } from "../components/UiIcon";
 import { CopyButton } from "../components/ContentView";
 import { documentNames } from "../components/project-pulse-model";
@@ -39,6 +40,7 @@ export default function Delivery({
   request,
   navigate,
 }: PageProps) {
+  const {protect}=useEditGuard();
   const [choice, setChoice] = useState("");
   const [revision, setRevision] = useState(0);
   const project =
@@ -84,7 +86,7 @@ export default function Delivery({
           projects={projects}
           id="delivery-project"
           value={project.id}
-          onChange={setChoice}
+          onChange={value=>protect(()=>setChoice(value))}
         />
         <span className="delivery-version">
           {detail.loading
@@ -99,7 +101,7 @@ export default function Delivery({
           className="button secondary"
           type="button"
           disabled={detail.loading}
-          onClick={() => setRevision((value) => value + 1)}
+          onClick={() => protect(()=>setRevision((value) => value + 1))}
         >
           刷新成果记录
         </button>
@@ -143,14 +145,21 @@ function DeliveryBoard({
   const key = deliveryKey(project.id, requirement?.id);
   const [saved, setSaved] = useState(() => {
     try {
-      return { record: readDelivery(localStorage.getItem(key)), error: "" };
+      return { record: readDelivery(localStorage.getItem(key)), error: "",dirty:false };
     } catch {
       return {
         record: blankDelivery(),
         error: "本机存储不可用，核对记录暂时无法持久保存。",
+        dirty:false,
       };
     }
   });
+  const savedRef=useRef(saved);savedRef.current=saved;
+  function persist(record:typeof saved.record){
+    let error='';try{localStorage.setItem(key,JSON.stringify(record));}catch{error='本机保存失败，当前修改仅在本页内存中。请重试保存或导出清单保留内容。';}
+    const next={record,error,dirty:Boolean(error)};savedRef.current=next;setSaved(next);return !error;
+  }
+  useUnsavedEdit(`delivery:${key}`,{label:'尚未保存的本机交付核对',dirty:saved.dirty,save:async()=>persist(savedRef.current.record)});
   const [notice, setNotice] = useState("");
   const [downloadError, setDownloadError] = useState("");
   const base = `/projects/${encodeURIComponent(project.id)}`;
@@ -234,15 +243,7 @@ function DeliveryBoard({
         [id]: { ...saved.record.items[id], ...patch,...(patch.status==='checked'&&trackedChecks.has(id)?{evidenceStamp:evidenceStamp(currentEvidence,id)}:{}) },
       },
     };
-    try {
-      localStorage.setItem(key, JSON.stringify(next));
-      setSaved({ record: next, error: "" });
-    } catch {
-      setSaved({
-        record: next,
-        error: "本机保存失败，当前修改仅在本页内存中。请导出清单保留内容。",
-      });
-    }
+    persist(next);
     setNotice("");
   }
   const report = [
@@ -284,6 +285,7 @@ function DeliveryBoard({
         {saved.error && (
           <p className="wb-warning" role="alert">
             {saved.error}
+            <button type="button" className="text-link" onClick={()=>persist(savedRef.current.record)}>重试保存核对记录</button>
           </p>
         )}
         {!docs.loading&&staleChecks.length>0&&<p className="wb-warning" role="status">{staleChecks.length} 项旧核对的依据已变化、不可读取或尚未记录。原备注仍然保留，请核对当前资料后重新确认。</p>}

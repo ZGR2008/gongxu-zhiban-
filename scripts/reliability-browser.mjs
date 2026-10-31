@@ -195,6 +195,16 @@ try{
   await page.reload();await page.locator('#delivery-tests-status').waitFor();await page.waitForFunction(()=>document.querySelector('.delivery-count strong')?.textContent==='1');
   assert.equal(await page.locator('#delivery-tests-note').inputValue(),'此前人工核对的备注必须保留');
  });
+ await scenario('delivery_storage_failure_blocks_navigation_until_saved_or_explicitly_discarded',async(page,state)=>{
+  await page.goto(`${origin.origin}/delivery`);await page.locator('#delivery-tests-note').waitFor();
+  await page.evaluate(()=>{const original=Storage.prototype.setItem;window.restoreDeliveryStorage=()=>{Storage.prototype.setItem=original;};Storage.prototype.setItem=function(key,value){if(key.includes('delivery'))throw new DOMException('Synthetic quota limit','QuotaExceededError');return original.call(this,key,value);};});
+  await page.locator('#delivery-tests-note').fill('存储失败仍须保留的本机核对备注');await page.getByText(/本机保存失败/).waitFor();
+  await page.locator('#delivery-project').selectOption(B);const dialog=page.getByRole('dialog',{name:'保留未保存的编辑'});await dialog.waitFor();
+  await dialog.getByRole('button',{name:'保存并继续'}).click();await dialog.getByText(/保存未成功/).waitFor();assert.equal(await page.locator('#delivery-project').inputValue(),A);
+  await dialog.getByRole('button',{name:'留在此页'}).click();assert.equal(await page.locator('#delivery-tests-note').inputValue(),'存储失败仍须保留的本机核对备注');
+  await page.getByRole('link',{name:'我的项目',exact:true}).first().click();await dialog.waitFor();await page.evaluate(()=>window.restoreDeliveryStorage());await dialog.getByRole('button',{name:'保存并继续'}).click();await page.waitForURL('**/projects');
+  await page.goto(`${origin.origin}/delivery`);assert.equal(await page.locator('#delivery-tests-note').inputValue(),'存储失败仍须保留的本机核对备注');
+ });
  await scenario('test_center_defaults_to_latest_confirmed_version_not_old_passes',async(page,state)=>{
   state.detailOverride={project:project(A),requirements:[{id:RA,version:2,status:'confirmed',content:'新版本',createdAt:now},{id:RB,version:1,status:'confirmed',content:'旧版本',createdAt:now}]};
   const common={category:'normal',preconditions:'合成前提',steps:'人工步骤',expected:'预期',executionNote:'人工合成记录',executedAt:now};

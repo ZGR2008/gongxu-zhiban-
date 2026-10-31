@@ -63,6 +63,10 @@ try{
   let response=await call('PATCH',url+'/execution',{result:'passed',note:'合成人工记录：仅用于验证历史留存，不代表执行了示例代码',expectedRevision:1});assert.equal(response.statusCode,200);
   assert.equal((await call('GET',`${root}/trace`)).json().items[0].coverage.manualEvidence,1);
   const {category,title,preconditions,steps}=testCase;
+  const beforeHistory=(await call('GET',url+'/history')).json().history.length;
+  response=await call('PATCH',url,{category,title,preconditions,steps,expected:testCase.expected,expectedRevision:1});assert.equal(response.statusCode,200);assert.equal(response.json().case.result,'passed');assert.equal(response.json().case.revision,1);assert.equal((await call('GET',url+'/history')).json().history.length,beforeHistory);
+  assert.equal((await call('PATCH',url+'/execution',{result:'failed',note:'缺少修订不能覆盖'})).statusCode,428);
+  assert.equal((await call('PATCH',url+'/execution',{result:'passed',note:'  ',expectedRevision:1})).statusCode,422);
   response=await call('PATCH',url,{category,title,preconditions,steps,expected:'新版必须双人审批',expectedRevision:1});assert.equal(response.statusCode,200);assert.equal(response.json().case.revision,2);assert.equal(response.json().case.result,'not_run');
   const trace=(await call('GET',`${root}/trace`)).json();assert.equal(trace.items[0].coverage.manualEvidence,0);assert.equal(trace.items[0].coverage.stale,1);
   const history=(await call('GET',url+'/history')).json().history;assert.ok(history.some(row=>row.kind==='definition_changed'&&row.snapshot.result==='passed'&&row.snapshot.execution_note.includes('合成人工记录')));
