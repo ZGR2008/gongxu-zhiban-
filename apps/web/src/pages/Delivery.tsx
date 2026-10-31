@@ -27,6 +27,7 @@ import {
 } from "./WorkbenchShared";
 
 type TestCase = { id: string; requirementVersionId: string; result: string };
+const deliveryReadScope = '测试统计覆盖当前已确认需求的全部用例；文档摘要覆盖当前需求的完整目录，每类取最新一份。规划与审查仍最多读取最近 100 条。';
 type Doc = {
   id: string;
   requirementVersionId: string;
@@ -260,7 +261,8 @@ function DeliveryBoard({
       `备注：${saved.record.items[item.id].note || "尚未填写"}`,
     ]),
     "## 数据范围",
-    "规划、文档和审查最多读取最近 100 条；测试用例最多 200 条。测试与文档按当前已确认需求过滤，测试结果由人工登记。没有运行用户代码，也没有检查线上部署。",
+    deliveryReadScope,
+    "测试结果由人工登记。没有运行用户代码，也没有检查线上部署。记录存在不等于通过验收。",
   ].join("\n\n");
   return (
     <div className="delivery-grid" aria-busy={docs.loading}>
@@ -427,8 +429,7 @@ function DeliveryBoard({
           编辑与导出原文档 →
         </button>
         <p className="wb-fineprint">
-          成果最多读取最近 100 条运行/文档/审查及 200
-          条用例；记录存在不等于通过验收。
+          {deliveryReadScope}记录存在不等于通过验收。
         </p>
       </aside>
     </div>

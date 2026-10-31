@@ -272,6 +272,9 @@ try {
           text.includes("需求 V1"),
         "handoff_export_scope",
       );
+      const scope = '测试统计覆盖当前已确认需求的全部用例；文档摘要覆盖当前需求的完整目录，每类取最新一份。规划与审查仍最多读取最近 100 条。';
+      assert(text.includes(scope) && !text.includes('测试用例最多 200 条'), 'handoff_export_current_scope');
+      assert((await page.locator('.wb-fineprint').allTextContents()).some(value=>value.includes(scope)), 'handoff_visible_current_scope');
       const after = await api(projectPath);
       assert(
         JSON.stringify(before) === JSON.stringify(after),

@@ -233,8 +233,13 @@ try {
     );
     await page.getByLabel('文档名称', { exact: true }).fill('借阅规则 · 界面演示资料');
     await page.getByRole('button', { name: /保存并分块/ }).click();
+    await page.getByRole('button', { name: '建立索引', exact: true }).waitFor();
+    const indexedCatalogue=page.waitForResponse(response=>new URL(response.url()).pathname==='/api/knowledge'&&response.request().method()==='GET'&&response.ok());
     await page.getByRole('button', { name: '建立索引', exact: true }).click();
-    await page.getByText('可检索', { exact: true }).waitFor({ timeout: 90000 });
+    const catalogue=await (await indexedCatalogue).json();
+    const indexedDocument=catalogue.documents.find(document=>document.name==='借阅规则 · 界面演示资料');
+    assert(indexedDocument?.indexCompatibility==='current'&&indexedDocument.currentChunks===indexedDocument.chunkCount&&indexedDocument.chunkCount>0,'index_current_source_incomplete');
+    await page.getByText('当前模型索引', { exact: true }).waitFor({ timeout: 90000 });
     await page.getByLabel('检索问题', { exact: true }).fill('校园借阅有哪些数量和库存限制，如何设计测试？');
     await page.getByRole('button', { name: /检索知识/ }).click();
     await page.locator('.knowledge-source').first().waitFor();
