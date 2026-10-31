@@ -47,6 +47,10 @@ pnpm dev
 
 Windows 下可使用 `pnpm start:local` 启动本地开发服务并检查状态。脚本优先识别当前工作区已经安装的本地 PostgreSQL 启动器，其他工作区默认使用仓库的 Docker Compose；已有外部 PostgreSQL 可运行 `pnpm start:local -Database external`。首次构建可加 `-Build`，修改 API 源码或本地环境配置后可加 `-RestartApi`。脚本不会输出配置内容或发起收费模型请求；日志及进程记录保存在被 Git 忽略的 `.runtime/services/`。它使用默认端口 3001、3010、5173，不是公网部署脚本。
 
+电脑重启会停止这些本地进程。Windows 可运行 `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/install-windows-startup.ps1`，为当前用户创建桌面的“打开工序智伴”和登录启动入口。以后登录 Windows 时会在后台启动本地服务；双击桌面入口会先检查服务，再打开工作台。重复点击会复用已运行的服务，并通过启动锁避免重复启动；不自动调用收费模型。启动状态记录在 `.runtime/services/launcher.log`，只写固定状态，不记录密钥或子进程正文。
+
+需要移除本项目创建的两个快捷方式时，可运行同一安装脚本并加 `-Remove`；它只移除指向本工作区启动器的快捷方式，不删除项目或数据库。启动脚本在系统未配置 Node/pnpm 路径时会尝试已有的本机运行环境；本机地址仍为 `http://127.0.0.1:5173/dashboard`，电脑关机时不能访问。
+
 本机的 Docker 安装仍受 Windows 组件损坏影响，因此本轮验证使用原生 PostgreSQL 16.15 + pgvector 0.8.7，数据库数据位于工作区外层 `.setup/postgresql/data16/`；Docker 配置继续保留。切换数据库部署方式时应迁移真实数据，并避免两个数据库同时占用 5432 端口。
 
 ### AI 与知识检索配置

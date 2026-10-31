@@ -11,12 +11,15 @@ $runtimeRoot = Join-Path $projectRoot '.runtime\services'
 New-Item -ItemType Directory -Path $runtimeRoot -Force | Out-Null
 
 $nodeCommand = Get-Command node -ErrorAction SilentlyContinue
-if (-not $nodeCommand) {
+$pnpmCommand = Get-Command pnpm -ErrorAction SilentlyContinue
+if (-not $nodeCommand -or -not $pnpmCommand) {
     $runtimeDependencies = Join-Path $env:USERPROFILE '.cache\codex-runtimes\codex-primary-runtime\dependencies'
     $runtimeNode = Join-Path $runtimeDependencies 'node\bin'
-    if (-not (Test-Path -LiteralPath (Join-Path $runtimeNode 'node.exe'))) { throw 'Node.js 22+ is required.' }
-    $env:PATH = "$runtimeNode;$(Join-Path $runtimeDependencies 'bin\fallback');$env:PATH"
-    $nodeCommand = Get-Command node
+    if (Test-Path -LiteralPath (Join-Path $runtimeNode 'node.exe')) {
+        $env:PATH = "$runtimeNode;$(Join-Path $runtimeDependencies 'bin\fallback');$env:PATH"
+    }
+    $nodeCommand = Get-Command node -ErrorAction SilentlyContinue
+    if (-not $nodeCommand) { throw 'Node.js 22+ is required.' }
 }
 $pnpmCommand = Get-Command pnpm -ErrorAction Stop
 $nativeBootstrap = Join-Path $workspaceRoot '.setup\postgresql\start-local-postgres.mjs'
@@ -37,7 +40,7 @@ try {
     }
     & $pnpmCommand.Source --filter '@gongxu/api' db:migrate
     if ($LASTEXITCODE -ne 0) { throw 'Database migrations failed; application startup stopped.' }
-    if ($Build -or -not (Test-Path -LiteralPath (Join-Path $projectRoot 'apps\embedding\dist\server.js'))) {
+    if ($Build -or -not (Test-Path -LiteralPath (Join-Path $projectRoot 'apps\embedding\dist\server.js')) -or -not (Test-Path -LiteralPath (Join-Path $projectRoot 'apps\api\dist\server.js'))) {
         & $pnpmCommand.Source build
         if ($LASTEXITCODE -ne 0) { throw 'Build failed; application startup stopped.' }
     }
