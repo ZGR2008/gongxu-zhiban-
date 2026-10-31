@@ -12,6 +12,8 @@ v3继续补齐明确的任务—用例配对、同版本证据变化提示、文
 
 成长中心默认按各项目最近已确认需求统计任务与用例，旧版本的完成或通过不计入当前进度。历史累计需要主动选择，且不据此生成当前下一步建议；审查、语法诊断和最近活动明确为账号历史。用例数量与当前人工结果不是累计执行次数，也不是能力评分。范围切换会取消旧读取，失败或返回范围不一致不会继续展示旧数字。
 
+Markdown排版按需加载，等待或资源下载失败时保留完整原文、继续编辑和复制，支持重试排版；文档大纲在实际排版完成后更新。受控生产浏览器中，首页JS由458,518字节降至292,487字节；这是资源量变化，不宣称等比例用户速度提升。条件、样本与失败恢复证据见[首屏性能验证](docs/PERFORMANCE-V3.md)。
+
 ![本轮合成项目的真实数据库追踪界面：建议、审核和人工证据分别展示](docs/screenshots/review-v2/trace-desktop.png)
 
 版本化评测入口为 `pnpm eval:offline`；`pnpm eval:prepare`准备实际路由的合成输入，`pnpm eval:report`离线核对明确提供的记录。输入、模型、资料或设置不一致及缺少人工判断时拒绝计算可比结果，真实模型三流程对比仍待授权；[案例与盲评协议](evaluation/README.md)没有虚构成绩或提升百分比。[竞赛截图逐项检查](docs/CONTEST-ACCEPTANCE-2026-11.md)只采用七张图清晰可见的要求，评分权重、国赛细则及裁切部分为信息不足。
@@ -104,7 +106,7 @@ pnpm --filter @gongxu/embedding start
 
 代码审查目前的确定性检测仅覆盖 JavaScript/TypeScript 语法，不执行提交的代码；AI 的安全、性能等意见属于待验证建议。生成的测试用例默认未执行，人工修改用例后执行状态会重置。文档草稿读取已确认需求、相关任务和人工测试记录，缺失的 API、代码和部署事实须人工补充。
 
-注意：当前登录限频为单进程机制，前端令牌存储在本地浏览器中；上线前需增加 HTTPS、共享限流、会话保护及安全审查。运行中的 Agent 在进程意外中断后尚不能自动恢复。
+注意：当前登录限频为单进程机制，前端令牌存储在本地浏览器中；上线前需增加 HTTPS、共享限流、会话保护及安全审查。Agent通过心跳、总截止与读取时检查识别中断，保留已完成记录，允许人主动取消或新建运行；不会自动恢复或重放收费调用。
 
 当前后端开发命令先编译 TypeScript，再监听编译后的文件；修改后端源码时需重新运行构建或重启开发命令。前端支持 Vite 热更新。
 
@@ -118,6 +120,7 @@ pnpm test:ui-models
 pnpm test:workbench
 pnpm test:review-package
 pnpm verify:reliability-ui
+pnpm verify:web-entry
 pnpm eval:offline
 ```
 
@@ -137,7 +140,7 @@ pnpm smoke:ui                  # 新界面回归：导航、显示偏好、编�
 pnpm smoke:ui --with-ai        # 增加真实 Agent、审查、RAG、测试用例及文档交互，会产生 API 用量
 pnpm smoke:visual              # 星环真实画面、方向、倍速、暂停、拖动、减少动画和图形恢复；不调用模型
 pnpm smoke:visual --webkit     # 同样的 9 组检查，使用 Playwright WebKit
-pnpm test:ui-models            # 15 项纯前端规则检查：版本隔离、真实状态、边界与逐行比较
+pnpm test:ui-models            # 16 项纯前端规则检查：版本隔离、真实状态、边界与逐行比较
 pnpm smoke:project-controls    # 8 组项目概览/版本对比检查，使用真实本地数据库，不调用模型
 pnpm smoke:project-controls --webkit # 同样检查，使用 Playwright WebKit
 pnpm test:workbench            # 10 项规则检查：任务书、时间显示、人工清单存储与版本隔离

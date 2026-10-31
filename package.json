@@ -25,6 +25,7 @@
     "start:local": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/start-local.ps1",
     "test:review-package": "node --test scripts/review-package.test.mjs",
     "verify:reliability-ui": "node scripts/reliability-browser.mjs",
+    "verify:web-entry": "node scripts/measure-web-entry.mjs --assert-deferred",
     "verify:local": "pnpm --filter @gongxu/api build && cd apps/api && node ../../scripts/reliability-local.mjs",
     "eval:offline": "pnpm --filter @gongxu/api build && node scripts/evaluate-offline.mjs",
     "eval:prepare": "pnpm --filter @gongxu/api build && node scripts/evaluate-prepare.mjs",

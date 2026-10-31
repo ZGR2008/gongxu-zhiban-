@@ -55,7 +55,12 @@ async function scenario(name,work){
  page.on('pageerror',error=>{state.errors.push('page_error');if(baselineCommit)console.log(`Historical browser module error: ${error.message}`);});
  await page.route('**/*',async route=>{
   const url=new URL(route.request().url());
-  if(url.origin!==origin.origin) return route.abort();
+  if(url.origin!==origin.origin){state.externalRequests=(state.externalRequests??0)+1;return route.abort();}
+  if(/\/MarkdownRenderer[.-]/.test(url.pathname)){
+   state.markdownLoads=(state.markdownLoads??0)+1;
+   if(state.markdownGate)await state.markdownGate;
+   if(state.markdownFail)return route.abort('failed');
+  }
   if(baselineModule&&url.pathname===`/src/${baselineSource}`)return route.fulfill({contentType:'application/javascript',body:baselineModule});
   if(!url.pathname.startsWith('/api/')) return route.continue();
   const path=url.pathname.slice(4),method=route.request().method();
@@ -133,6 +138,31 @@ function traceFixture(state){
  state.traceData={version:{id:RA,number:1,current:true},items:[{id:RA,key:'REQ-fixture',position:1,start:0,end:4,text:'审批留档',change:'initial',coverage:{suggested:0,confirmedTasks:1,confirmedCases:1,stale:0,manualEvidence:0}}],links:[{id:'task-link',itemId:RA,taskId:RA,caseId:null,status:'confirmed',origin:'human'},{id:'case-link',itemId:RA,taskId:null,caseId:RB,caseRevision:1,status:'confirmed',origin:'human'}],tasks:[{id:RA,title:'合成审批任务'}],cases:[test],previousItems:[],impact:null,taskTests:[],taskTestHistory:[],scope:'受控浏览器替身，不是业务数据'};
 }
 try{
+ await scenario('markdown_deferred_load_keeps_complete_draft_and_builds_outline',async(page,state)=>{
+  let release;state.markdownGate=new Promise(resolve=>{release=resolve;});
+  const source='# 延迟排版标题\n\n<script>window.fixtureExecuted=true</script>\n![不可外发](https://example.invalid/fixture.png)\n\n## 末尾验收要求\n审批后必须保存记录';
+  try{
+   await page.goto(`${origin.origin}/dashboard`);await page.locator('.project-info strong').first().waitFor();assert.equal(state.markdownLoads??0,0);
+   await routeTo(page,A);await page.locator('#requirement').fill(source);await page.getByRole('button',{name:'分栏',exact:true}).click();await waitFor(()=>state.markdownLoads>0);
+   assert.equal(await page.locator('.rich-content-fallback').innerText(),source);assert.equal(await page.locator('#requirement').inputValue(),source);
+   const edited=source+'\n加载期间新增的条件';await page.locator('#requirement').fill(edited);assert.equal(await page.locator('.rich-content-fallback').innerText(),edited);
+   release();await page.getByRole('region',{name:'文档预览'}).getByRole('heading',{name:'末尾验收要求',exact:true}).waitFor();await page.getByRole('button',{name:'文档大纲',exact:true}).click();assert.equal(await page.locator('.document-outline button').count(),2);
+   assert.equal(await page.locator('#requirement').inputValue(),edited);assert.equal(await page.locator('.rich-content img, .rich-content script').count(),0);assert.equal(await page.evaluate(()=>window.fixtureExecuted),undefined);assert.equal(state.externalRequests??0,0);
+  }finally{release();}
+ });
+ await scenario('markdown_failed_chunk_retains_raw_text_and_retries_without_losing_edits',async(page,state)=>{
+  state.markdownFail=true;const source='# 断网时的原文\n\n末尾条件必须保留';
+  await page.goto(`${origin.origin}/projects/${A}/requirements`);await page.locator('#requirement').fill(source);await page.getByRole('button',{name:'分栏',exact:true}).click();await page.getByRole('button',{name:'重试排版',exact:true}).waitFor();
+  assert.equal(await page.locator('.rich-content-fallback').innerText(),source);const edited=source+'\n断网后继续输入';await page.locator('#requirement').fill(edited);
+  state.markdownFail=false;await page.getByRole('button',{name:'重试排版',exact:true}).click();await page.getByRole('region',{name:'文档预览'}).getByRole('heading',{name:'断网时的原文',exact:true}).waitFor();assert.equal(await page.locator('#requirement').inputValue(),edited);assert.ok(state.markdownLoads>=2);assert.equal(state.writes.length,0);
+ });
+ await scenario('markdown_late_renderer_never_reintroduces_previous_project_content',async(page,state)=>{
+  let release;state.markdownGate=new Promise(resolve=>{release=resolve;});state.makeDetail=id=>detail(id,id===A?'# A项目原文':'# B项目原文\n\nB的验收条件');
+  try{
+   await page.goto(`${origin.origin}/projects/${A}/requirements`);await page.locator('#requirement').waitFor();await page.getByRole('button',{name:'预览',exact:true}).click();await waitFor(()=>state.markdownLoads>0);
+   await routeTo(page,B);await waitFor(()=>state.detailCounts[B]>0);await page.locator('#requirement').waitFor();assert.equal(await page.locator('#requirement').inputValue(),'# B项目原文\n\nB的验收条件');await page.getByRole('button',{name:'预览',exact:true}).click();assert.equal(await page.locator('.rich-content-fallback').innerText(),'# B项目原文\n\nB的验收条件');release();await page.getByRole('region',{name:'文档预览'}).getByRole('heading',{name:'B项目原文',exact:true}).waitFor();assert.equal(await page.getByRole('heading',{name:'A项目原文',exact:true}).count(),0);assert.equal(await page.locator('#requirement').inputValue(),'# B项目原文\n\nB的验收条件');
+  }finally{release();}
+ });
  await scenario('growth_scope_fast_switch_discards_late_history_and_hides_old_statistics',async(page,state)=>{
   await page.goto(`${origin.origin}/growth`);await page.getByRole('heading',{name:'当前版本任务进度',exact:true}).waitFor();assert.ok((await page.getByRole('region',{name:'任务进度',exact:true}).innerText()).includes('共 2 项'));
   state.growthDelay=scope=>scope==='history'?450:0;const reads=state.growthReads;await page.getByLabel('任务与测试统计范围').selectOption('history');await waitFor(()=>state.growthReads>reads);

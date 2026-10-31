@@ -32,6 +32,7 @@ API `/health`只证明进程在响应；`/ready`会核对数据库、迁移和pg
 | `pnpm test:review-package` | 没有.git的源码副本也能检查模板 | 合成临时目录，不读真实.env |
 | `pnpm typecheck`、`pnpm build` | 类型与生产构建 | 不代表视觉或真实AI验收 |
 | `pnpm verify:reliability-ui` | 乱序、失败、编辑保护、历史、焦点、取消、动效 | 浏览器受控响应，外部网络被阻止 |
+| `pnpm verify:web-entry` | 冻结本机生产构建，测首屏脚本资源且首页不加载排版库 | 临时回环静态服务及受控API，不读环境/DB/模型；先构建web |
 | `pnpm verify:local -- --browser` | 真实本地DB、版本证据、权限、桌面HTTP与可选本地Embedding | 新建合成账号/项目，真实模型回复使用替身；不操作已有用户项目 |
 | `pnpm eval:offline` | 8个版本化案例的实现协议检查 | 阻止网络调用；语义效果未评估 |
 | `pnpm eval:prepare`、`pnpm eval:report` | 捕获合成输入与核对明确提供的评测记录 | 不读取.env；不执行模型；缺少真实结果时保持待执行 |

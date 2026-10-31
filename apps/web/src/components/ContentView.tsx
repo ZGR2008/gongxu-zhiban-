@@ -1,7 +1,19 @@
-import { useEffect, useId, useRef, useState, type ReactNode, type CSSProperties } from 'react';
-import Markdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
+import { useCallback, useEffect, useId, useRef, useState, type ReactNode, type CSSProperties, type ComponentType } from 'react';
 import { UiIcon } from './UiIcon';
+import './content-fallback.css';
+
+let cachedRenderer: ComponentType<{ value: string }> | null = null;
+let rendererLoad: Promise<typeof import('./MarkdownRenderer')> | undefined;
+function loadRenderer() {
+  rendererLoad ??= import('./MarkdownRenderer').then(module => {
+    cachedRenderer = module.MarkdownRenderer;
+    return module;
+  }).catch(error => {
+    rendererLoad = undefined;
+    throw error;
+  });
+  return rendererLoad;
+}
 
 export function CopyButton({ value, label = '复制内容' }: { value: string; label?: string }) {
   const [feedback, setFeedback] = useState('');
@@ -35,28 +47,28 @@ export function CopyButton({ value, label = '复制内容' }: { value: string; l
 
 /** Markdown is rendered as React nodes: raw HTML is disabled, and images never
  * fetch remote resources supplied by a model or uploaded knowledge document. */
-export function RichContent({ value }: { value: string }) {
+export function RichContent({ value, onRendered }: { value: string; onRendered?: () => void }) {
+  const [Renderer, setRenderer] = useState(() => cachedRenderer);
+  const [failed, setFailed] = useState(false);
+  const [attempt, setAttempt] = useState(0);
+  useEffect(() => {
+    if (Renderer) return;
+    let active = true;
+    setFailed(false);
+    void loadRenderer().then(module => {
+      if (active) setRenderer(() => module.MarkdownRenderer);
+    }).catch(() => { if (active) setFailed(true); });
+    return () => { active = false; };
+  }, [Renderer, attempt]);
+  // Notify after the actual DOM commit, including the first deferred render.
+  useEffect(() => { if (Renderer) onRendered?.(); }, [Renderer, value, onRendered]);
   return (
     <div className="rich-content">
-      <Markdown
-        remarkPlugins={[remarkGfm]}
-        skipHtml
-        components={{
-          a: ({ children, href }) => (
-            <a href={href} target="_blank" rel="noopener noreferrer">
-              {children}
-            </a>
-          ),
-          img: ({ alt }) => <span className="markdown-image-note">[图片：{alt || '未命名'}]</span>,
-          table: ({ children }) => (
-            <div className="markdown-table-scroll" tabIndex={0}>
-              <table>{children}</table>
-            </div>
-          ),
-        }}
-      >
-        {value}
-      </Markdown>
+      {Renderer?<Renderer value={value}/>:<>
+        <p className="muted-text" role="status">{failed?'排版资源暂未加载，以下保留完整原文，可继续编辑和复制。':'正在准备排版，以下为完整原文…'}</p>
+        {failed&&<button type="button" className="button secondary" onClick={()=>setAttempt(value=>value+1)}>重试排版</button>}
+        <pre className="rich-content-fallback">{value}</pre>
+      </>}
     </div>
   );
 }
@@ -83,20 +95,21 @@ export function MarkdownEditor({
   const preview = useRef<HTMLDivElement>(null);
   const [outline, setOutline] = useState<{ id: string; title: string; level: number }[]>([]);
   const [showOutline, setShowOutline] = useState(false);
+  const updateOutline = useCallback(() => {
+    const headings = [...(preview.current?.querySelectorAll<HTMLHeadingElement>('h1,h2,h3') ?? [])];
+    setOutline(headings.map((heading, index) => {
+      const id = `${groupId}-heading-${index}`;
+      heading.id = id;
+      return { id, title: heading.textContent || '未命名章节', level: Number(heading.tagName.slice(1)) };
+    }));
+  }, [groupId]);
   useEffect(() => {
     if (view === 'edit') {
       setOutline([]);
       return;
     }
-    const headings = [...(preview.current?.querySelectorAll<HTMLHeadingElement>('h1,h2,h3') ?? [])];
-    setOutline(
-      headings.map((heading, index) => {
-        const id = `${groupId}-heading-${index}`;
-        heading.id = id;
-        return { id, title: heading.textContent || '未命名章节', level: Number(heading.tagName.slice(1)) };
-      }),
-    );
-  }, [value, view, groupId]);
+    updateOutline();
+  }, [value, view, updateOutline]);
   return (
     <div className={`markdown-editor markdown-editor--${view}`}>
       <div className="editing-toolbar">
@@ -173,7 +186,7 @@ export function MarkdownEditor({
         {view !== 'edit' && (
           <div ref={preview} className="markdown-preview" role="region" tabIndex={0} aria-label="文档预览">
             {value.trim() ? (
-              <RichContent value={value} />
+              <RichContent value={value} onRendered={updateOutline} />
             ) : (
               <div className="preview-placeholder">
                 <UiIcon name="document" size={26} />
