@@ -1,13 +1,16 @@
+import {withAbort} from './abortable.js';
 export type AiConfig = { baseUrl: string; apiKey: string; model: string; timeoutMs: number; maxOutputTokens?: number; reasoningEffort?: 'none' | 'low' | 'high' | 'max' };
+export type CompletionOptions={signal?:AbortSignal};
 export type AiMessage = { role: 'system' | 'user' | 'assistant'; content: string };
 export class AiError extends Error {
-  constructor(public readonly code: 'ai_not_configured' | 'ai_timeout' | 'ai_provider_error' | 'ai_auth_error' | 'ai_insufficient_balance' | 'ai_rate_limited' | 'ai_output_truncated') { super(code); }
+  constructor(public readonly code: 'ai_not_configured' | 'ai_timeout' | 'ai_cancelled' | 'ai_provider_error' | 'ai_auth_error' | 'ai_insufficient_balance' | 'ai_rate_limited' | 'ai_output_truncated') { super(code); }
 }
 
 // Provider credentials are a server-side problem, never an application login failure.
 export function aiErrorStatus(code: AiError['code']): number {
   if (code === 'ai_not_configured') return 503;
   if (code === 'ai_timeout') return 504;
+  if (code === 'ai_cancelled') return 409;
   if (code === 'ai_rate_limited') return 429;
   return 502;
 }
@@ -31,19 +34,22 @@ export function loadAiConfig(env: NodeJS.ProcessEnv = process.env): AiConfig | u
   return { baseUrl: url.toString().replace(/\/$/, ''), apiKey, model, timeoutMs, maxOutputTokens, reasoningEffort: effort as AiConfig['reasoningEffort'] };
 }
 
-export async function completeChat(config: AiConfig | undefined, messages: AiMessage[], fetcher: typeof fetch = fetch): Promise<string> {
+export async function completeChat(config: AiConfig | undefined, messages: AiMessage[], fetcher: typeof fetch = fetch, options:CompletionOptions={}): Promise<string> {
   if (!config) throw new AiError('ai_not_configured');
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), config.timeoutMs);
+  const signal=options.signal?AbortSignal.any([controller.signal,options.signal]):controller.signal;
+  let reader:ReadableStreamDefaultReader<Uint8Array>|undefined;
   try {
-    const response = await fetcher(`${config.baseUrl}/chat/completions`, {
-      method: 'POST', redirect: 'error', signal: controller.signal,
+    const response = await withAbort(signal,()=>fetcher(`${config.baseUrl}/chat/completions`, {
+      method: 'POST', redirect: 'error', signal,
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${config.apiKey}` },
       body: JSON.stringify({ model: config.model, messages, temperature: 0.3, max_tokens: config.maxOutputTokens ?? 4096,
         ...(config.reasoningEffort ? { reasoning_effort: config.reasoningEffort } : {}) }),
-    });
+    }));
     if (!response.ok) {
       // Do not read or expose provider error bodies; they can contain sensitive data.
+      void response.body?.cancel().catch(()=>{});
       if (response.status === 401 || response.status === 403) throw new AiError('ai_auth_error');
       if (response.status === 402) throw new AiError('ai_insufficient_balance');
       if (response.status === 429) throw new AiError('ai_rate_limited');
@@ -51,14 +57,14 @@ export async function completeChat(config: AiConfig | undefined, messages: AiMes
     }
     if (!response.body) throw new AiError('ai_provider_error');
     // Limit the provider response to avoid accepting unbounded bodies.
-    const reader = response.body.getReader();
+    reader = response.body.getReader();
     const chunks: Uint8Array[] = [];
     let total = 0;
     while (true) {
-      const { done, value } = await reader.read();
+      const { done, value } = await withAbort(signal,()=>reader!.read());
       if (done) break;
       total += value.byteLength;
-      if (total > 512_000) { await reader.cancel(); throw new AiError('ai_provider_error'); }
+      if (total > 512_000) throw new AiError('ai_provider_error');
       chunks.push(value);
     }
     const bytes = new Uint8Array(total); let offset = 0;
@@ -70,8 +76,9 @@ export async function completeChat(config: AiConfig | undefined, messages: AiMes
     if (typeof content !== 'string' || !content.trim() || content.length > 45_000) throw new AiError('ai_provider_error');
     return content.trim();
   } catch (error) {
+    if(options.signal?.aborted)throw new AiError('ai_cancelled');
     if (controller.signal.aborted) throw new AiError('ai_timeout');
     if (error instanceof AiError) throw error;
     throw new AiError('ai_provider_error');
-  } finally { clearTimeout(timer); }
+  } finally { clearTimeout(timer);void reader?.cancel().catch(()=>{}); }
 }

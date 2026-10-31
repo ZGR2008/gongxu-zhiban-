@@ -19,6 +19,7 @@
     "test:ui-models": "node --test scripts/ui-models.test.mjs",
     "test:workbench": "node --test scripts/workbench-models.test.mjs",
     "test:evidence": "node --test scripts/evidence-state.test.mjs",
+    "verify:agent-recovery": "pnpm --filter @gongxu/api build && cd apps/api && node ../../scripts/agent-recovery-local.mjs",
     "smoke:workbench": "node scripts/workbench-smoke.mjs",
     "smoke:project-controls": "node scripts/project-controls-smoke.mjs",
     "start:local": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/start-local.ps1",

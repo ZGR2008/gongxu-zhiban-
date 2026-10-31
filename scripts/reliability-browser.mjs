@@ -47,6 +47,9 @@ async function scenario(name,work){
   } else if(/\/documents\/[^/]+\/history$/.test(path))body={history:state.docHistory,nextCursor:null};
   else if(/\/documents\/[^/]+$/.test(path)&&method==='GET')body={document:state.documents.find(row=>path.endsWith('/'+row.id))};
   else if(path.endsWith('/test-cases'))body={cases:state.cases};
+  else if(/\/agent\/runs\/[^/]+\/cancel$/.test(path)&&method==='POST'){
+   state.writes.push({path});state.runs=state.runs.map(run=>path.endsWith('/'+run.id+'/cancel')?{...run,status:'failed',errorCode:'agent_cancelled'}:run);body={status:'cancelled'};
+  }
   else if(path.endsWith('/agent/runs'))body={runs:state.runs};
   else if(/\/agent\/runs\/[^/]+$/.test(path)){const id=path.split('/').at(-1);state.runCounts[id]=(state.runCounts[id]||0)+1;await new Promise(r=>setTimeout(r,state.runDelay(id)));body={run:state.runs.find(r=>r.id===id),steps:[{id:'s',stage:'plan_1',status:'succeeded',outputSummary:id===RA?'运行A输出':'运行B输出',tools:[]}]};}
   else if(path.endsWith('/trace'))body={version:null,items:[],links:[],tasks:[],cases:[],previousItems:[],impact:null};
@@ -143,6 +146,15 @@ try{
   await page.getByRole('button',{name:'使用修订 1 编辑'}).click();await page.getByRole('dialog').getByRole('button',{name:'放弃并继续'}).click();assert.equal(await page.locator('#doc-content').inputValue(),'历史正文');
   await page.getByRole('link',{name:'我的项目',exact:true}).first().click();await page.getByRole('dialog').getByRole('button',{name:'保存并继续'}).click();await page.waitForURL('**/projects');
   assert.equal(state.writes.length,1);assert.equal(state.writes[0].body.content,'历史正文');assert.equal(state.writes[0].body.expectedRevision,2);
+ });
+ await scenario('agent_cancel_keeps_stopped_record_and_never_automatically_restarts',async(page,state)=>{
+  state.detailOverride={project:project(A),requirements:[{id:RA,version:1,status:'confirmed',content:'合成需求',createdAt:now}]};
+  state.runs=[{id:RA,requirementVersionId:RA,status:'running',createdAt:now,heartbeatAt:now,plan:null,errorCode:null}];
+  await page.goto(`${origin.origin}/projects/${A}/agent`);await page.getByRole('button',{name:'取消本次运行',exact:true}).waitFor();
+  assert.equal(await page.getByRole('button',{name:/开始规划/}).isDisabled(),true);
+  await page.getByRole('button',{name:'取消本次运行',exact:true}).click();await page.getByRole('button',{name:/重新规划当前需求/}).waitFor();
+  assert.equal(await page.getByRole('button',{name:/重新规划当前需求/}).isEnabled(),true);assert.ok((await page.locator('.agent-recovery-note').innerText()).includes('由用户取消'));
+  assert.equal(state.writes.length,1);assert.equal(state.writes[0].path,`/projects/${A}/agent/runs/${RA}/cancel`);assert.equal(state.runs[0].status,'failed');
  });
  await scenario('agent_task_board_defaults_to_current_version_and_history_is_read_only',async(page,state)=>{
   state.detailOverride={project:project(A),requirements:[{id:RA,version:2,status:'confirmed',content:'当前需求',createdAt:now},{id:RB,version:1,status:'confirmed',content:'历史需求',createdAt:now}]};

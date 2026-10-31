@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import pg from 'pg';
+import {createRuntimeDatabase} from './database.js';
 import { loadConfig } from './config.js';
 import { createApp } from './app.js';
 import { PgProjectStore } from './project-store.js';
@@ -9,7 +9,7 @@ import { resolveEmbeddingConfig } from './rag/service.js';
 
 const config = loadConfig();
 const embedding = resolveEmbeddingConfig();
-const database = config.DATABASE_URL ? new pg.Pool({ connectionString: config.DATABASE_URL, connectionTimeoutMillis: 3000 }) : undefined;
+const database = config.DATABASE_URL ? createRuntimeDatabase(config.DATABASE_URL) : undefined;
 const app = await createApp({ database, pool: database, projectStore: database ? new PgProjectStore(database) : undefined,
   aiConfig: loadAiConfig(), aiGenerationStore: database ? new PgAiGenerationStore(database) : undefined,
   embeddingConfig: embedding.config, corsOrigin: config.CORS_ORIGIN, logger: true });

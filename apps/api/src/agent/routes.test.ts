@@ -13,7 +13,7 @@ test('missing embedding is recorded as skipped and never fakes a tool call', asy
   const writes:{sql:string; values:unknown[]}[]=[]; let plan:unknown; let modelInput='';
   const pool={query:async(sql:string,values:unknown[])=>{
     writes.push({sql,values});
-    if (sql.includes("status='awaiting_review'")) plan=JSON.parse(values[1] as string);
+    if (sql.includes("status='awaiting_review'")) {plan=JSON.parse(values[1] as string);return {rows:[{id}]};}
     if (sql.includes('FROM agent_runs WHERE id=')) return {rows:[{id,status:'awaiting_review',plan}]};
     return {rows:sql.includes('RETURNING id')?[{id}]:[]};
   }} as unknown as Pool;
@@ -51,7 +51,7 @@ test('actual workflow invokes retrieval, retries validation, then awaits human r
   const pool={query:async(sql:string,values:unknown[])=>{
     writes.push({sql,values});
     if (sql.startsWith('INSERT INTO')) return {rows:[{id}]};
-    if (sql.includes("status='awaiting_review'")) plan=JSON.parse(values[1] as string);
+    if (sql.includes("status='awaiting_review'")) {plan=JSON.parse(values[1] as string);return {rows:[{id}]};}
     if (sql.includes('FROM agent_runs WHERE id=')) return {rows:[{id,status:'awaiting_review',plan}]};
     return {rows:[]};
   }} as unknown as Pool;

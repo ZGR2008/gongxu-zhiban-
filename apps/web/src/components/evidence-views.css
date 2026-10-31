@@ -685,3 +685,4 @@ details:not([open]) > :not(summary) {
     min-width: 100px;
   }
 }
+.agent-recovery-note{padding:14px 18px;margin:14px 0;color:#d1c4e9;font-size:13px;line-height:1.7;border-left:2px solid #9272c4;background:#21162f66}

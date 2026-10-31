@@ -11,22 +11,26 @@ import type { KnowledgeHit } from '../rag/search.js';
 import { validatePlan } from './validate.js';
 import { requirementGenerationIssue, requirementSegments } from '../requirement-content.js';
 import { requirementItems, assessPlan } from '../trace/domain.js';
+import {AgentStopError,executionLease,finishInterruptedRuns} from './lifecycle.js';
+import type {CompletionOptions} from '../ai/model.js';
 
 const params = z.object({ projectId: z.string().uuid() });
 const runParams = params.extend({ runId: z.string().uuid() });
-const body = z.object({ requirementId: z.string().uuid() }).strict();
-const runFields = `id, project_id AS "projectId", requirement_version_id AS "requirementVersionId", model_name AS "modelName", status, plan, error_code AS "errorCode", created_at AS "createdAt", finished_at AS "finishedAt", confirmed_at AS "confirmedAt"`;
+const body = z.object({ requirementId: z.string().uuid(),requestKey:z.string().uuid().optional() }).strict();
+const runFields = `id, project_id AS "projectId", requirement_version_id AS "requirementVersionId", model_name AS "modelName", status, plan, error_code AS "errorCode", created_at AS "createdAt", finished_at AS "finishedAt", confirmed_at AS "confirmedAt",heartbeat_at AS "heartbeatAt",deadline_at AS "deadlineAt",request_key AS "requestKey"`;
 const taskFields = `t.id,t.requirement_version_id AS "requirementVersionId",t.agent_run_id AS "agentRunId",t.plan_key AS "planKey",t.title,t.stage,t.description,t.deliverable,t.status,COALESCE(array_agg(d.depends_on_task_id) FILTER (WHERE d.depends_on_task_id IS NOT NULL),'{}') AS "dependsOn"`;
 
 type Dependencies = {
-  complete?: (config: AiConfig | undefined, messages: AiMessage[]) => Promise<string>;
+  complete?: (config: AiConfig | undefined, messages: AiMessage[],options?:CompletionOptions) => Promise<string>;
   retrieve?: (pool: Pool, ownerId: string, query: string, config: EmbeddingConfig, options?:EmbeddingOptions) => Promise<KnowledgeHit[]>;
 };
 class WorkflowError extends Error { constructor(public code: string) { super(code); } }
 
 export async function registerAgentRoutes(app: FastifyInstance, store?: ProjectStore, pool?: Pool, ai?: AiConfig, embedding?: EmbeddingConfig, deps: Dependencies = {}) {
-  const runModel = deps.complete ?? completeChat;
+  const runModel = deps.complete ?? ((config,messages,options)=>completeChat(config,messages,fetch,options));
   const search = deps.retrieve ?? retrieveKnowledge;
+  const executions=new Map<string,ReturnType<typeof executionLease>>();
+  app.addHook('onClose',async()=>{for(const lease of executions.values()){lease.stop(new AgentStopError('agent_interrupted'));lease.dispose();}executions.clear();});
   const limits = new Map<string, { count: number; expires: number }>();
   async function getRun(projectId: string, runId: string) {
     const r = await pool!.query(`SELECT ${runFields} FROM agent_runs WHERE id=$1 AND project_id=$2`, [runId, projectId]);
@@ -43,13 +47,15 @@ export async function registerAgentRoutes(app: FastifyInstance, store?: ProjectS
     return r.rows;
   }
   async function startStep(runId: string, stage: string) {
-    const r = await pool!.query(`INSERT INTO agent_steps(run_id,stage,status) VALUES ($1,$2,'running') RETURNING id`, [runId, stage]); return r.rows[0].id as string;
+    const r = await pool!.query(`INSERT INTO agent_steps(run_id,stage,status) SELECT id,$2,'running' FROM agent_runs WHERE id=$1 AND status='running' AND deadline_at>now() RETURNING id`, [runId, stage]);
+    if(!r.rows[0])throw new AgentStopError('agent_interrupted');return r.rows[0].id as string;
   }
-  async function endStep(id: string, status: 'succeeded' | 'failed' | 'skipped', summary: string) { await pool!.query(`UPDATE agent_steps SET status=$2,output_summary=$3,finished_at=now() WHERE id=$1`, [id,status,summary]); }
+  async function endStep(id: string, status: 'succeeded' | 'failed' | 'skipped', summary: string) { await pool!.query(`UPDATE agent_steps SET status=$2,output_summary=$3,finished_at=now() WHERE id=$1 AND status='running' AND EXISTS(SELECT 1 FROM agent_runs r WHERE r.id=agent_steps.run_id AND r.status='running')`, [id,status,summary]); }
   async function startTool(step: string, name: 'knowledge_search'|'validate_plan', input: string) {
-    const r = await pool!.query(`INSERT INTO agent_tool_calls(step_id,tool_name,status,input_summary) VALUES ($1,$2,'running',$3) RETURNING id`, [step,name,input.slice(0,1000)]); return r.rows[0].id as string;
+    const r = await pool!.query(`INSERT INTO agent_tool_calls(step_id,tool_name,status,input_summary) SELECT s.id,$2,'running',$3 FROM agent_steps s JOIN agent_runs r ON r.id=s.run_id WHERE s.id=$1 AND s.status='running' AND r.status='running' AND r.deadline_at>now() RETURNING id`, [step,name,input.slice(0,1000)]);
+    if(!r.rows[0])throw new AgentStopError('agent_interrupted');return r.rows[0].id as string;
   }
-  async function endTool(id: string, status: 'succeeded' | 'failed', summary: string) { await pool!.query(`UPDATE agent_tool_calls SET status=$2,output_summary=$3,finished_at=now() WHERE id=$1`, [id,status,summary]); }
+  async function endTool(id: string, status: 'succeeded' | 'failed', summary: string) { await pool!.query(`UPDATE agent_tool_calls SET status=$2,output_summary=$3,finished_at=now() WHERE id=$1 AND status='running' AND EXISTS(SELECT 1 FROM agent_steps s JOIN agent_runs r ON r.id=s.run_id WHERE s.id=agent_tool_calls.step_id AND r.status='running')`, [id,status,summary]); }
   async function authorize(request: Parameters<typeof authorizeRequest>[0], reply: { code: (n: number) => { send: (data: object) => unknown } }) {
     if (!store || !pool) { reply.code(503).send({ error:'database_not_configured' }); return null; }
     const user = await authorizeRequest(request, store); if (!user) { reply.code(401).send({ error:'unauthorized' }); return null; }
@@ -59,12 +65,24 @@ export async function registerAgentRoutes(app: FastifyInstance, store?: ProjectS
   }
   app.get('/projects/:projectId/agent/runs', async (req, reply) => {
     const access = await authorize(req,reply); if (!access) return;
+    await finishInterruptedRuns(pool!,access.projectId);
     const r = await pool!.query(`SELECT ${runFields} FROM agent_runs WHERE project_id=$1 ORDER BY created_at DESC LIMIT 100`, [access.projectId]); return { runs:r.rows };
   });
   app.get('/projects/:projectId/agent/runs/:runId', async (req, reply) => {
     const access = await authorize(req,reply); if (!access) return;
     const p = runParams.safeParse(req.params); if (!p.success) return reply.code(400).send({ error:'invalid_input' });
+    await finishInterruptedRuns(pool!,access.projectId);
     return await details(access.projectId,p.data.runId) ?? reply.code(404).send({error:'not_found'});
+  });
+  app.post('/projects/:projectId/agent/runs/:runId/cancel',async(req,reply)=>{
+    const access=await authorize(req,reply);if(!access)return;
+    const p=runParams.safeParse(req.params);if(!p.success)return reply.code(400).send({error:'invalid_input'});
+    const run=await getRun(access.projectId,p.data.runId);if(!run)return reply.code(404).send({error:'not_found'});
+    if(run.status!=='running')return run.errorCode==='agent_cancelled'?{status:'cancelled',runId:run.id}:reply.code(409).send({error:'agent_run_not_running'});
+    const ended=await finishInterruptedRuns(pool!,access.projectId,p.data.runId);
+    if(!ended.rows.length)return reply.code(409).send({error:'agent_run_not_running'});
+    executions.get(p.data.runId)?.stop(new AgentStopError('agent_cancelled'));
+    return {status:'cancelled',runId:p.data.runId,scope:'stopped_local_workflow_not_billing_reversal'};
   });
   app.get('/projects/:projectId/tasks', async (req, reply) => {
     const access = await authorize(req,reply); if (!access) return;
@@ -83,8 +101,11 @@ export async function registerAgentRoutes(app: FastifyInstance, store?: ProjectS
     const limit = limits.get(access.user.id) ?? { count:0, expires:now+60_000 };
     if (limit.count >= 5) return reply.code(429).send({error:'agent_rate_limited'});
     limit.count++; limits.set(access.user.id,limit);
-    const run = await pool!.query(`INSERT INTO agent_runs(project_id,requirement_version_id,model_name,status) VALUES($1,$2,$3,'running') RETURNING id`, [access.projectId,requirement.id,ai?.model ?? 'unconfigured']);
+    const run = await pool!.query(`INSERT INTO agent_runs(project_id,requirement_version_id,model_name,status,request_key) VALUES($1,$2,$3,'running',$4)
+      ON CONFLICT(project_id,request_key) WHERE request_key IS NOT NULL DO NOTHING RETURNING id`, [access.projectId,requirement.id,ai?.model ?? 'unconfigured',input.data.requestKey??null]);
+    if(!run.rows[0])return reply.code(409).send({error:'agent_request_exists'});
     const runId:string = run.rows[0].id;
+    const lease=executionLease(pool!,runId);executions.set(runId,lease);
     let currentStep: string | undefined; let currentTool: string | undefined;
     let embeddingActivity:ReturnType<typeof openEmbeddingActivity>|undefined;
     try {
@@ -101,7 +122,8 @@ export async function registerAgentRoutes(app: FastifyInstance, store?: ProjectS
         const segmentEvidence = [];
         const found = new Map<string, KnowledgeHit>();
         for (const segment of segments) {
-          const matches = await search(pool!,access.user.id,segment.content,embedding,embeddingActivity.options);
+          const options={...embeddingActivity.options,signal:embeddingActivity.options.signal?AbortSignal.any([lease.signal,embeddingActivity.options.signal]):lease.signal};
+          const matches = await lease.guard(()=>search(pool!,access.user.id,segment.content,embedding,options));
           segmentEvidence.push({part:segment.part,start:segment.start,end:segment.end,hitIds:matches.map(hit=>hit.id)});
           for (const hit of matches) if (!found.has(hit.id)) found.set(hit.id,hit);
         }
@@ -120,7 +142,7 @@ export async function registerAgentRoutes(app: FastifyInstance, store?: ProjectS
       let feedback = ''; let accepted = false;
       for (let attempt=1; attempt<=2; attempt++) {
         currentStep = await startStep(runId,`plan_${attempt}`);
-        const raw = await runModel(ai,[{role:'system',content:instructions},{role:'user',content:`确认需求：\n${requirement.content}\n需求条目索引（UTF-16原文偏移，包含起点、不包含终点）：${JSON.stringify(sourceItems.map(({key,start,end,text})=>({key,start,end,text})))}\n知识检索状态：${embedding ? (hits.length ? '已检索到资料' : '已检索但未找到充分依据') : '未配置 Embedding，检索已跳过，计划缺少知识库依据'}\n实际检索资料：\n${JSON.stringify(evidence)}\n上次校验反馈：${feedback || '无'}`}]);
+        const raw = await lease.guard(()=>runModel(ai,[{role:'system',content:instructions},{role:'user',content:`确认需求：\n${requirement.content}\n需求条目索引（UTF-16原文偏移，包含起点、不包含终点）：${JSON.stringify(sourceItems.map(({key,start,end,text})=>({key,start,end,text})))}\n知识检索状态：${embedding ? (hits.length ? '已检索到资料' : '已检索但未找到充分依据') : '未配置 Embedding，检索已跳过，计划缺少知识库依据'}\n实际检索资料：\n${JSON.stringify(evidence)}\n上次校验反馈：${feedback || '无'}`}],{signal:lease.signal}));
         await endStep(currentStep,'succeeded',`模型返回 ${raw.length} 字符，待规则校验`); currentStep=undefined;
         currentStep = await startStep(runId,`validate_${attempt}`); currentTool = await startTool(currentStep,'validate_plan',`校验第 ${attempt} 次模型输出`);
         const result = validatePlan(raw,hits.map(h=>h.id));
@@ -132,20 +154,22 @@ export async function registerAgentRoutes(app: FastifyInstance, store?: ProjectS
         const plan={...result.plan,review,requirementItems:sourceItems};
         await endTool(currentTool,'succeeded',JSON.stringify({structureValid:true,...review})); currentTool=undefined;
         await endStep(currentStep,'succeeded',`结构、依赖与引用ID校验通过；${review.warnings.length}项审核提示，完整性和引用支持性待人工核对`); currentStep=undefined;
-        await pool!.query(`UPDATE agent_runs SET status='awaiting_review',plan=$2::jsonb,finished_at=now() WHERE id=$1`,[runId,JSON.stringify(plan)]);
+        const saved=await pool!.query(`UPDATE agent_runs SET status='awaiting_review',plan=$2::jsonb,finished_at=now() WHERE id=$1 AND status='running' AND deadline_at>now() RETURNING id`,[runId,JSON.stringify(plan)]);
+        if(!saved.rows.length)throw new AgentStopError('agent_interrupted');
         accepted=true; break;
       }
       if (!accepted) throw new WorkflowError('plan_validation_failed');
       return reply.code(201).send(await details(access.projectId,runId));
     } catch (error) {
       embeddingActivity?.finish(error);
-      const code = error instanceof WorkflowError ? error.code : error instanceof AiError ? error.code : error instanceof EmbeddingError ? error.code : 'agent_execution_failed';
+      const stop=lease.signal.aborted?lease.signal.reason:error;
+      const code = stop instanceof AgentStopError?stop.code:error instanceof WorkflowError ? error.code : error instanceof AiError ? error.code : error instanceof EmbeddingError ? error.code : 'agent_execution_failed';
       if (currentTool) await endTool(currentTool,'failed',code);
       if (currentStep) await endStep(currentStep,'failed',code);
-      await pool!.query(`UPDATE agent_runs SET status='failed',error_code=$2,finished_at=now() WHERE id=$1`,[runId,code]);
-      const status = error instanceof AiError ? aiErrorStatus(error.code) : code.endsWith('_not_configured') ? 503 : code==='plan_validation_failed' ? 422 : 502;
+      await pool!.query(`UPDATE agent_runs SET status='failed',error_code=$2,finished_at=now() WHERE id=$1 AND status='running'`,[runId,code]);
+      const status = stop instanceof AgentStopError?(code==='agent_deadline_exceeded'?504:code==='agent_checkpoint_failed'?503:409):error instanceof AiError ? aiErrorStatus(error.code) : code.endsWith('_not_configured') ? 503 : code==='plan_validation_failed' ? 422 : 502;
       return reply.code(status).send({error:code,runId});
-    }
+    }finally{lease.dispose();executions.delete(runId);}
   });
   app.post('/projects/:projectId/agent/runs/:runId/confirm', async (req,reply) => {
     const access = await authorize(req,reply); if (!access) return;

@@ -53,7 +53,7 @@ export function Knowledge({ request }: { request: Api }) {
 
 type Requirement = { id:string; version:number; status:string };
 type TaskPlan = {key:string;stage:string;title:string;description:string;deliverable:string;dependsOn:string[];citations:string[]};
-type Run = {id:string;requirementVersionId:string;status:string;plan:{tasks:TaskPlan[]} | null;errorCode:string|null;createdAt:string};
+type Run = {id:string;requirementVersionId:string;status:string;plan:{tasks:TaskPlan[]} | null;errorCode:string|null;createdAt:string;heartbeatAt?:string|null;deadlineAt?:string|null;requestKey?:string|null};
 type Tool = {id:string;toolName:string;status:string;inputSummary:string;outputSummary:string};
 type Step = {id:string;stage:string;status:string;outputSummary:string;tools:Tool[]};
 type RunDetail = {run:Run; steps:Step[]};
@@ -63,6 +63,7 @@ const stages: Record<string,string> = {knowledge_search:'知识检索',plan_1:'�
 export function Agent({ request, projectId, requirements }: {request:Api;projectId:string;requirements:Requirement[]}) {
   const [runs,setRuns] = useState<Run[]>([]); const [selected,setSelected] = useState<RunDetail | null>(null); const [tasks,setTasks] = useState<Task[]>([]);
   const [planning,setPlanning] = useState(false);
+  const [cancelling,setCancelling]=useState(false);const cancelPending=useRef(false),requestKey=useRef<string|null>(null);
   const [reviewed,setReviewed]=useState(false);
   const runSelection=useRef(new RequestScope());const working=useRef(false);
   useEffect(()=>()=>runSelection.current.cancel(),[]);
@@ -82,7 +83,7 @@ export function Agent({ request, projectId, requirements }: {request:Api;project
     async function poll() {
       try {
         const history = await request<{runs:Run[]}>(`${base}/agent/runs`, { signal: controller.signal });
-        const id = planning ? history.runs[0]?.id : selected?.run.id;
+        const id = planning ? history.runs.find(run=>run.requestKey===requestKey.current)?.id : selected?.run.id;
         const detail = id ? await request<RunDetail>(`${base}/agent/runs/${encodeURIComponent(id)}`, { signal: controller.signal }) : null;
         if (active) { setRuns(history.runs); if (detail) setSelected(detail); }
       } catch (error) { if (active) setError(errorMessage(error)); }
@@ -92,11 +93,15 @@ export function Agent({ request, projectId, requirements }: {request:Api;project
     return () => { active = false; clearTimeout(timer); controller.abort(); };
   }, [planning, selected?.run.id, selected?.run.status, base, request]);
   async function selectRun(id:string) {const ticket=runSelection.current.begin(id);setError('');try{const next=await request<RunDetail>(`${base}/agent/runs/${encodeURIComponent(id)}`,{signal:ticket.signal});if(runSelection.current.accepts(ticket,id)&&next.run.id===id)setSelected(next);}catch(e){if(runSelection.current.accepts(ticket,id))setError(errorMessage(e));}}
-  async function start() { if (!latestConfirmed||working.current) return;working.current=true;runSelection.current.cancel(); setBusy(true); setPlanning(true); setError(''); setNotice(''); try { const result = await request<RunDetail>(`${base}/agent/runs`, {method:'POST',body:JSON.stringify({requirementId:latestConfirmed.id})}); await refresh(); setSelected(result); setNotice('规划已生成，请审阅任务及实际工具记录。'); } catch (e) { await refresh(); setError(errorMessage(e)); } finally { working.current=false;setBusy(false); setPlanning(false); } }
+  async function start() { if (!latestConfirmed||working.current) return;working.current=true;requestKey.current=crypto.randomUUID();runSelection.current.cancel();setSelected(null); setBusy(true); setPlanning(true); setError(''); setNotice(''); try { const result = await request<RunDetail>(`${base}/agent/runs`, {method:'POST',body:JSON.stringify({requirementId:latestConfirmed.id,requestKey:requestKey.current})}); await refresh(); setSelected(result); setNotice('规划已生成，请审阅任务及实际工具记录。'); } catch (e) { await refresh();if((e as {code?:string}).code==='agent_cancelled')setNotice('运行已取消，已完成步骤保留。重新规划会创建新运行。');else setError(errorMessage(e)); } finally { working.current=false;setBusy(false); setPlanning(false); } }
+  async function cancelRun(){if(!selected||selected.run.status!=='running'||cancelPending.current)return;cancelPending.current=true;setCancelling(true);setError('');runSelection.current.cancel();try{await request(`${base}/agent/runs/${selected.run.id}/cancel`,{method:'POST'});await refresh();setNotice('运行已取消，已完成步骤保留。取消不承诺撤销供应商计费。');}catch(error){setError(errorMessage(error));}finally{cancelPending.current=false;setCancelling(false);}}
   async function updateTask(id:string,status:string) { if(working.current)return;working.current=true;setBusy(true); setError(''); try { await request(`${base}/tasks/${encodeURIComponent(id)}`, {method:'PATCH',body:JSON.stringify({status})}); setTasks(prev=>prev.map(task=>task.id===id?{...task,status}:task)); } catch(e) { setError(errorMessage(e)); } finally { working.current=false;setBusy(false); } }
   async function confirm() { if (!selected||!reviewed||working.current) return;working.current=true; setBusy(true); setError(''); setNotice(''); try { await request(`${base}/agent/runs/${encodeURIComponent(selected.run.id)}/confirm`,{method:'POST'}); await refresh(); setNotice('计划已确认，任务已保存。'); } catch(e) { setError(errorMessage(e)); } finally { working.current=false;setBusy(false); } }
   return <section className="module-page module-page--agent">
-    <div className="section-heading compact"><div><div className="eyebrow">AGENT / PLANNING</div><h2>让计划有依据，也能被检查</h2><p>使用已确认的需求，检索知识并生成任务计划。所有步骤和工具调用来自实际运行。</p></div><button type="button" className="button primary" onClick={() => void start()} disabled={busy || !latestConfirmed}>{busy ? '执行中…' : '开始规划'} <span>↗</span></button></div>
+    <div className="section-heading compact"><div><div className="eyebrow">AGENT / PLANNING</div><h2>让计划有依据，也能被检查</h2><p>使用已确认的需求，检索知识并生成任务计划。所有步骤和工具调用来自实际运行。</p></div><div className="form-actions">{selected?.run.status==='running'&&<button type="button" className="button secondary" disabled={cancelling} onClick={()=>void cancelRun()}>{cancelling?'正在取消…':'取消本次运行'}</button>}<button type="button" className="button primary" onClick={() => void start()} disabled={busy || cancelling || !latestConfirmed || runs.some(run=>run.status==='running')}>{busy ? '执行中…' : selected?.run.status==='failed'?'重新规划当前需求':'开始规划'} <span>↗</span></button></div></div>
+    {selected?.run.status==='running'&&<p className="agent-recovery-note" role="status">最近活动：{selected.run.heartbeatAt?date(selected.run.heartbeatAt):'待读取'}。单次运行最多 10 分钟；失去心跳后，刷新会将运行标记为中断，不会自动重试模型。</p>}
+    {selected?.run.status==='failed'&&<p className="agent-recovery-note" role="status">本次运行已停止。{selected.run.errorCode==='agent_cancelled'?'由用户取消。':selected.run.errorCode==='agent_interrupted'?'服务心跳中断，已保留已完成步骤。':selected.run.errorCode==='agent_deadline_exceeded'?'已达到单次运行截止时间。':'请核对失败步骤。'}重新规划由你主动触发，创建新运行，原记录保留。</p>}
+    {planning&&!selected&&<p className="agent-recovery-note" role="status">正在等待本次请求的真实运行记录；不会把其他运行的步骤当作本次进度。</p>}
     {!latestConfirmed && <div className="alert error">请先在需求分析页面确认一个需求版本。</div>}
     <EmbeddingActivity request={request} active={planning}/>
     {error && <div className="alert error" role="alert">{error}<button type="button" onClick={() => void refresh()}>刷新记录</button></div>}
