@@ -33,3 +33,5 @@
 - 无障碍标准其余人工条款；真实用户辅助技术试用。
 
 Firefox 缓存引擎启动30秒未完成握手，未运行测试；没有为此关闭安全设置。Windows Playwright WebKit 结果也不能等同 Safari 真机。
+
+补充引擎验证：WebKit默认Tab路径曾跳过新加的普通锚点，实际聚焦到了退出按钮；为跳过入口显式设置`tabIndex=0`后，同一首Tab/主内容焦点/历史不变回归通过。没有改变浏览器安全或系统键盘设置，也没有删除该断言。报告`.runtime/reliability-ui-8d3f6ec8-b4d2-40dc-b058-68ce2c05af61`。

@@ -39,6 +39,8 @@ API `/health`只证明进程在响应；`/ready`会核对数据库、迁移和pg
 | `pnpm verify:agent-recovery` | 过期运行、取消、重复请求与人工审核 | 真实本地DB、模型替身；保留合成运行记录 |
 | `pnpm verify:review-context` | 审查来源、换版、隔离、取消、桌面原文显示 | 真实本地DB/向量/浏览器；聊天替身；禁止外部网络，不执行输入代码 |
 | `pnpm verify:document-context` | 完整说明末尾、51条/30000字符阻止、账号和桌面恢复 | 真实本地DB/HTTP/浏览器，1次聊天替身；不截断、无收费 |
+| `pnpm verify:knowledge-answer` | 检索/模型期间实际HTTP断开、取消信号、容量恢复与来源隔离 | 真实本地DB/向量/HTTP，聊天替身；不调用收费模型 |
+| `pnpm verify:accessibility` | 19个桌面页面/弹窗的axe规则、可访问名称和ARIA | 全部合成API；自动结果不含人工对比度/屏幕阅读器验收；见ACCESSIBILITY-V3.md |
 | `pnpm eval:retrieval-local` | 冻结15篇合成资料及16问题的实际检索测量 | 真实本地向量/pgvector，不执行聊天；保留未召回和未评估语义支持 |
 | `pnpm verify:growth-scope` | 当前/历史统计、多个项目、账号隔离与桌面范围切换 | 真实本地DB/HTTP/浏览器；新建合成记录，无模型调用 |
 | `pnpm smoke --with-rag` | 实际运行API/数据库/PDF/本地索引及检索 | 先核对Embedding为已授权的本机服务；不用`--with-ai` |

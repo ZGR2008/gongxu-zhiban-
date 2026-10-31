@@ -130,6 +130,7 @@ async function scenario(name,work){
   else if(path==='/knowledge/text'||path==='/knowledge/pdf'){state.writes.push({path,body:route.request().postDataJSON()});await new Promise(r=>setTimeout(r,state.uploadDelay??0));status=state.failUpload?503:201;body=state.failUpload?{error:'database_unavailable'}:{id:RA,status:'awaiting_embedding',chunks:1};if(state.failKnowledgeAfterUpload)state.knowledgeStatus=503;}
   else if(path==='/knowledge/activity')body={activities:[]};
   else if(path==='/knowledge/search'){state.searches++;await new Promise(r=>setTimeout(r,state.searchDelay));body={hits:[{id:RA,document_name:'取消后重试资料',content:'成功检索的合成片段',page:1,distance:0.1}]};}
+  else if(path==='/knowledge/answer'){state.answers=(state.answers??0)+1;state.answerQueries??=[];state.answerQueries.push(route.request().postDataJSON().query);await new Promise(r=>setTimeout(r,state.answerDelay??0));body={answer:'合成回答内容，不是真实模型结果',sources:[{id:RA,document_name:'合成回答来源',content:'回答实际提供的原文',page:1,distance:0.1}]};}
   else if(/\/tasks\/[^/]+$/.test(path)&&method==='PATCH'){
    const input=route.request().postDataJSON();state.writes.push({path,body:input});
    if(state.taskUpdateConflict){status=409;body={error:'task_requirement_outdated'};}else{state.tasks=state.tasks.map(task=>path.endsWith('/'+task.id)?{...task,status:input.status}:task);body={task:state.tasks.find(task=>path.endsWith('/'+task.id))};}
@@ -218,7 +219,8 @@ try{
   await page.goto(`${origin.origin}/projects/${A}/requirements`);await page.locator('#requirement').waitFor();
   const previousUrl=page.url(),previousLength=await page.evaluate(()=>history.length);
   await page.keyboard.press('Tab');const skip=page.getByRole('link',{name:'跳到主要内容',exact:true});
-  assert.ok(await skip.evaluate(el=>el===document.activeElement));assert.ok(await skip.isVisible());
+  if(!(await skip.evaluate(el=>el===document.activeElement)))console.log(await page.evaluate(()=>`First Tab focused ${document.activeElement?.tagName}.${document.activeElement?.className}`));
+  assert.ok(await skip.evaluate(el=>el===document.activeElement),await page.evaluate(()=>`First Tab focused ${document.activeElement?.tagName}.${document.activeElement?.className}`));assert.ok(await skip.isVisible());
   await page.keyboard.press('Enter');assert.equal(await page.evaluate(()=>document.activeElement?.id),'workspace-main');
   assert.equal(page.url(),previousUrl);assert.equal(await page.evaluate(()=>history.length),previousLength);
   assert.equal(await page.locator('.side-nav [aria-current="page"]').count(),1);
@@ -668,5 +670,22 @@ try{
   state.searchDelay=450;await page.goto(`${origin.origin}/knowledge`);await page.getByLabel('检索问题').fill('检索合成资料');await page.getByRole('button',{name:/检索知识/}).click();await waitFor(()=>state.searches===1);
   await page.getByRole('button',{name:'取消检索或索引',exact:true}).click();await page.waitForTimeout(550);assert.equal(await page.getByText('成功检索的合成片段',{exact:true}).count(),0);
   state.searchDelay=0;await page.getByRole('button',{name:/检索知识/}).click();await page.getByText('成功检索的合成片段',{exact:true}).waitFor();
+ });
+ await scenario('knowledge_answer_cancel_and_retry_keep_response_question_identity',async(page,state)=>{
+  state.answerDelay=400;await page.goto(`${origin.origin}/knowledge`);await page.getByLabel('检索问题').fill('第一次回答的问题');
+  await page.getByRole('button',{name:/知识增强回答/}).click();await waitFor(()=>state.answers===1);
+  await page.getByRole('button',{name:'取消回答等待',exact:true}).click();await page.getByRole('status').filter({hasText:/本次回答等待已取消/}).waitFor();
+  await page.waitForTimeout(450);assert.equal(await page.getByText('合成回答内容，不是真实模型结果',{exact:true}).count(),0);
+  await page.getByLabel('检索问题').fill('实际发出的第二个问题');await page.getByRole('button',{name:/知识增强回答/}).click();await waitFor(()=>state.answers===2);
+  await page.getByLabel('检索问题').fill('尚未发出的新问题');await page.getByText('合成回答内容，不是真实模型结果',{exact:true}).waitFor();
+  assert.equal(await page.getByLabel('检索问题').inputValue(),'尚未发出的新问题');
+  await page.getByText('本次回答问题：实际发出的第二个问题',{exact:true}).waitFor();
+  assert.deepEqual(state.answerQueries,['第一次回答的问题','实际发出的第二个问题']);
+ });
+ await scenario('knowledge_search_result_keeps_original_question_when_input_changes',async(page,state)=>{
+  state.searchDelay=300;await page.goto(`${origin.origin}/knowledge`);await page.getByLabel('检索问题').fill('已发出的检索问题');
+  await page.getByRole('button',{name:/检索知识/}).click();await waitFor(()=>state.searches===1);await page.getByLabel('检索问题').fill('尚未检索的新输入');
+  await page.getByText('成功检索的合成片段',{exact:true}).waitFor();await page.getByText('本次检索问题：已发出的检索问题',{exact:true}).waitFor();
+  assert.equal(await page.getByLabel('检索问题').inputValue(),'尚未检索的新输入');
  });
 }finally{await browser.close();report.finishedAt=new Date().toISOString();await writeFile(new URL('report.json',directory),JSON.stringify(report,null,2));}

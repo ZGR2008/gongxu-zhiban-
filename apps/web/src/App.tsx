@@ -255,7 +255,7 @@ function Workspace({token,onAuthenticated}:{token:string;onAuthenticated:(token:
 
   if (!token) return <Auth onAuthenticated={onAuthenticated} connection={connection} onCheck={() => void checkHealth()} />;
   return <div className="app-shell">
-    <a className="skip-to-main" href="#workspace-main" onClick={event=>{event.preventDefault();document.getElementById('workspace-main')?.focus();}}>跳到主要内容</a>
+    <a className="skip-to-main" href="#workspace-main" tabIndex={0} onClick={event=>{event.preventDefault();document.getElementById('workspace-main')?.focus();}}>跳到主要内容</a>
     <aside className="sidebar" aria-label="工作空间导航">
       <a className="brand" href="/dashboard" onClick={e => link(e, '/dashboard')}><span className="brand-mark">工</span><span><strong>工序智伴</strong><small>GONGXU AI</small></span></a>
       <div className="side-label">WORKSPACE <span>工作空间</span></div>

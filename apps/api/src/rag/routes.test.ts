@@ -7,6 +7,7 @@ import type { ProjectStore } from '../project-store.js';
 import type { Pool } from 'pg';
 import type { KnowledgeHit } from './search.js';
 import { pdfParserAvailable } from './pdf.js';
+import type { FastifyRequest } from 'fastify';
 
 const owner = '00000000-0000-4000-8000-000000000001';
 const hit: KnowledgeHit = { id: '00000000-0000-4000-8000-000000000002', document_id: '00000000-0000-4000-8000-000000000003', document_name: 'source.txt', page: null, content: '可核对的原始内容', distance: 0.1 };
@@ -15,6 +16,31 @@ const pool = {} as Pool;
 const embedding = { baseUrl: 'https://example.test', apiKey: 'test', model: 'embedding' };
 const ai = { baseUrl: 'https://example.test', apiKey: 'test', model: 'chat', timeoutMs: 1000 };
 const auth = { authorization: `Bearer ${'a'.repeat(64)}` };
+
+test('RAG answer never starts model work after disconnection during retrieval', async () => {
+  const app=Fastify();let request:FastifyRequest;let modelCalls=0;
+  app.addHook('preHandler',async current=>{request=current;});
+  await registerKnowledgeRoutes(app,store,pool,embedding,ai,{retrieve:async()=>{request.raw.emit('aborted');return [hit];},complete:async()=>{modelCalls++;return JSON.stringify({answer:'不应返回',citations:[hit.id]});}});
+  try{
+    const response=await app.inject({method:'POST',url:'/knowledge/answer',headers:auth,payload:{query:'已断开的合成问题'}});
+    assert.equal(modelCalls,0);assert.equal(response.statusCode,409);assert.equal(response.json().error,'ai_cancelled');
+  }finally{await app.close();}
+});
+
+test('RAG model phase receives cancellation and late adapters cannot keep a request active', async () => {
+  const app=Fastify();let request:FastifyRequest;let received:AbortSignal|undefined;let release:(value:string)=>void=()=>{};let timer:ReturnType<typeof setTimeout>|undefined;
+  app.addHook('preHandler',async current=>{request=current;});
+  await registerKnowledgeRoutes(app,store,pool,embedding,ai,{retrieve:async()=>[hit],complete:async(_config,_messages,_fetcher,options)=>{
+    received=options?.signal;request.raw.emit('aborted');return new Promise(resolve=>{release=resolve;timer=setTimeout(()=>resolve(JSON.stringify({answer:'迟到回答',citations:[hit.id]})),120);});
+  }});
+  try{
+    for(let attempt=0;attempt<3;attempt++){
+      const response=await app.inject({method:'POST',url:'/knowledge/answer',headers:auth,payload:{query:'合成模型阶段取消'}});
+      assert.ok(received?.aborted);assert.equal(response.statusCode,409);assert.equal(response.json().error,'ai_cancelled');
+      clearTimeout(timer);release('');
+    }
+  }finally{clearTimeout(timer);release('');await app.close();}
+});
 
 test('RAG answer refuses unsupported citations and returns only actual retrieved sources', async () => {
   const app = Fastify();

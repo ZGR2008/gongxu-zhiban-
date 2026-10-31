@@ -37,6 +37,13 @@ body {
 .skip-to-main:focus {
   transform: translateY(0);
 }
+.query-origin {
+  color: var(--gx-muted);
+  font-size: var(--gx-reading-size);
+  line-height: 1.7;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
 ::selection {
   background: #744493;
   color: #fff;
