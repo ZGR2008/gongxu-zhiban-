@@ -1,0 +1,116 @@
+{
+  "file": "gongxu-zhiban-demo-v3-draft-20261101-031806.mp4",
+  "seconds": 378.307,
+  "dimensions": [
+    1920,
+    1080
+  ],
+  "codec": "H.264 / AAC",
+  "fps": 30,
+  "scope": "合成账号与项目；真实本地HTTP、PostgreSQL及Embedding；聊天模型为明确替身；非正式参赛成片",
+  "voice": "Windows 本机中文合成语音，正式成片建议由参赛者重新录音",
+  "captionAlignment": "clause_proportional_needs_final_human_timing_review",
+  "scenes": [
+    {
+      "id": "intro",
+      "title": "01 工程流程与真实性边界",
+      "startSeconds": 7.289999999989049e-05,
+      "durationSeconds": 40.210715500000006
+    },
+    {
+      "id": "requirements",
+      "title": "02 保存并确认需求版本",
+      "startSeconds": 40.210802,
+      "durationSeconds": 41.7781361
+    },
+    {
+      "id": "guard",
+      "title": "03 未保存内容与离开保护",
+      "startSeconds": 82.02086290000001,
+      "durationSeconds": 36.755609
+    },
+    {
+      "id": "knowledge",
+      "title": "04 本地向量检索与原文",
+      "startSeconds": 118.77649160000001,
+      "durationSeconds": 41.16366959999999
+    },
+    {
+      "id": "agent",
+      "title": "05 实际工具步骤与人工计划审核",
+      "startSeconds": 159.94017449999998,
+      "durationSeconds": 46.0090803
+    },
+    {
+      "id": "tests",
+      "title": "06 当前版本用例与人工结果",
+      "startSeconds": 205.9492687,
+      "durationSeconds": 40.276682099999974
+    },
+    {
+      "id": "trace",
+      "title": "07 需求到任务及执行证据",
+      "startSeconds": 246.2259656,
+      "durationSeconds": 46.00890150000001
+    },
+    {
+      "id": "documents",
+      "title": "08 文档来源快照与修订历史",
+      "startSeconds": 292.23488259999993,
+      "durationSeconds": 42.007527100000004
+    },
+    {
+      "id": "change",
+      "title": "09 需求改变后保留历史、重新验证",
+      "startSeconds": 334.2424238,
+      "durationSeconds": 44.06409279999998
+    }
+  ],
+  "rawRecordingSha256": "d83e886521ceb02a3f167baefc82327f9fa5f7dbd6a0e48b799f2f759f0b4ee5",
+  "sha256": "51b33bdd5d97d7294a78dffa96edbfbf4a572c80b930f17b12c829b17f2e1a23",
+  "bytes": 12579187,
+  "validation": "full_decode_passed_and_all_scene_samples_visually_reviewed",
+  "officialSubmissionReady": false,
+  "decodedSeconds": 378.31,
+  "reviewFrames": [
+    {
+      "scene": "intro",
+      "sampleSeconds": 15.0000729
+    },
+    {
+      "scene": "requirements",
+      "sampleSeconds": 55.210802
+    },
+    {
+      "scene": "guard",
+      "sampleSeconds": 97.02086290000001
+    },
+    {
+      "scene": "knowledge",
+      "sampleSeconds": 133.7764916
+    },
+    {
+      "scene": "agent",
+      "sampleSeconds": 174.94017449999998
+    },
+    {
+      "scene": "tests",
+      "sampleSeconds": 220.9492687
+    },
+    {
+      "scene": "trace",
+      "sampleSeconds": 261.2259656
+    },
+    {
+      "scene": "documents",
+      "sampleSeconds": 307.23488259999993
+    },
+    {
+      "scene": "change",
+      "sampleSeconds": 349.2424238
+    }
+  ],
+  "humanAudioReview": "not_executed",
+  "frameReviewAt": "2026-10-31T19:27:12.704737+00:00",
+  "reviewLimit": "One sample per chapter was visually inspected. Full real-time listening, word-aligned subtitles and final submission review remain pending."
+}

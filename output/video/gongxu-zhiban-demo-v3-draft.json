@@ -1,0 +1,114 @@
+{
+  "file": "gongxu-zhiban-demo-v3-draft.mp4",
+  "seconds": 378.306,
+  "dimensions": [
+    1920,
+    1080
+  ],
+  "codec": "H.264 / AAC",
+  "fps": 30,
+  "scope": "合成账号与项目；真实本地HTTP、PostgreSQL及Embedding；聊天模型为明确替身；非正式参赛成片",
+  "voice": "Windows 本机中文合成语音，正式成片建议由参赛者重新录音",
+  "captionAlignment": "clause_proportional_needs_final_human_timing_review",
+  "scenes": [
+    {
+      "id": "intro",
+      "title": "01 工程流程与真实性边界",
+      "startSeconds": 6.709999999998217e-05,
+      "durationSeconds": 40.218357499999996
+    },
+    {
+      "id": "requirements",
+      "title": "02 保存并确认需求版本",
+      "startSeconds": 40.2184405,
+      "durationSeconds": 41.7802996
+    },
+    {
+      "id": "guard",
+      "title": "03 未保存内容与离开保护",
+      "startSeconds": 82.0323895,
+      "durationSeconds": 36.761165500000004
+    },
+    {
+      "id": "knowledge",
+      "title": "04 本地向量检索与原文",
+      "startSeconds": 118.7935748,
+      "durationSeconds": 41.16360740000001
+    },
+    {
+      "id": "agent",
+      "title": "05 实际工具步骤与人工计划审核",
+      "startSeconds": 159.9571969,
+      "durationSeconds": 46.001361199999984
+    },
+    {
+      "id": "tests",
+      "title": "06 当前版本用例与人工结果",
+      "startSeconds": 205.9585722,
+      "durationSeconds": 40.27084880000001
+    },
+    {
+      "id": "trace",
+      "title": "07 需求到任务及执行证据",
+      "startSeconds": 246.229436,
+      "durationSeconds": 46.01252719999998
+    },
+    {
+      "id": "documents",
+      "title": "08 文档来源快照与修订历史",
+      "startSeconds": 292.2419756,
+      "durationSeconds": 42.004946700000026
+    },
+    {
+      "id": "change",
+      "title": "09 需求改变后保留历史、重新验证",
+      "startSeconds": 334.2469352,
+      "durationSeconds": 44.058669700000024
+    }
+  ],
+  "rawRecordingSha256": "da4f12c219ca316f03440d0e4c9d1801bee575c97a31bbcf443430f6cf4fd3dd",
+  "sha256": "00d4ae1000bd04fe0c53efe2eebe5fae68d81295f9451ca8c50aa259d6a2565f",
+  "bytes": 12316598,
+  "validation": "full_decode_passed_frames_pending_review",
+  "officialSubmissionReady": false,
+  "decodedSeconds": 378.31,
+  "reviewFrames": [
+    {
+      "scene": "intro",
+      "sampleSeconds": 15.0000671
+    },
+    {
+      "scene": "requirements",
+      "sampleSeconds": 55.2184405
+    },
+    {
+      "scene": "guard",
+      "sampleSeconds": 97.0323895
+    },
+    {
+      "scene": "knowledge",
+      "sampleSeconds": 133.7935748
+    },
+    {
+      "scene": "agent",
+      "sampleSeconds": 174.9571969
+    },
+    {
+      "scene": "tests",
+      "sampleSeconds": 220.9585722
+    },
+    {
+      "scene": "trace",
+      "sampleSeconds": 261.22943599999996
+    },
+    {
+      "scene": "documents",
+      "sampleSeconds": 307.2419756
+    },
+    {
+      "scene": "change",
+      "sampleSeconds": 349.2469352
+    }
+  ],
+  "humanAudioReview": "not_executed"
+}
