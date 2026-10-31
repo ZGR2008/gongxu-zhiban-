@@ -38,6 +38,8 @@ API `/health`只证明进程在响应；`/ready`会核对数据库、迁移和pg
 | `pnpm eval:prepare`、`pnpm eval:report` | 捕获合成输入与核对明确提供的评测记录 | 不读取.env；不执行模型；缺少真实结果时保持待执行 |
 | `pnpm verify:agent-recovery` | 过期运行、取消、重复请求与人工审核 | 真实本地DB、模型替身；保留合成运行记录 |
 | `pnpm verify:review-context` | 审查来源、换版、隔离、取消、桌面原文显示 | 真实本地DB/向量/浏览器；聊天替身；禁止外部网络，不执行输入代码 |
+| `pnpm verify:document-context` | 完整说明末尾、51条/30000字符阻止、账号和桌面恢复 | 真实本地DB/HTTP/浏览器，1次聊天替身；不截断、无收费 |
+| `pnpm eval:retrieval-local` | 冻结15篇合成资料及16问题的实际检索测量 | 真实本地向量/pgvector，不执行聊天；保留未召回和未评估语义支持 |
 | `pnpm verify:growth-scope` | 当前/历史统计、多个项目、账号隔离与桌面范围切换 | 真实本地DB/HTTP/浏览器；新建合成记录，无模型调用 |
 | `pnpm smoke --with-rag` | 实际运行API/数据库/PDF/本地索引及检索 | 先核对Embedding为已授权的本机服务；不用`--with-ai` |
 | `pnpm smoke:browser`、`pnpm smoke:project-controls`、`pnpm smoke:ui`、`pnpm smoke:workbench` | 旧界面与核心流程回归 | 无`--with-ai`时增加收费接口拦截；部分场景受控替身 |

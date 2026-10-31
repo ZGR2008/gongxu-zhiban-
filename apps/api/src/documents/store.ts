@@ -8,7 +8,10 @@ export type DocumentRevision = { revision: number; content: string; savedAt: Dat
 export class DocumentConflictError extends Error {
   constructor(public currentRevision: number) { super('document_conflict'); }
 }
-export type DocumentContext = { snapshot?:EvidenceSnapshot|null; tasks: { title: string; stage: string; status: string }[]; testCases: { title: string; category: string; result: string; executionNote: string; executedAt: Date | null }[]; testCounts: { total: number; notRun: number; passed: number; failed: number; blocked: number } };
+export type DocumentContext = { snapshot?:EvidenceSnapshot|null; taskCount?:number;
+  tasks: { id?:string; title:string; stage:string; status:string; description?:string; deliverable?:string }[];
+  testCases: { id?:string; revision?:number; title:string; category:string; preconditions?:string; steps?:string; expected?:string; result:string; executionNote:string; executedAt:Date|null }[];
+  testCounts: { total:number; notRun:number; passed:number; failed:number; blocked:number } };
 export interface DocumentStore {
   getContext(userId: string, projectId: string, requirementId: string): Promise<DocumentContext>;
   list(userId: string, projectId: string): Promise<ProjectDocument[]>;
@@ -28,12 +31,12 @@ export class PgDocumentStore implements DocumentStore {
       // Context and source counters share one database snapshot. The transaction
       // ends before the model call, so generation never holds database locks.
       await client.query('BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY');
-      const tasks=await client.query(`SELECT t.title,t.stage,t.status FROM tasks t JOIN projects p ON p.id=t.project_id JOIN agent_runs a ON a.id=t.agent_run_id AND a.project_id=p.id WHERE p.owner_id=$1 AND p.id=$2 AND t.requirement_version_id=$3 AND a.status='confirmed' ORDER BY t.created_at,t.id LIMIT 50`, [userId,projectId,requirementId]);
-      const cases=await client.query(`SELECT c.title,c.category,c.result,c.execution_note AS "executionNote",c.executed_at AS "executedAt",COUNT(*) OVER() AS total,COUNT(*) FILTER (WHERE c.result='not_run') OVER() AS "notRun",COUNT(*) FILTER (WHERE c.result='passed') OVER() AS passed,COUNT(*) FILTER (WHERE c.result='failed') OVER() AS failed,COUNT(*) FILTER (WHERE c.result='blocked') OVER() AS blocked FROM practice_test_cases c JOIN projects p ON p.id=c.project_id WHERE p.owner_id=$1 AND p.id=$2 AND c.requirement_version_id=$3 ORDER BY c.created_at,c.id LIMIT 50`, [userId,projectId,requirementId]);
+      const tasks=await client.query(`SELECT t.id,t.title,t.stage,t.status,t.description,t.deliverable,COUNT(*) OVER() AS total FROM tasks t JOIN projects p ON p.id=t.project_id JOIN agent_runs a ON a.id=t.agent_run_id AND a.project_id=p.id WHERE p.owner_id=$1 AND p.id=$2 AND t.requirement_version_id=$3 AND a.status='confirmed' ORDER BY t.created_at,t.id LIMIT 50`, [userId,projectId,requirementId]);
+      const cases=await client.query(`SELECT c.id,c.revision,c.title,c.category,c.preconditions,c.steps,c.expected,c.result,c.execution_note AS "executionNote",c.executed_at AS "executedAt",COUNT(*) OVER() AS total,COUNT(*) FILTER (WHERE c.result='not_run') OVER() AS "notRun",COUNT(*) FILTER (WHERE c.result='passed') OVER() AS passed,COUNT(*) FILTER (WHERE c.result='failed') OVER() AS failed,COUNT(*) FILTER (WHERE c.result='blocked') OVER() AS blocked FROM practice_test_cases c JOIN projects p ON p.id=c.project_id WHERE p.owner_id=$1 AND p.id=$2 AND c.requirement_version_id=$3 ORDER BY c.created_at,c.id LIMIT 50`, [userId,projectId,requirementId]);
       const snapshot=await readEvidenceSnapshot(client,userId,projectId,requirementId);
       await client.query('COMMIT');
       const count=cases.rows[0];
-      return {snapshot,tasks:tasks.rows,testCases:cases.rows.map(({title,category,result,executionNote,executedAt})=>({title,category,result,executionNote,executedAt})),testCounts:{total:Number(count?.total??0),notRun:Number(count?.notRun??0),passed:Number(count?.passed??0),failed:Number(count?.failed??0),blocked:Number(count?.blocked??0)}};
+      return {snapshot,taskCount:Number(tasks.rows[0]?.total??tasks.rows.length),tasks:tasks.rows.map(({id,title,stage,status,description,deliverable})=>({id,title,stage,status,description,deliverable})),testCases:cases.rows.map(({id,revision,title,category,preconditions,steps,expected,result,executionNote,executedAt})=>({id,revision,title,category,preconditions,steps,expected,result,executionNote,executedAt})),testCounts:{total:Number(count?.total??0),notRun:Number(count?.notRun??0),passed:Number(count?.passed??0),failed:Number(count?.failed??0),blocked:Number(count?.blocked??0)}};
     } catch(error){await client.query('ROLLBACK');throw error;}finally{client.release();}
   }
   evidence(userId:string,projectId:string){return readEvidenceSnapshot(this.pool,userId,projectId);}

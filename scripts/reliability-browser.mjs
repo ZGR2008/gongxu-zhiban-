@@ -97,6 +97,10 @@ async function scenario(name,work){
    state.writes.push({path,body:route.request().postDataJSON()});
    await new Promise(resolve=>setTimeout(resolve,state.saveDelay));
    if(state.failSave){status=503;body={error:'database_unavailable'};} else body={requirement:{...detail(path.split('/')[2]).requirements[0],id:'cccccccc-cccc-4ccc-8ccc-cccccccccccc',version:2,content:route.request().postDataJSON().content}};
+  } else if(path.endsWith('/documents/generate')&&method==='POST'){
+   state.docGenerateCalls=(state.docGenerateCalls??0)+1;
+   if(state.docGenerateError){status=413;body={error:state.docGenerateError};}
+   else{status=201;const document={id:'cccccccc-cccc-4ccc-8ccc-cccccccccccd',type:route.request().postDataJSON().type,content:'恢复后生成的合成文档',revision:1,modelName:'fixture',createdAt:now,requirementVersionId:RA};state.documents.unshift(document);body={document,evidence:state.evidence};}
   } else if(path.endsWith('/documents')) {state.docReads++;body={documents:(state.docResponse?state.docResponse(state.docReads):state.documents).map(row=>({revision:1,...row})),evidence:state.evidence};await new Promise(resolve=>setTimeout(resolve,state.docReadDelay(state.docReads)));}
   else if(/\/documents\/[^/]+$/.test(path)&&method==='PATCH'){
    state.writes.push({path,body:route.request().postDataJSON()});
@@ -404,6 +408,17 @@ try{
   state.failSave=true;await page.getByRole('button',{name:/软件设计文档/}).click();await dialog.getByRole('button',{name:'保存并继续'}).click();
   await dialog.getByRole('alert').waitFor();assert.equal(await page.locator('#doc-content').inputValue(),'文档尚未保存的编辑');
   await dialog.getByRole('button',{name:'放弃并继续'}).click();assert.equal(await page.locator('#doc-content').inputValue(),'设计合成正文');
+ });
+ await scenario('document_generation_boundary_preserves_selected_content_and_can_recover',async(page,state)=>{
+  state.makeDetail=id=>{const value=detail(id);value.requirements[0].status='confirmed';return value;};
+  state.documents=[{id:RA,type:'readme',content:'已有文档原文必须保留',revision:1,modelName:'fixture',createdAt:now,requirementVersionId:RA}];
+  await page.goto(`${origin.origin}/projects/${A}/documents`);await page.locator('#doc-content').waitFor();
+  for(const [code,text] of [['document_context_incomplete','50 条'],['document_context_too_large','30000 字符']]){
+   state.docGenerateError=code;await page.getByRole('button',{name:/生成草稿/}).click();
+   await page.getByRole('alert').filter({hasText:text}).waitFor();assert.equal(await page.locator('#doc-content').inputValue(),'已有文档原文必须保留');assert.equal(state.documents.length,1);assert.ok(!await page.getByRole('button',{name:/生成草稿/}).isDisabled());
+  }
+  state.docGenerateError=null;await page.getByRole('button',{name:/生成草稿/}).click();await page.getByText('已生成草稿，请核实并编辑。',{exact:true}).waitFor();
+  assert.equal(await page.locator('#doc-content').inputValue(),'恢复后生成的合成文档');assert.equal(state.docGenerateCalls,3);
  });
  await scenario('document_late_save_cannot_reselect_previous_document',async(page,state)=>{
   state.docSaveDelay=1000;

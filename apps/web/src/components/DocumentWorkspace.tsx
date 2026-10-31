@@ -121,7 +121,7 @@ export function DocumentWorkspace({ request, projectId, requirements }: Props) {
   async function save(event: FormEvent) { event.preventDefault(); await persist(); }
 
   return <section className="module-page module-page--documents">
-    <div className="section-heading compact"><div><div className="eyebrow">PROJECT DOCUMENTS</div><h2>将实践沉淀为项目文档</h2><p>依据已确认需求、任务与人工测试记录生成草稿。缺失信息须人工核实，单次生成需求限 20000 字符。</p></div></div>
+    <div className="section-heading compact"><div><div className="eyebrow">PROJECT DOCUMENTS</div><h2>将实践沉淀为项目文档</h2><p>依据已确认需求、任务与人工测试记录生成草稿。缺失信息须人工核实，单次生成需求限 20000 字符。</p><details className="muted-text"><summary>资料完整性与生成边界</summary><p>任务与测试各最多 50 条，完整结构化明细最多 30000 字符。保留实际标识、完整步骤和执行说明；超过边界时明确阻止，不丢弃末尾限制。来源及结果仍须人工审核。</p></details></div></div>
     {!req && <div className="alert error">请先确认需求版本。</div>}
     {error && <div className="alert error" role="alert">{error}</div>}
     {notice && <div className="alert success" role="status">{notice}</div>}

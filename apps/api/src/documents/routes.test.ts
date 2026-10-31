@@ -54,13 +54,51 @@ test('document context queries are scoped to owner, project and requirement and 
   const client={release:()=>{released=true;},query:async(sql:string,values:unknown[])=>{
     calls.push({sql,values});
     if (sql.includes('practice_test_cases')) return {rows:[{title:'边界',category:'boundary',result:'not_run',executionNote:'',executedAt:null,total:'70',notRun:'68',passed:'1',failed:'1',blocked:'0'}]};
-    return {rows:[{title:'任务',stage:'开发',status:'done'}]};
+    return {rows:[{id,title:'任务',stage:'开发',status:'done',description:'完整说明',deliverable:'验收产物',total:'51'}]};
   }};
   const { PgDocumentStore }=await import('./store.js');
   const context=await new PgDocumentStore({connect:async()=>client} as never).getContext('owner',project,requirement);
   assert.deepEqual(context.testCounts,{total:70,notRun:68,passed:1,failed:1,blocked:0});
   assert.equal(context.testCases[0].result,'not_run');
+  assert.equal(context.taskCount,51);assert.equal(context.tasks[0].id,id);assert.equal(context.tasks[0].description,'完整说明');
   assert.equal(calls.length,5);assert.equal(calls[0].sql,'BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY');assert.equal(calls.at(-1)?.sql,'COMMIT');assert.ok(released);
   for(const call of calls.filter(call=>call.values)){ assert.deepEqual(call.values,['owner',project,requirement]); assert.match(call.sql,/p\.owner_id=\$1/);assert.match(call.sql,call.sql.includes('statement_timestamp')?/r\.id=\$3/:/requirement_version_id=\$3/); }
   assert.ok(calls.some(call=>call.sql.includes("a.status='confirmed'")));
+});
+
+test('document model context retains complete execution notes and actual task/case identifiers',async t=>{
+ let captured='';const note='人工登记上下文。'.repeat(70)+'末尾限制：仅本地合成替身通过，真实模型与公网部署未验证。';
+ const docs={getContext:async()=>({taskCount:1,tasks:[{id:other,title:'合成任务',stage:'测试',status:'done',description:'完整任务说明',deliverable:'人工审核证据'}],testCases:[{id,revision:3,title:'合成用例',category:'normal',preconditions:'独立账号',steps:'执行实际操作',expected:'满足当前需求',result:'passed',executionNote:note,executedAt:new Date()}],testCounts:{total:1,notRun:0,passed:1,failed:0,blocked:0}}),evidence:async()=>null,create:async()=>({id})} as unknown as DocumentStore;
+ const app=Fastify();await registerDocumentRoutes(app,store,docs,config,async(_config,messages)=>{captured=messages[1].content;return '# 合成报告';});t.after(()=>app.close());
+ const response=await app.inject({method:'POST',url:`/projects/${project}/documents/generate`,headers,payload:{type:'test_report'}});
+ assert.equal(response.statusCode,201);assert.ok(captured.includes(note));assert.ok(captured.includes(other));assert.ok(captured.includes(id));assert.match(captured,/完整任务说明/);assert.match(captured,/执行实际操作/);
+});
+
+test('incomplete document details are blocked before model calls or writes instead of presenting a complete report',async t=>{
+ for(const kind of ['task','case']){
+  let calls=0,writes=0;
+  const docs={getContext:async()=>({taskCount:kind==='task'?51:0,tasks:kind==='task'?Array.from({length:50},()=>({title:'合成',stage:'测试',status:'todo'})):[],testCases:kind==='case'?Array.from({length:50},()=>({title:'合成',category:'normal',result:'not_run',executionNote:'',executedAt:null})):[],testCounts:{total:kind==='case'?51:0,notRun:kind==='case'?51:0,passed:0,failed:0,blocked:0}}),create:async()=>{writes++;return{id};},evidence:async()=>null} as unknown as DocumentStore;
+  const app=Fastify();await registerDocumentRoutes(app,store,docs,config,async()=>{calls++;return '# 未完整';});t.after(()=>app.close());
+  const response=await app.inject({method:'POST',url:`/projects/${project}/documents/generate`,headers,payload:{type:'test_report'}});
+  assert.equal(response.statusCode,413);assert.equal(response.json().error,'document_context_incomplete');assert.equal(response.json().maximumDetailItems,50);assert.equal(calls,0);assert.equal(writes,0);
+ }
+});
+
+test('oversized full document evidence blocks generation and does not consume model-attempt rate quota',async t=>{
+ let oversized=true,calls=0,writes=0;
+ const docs={getContext:async()=>({taskCount:0,tasks:[],testCases:oversized?Array.from({length:20},()=>({title:'合成记录',category:'normal',result:'blocked',executionNote:'完整说明'.repeat(500),executedAt:new Date()})):[],testCounts:{total:oversized?20:0,notRun:0,passed:0,failed:0,blocked:oversized?20:0}}),create:async()=>{writes++;return{id};},evidence:async()=>null} as unknown as DocumentStore;
+ const app=Fastify();await registerDocumentRoutes(app,store,docs,config,async()=>{calls++;return '# 合成报告';});t.after(()=>app.close());
+ for(let attempt=0;attempt<6;attempt++){
+  const response=await app.inject({method:'POST',url:`/projects/${project}/documents/generate`,headers,payload:{type:'summary'}});
+  assert.equal(response.statusCode,413);assert.equal(response.json().error,'document_context_too_large');assert.equal(response.json().maxCharacters,30000);
+ }
+ assert.equal(calls,0);assert.equal(writes,0);oversized=false;
+ assert.equal((await app.inject({method:'POST',url:`/projects/${project}/documents/generate`,headers,payload:{type:'summary'}})).statusCode,201);assert.equal(calls,1);assert.equal(writes,1);
+});
+
+test('exactly fifty complete short records remain eligible rather than being treated as truncated',async t=>{
+ let calls=0;
+ const docs={getContext:async()=>({taskCount:50,tasks:Array.from({length:50},(_,i)=>({title:`合成任务${i}`,stage:'开发',status:'todo'})),testCases:Array.from({length:50},(_,i)=>({title:`合成用例${i}`,category:'normal',result:'not_run',executionNote:'',executedAt:null})),testCounts:{total:50,notRun:50,passed:0,failed:0,blocked:0}}),create:async()=>({id}),evidence:async()=>null} as unknown as DocumentStore;
+ const app=Fastify();await registerDocumentRoutes(app,store,docs,config,async(_config,messages)=>{calls++;assert.ok(messages[1].content.includes('合成任务49'));assert.ok(messages[1].content.includes('合成用例49'));return '# 完整合成草稿';});t.after(()=>app.close());
+ const response=await app.inject({method:'POST',url:`/projects/${project}/documents/generate`,headers,payload:{type:'summary'}});assert.equal(response.statusCode,201);assert.equal(calls,1);
 });
