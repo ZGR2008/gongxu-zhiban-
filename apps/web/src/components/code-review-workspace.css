@@ -13,3 +13,9 @@
 .code-draft-conflict{margin-top:20px;padding-top:16px;border-top:1px solid rgba(188,19,254,.2)}
 .code-draft-conflict p{color:var(--text-muted,#d1c4e9);line-height:1.7}
 .code-draft-conflict .code-preview{max-height:280px;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere}
+.review-scope-note{line-height:1.7;margin:10px 0 16px}
+.review-source-text{white-space:pre-wrap;overflow-wrap:anywhere;max-height:320px;overflow:auto;line-height:1.8;font-family:inherit;font-size:var(--gx-body-size,14px);padding:14px;background:rgba(10,6,20,.5);border:1px solid rgba(188,19,254,.15);border-radius:8px}
+.review-source-list{list-style:none;padding:0;margin:14px 0}
+.review-source-list>li{border-top:1px solid rgba(188,19,254,.15);padding:12px 0}
+.review-sources summary{cursor:pointer;line-height:1.6;color:var(--text-primary,#f7f2ff)}
+.review-source-warning{color:#e9c2ff;border-left:2px solid #bc76e7;padding:8px 12px;background:rgba(138,43,226,.08);line-height:1.7}

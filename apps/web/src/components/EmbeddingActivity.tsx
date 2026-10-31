@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 type Activity={id:string;kind:string;state:string;attempt?:number;code?:string;updatedAt:string};
 const states:Record<string,string>={queued:'正在排队',running:'正在处理',retrying:'等待有限重试',succeeded:'已完成',failed:'失败，可检查后重试',cancelled:'已取消'};
-const kinds:Record<string,string>={index:'建立索引',search:'知识检索',answer:'回答前检索',agent:'规划前检索'};
+const kinds:Record<string,string>={index:'建立索引',search:'知识检索',answer:'回答前检索',agent:'规划前检索',review:'代码审查前检索'};
 export function EmbeddingActivity({request,active}:{request:<T>(path:string,options?:RequestInit)=>Promise<T>;active:boolean}){
  const [rows,setRows]=useState<Activity[]>([]);const [error,setError]=useState(false);
  useEffect(()=>{

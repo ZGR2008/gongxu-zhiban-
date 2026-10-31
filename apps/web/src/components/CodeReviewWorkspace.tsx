@@ -2,22 +2,27 @@ import {useCallback,useEffect,useRef,useState,type FormEvent} from 'react';
 import {CodeEditor,RichContent,CopyButton,ModuleGuide} from './ContentView';
 import {useEditGuard,useUnsavedEdit} from './EditGuard';
 import {RequestScope} from './request-scope';
+import {EmbeddingActivity} from './EmbeddingActivity';
+import {ReviewSources,type ReviewContext} from './ReviewSources';
 import './code-review-workspace.css';
 
 type Api=<T>(path:string,options?:RequestInit)=>Promise<T>;
 type Draft={language:string;code:string;revision:number;updatedAt?:string};
-type Review={id:string;language:string;code:string;syntaxFindings:{code:number;line:number;column:number;message:string}[];aiAdvice:string;modelName:string;createdAt:string};
+type Review={id:string;language:string;code:string;syntaxFindings:{code:number;line:number;column:number;message:string}[];aiAdvice:string;modelName:string;createdAt:string;reviewContext?:ReviewContext|null};
 const empty:Draft={language:'typescript',code:'',revision:0};
 const message=(error:unknown)=>error instanceof Error?error.message:'操作失败，当前输入已保留。';
 const same=(a:Pick<Draft,'code'|'language'>,b:Pick<Draft,'code'|'language'>)=>a.code===b.code&&a.language===b.language;
 const date=(value:string)=>new Date(value).toLocaleString('zh-CN');
 
-export function CodeReviewWorkspace({request,projectId}:{request:Api;projectId:string;requirements?:unknown}){
+export function CodeReviewWorkspace({request,projectId,requirements=[]}:{request:Api;projectId:string;requirements?:{id:string;status:string;version:number}[]}){
   const base=`/projects/${projectId}`,{protect}=useEditGuard();
   const [saved,setSaved]=useState<Draft>(empty),[code,setCode]=useState(''),[language,setLanguage]=useState('typescript');
   const [ready,setReady]=useState(false),[reading,setReading]=useState(true),[saving,setSaving]=useState(false),[reviewing,setReviewing]=useState(false);
   const [error,setError]=useState(''),[notice,setNotice]=useState(''),[conflict,setConflict]=useState<Draft|null>(null);
   const [reviews,setReviews]=useState<Review[]>([]),[selected,setSelected]=useState<Review|null>(null),[loadingReviews,setLoadingReviews]=useState(true);
+  const [scope,setScope]=useState<'project'|'code_only'>('project');
+  const confirmed=requirements.filter(row=>row.status==='confirmed').sort((a,b)=>b.version-a.version)[0];
+  const reviewController=useRef<AbortController|null>(null);
   const draftScope=useRef(new RequestScope()),reviewScope=useRef(new RequestScope()),pendingSave=useRef<Promise<boolean>|null>(null),pendingReview=useRef(false),selection=useRef(0),mounted=useRef(true);
   const current=useRef({code,language});current.current={code,language};
   const dirty=!same(current.current,saved);
@@ -36,7 +41,7 @@ export function CodeReviewWorkspace({request,projectId}:{request:Api;projectId:s
     }catch(error){if(reviewScope.current.accepts(ticket,projectId))setError(message(error));}
     finally{if(reviewScope.current.accepts(ticket,projectId))setLoadingReviews(false);}
   },[request,base,projectId]);
-  useEffect(()=>{mounted.current=true;void loadDraft();void loadReviews();return()=>{mounted.current=false;draftScope.current.cancel();reviewScope.current.cancel();};},[loadDraft,loadReviews]);
+  useEffect(()=>{mounted.current=true;void loadDraft();void loadReviews();return()=>{mounted.current=false;draftScope.current.cancel();reviewScope.current.cancel();reviewController.current?.abort();};},[loadDraft,loadReviews]);
 
   function saveDraft():Promise<boolean>{
     if(pendingSave.current)return pendingSave.current;
@@ -55,18 +60,20 @@ export function CodeReviewWorkspace({request,projectId}:{request:Api;projectId:s
 
   async function submit(event:FormEvent){
     event.preventDefault();if(pendingReview.current||!ready||reading||!current.current.code.trim())return;
-    const snapshot={...current.current},selectedAtStart=selection.current;
+    const snapshot={...current.current,context:scope,...(scope==='project'?{requirementId:confirmed?.id??null}:{})},selectedAtStart=selection.current;
+    const controller=new AbortController();reviewController.current=controller;
     pendingReview.current=true;setReviewing(true);setError('');setNotice('');
     try{
       if(!(await saveDraft()))return;
+      if(controller.signal.aborted)return;
       reviewScope.current.cancel();setLoadingReviews(false);
-      const result=await request<{review:Review}>(`${base}/code-reviews`,{method:'POST',body:JSON.stringify(snapshot)});
+      const result=await request<{review:Review}>(`${base}/code-reviews`,{method:'POST',body:JSON.stringify(snapshot),signal:controller.signal});
       if(!mounted.current)return;
       setReviews(rows=>[result.review,...rows.filter(row=>row.id!==result.review.id)]);
       if(selection.current===selectedAtStart)setSelected(result.review);
       setNotice('审查记录已保存，结果对应提交时的代码。AI建议未经运行验证。');
-    }catch(error){if(mounted.current)setError(message(error));}
-    finally{pendingReview.current=false;if(mounted.current)setReviewing(false);}
+    }catch(error){if(mounted.current&&!controller.signal.aborted)setError(message(error));}
+    finally{pendingReview.current=false;reviewController.current=null;if(mounted.current){setReviewing(false);if(controller.signal.aborted)setNotice('本地等待已取消。已发出的模型请求可能仍计费或完成写入，请核对审查记录；代码草稿保留。');}}
   }
 
   return <section className="module-page code-review-page">
@@ -81,13 +88,17 @@ export function CodeReviewWorkspace({request,projectId}:{request:Api;projectId:s
           <div className="form-actions"><button type="button" className="button secondary" disabled={saving||reviewing||!dirty||!!conflict} onClick={()=>void saveDraft()}>{saving?'保存草稿中…':'保存代码草稿'}</button><button className="button primary" aria-label={reviewing?'审查中…':'提交审查'} disabled={saving||reviewing||!!conflict||!code.trim()}>{reviewing?'审查中…':'提交审查'} <span aria-hidden="true">↗</span></button></div>
         </div>
         <p className="muted-text code-draft-state" role="status">{dirty?'有尚未保存的编辑':saved.revision?`草稿修订 ${saved.revision} · 已保存`:'尚无已保存草稿'} · 最多 50000 字符</p>
+        <label htmlFor="review-scope">审查依据</label><select id="review-scope" value={scope} disabled={reviewing} onChange={event=>setScope(event.target.value as 'project'|'code_only')}><option value="project">结合当前确认需求与检索资料</option><option value="code_only">仅代码</option></select>
+        <p className="muted-text review-scope-note">{scope==='code_only'?'只发送本次代码和语法结果，不检查项目需求或检索知识库。':confirmed?`本次会发送代码、已确认需求 V${confirmed.version}，以及实际检索到的本账号资料片段。未配置或无匹配会如实标注；需求超过20000字符会阻止本次完整审查。`:'当前没有已确认需求，本次只审查代码；不会伪造需求或知识来源。'}</p>
+        {reviewing&&<div className="form-actions"><span className="muted-text" role="status">正在保存提交稿、检索实际资料或等待模型…</span><button type="button" className="button secondary" onClick={()=>{reviewController.current?.abort();setNotice('本地等待已取消。已发出的模型请求可能仍计费或完成写入，请核对审查记录；代码草稿保留。');}}>取消审查等待</button></div>}
         <label htmlFor="code-input">代码内容</label><CodeEditor value={code} onChange={setCode} language={language}/>
       </fieldset>
       {conflict&&<section className="code-draft-conflict" aria-label="代码草稿冲突"><h4>另一个窗口的草稿 · 修订 {conflict.revision}</h4><p>当前输入仍保留在编辑器中。请比较后手动合并，再明确选择继续编辑；这一步不会立即覆盖服务器草稿。</p><pre className="code-preview">{conflict.code||'（空草稿）'}</pre><CopyButton value={code} label="复制当前输入"/><button type="button" className="button secondary" onClick={()=>{setSaved(conflict);setConflict(null);setError('');setNotice('已采用最新修订作为保存依据；当前编辑内容尚未提交。');}}>已核对，以当前输入继续编辑</button></section>}
-    </form>
+    </form>{reviewing&&<EmbeddingActivity request={request} active={reviewing}/>}
     <section className="editor-panel"><div className="panel-heading"><h3>审查记录</h3><button className="text-link" type="button" disabled={loadingReviews||reviewing} onClick={()=>void loadReviews()}>刷新审查记录</button></div>
       {loadingReviews?<p role="status" className="muted-text">正在加载…</p>:reviews.length?<ul className="module-list">{reviews.map(row=><li key={row.id}><button type="button" className="run-link" aria-pressed={selected?.id===row.id} onClick={()=>{selection.current++;setSelected(row);}}><strong>{row.language} · {date(row.createdAt)}</strong><small>模型：{row.modelName}</small></button></li>)}</ul>:<p className="muted-text">暂无审查记录。</p>}
     </section></div><div>{selected?<>
+      <ReviewSources context={selected.reviewContext} currentVersionId={confirmed?.id}/>
       <section className="editor-panel"><h3>真实语法诊断</h3><p className="muted-text">仅检查语法，不包含类型、安全、性能或运行正确性验证。</p>{selected.syntaxFindings.length?<ul className="finding-list">{selected.syntaxFindings.map((finding,index)=><li key={index}>第 {finding.line} 行，第 {finding.column} 列 · TS{finding.code}<p>{finding.message}</p></li>)}</ul>:<p className="muted-text">语法检查未报告问题，不代表代码没有其他问题。</p>}</section>
       <section className="editor-panel"><h3>AI 审查建议</h3><p className="muted-text">以下内容未经验证，请结合实际代码和测试判断。</p><RichContent value={selected.aiAdvice}/><div className="result-copy"><CopyButton value={selected.aiAdvice}/></div></section>
       <details className="editor-panel"><summary>查看本次提交的代码</summary><pre className="code-preview">{selected.code}</pre></details>

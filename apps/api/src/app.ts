@@ -35,7 +35,7 @@ export async function createApp(options: { database?: DatabaseCheck; pool?: Pool
   await registerAiRoutes(app, options.projectStore, options.aiConfig, options.aiGenerationStore);
   await registerKnowledgeRoutes(app, options.projectStore, options.pool, options.embeddingConfig, options.aiConfig);
   await registerAgentRoutes(app, options.projectStore, options.pool, options.aiConfig, options.embeddingConfig);
-  await registerPracticeRoutes(app, options.projectStore, options.pool, options.aiConfig);
+  await registerPracticeRoutes(app, options.projectStore, options.pool, options.aiConfig,{embedding:options.embeddingConfig});
   await registerDocumentRoutes(app, options.projectStore, options.pool ? new PgDocumentStore(options.pool) : undefined, options.aiConfig);
   await registerGrowthRoutes(app, options.projectStore, options.pool);
   await registerTraceRoutes(app, options.projectStore, options.pool);

@@ -9,7 +9,7 @@ export function listEmbeddingActivities(owner:string) {
   return [...records.values()].filter(row=>row.owner===owner).slice(-12).reverse().map(({owner:_owner,...row})=>row);
 }
 /** Only status metadata is recorded; no source text, provider URL or credentials. */
-export function openEmbeddingActivity(owner:string,kind:'index'|'search'|'answer'|'agent',request:FastifyRequest,reply:FastifyReply) {
+export function openEmbeddingActivity(owner:string,kind:'index'|'search'|'answer'|'agent'|'review',request:FastifyRequest,reply:FastifyReply) {
   listEmbeddingActivities(owner);
   const id=randomUUID(),startedAt=new Date().toISOString();
   const record:Activity={id,owner,kind,state:'running',startedAt,updatedAt:startedAt};

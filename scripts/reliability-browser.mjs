@@ -109,7 +109,7 @@ async function scenario(name,work){
    if(state.failSave){status=503;body={error:'database_unavailable'};}else if(state.codeConflict){status=409;body={error:'code_draft_conflict'};}else{state.codeDraft={projectId:A,language:input.language,code:input.code,revision:(state.codeDraft?.revision??0)+1,updatedAt:now};body={draft:state.codeDraft};}
   }
   else if(path.endsWith('/code-reviews')&&method==='POST'){
-   const input=route.request().postDataJSON();state.writes.push({path,body:input});await new Promise(r=>setTimeout(r,state.reviewDelay??0));body={review:{id:'new-review',...input,aiAdvice:'新的合成审查建议',syntaxFindings:[],modelName:'fixture',createdAt:now}};state.reviews=[body.review,...(state.reviews??[])];status=201;
+   const input=route.request().postDataJSON();state.writes.push({path,body:input});await new Promise(r=>setTimeout(r,state.reviewDelay??0));body={review:{id:'new-review',...input,aiAdvice:'新的合成审查建议',syntaxFindings:[],modelName:'fixture',createdAt:now,reviewContext:state.reviewContext??null}};state.reviews=[body.review,...(state.reviews??[])];status=201;
   }
   else if(path.endsWith('/code-reviews'))body={reviews:state.reviews??[]};
   else {status=404;body={error:'not_found'};}
@@ -127,6 +127,17 @@ function traceFixture(state){
  state.traceData={version:{id:RA,number:1,current:true},items:[{id:RA,key:'REQ-fixture',position:1,start:0,end:4,text:'审批留档',change:'initial',coverage:{suggested:0,confirmedTasks:1,confirmedCases:1,stale:0,manualEvidence:0}}],links:[{id:'task-link',itemId:RA,taskId:RA,caseId:null,status:'confirmed',origin:'human'},{id:'case-link',itemId:RA,taskId:null,caseId:RB,caseRevision:1,status:'confirmed',origin:'human'}],tasks:[{id:RA,title:'合成审批任务'}],cases:[test],previousItems:[],impact:null,taskTests:[],taskTestHistory:[],scope:'受控浏览器替身，不是业务数据'};
 }
 try{
+ await scenario('code_review_sources_distinguish_supplied_context_history_and_unknown',async(page,state)=>{
+  state.detailOverride={project:project(A),requirements:[{id:RA,version:2,status:'confirmed',content:'当前合成需求',createdAt:now}]};
+  state.reviews=[{id:'source-review',language:'typescript',code:'const x = 1;',aiAdvice:'基于旧需求的合成建议，尚未验证',syntaxFindings:[],modelName:'fixture',createdAt:now,reviewContext:{schemaVersion:1,scope:'project',capturedAt:now,requirement:{id:RB,version:1,content:'历史需求原文必须能核对'},retrieval:{status:'retrieved',segments:[{part:1,start:0,end:12,sourceIds:[RB]}],sources:[{id:RB,documentName:'实际传入的合成资料',page:2,content:'原文片段：只允许审批者操作。',distance:.1}]}}},{id:'legacy-review',language:'javascript',code:'let x;',aiAdvice:'旧审查',syntaxFindings:[],modelName:'fixture',createdAt:now}];
+  await page.goto(`${origin.origin}/projects/${A}/reviews`);const sources=page.getByRole('region',{name:'本次审查依据'});await sources.getByText(/依据为历史需求/).waitFor();await sources.getByText(/核对提交时的完整需求/).click();await sources.getByText('历史需求原文必须能核对',{exact:true}).waitFor();await sources.getByText(/实际传入的合成资料/).click();await sources.getByText('原文片段：只允许审批者操作。',{exact:true}).waitFor();assert.equal(await sources.getByText(/并不证明模型实际引用/).count(),1);
+  await page.locator('.run-link').nth(1).click();await sources.getByText(/历史记录未保存来源快照/).waitFor();assert.equal(await sources.getByText(/依据为历史需求/).count(),0);
+  await page.locator('#review-scope').selectOption('code_only');await page.locator('#code-input').fill('const explicitScope = 1;');await page.getByRole('button',{name:'提交审查',exact:true}).click();await waitFor(()=>state.writes.some(row=>row.path.endsWith('/code-reviews')));const sent=state.writes.find(row=>row.path.endsWith('/code-reviews')).body;assert.equal(sent.context,'code_only');assert.equal(sent.requirementId,undefined);
+ });
+ await scenario('code_review_cancellation_keeps_draft_and_ignores_late_advice',async(page,state)=>{
+  state.reviewDelay=600;await page.goto(`${origin.origin}/projects/${A}/reviews`);await page.locator('#code-input').fill('const retained = 1;');await page.getByRole('button',{name:'提交审查',exact:true}).click();await waitFor(()=>state.writes.some(row=>row.path.endsWith('/code-reviews')));
+  await page.getByRole('button',{name:'取消审查等待',exact:true}).click();await page.waitForTimeout(750);assert.equal(await page.getByText('新的合成审查建议',{exact:true}).count(),0);assert.equal(await page.locator('#code-input').inputValue(),'const retained = 1;');await page.getByText(/本地等待已取消/).waitFor();assert.equal(state.codeDraft.code,'const retained = 1;');
+ });
  await scenario('code_draft_save_and_leave_checks_committed_state_under_cpu_throttle',async(page,state)=>{
   const session=await page.context().newCDPSession(page);await session.send('Emulation.setCPUThrottlingRate',{rate:4});page.setDefaultTimeout(12000);
   try{await page.goto(`${origin.origin}/projects/${A}/reviews`);await page.locator('#code-input').fill('const committedSnapshot = 1;');await page.getByRole('link',{name:'知识库',exact:true}).first().click();
