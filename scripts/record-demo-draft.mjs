@@ -1,6 +1,7 @@
 // Local synthetic workflow recording. No production accounts or remote model calls.
 import {createRequire} from 'node:module';
-import {randomUUID,randomBytes} from 'node:crypto';
+import {randomUUID,randomBytes,createHash} from 'node:crypto';
+import {execFileSync} from 'node:child_process';
 import {mkdir,readFile,writeFile,copyFile} from 'node:fs/promises';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
@@ -21,8 +22,12 @@ import {loadEmbeddingConfig,saveText,indexDocument} from '../apps/api/dist/rag/s
 const root=fileURLToPath(new URL('../',import.meta.url));
 const quick=process.argv.includes('--quick');
 const ffmpeg=process.argv.find(a=>a.startsWith('--ffmpeg='))?.slice(9);
+const narration=path.resolve(root,process.argv.find(a=>a.startsWith('--narration='))?.slice(12)??'.runtime/demo-v3-narration');
+const narrationRelative=path.relative(path.join(root,'.runtime'),narration);
+assert.ok(narrationRelative&&narrationRelative!=='..'&&!narrationRelative.startsWith('..'+path.sep)&&!path.isAbsolute(narrationRelative),'Narration must be in project .runtime.');
+const narrationManifest=JSON.parse((await readFile(path.join(narration,'manifest.json'),'utf8')).replace(/^\uFEFF/,''));
 assert.ok(ffmpeg&&path.isAbsolute(ffmpeg),'Supply a trusted local --ffmpeg=absolute-path executable.');
-assert.ok(process.argv.slice(2).every(a=>a==='--quick'||a.startsWith('--ffmpeg=')),'Unknown argument.');
+assert.ok(process.argv.slice(2).every(a=>a==='--quick'||a.startsWith('--ffmpeg=')||a.startsWith('--narration=')),'Unknown argument.');
 const require=createRequire(new URL('../apps/api/package.json',import.meta.url));
 require('dotenv').config(); // Normal app loader; values are never reported.
 const settings=loadConfig(),embedding=loadEmbeddingConfig();
@@ -56,13 +61,15 @@ await registerAgentRoutes(app,store,pool,ai,embedding,{complete:async(_config,me
   const evidence=JSON.parse(content.split('实际检索资料：\n')[1].split('\n上次校验反馈：')[0]);
   return JSON.stringify({tasks:[['审批留痕与归属规则','需求'],['实现申请与库存约束','开发'],['检查越权与回滚分支','审查'],['核对边界与失败证据','测试'],['整理版本化交付说明','交付']].map(([title,stage],i)=>({key:`t${i+1}`,title,stage,description:'合成替身计划：请按当前确认需求实施并保留可核对记录。',deliverable:'说明操作、预期结果与实际结果，按需求逐项人工验收。',dependsOn:i?[`t${i}`]:[],citations:evidence.length?[evidence[0].id]:[],requirementIds:i===0?[keys[0]]:keys}))});
 }});
-await registerPracticeRoutes(app,store,pool,ai,{complete:async(_config,messages)=>JSON.stringify({cases:['normal','boundary','exception'].map((category,i)=>({category,title:['审批记录保留与归属','库存为零时拒绝借用','保存失败时回滚申请'][i]+' · 合成用例',preconditions:'合成工程演示，设备借用应用尚未执行',steps:['以申请人身份提交借用，审批后检查留存记录','库存为零时提交申请，核对拒绝状态','模拟保存失败，核对没有半完成审批记录'][i],expected:['审批记录可追溯，其他学生不可见','不能借出，库存不为负数','保留原状态，不生成重复记录'][i],requirementIds:[messages[1].content.match(/REQ-[a-f0-9]{16}/)[0]]}))})});
+await registerPracticeRoutes(app,store,pool,ai,{embedding,complete:async(_config,messages)=>messages[0].content.includes('代码审查')?'# 合成审查建议（聊天替身）\n\n语法解析没有报错，但这不能证明代码正确。请结合确认需求补充审批留痕、库存并发和失败回滚的验收。\n\n建议尚未验证；本段没有执行代码。提供的资料可在右侧逐条核对。':JSON.stringify({cases:['normal','boundary','exception'].map((category,i)=>({category,title:['审批记录保留与归属','库存为零时拒绝借用','保存失败时回滚申请'][i]+' · 合成用例',preconditions:'合成工程演示，设备借用应用尚未执行',steps:['以申请人身份提交借用，审批后检查留存记录','库存为零时提交申请，核对拒绝状态','模拟保存失败，核对没有半完成审批记录'][i],expected:['审批记录可追溯，其他学生不可见','不能借出，库存不为负数','保留原状态，不生成重复记录'][i],requirementIds:[messages[1].content.match(/REQ-[a-f0-9]{16}/)[0]]}))})});
 await registerDocumentRoutes(app,store,new PgDocumentStore(pool),ai,async()=> '# 设备借用实训 · 合成文档替身\n\n## 目的\n练习审批留痕、库存约束与失败回滚。\n\n## 当前状态\n已形成需求、任务和测试建议。应用尚未在本段演示中实施。测试登记为未执行或阻塞，不能写为通过。\n\n## 待补材料\n真实接口、部署信息、实际执行证据与团队信息待补。\n\n## 交付前核对\n逐条检查当前版本、人工审核依据与用例修订。');
 app.get('/health',async()=>({status:'ok',service:'gongxu-api'}));
 app.get('/ready',async()=>({status:'ready'}));
 app.get('/ai/status',async()=>({configured:true,model:ai.model}));
 const story=JSON.parse(await readFile(path.join(root,'docs/demo-v3/storyboard.json'),'utf8'));
-const report={scope:story.scope,voice:story.voice,quick,startedAt:new Date().toISOString(),model:'controlled_fixture_no_remote_calls',scenes:[],pageErrors:0};
+let sourceCommit=null,sourceModified=null;
+try{sourceCommit=execFileSync('git',['rev-parse','HEAD'],{cwd:root,encoding:'utf8',stdio:['ignore','pipe','ignore']}).trim();sourceModified=Boolean(execFileSync('git',['status','--porcelain'],{cwd:root,encoding:'utf8',stdio:['ignore','pipe','ignore']}).trim());}catch{/* A source ZIP may not contain Git metadata. */}
+const report={scope:story.scope,voice:story.voice,quick,startedAt:new Date().toISOString(),sourceCommit,sourceModified,model:'controlled_fixture_no_remote_calls',narrationDirectory:path.relative(root,narration),scenes:[],pageErrors:0};
 let auth={},browser,context,page,stage='setup',videoPath,started;
 const call=(method,url,payload)=>app.inject({method,url,headers:auth,...(payload===undefined?{}:{payload})});
 const requirement='审批必须保留申请人、审批状态与操作记录。\n学生只能查看自己的借用申请，不得读取其他同学的材料。\n库存不足时必须拒绝借用，库存不得出现负数。\n保存失败必须回滚，不得产生重复审批记录。';
@@ -70,12 +77,15 @@ const pause=ms=>delay(quick?100:ms);
 function wavSeconds(buffer){let rate,bytes;for(let p=12;p+8<=buffer.length;){const kind=buffer.toString('ascii',p,p+4),length=buffer.readUInt32LE(p+4);if(kind==='fmt ')rate=buffer.readUInt32LE(p+16);if(kind==='data')bytes=length;p+=8+length+(length%2);}assert.ok(rate&&bytes);return bytes/rate;}
 async function scene(id,action){
   stage=id;const spec=story.scenes.find(s=>s.id===id),start=performance.now();console.log(`SCENE ${id}`);
-  const audio=await readFile(path.join(root,'.runtime/demo-v3-narration',id+'.wav'));
+  const audio=await readFile(path.join(narration,id+'.wav'));
+  const audioSha256=createHash('sha256').update(audio).digest('hex'),narrationSha256=createHash('sha256').update(spec.narration).digest('hex');
+  const manifest=narrationManifest.scenes.find(row=>row.id===id);
+  assert.equal(manifest?.textSha256,narrationSha256,'Narration must match this scene text. Regenerate into a new directory.');assert.equal(manifest.audioSha256,audioSha256,'Narration audio changed after generation.');
   const audioSeconds=wavSeconds(audio),target=quick?0:Math.max(audioSeconds+2,spec.minimumSeconds);
   await action();
   await page.screenshot({path:path.join(directory,id+'.png')});
   const remaining=target*1000-(performance.now()-start);if(remaining>0)await delay(remaining);
-  report.scenes.push({...spec,startSeconds:(start-started)/1000,durationSeconds:(performance.now()-start)/1000,audioSeconds});
+  report.scenes.push({...spec,startSeconds:(start-started)/1000,durationSeconds:(performance.now()-start)/1000,audioSeconds,audioSha256,narrationSha256});
 }
 try{
   const registration=await call('POST','/auth/register',{name:'工程演示 · 合成账号',email:`demo-${randomUUID()}@example.test`,password:randomBytes(24).toString('base64url')});assert.equal(registration.statusCode,201);
@@ -120,6 +130,13 @@ try{
     await page.getByText('计划已确认，任务和人工审核记录已保存。',{exact:true}).waitFor();
     await page.locator('.confirmed-task-panel').scrollIntoViewIfNeeded();
   });
+  await scene('review',async()=>{
+    await go('reviews');await page.locator('#code-input').fill('type BorrowRequest = { ownerId: string; stock: number };\nexport function mayBorrow(request: BorrowRequest, userId: string) {\n  return request.stock > 0 && request.ownerId === userId;\n}');
+    await page.getByRole('button',{name:'保存代码草稿',exact:true}).click();await page.getByText(/代码草稿已保存/).waitFor();await pause(5000);
+    await page.locator('#review-scope').selectOption('project');await page.getByRole('button',{name:'提交审查',exact:true}).click();await page.getByRole('heading',{name:'合成审查建议（聊天替身）',exact:true}).waitFor();
+    const sources=page.getByRole('region',{name:'本次审查依据'});await sources.getByText(/核对提交时的完整需求/).click();await pause(5000);await sources.getByText('设备借用实训规范 · 原创合成资料',{exact:false}).click();await sources.scrollIntoViewIfNeeded();
+    const review=(await call('GET',base+'/code-reviews')).json().reviews[0];assert.equal(review.reviewContext.requirement.id,first.id);assert.equal(review.reviewContext.retrieval.status,'retrieved');assert.ok(review.reviewContext.retrieval.sources.length>0);assert.equal(review.syntaxFindings.length,0);
+  });
   await scene('tests',async()=>{
     await go('tests');await page.getByRole('button',{name:/生成测试用例/}).click();const card=page.locator('.case-item').filter({hasText:'审批记录保留与归属'});await card.waitFor();
     await card.scrollIntoViewIfNeeded();await pause(11000);
@@ -147,6 +164,11 @@ try{
     await go('requirements');await page.locator('#requirement').fill(requirement.replace('审批必须保留','双人审批必须共同确认，并保留'));await page.getByRole('button',{name:/保存需求草稿/}).click();await page.getByRole('button',{name:/确认最新版本/}).click();
     await page.getByRole('region',{name:'需求到验证证据追踪'}).getByText('原文与版本来源',{exact:true}).waitFor();await pause(5000);await go('tests');await page.getByText('此需求版本暂无测试用例，其他版本的结果不会自动继承。',{exact:true}).waitFor();await pause(16000);
     await page.getByLabel('测试来源需求版本').selectOption(first.id);await page.locator('.case-item').first().waitFor();assert.match(await page.getByLabel('测试来源需求版本').locator('option:checked').innerText(),/历史/);
+  });
+  await scene('growth',async()=>{
+    await go('/growth');await page.getByRole('heading',{name:'当前版本任务进度',exact:true}).waitFor();assert.ok((await page.getByRole('region',{name:'任务进度',exact:true}).innerText()).includes('共 0 项'));await pause(9000);
+    await page.getByLabel('任务与测试统计范围').selectOption('history');await page.getByRole('heading',{name:'历史任务状态',exact:true}).waitFor();assert.ok((await page.getByRole('region',{name:'任务进度',exact:true}).innerText()).includes('共 5 项'));await pause(10000);
+    await page.getByLabel('任务与测试统计范围').selectOption('current');await page.getByRole('heading',{name:'当前版本任务进度',exact:true}).waitFor();
   });
   assert.equal(report.pageErrors,0);report.status='recorded';
 }catch(error){report.status='failed';report.failedStage=stage;report.errorType=error.constructor.name;console.log(`FAILED ${stage} ${error.constructor.name}`);if(page)await page.screenshot({path:path.join(directory,'failure.png')}).catch(()=>{});process.exitCode=1;}

@@ -6,23 +6,23 @@
 
 ## 分镜与复现
 
-`storyboard.json`包含9个场景及普通话讲稿：项目边界、需求确认、未保存保护、本地RAG、Agent实际工具/人工采用、测试结果、任务验证链、文档修订、需求变更后历史隔离。
+`storyboard.json`包含11个场景及普通话讲稿：项目边界、需求确认、未保存保护、本地RAG、Agent实际工具/人工采用、独立代码草稿与审查来源、测试结果、任务验证链、文档修订、需求变更后历史隔离、当前与历史成长统计。早期9场景MP4仍保留，不能据它声称已演示后来新增的能力。
 
 准备已启动的本地前端、当前迁移和本地向量服务，以及经过来源核对的FFmpeg。所有聊天输出在独立回环API内注入；脚本拒绝外部网络目的地，不会把合成流程转发给运行中的真实聊天模型。
 
 在项目根目录使用可访问本机已安装语音的PowerShell 7环境生成配音：
 
 ```powershell
-./scripts/narrate-demo-local.ps1 -OutputDirectory E:/ai/gongxu-zhiban/.runtime/demo-v3-narration
+./scripts/narrate-demo-local.ps1 -OutputDirectory E:/ai/gongxu-zhiban/.runtime/demo-v3-narration-新的批次名
 ```
 
-脚本不覆盖已有配音。旧版Windows PowerShell或受限进程可能无法使用本机语音组件；应记录错误，不能通过改变安全设置来绕过。没有本地中文语音时，不自动切换云端。
+脚本不覆盖已有配音，另存讲稿与音频哈希清单。录制与合成都会核对哈希，修改讲稿后必须在新目录生成配音，不能静默沿用旧音频。旧版Windows PowerShell或受限进程可能无法使用本机语音组件；应记录错误，不能通过改变安全设置来绕过。没有本地中文语音时，不自动切换云端。
 
 先完成API构建，再在`apps/api`目录运行（仅由程序按既有方式读取本地数据库/Embedding配置）：
 
 ```powershell
-node ../../scripts/record-demo-draft.mjs --quick --ffmpeg=E:/ai/.review-tools/media/ffmpeg-7.1.exe
-node ../../scripts/record-demo-draft.mjs --ffmpeg=E:/ai/.review-tools/media/ffmpeg-7.1.exe
+node ../../scripts/record-demo-draft.mjs --quick --ffmpeg=E:/ai/.review-tools/media/ffmpeg-7.1.exe --narration=E:/ai/gongxu-zhiban/.runtime/demo-v3-narration-新的批次名
+node ../../scripts/record-demo-draft.mjs --ffmpeg=E:/ai/.review-tools/media/ffmpeg-7.1.exe --narration=E:/ai/gongxu-zhiban/.runtime/demo-v3-narration-新的批次名
 ```
 
 `--quick`先检查各场景的操作和断言，不生成可作为正式演示的讲解节奏。完整录制保留当前页面状态，并为讲解和核对留出阅读时间。不要在录制期间修改前端源码，以免热更新打断操作。FFmpeg路径仅为本机示例，评审机需自行准备可信工具；不会打包二进制。

@@ -21,7 +21,8 @@ assert report['model']=='controlled_fixture_no_remote_calls'
 video=recording/report['video'];assert video.is_file() and video.parent==recording
 scenes=report['scenes'];duration=scenes[-1]['startSeconds']+scenes[-1]['durationSeconds']
 assert 300<=duration<=480, 'This planned draft should fit the screenshot video duration range.'
-audio_dir=ROOT/'.runtime/demo-v3-narration'
+audio_dir=(ROOT/report.get('narrationDirectory','.runtime/demo-v3-narration')).resolve()
+assert audio_dir.is_relative_to((ROOT/'.runtime').resolve())
 output=ROOT/'output/video';output.mkdir(parents=True,exist_ok=True)
 name='gongxu-zhiban-demo-v3-draft'
 if (output/(name+'.mp4')).exists():name+='-'+datetime.now().strftime('%Y%m%d-%H%M%S')
@@ -33,6 +34,10 @@ with wave.open(str(audio_dir/(scenes[0]['id']+'.wav')),'rb') as audio:
 block=channels*sample_width
 mixed=bytearray(math.ceil((duration+1)*rate)*block)
 for scene in scenes:
+ assert re.fullmatch('[a-z]+',scene['id'])
+ if 'audioSha256' in scene:
+  assert hashlib.sha256((audio_dir/(scene['id']+'.wav')).read_bytes()).hexdigest()==scene['audioSha256']
+  assert hashlib.sha256(scene['narration'].encode('utf-8')).hexdigest()==scene['narrationSha256']
  with wave.open(str(audio_dir/(scene['id']+'.wav')),'rb') as audio:
   assert (audio.getnchannels(),audio.getsampwidth(),audio.getframerate())==(channels,sample_width,rate)
   data=audio.readframes(audio.getnframes())
@@ -75,5 +80,7 @@ command=[str(Path(args.ffmpeg).resolve()),'-hide_banner','-n','-i',str(video),'-
 with (work/'encode.log').open('w',encoding='utf-8') as log:
  subprocess.run(command,cwd=work,stdout=log,stderr=log,check=True)
 manifest={'file':dest.name,'seconds':round(duration,3),'dimensions':[1920,1080],'codec':'H.264 / AAC','fps':30,'scope':report['scope'],'voice':report['voice'],'captionAlignment':'clause_proportional_needs_final_human_timing_review','scenes':[{'id':s['id'],'title':s['title'],'startSeconds':s['startSeconds'],'durationSeconds':s['durationSeconds']} for s in scenes],'rawRecordingSha256':hashlib.sha256(video.read_bytes()).hexdigest(),'sha256':hashlib.sha256(dest.read_bytes()).hexdigest(),'bytes':dest.stat().st_size,'validation':'pending_decode_and_frame_review','officialSubmissionReady':False}
+manifest['sourceCommit']=report.get('sourceCommit');manifest['sourceModified']=report.get('sourceModified')
+manifest['narrationHashes']=[{'id':s['id'],'textSha256':s.get('narrationSha256'),'audioSha256':s.get('audioSha256')} for s in scenes]
 (output/(name+'.json')).write_text(json.dumps(manifest,ensure_ascii=False,indent=2),encoding='utf-8')
 print(f'Created {dest.name}: {round(duration,1)} seconds, {dest.stat().st_size} bytes. Decode and visual review required.')

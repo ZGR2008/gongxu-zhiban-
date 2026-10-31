@@ -8,6 +8,8 @@ New-Item -ItemType Directory -Path $resolvedOutput -Force | Out-Null
 $story = Get-Content -LiteralPath (Join-Path $projectRoot 'docs/demo-v3/storyboard.json') -Raw -Encoding UTF8 | ConvertFrom-Json
 Add-Type -AssemblyName System.Speech
 $speaker = New-Object System.Speech.Synthesis.SpeechSynthesizer
+$entries = @()
+$hasher = [System.Security.Cryptography.SHA256]::Create()
 try {
   $voice = $speaker.GetInstalledVoices() | Where-Object { $_.Enabled -and $_.VoiceInfo.Culture.Name -eq 'zh-CN' } | Select-Object -First 1
   if (-not $voice) { throw 'No installed local Chinese voice. No cloud fallback is allowed.' }
@@ -20,6 +22,9 @@ try {
     $speaker.SetOutputToWaveFile($path)
     $speaker.Speak([string]$scene.narration)
     $speaker.SetOutputToNull()
+    $textHash = [BitConverter]::ToString($hasher.ComputeHash([Text.Encoding]::UTF8.GetBytes([string]$scene.narration))).Replace('-','').ToLowerInvariant()
+    $entries += [pscustomobject]@{ id=$scene.id; textSha256=$textHash; audioSha256=(Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash.ToLowerInvariant() }
     Write-Output ('Narrated: ' + $scene.id)
   }
-} finally { $speaker.Dispose() }
+  [pscustomobject]@{ scope='local_synthetic_voice_no_cloud'; scenes=$entries } | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath (Join-Path $resolvedOutput 'manifest.json') -Encoding UTF8
+} finally { $speaker.Dispose(); $hasher.Dispose() }
