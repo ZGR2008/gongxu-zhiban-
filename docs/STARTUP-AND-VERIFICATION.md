@@ -40,7 +40,8 @@ API `/health`只证明进程在响应；`/ready`会核对数据库、迁移和pg
 | `pnpm verify:review-context` | 审查来源、换版、隔离、取消、桌面原文显示 | 真实本地DB/向量/浏览器；聊天替身；禁止外部网络，不执行输入代码 |
 | `pnpm verify:document-context` | 完整说明末尾、51条/30000字符阻止、账号和桌面恢复 | 真实本地DB/HTTP/浏览器，1次聊天替身；不截断、无收费 |
 | `pnpm verify:knowledge-answer` | 检索/模型期间实际HTTP断开、取消信号、容量恢复与来源隔离 | 真实本地DB/向量/HTTP，聊天替身；不调用收费模型 |
-| `pnpm verify:test-list` | 201条分页、完整统计、修订失效、微秒/同时间戳、跨账号与三个桌面页面 | 真实本地DB/HTTP/浏览器；计划列表为空替身，没有聊天或向量调用 |
+| `pnpm verify:test-list` | 201条分页、完整统计、修订失效、微秒/同时间戳、跨账号与三个桌面页面 | 真实本地DB/HTTP/浏览器；新建合成项目，没有聊天或向量调用 |
+| `pnpm verify:document-list` | 102份目录分页、隐藏类型完整摘要、历史/账号隔离、修订/导出与三个桌面页面 | 真实本地DB/HTTP/浏览器；新建合成文档，没有聊天或向量调用 |
 | `pnpm verify:index-compatibility` | 当前索引、旧模型标识排除、手动重建失败与恢复、原文和上传草稿 | 真实本地DB/向量/HTTP/桌面，新建合成资料；旧身份及断网为受控注入，无聊天 |
 | `pnpm verify:accessibility` | 19个桌面页面/弹窗的axe规则、可访问名称和ARIA | 全部合成API；自动结果不含人工对比度/屏幕阅读器验收；见ACCESSIBILITY-V3.md |
 | `pnpm eval:retrieval-local` | 冻结15篇合成资料及16问题的实际检索测量 | 真实本地向量/pgvector，不执行聊天；保留未召回和未评估语义支持 |

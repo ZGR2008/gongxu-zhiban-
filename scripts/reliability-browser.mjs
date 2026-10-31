@@ -105,7 +105,16 @@ async function scenario(name,work){
    state.docGenerateCalls=(state.docGenerateCalls??0)+1;
    if(state.docGenerateError){status=413;body={error:state.docGenerateError};}
    else{status=201;const document={id:'cccccccc-cccc-4ccc-8ccc-cccccccccccd',type:route.request().postDataJSON().type,content:'恢复后生成的合成文档',revision:1,modelName:'fixture',createdAt:now,requirementVersionId:RA};state.documents.unshift(document);body={document,evidence:state.evidence};}
-  } else if(path.endsWith('/documents')) {state.docReads++;body={documents:(state.docResponse?state.docResponse(state.docReads):state.documents).map(row=>({revision:1,...row})),evidence:state.evidence};await new Promise(resolve=>setTimeout(resolve,state.docReadDelay(state.docReads)));}
+  } else if(path.endsWith('/documents')) {
+   state.docReads++;const rows=(state.docResponse?state.docResponse(state.docReads):state.documents).map(row=>({revision:1,...row}));
+   const only=url.searchParams.get('summaryOnly')==='true',limit=Number(url.searchParams.get('limit')??100),cursor=url.searchParams.get('cursor'),offset=cursor?Number(cursor.split('-')[1]):0,revision=state.catalogRevision??1;
+   const source=[...(state.detailOverride??state.makeDetail(path.split('/')[2])).requirements].filter(row=>row.status==='confirmed').sort((a,b)=>b.version-a.version)[0];
+   const evidence=state.evidence??(only&&source?{requirementVersionId:source.id,requirementVersion:source.version,taskRevision:0,caseRevision:0,traceRevision:0,documentRevision:0,capturedAt:now}:null);
+   const summary=[...new Map(rows.filter(row=>row.requirementVersionId===source?.id).slice().reverse().map(row=>[row.type,row])).values()].map(({content:_,...row})=>row);
+   body={documents:only?summary:rows.slice(offset,offset+limit),evidence,summaryComplete:only,page:{total:rows.length,limit,hasMore:!only&&offset+limit<rows.length,nextCursor:!only&&offset+limit<rows.length?`doc-${offset+limit}-${revision}`:null}};
+   if(cursor&&Number(cursor.split('-')[2])!==revision){status=409;body={error:'document_list_changed'};}
+   if(state.docListFail){status=503;body={error:'database_unavailable'};}await new Promise(resolve=>setTimeout(resolve,state.docReadDelay(state.docReads)));
+  }
   else if(/\/documents\/[^/]+$/.test(path)&&method==='PATCH'){
    state.writes.push({path,body:route.request().postDataJSON()});
    await new Promise(resolve=>setTimeout(resolve,state.docSaveDelay));
@@ -515,6 +524,24 @@ try{
   }
   state.docGenerateError=null;await page.getByRole('button',{name:/生成草稿/}).click();await page.getByText('已生成草稿，请核实并编辑。',{exact:true}).waitFor();
   assert.equal(await page.locator('#doc-content').inputValue(),'恢复后生成的合成文档');assert.equal(state.docGenerateCalls,3);
+ });
+ await scenario('document_catalogue_pages_preserve_edits_on_cancel_failed_save_and_failed_read',async(page,state)=>{
+  state.documents=Array.from({length:41},(_,i)=>({id:`doc-${i}`,type:i===40?'api':'readme',content:`分页合成正文 ${i}`,revision:1,modelName:'fixture',createdAt:now,requirementVersionId:RA}));
+  await page.goto(`${origin.origin}/projects/${A}/documents`);await page.getByText('读取时共 41 份 · 第 1 页 · 本页 20 份',{exact:true}).waitFor();
+  await page.locator('#doc-content').fill('跨页前必须保留的编辑');await page.getByRole('button',{name:'下一页文档',exact:true}).click();const dialog=page.getByRole('dialog',{name:'保留未保存的编辑'});
+  await dialog.getByRole('button',{name:'留在此页',exact:true}).click();assert.equal(await page.locator('#doc-content').inputValue(),'跨页前必须保留的编辑');assert.match(await page.locator('.document-catalogue-toolbar').innerText(),/第 1 页/);
+  state.failSave=true;await page.getByRole('button',{name:'下一页文档',exact:true}).click();await dialog.getByRole('button',{name:'保存并继续',exact:true}).click();await dialog.getByRole('alert').waitFor();assert.equal(await page.locator('#doc-content').inputValue(),'跨页前必须保留的编辑');assert.match(await page.locator('.document-catalogue-toolbar').innerText(),/第 1 页/);
+  state.docListFail=true;await dialog.getByRole('button',{name:'放弃并继续',exact:true}).click();await page.getByRole('alert').waitFor();assert.equal(await page.locator('#doc-content').inputValue(),'跨页前必须保留的编辑');assert.ok(await page.getByRole('button',{name:'下一页文档',exact:true}).isDisabled());
+  state.docListFail=false;await page.getByRole('button',{name:'刷新文档',exact:true}).click();await dialog.getByRole('button',{name:'放弃并继续',exact:true}).click();await page.getByText('读取时共 41 份 · 第 1 页 · 本页 20 份',{exact:true}).waitFor();
+  for(const i of [2,3]){await page.getByRole('button',{name:'下一页文档',exact:true}).click();await page.getByText(`读取时共 41 份 · 第 ${i} 页 · 本页 ${i===3?1:20} 份`,{exact:true}).waitFor();}
+  assert.equal(await page.locator('#doc-content').inputValue(),'分页合成正文 40');assert.ok(await page.getByRole('button',{name:'下一页文档',exact:true}).isDisabled());
+  await page.getByRole('button',{name:'上一页文档',exact:true}).click();await page.getByText('读取时共 41 份 · 第 2 页 · 本页 20 份',{exact:true}).waitFor();assert.equal(await page.locator('#doc-content').inputValue(),'分页合成正文 20');
+ });
+ await scenario('document_catalogue_rejects_stale_cursor_and_refresh_recovers_without_losing_editor',async(page,state)=>{
+  state.documents=Array.from({length:21},(_,i)=>({id:`doc-${i}`,type:'readme',content:`原文 ${i}`,revision:1,modelName:'fixture',createdAt:now,requirementVersionId:RA}));
+  await page.goto(`${origin.origin}/projects/${A}/documents`);await page.getByText('读取时共 21 份 · 第 1 页 · 本页 20 份',{exact:true}).waitFor();state.catalogRevision=2;
+  await page.getByRole('button',{name:'下一页文档',exact:true}).click();await page.getByRole('alert').filter({hasText:'文档目录在其他操作中发生变化'}).waitFor();assert.equal(await page.locator('#doc-content').inputValue(),'原文 0');assert.ok(await page.getByRole('button',{name:'下一页文档',exact:true}).isDisabled());
+  await page.getByRole('button',{name:'刷新文档',exact:true}).click();await page.getByText('读取时共 21 份 · 第 1 页 · 本页 20 份',{exact:true}).waitFor();await page.getByRole('button',{name:'下一页文档',exact:true}).click();await page.getByText('读取时共 21 份 · 第 2 页 · 本页 1 份',{exact:true}).waitFor();assert.equal(await page.locator('#doc-content').inputValue(),'原文 20');
  });
  await scenario('document_late_save_cannot_reselect_previous_document',async(page,state)=>{
   state.docSaveDelay=1000;

@@ -10,6 +10,7 @@ type Api = <T>(path: string, options?: RequestInit) => Promise<T>;
 const types = { readme: 'README', requirements: '需求分析文档', design: '软件设计文档', api: 'API 说明文档', test_report: '测试报告', summary: '项目总结' } as const;
 type DocType = keyof typeof types;
 type Doc = { id: string; type: DocType; content: string; modelName: string; revision: number; createdAt: string; requirementVersionId: string; sourceSnapshot?:EvidenceSnapshot|null };
+type CataloguePage={total:number;limit:number;hasMore:boolean;nextCursor:string|null};
 type Props = { request: Api; projectId: string; requirements: { id: string; version: number; status: string }[] };
 const errorText = (error: unknown) => error instanceof Error ? error.message : '操作失败，请重试。';
 
@@ -20,6 +21,8 @@ export function DocumentWorkspace({ request, projectId, requirements }: Props) {
   const [loading, setLoading] = useState(true), [busy, setBusy] = useState<'saving' | 'generating' | 'exporting' | null>(null);
   const [conflicted, setConflicted] = useState(false), [remote, setRemote] = useState<Doc | null>(null), [checking, setChecking] = useState(false);
   const [evidence,setEvidence]=useState<EvidenceSnapshot|null>(null);
+  const [catalogue,setCatalogue]=useState<CataloguePage|null>(null),[catalogueStale,setCatalogueStale]=useState(false),[pageIndex,setPageIndex]=useState(0);
+  const pageCursors=useRef<(string|null)[]>([null]);
   const active = useRef(true), savePending = useRef<Promise<boolean> | null>(null), working = useRef(false);
   const reads = useRef(new RequestScope()), conflictReads = useRef(new RequestScope());
   const selection = useRef(0), editor = useRef({ selected, content });
@@ -34,16 +37,18 @@ export function DocumentWorkspace({ request, projectId, requirements }: Props) {
     setSelected(doc); setContent(doc?.content || ''); setNotice(''); setError(''); setRemote(null); setConflicted(false); setChecking(false);
   }, []);
   const edit = (value: string) => { editor.current.content = value; setContent(value); setNotice(''); };
-  const load = useCallback(async () => {
+  const load = useCallback(async (cursor:string|null=null,index=0) => {
     const ticket = reads.current.begin(base);
     setLoading(true);
     try {
-      const data = await request<{ documents: Doc[]; evidence?:EvidenceSnapshot|null }>(base, { signal: ticket.signal });
+      const data = await request<{ documents: Doc[]; evidence?:EvidenceSnapshot|null;page:CataloguePage }>(`${base}?limit=20${cursor?`&cursor=${encodeURIComponent(cursor)}`:''}`, { signal: ticket.signal });
       if (!active.current || !reads.current.accepts(ticket, base)) return;
+      if(!data.page||!Number.isSafeInteger(data.page.total)||data.page.total<data.documents.length)throw new Error('文档目录分页信息暂不可用，已保留编辑内容；请核对前后端版本后重试。');
       setDocs(data.documents);
       setEvidence(data.evidence??null);
+      setCatalogue(data.page);setCatalogueStale(false);setPageIndex(index);pageCursors.current=index===0?[null]:[...pageCursors.current.slice(0,index),cursor];
       choose(data.documents.find(row => row.id === editor.current.selected?.id) || data.documents[0] || null);
-    } catch (error) { if (active.current && reads.current.accepts(ticket, base)) setError(errorText(error)); }
+    } catch (error) { if (active.current && reads.current.accepts(ticket, base)){setError(errorText(error));setCatalogueStale(true);} }
     finally { if (active.current && reads.current.accepts(ticket, base)) setLoading(false); }
   }, [base, request, choose]);
   useEffect(() => {
@@ -64,6 +69,7 @@ export function DocumentWorkspace({ request, projectId, requirements }: Props) {
         if (!active.current) return false;
         if (result.document.id !== target || result.document.revision < revision) throw new Error('返回文档归属或修订不一致，已保留编辑内容。');
         setDocs(rows => rows.map(row => row.id === target ? result.document : row));
+        setCatalogueStale(true);
         setEvidence(result.evidence??null);
         // A late save may update the list, but never the selection or a newer draft.
         if (selection.current !== epoch || editor.current.selected?.id !== target) return false;
@@ -102,7 +108,7 @@ export function DocumentWorkspace({ request, projectId, requirements }: Props) {
     working.current = true; setBusy('generating'); setError(''); setNotice('');
     try {
       const response = await request<{ document: Doc; evidence?:EvidenceSnapshot|null }>(base + '/generate', { method: 'POST', body: JSON.stringify({ type }) });
-      if (active.current) { setDocs(rows => [response.document, ...rows]); setEvidence(response.evidence??null);choose(response.document); setNotice('已生成草稿，请核实并编辑。'); }
+      if (active.current) { setDocs(rows => [response.document, ...rows].slice(0,20));setCatalogueStale(true); setEvidence(response.evidence??null);choose(response.document); setNotice('已生成草稿，请核实并编辑。'); }
     } catch (error) { if (active.current) setError(errorText(error)); }
     finally { working.current = false; if (active.current) setBusy(null); }
   }
@@ -128,6 +134,7 @@ export function DocumentWorkspace({ request, projectId, requirements }: Props) {
     <div className="module-grid"><div>
       <section className="editor-panel"><h3>生成文档草稿</h3><label htmlFor="doc-type">文档类型</label><select id="doc-type" value={type} disabled={busy === 'generating'} onChange={event => setType(event.target.value as DocType)}>{Object.entries(types).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select><div className="form-actions"><button type="button" className="button primary" onClick={() => protect(() => void generate())} disabled={Boolean(busy) || loading || !req}>{busy === 'generating' ? '正在生成草稿…' : '生成草稿'} <span>✦</span></button></div></section>
       <section className="editor-panel"><div className="panel-heading"><h3>已保存文档</h3><button type="button" className="text-link" disabled={Boolean(busy)} onClick={() => protect(() => void load())}>刷新文档</button></div>
+        <div className="document-catalogue-toolbar" role="group" aria-label="文档目录分页"><p role="status">{loading?'正在读取目录…':catalogueStale?'目录已有变化或读取未完成，请刷新后分页':catalogue?`读取时共 ${catalogue.total} 份 · 第 ${pageIndex+1} 页 · 本页 ${docs.length} 份`:'目录暂不可用'}</p><div><button className="button secondary" type="button" disabled={loading||Boolean(busy)||catalogueStale||pageIndex===0} onClick={()=>protect(()=>void load(pageCursors.current[pageIndex-1],pageIndex-1))}>上一页文档</button><button className="button secondary" type="button" disabled={loading||Boolean(busy)||catalogueStale||!catalogue?.nextCursor} onClick={()=>protect(()=>void load(catalogue!.nextCursor,pageIndex+1))}>下一页文档</button></div><p className="muted-text">按创建时间分页，每页最多20份。刷新从第一页读取，修改与导出仍保留原始版本。</p></div>
         {loading ? <p role="status">正在读取文档，完成后可继续编辑…</p> : docs.length ? <ul className="module-list">{docs.map(doc => <li key={doc.id}><button type="button" className="run-link" aria-pressed={selected?.id === doc.id} disabled={busy === 'generating'} onClick={() => { if (selected?.id !== doc.id) protect(() => choose(doc)); }}><strong>{types[doc.type]}</strong><small>{new Date(doc.createdAt).toLocaleString('zh-CN')} · {doc.modelName} · 来源 v{requirements.find(row => row.id === doc.requirementVersionId)?.version ?? '未知'} · 修订 {doc.revision}</small></button></li>)}</ul> : <p>暂无文档。确认项目需求后可生成第一份草稿。</p>}
       </section>
     </div>

@@ -1,4 +1,10 @@
 .document-editor-column{min-width:0;display:grid;gap:18px;align-content:start}
+.document-catalogue-toolbar{padding:12px 0 16px;border-bottom:1px solid #bc13fe33;margin-bottom:12px}
+.document-catalogue-toolbar>div{display:flex;gap:8px;flex-wrap:wrap}
+.document-catalogue-toolbar p{font-size:13px;line-height:1.7;color:#d1c4e9;margin:0 0 10px}
+.document-catalogue-toolbar p:first-child{text-wrap:balance}
+.document-catalogue-toolbar .muted-text{margin:10px 0 0}
+.document-catalogue-toolbar .button{min-height:36px;padding:8px 12px}
 .document-source-state{padding:12px 16px;margin-bottom:18px;border-left:2px solid #9a74c8;background:#22173366;font-size:13px}
 .document-source-state p{margin:6px 0 0;color:#d1c4e9;line-height:1.7}
 .document-source-state[data-state=changed],.document-source-state[data-state=historical]{border-color:#e5b76e}

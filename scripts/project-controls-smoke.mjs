@@ -130,9 +130,9 @@ try {
   await check('controlled_cross_version_evidence_and_status_counts', async () => {
     const cases = [{ id: 'old', requirementVersionId: sourceVersion.id, result: 'passed' }, { id: 'new1', requirementVersionId: currentVersion.id, result: 'blocked' }, { id: 'new2', requirementVersionId: currentVersion.id, result: 'not_run' }];
     const documents = [{ id: 'old', requirementVersionId: sourceVersion.id, type: 'readme' }, { id: 'new1', requirementVersionId: currentVersion.id, type: 'design' }, { id: 'new2', requirementVersionId: currentVersion.id, type: 'design' }];
-    const patterns = [`**/api${projectPath}/test-cases?**`, `**/api${projectPath}/documents`];
+    const patterns = [`**/api${projectPath}/test-cases?**`, `**/api${projectPath}/documents?**`];
     await page.route(patterns[0], route => route.fulfill({ json: { cases,summary:{requirementVersionId:currentVersion.id,requirementVersion:2,caseRevision:1,capturedAt:new Date().toISOString(),total:2,passed:0,failed:0,blocked:1,notRun:1},page:{limit:50,hasMore:false,nextCursor:null} } }));
-    await page.route(patterns[1], route => route.fulfill({ json: { documents } }));
+    await page.route(patterns[1], route => route.fulfill({ json: { documents,summaryComplete:true,evidence:{requirementVersionId:currentVersion.id,requirementVersion:2,taskRevision:0,caseRevision:1,traceRevision:0,documentRevision:1,capturedAt:new Date().toISOString()} } }));
     await page.getByRole('button', { name: '刷新概览', exact: true }).click(); await page.locator('.pulse-stats').waitFor();
     await page.waitForFunction(() => document.querySelector('.pulse-stats > div:nth-child(3) strong')?.textContent.replace(/\s/g, '') === '1/2');
     assert((await page.locator('.pulse-stats > div').nth(2).locator('strong').textContent()).replace(/\s/g, '') === '1/2', 'cross_version_test_count');

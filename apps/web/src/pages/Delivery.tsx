@@ -174,9 +174,9 @@ function DeliveryBoard({
     `${base}/test-cases?summaryOnly=true${requirement?`&requirementVersionId=${encodeURIComponent(requirement.id)}`:''}`,
     revision,
   );
-  const docs = useApiResource<{ documents: Doc[];evidence?:EvidenceSnapshot|null }>(
+  const docs = useApiResource<{ documents: Doc[];evidence?:EvidenceSnapshot|null;summaryComplete?:boolean }>(
     request,
-    `${base}/documents`,
+    `${base}/documents?summaryOnly=true`,
     revision,
   );
   const reviews = useApiResource<{ reviews: { id: string }[] }>(
@@ -189,13 +189,14 @@ function DeliveryBoard({
     docs.data?.documents.filter(
       (item) => item.requirementVersionId === requirement?.id,
     ) ?? [];
+  const documentSummaryReady=docs.data?.summaryComplete===true&&(!requirement||docs.data.evidence?.requirementVersionId===requirement.id);
   const confirmedPlans =
     runs.data?.runs.filter(
       (item) =>
         item.requirementVersionId === requirement?.id &&
         item.status === "confirmed",
     ) ?? [];
-  const currentEvidence=!docs.loading&&!docs.error&&docs.data?.evidence?.requirementVersionId===requirement?.id?docs.data?.evidence:null;
+  const currentEvidence=documentSummaryReady&&!docs.loading&&!docs.error&&docs.data?.evidence?.requirementVersionId===requirement?.id?docs.data?.evidence:null;
   const trackedChecks=new Set<CheckId>(['requirements','plan','tests','documents']);
   const isCurrent=(id:CheckId)=>!trackedChecks.has(id)||manualCheckFresh(saved.record.items[id].status,saved.record.items[id].evidenceStamp,evidenceStamp(currentEvidence,id));
   const staleChecks=deliveryChecks.filter(item=>saved.record.items[item.id].status==='checked'&&!isCurrent(item.id));
@@ -223,7 +224,7 @@ function DeliveryBoard({
       ? "文档暂不可用"
       : docs.loading
         ? "正在读取文档记录…"
-        : `${new Set(versionDocs.map((item) => item.type)).size} 类当前需求文档已保存；${staleDocumentTypes.size} 类有来源变化或缺少快照，须复核内容`,
+        : !documentSummaryReady?'完整版本文档目录暂不可用，请刷新核对':`${new Set(versionDocs.map((item) => item.type)).size} 类当前需求文档已保存（完整目录，各类最新一份）；${staleDocumentTypes.size} 类有来源变化或缺少快照，须复核内容`,
     demo: "平台没有自动检查部署、仓库访问或正式竞赛材料",
   };
   const completed = deliveryChecks.filter(

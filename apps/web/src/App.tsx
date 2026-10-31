@@ -51,6 +51,7 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
     const queueCodes:Record<string,string>={trace_version_outdated:'需求版本已变化，请刷新追踪视图后重新审核。',case_revision_required:'请选择当前修订的用例再进行审核。',test_case_unknown_requirement:'模型关联了不存在的需求条目，未保存本次用例，请重试或检查需求。',embedding_queue_full:'向量服务等待队列已满，请稍后重试。',embedding_queue_timeout:'向量请求排队超时，已退出队列，请稍后重试。',embedding_timeout:'向量请求超过等待时间，已停止本次请求。',embedding_cancelled:'本次向量请求已取消。',embedding_busy:'向量服务仍忙，有限重试已结束，请稍后再试。',embedding_unavailable:'向量服务暂不可用，有限重试已结束。请检查服务后重试。',test_case_changed:'用例已被修改，请刷新后核对最新定义，再登记执行结果。'};
     const documentCodes:Record<string,string>={
       test_list_changed:'用例记录或需求来源已变化，已保留当前页面。请先保存或处理编辑，再刷新用例与完整统计后继续分页。',
+      document_list_changed:'文档目录在其他操作中发生变化，已保留当前编辑。请先保存或处理草稿，再刷新文档，从第一页重新读取目录。',
       pdf_text_too_large:'PDF 提取的文本超过 200000 字符，已停止导入，未保存不完整资料。请按章节拆分文件后分别上传；这与文件是否超过 3 MB 不同。',
       document_too_many_chunks:'资料分块超过 250 块，未保存或删减任何片段。请按章节拆成多份资料，并保留末尾内容后分别上传。当前上传内容仍保留在编辑区。',
       invalid_document:'资料没有可用的文本片段，请检查原文后重试；本次没有生成可检索内容。',

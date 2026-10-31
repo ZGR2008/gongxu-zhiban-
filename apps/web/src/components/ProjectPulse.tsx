@@ -31,7 +31,7 @@ export function ProjectPulse({ request, projectId, projectName, requirements, na
       request<{ runs: RunSummary[] }>(`${base}/agent/runs`, options).then(data => data.runs),
       request<{ tasks: TaskSummary[] }>(`${base}/tasks`, options).then(data => data.tasks),
       request<TestCasePage<CaseSummary>>(`${base}/test-cases?summaryOnly=true${confirmedId?`&requirementVersionId=${encodeURIComponent(confirmedId)}`:''}`, options),
-      request<{ documents: (DocSummary&{sourceSnapshot?:EvidenceSnapshot|null})[];evidence?:EvidenceSnapshot|null }>(`${base}/documents`, options).then(data => data.documents.map(doc=>({...doc,sourceStatus:documentEvidence(doc,data.evidence).status}))),
+      request<{ documents: (DocSummary&{sourceSnapshot?:EvidenceSnapshot|null})[];evidence?:EvidenceSnapshot|null;summaryComplete?:boolean }>(`${base}/documents?summaryOnly=true`, options).then(data => {if(!data.summaryComplete||(confirmedId&&data.evidence?.requirementVersionId!==confirmedId))throw new Error('完整版本文档目录暂不可用，请刷新核对。');return data.documents.map(doc=>({...doc,sourceStatus:documentEvidence(doc,data.evidence).status}));}),
       request<{ reviews: ReviewSummary[] }>(`${base}/code-reviews`, options).then(data => data.reviews),
     ]).then(([runs, tasks, cases, docs, reviews]) => {
       if (controller.signal.aborted) return;
@@ -51,12 +51,12 @@ export function ProjectPulse({ request, projectId, projectName, requirements, na
   const errors = [
     ['规划记录', snapshot.runs.error], ['任务', snapshot.tasks.error], ['测试用例', snapshot.cases.error||(confirmed&&!testCounts?'完整版本统计暂不可用，请刷新核对。':null)], ['项目文档', snapshot.docs.error], ['代码审查', snapshot.reviews.error],
   ].filter(([, error]) => error);
-  const limited = (snapshot.docs.data?.length ?? 0) >= 100 || (snapshot.reviews.data?.length ?? 0) >= 100 || (snapshot.runs.data?.length ?? 0) >= 100;
+  const limited = (snapshot.reviews.data?.length ?? 0) >= 100 || (snapshot.runs.data?.length ?? 0) >= 100;
   const report = [
     `# ${projectName} · 实践快照`, `读取时间：${new Date(updatedAt).toLocaleString('zh-CN')}`, `当前依据：${version}`,
     `任务（${version}）：${snapshot.tasks.error ? '暂不可用' : `${done}/${tasks.length} 标记完成，${summary.blockedTasks.length} 项阻塞`}`,
     `测试（${version}）：${snapshot.cases.error ? '暂不可用' : confirmed ? testCounts?`${testCounts.total} 条完整版本用例，人工登记 ${recorded} 条，其中通过 ${passed} 条、失败或阻塞 ${summary.issues} 条`:'完整版本统计暂不可用' : '无已确认需求，不统计'}`,
-    `文档（${version}）：${snapshot.docs.error ? '暂不可用' : confirmed ? `${docKinds.length}/6 类已保存` : '无已确认需求，不统计'}`,
+    `文档（${version}）：${snapshot.docs.error ? '暂不可用' : confirmed ? `${docKinds.length}/6 类已保存；按各类最新文档核对完整目录` : '无已确认需求，不统计'}`,
     `下一步建议：${next.title}。${next.detail}`, '',
     '此快照仅汇总当前读取的记录，任务和测试状态由用户维护，不代表自动执行或正式验收。',
     ...(limited ? ['接口达到返回上限，历史数据可能未全部包含。'] : []),

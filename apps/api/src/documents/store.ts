@@ -1,5 +1,6 @@
 import type { Pool } from 'pg';
 import { readEvidenceSnapshot, type EvidenceSnapshot } from './evidence.js';
+import {documentFields,readDocumentPage,type DocumentListQuery,type DocumentPage} from './listing.js';
 
 export const documentTypes = ['readme', 'requirements', 'design', 'api', 'test_report', 'summary'] as const;
 export type DocumentType = typeof documentTypes[number];
@@ -15,13 +16,14 @@ export type DocumentContext = { snapshot?:EvidenceSnapshot|null; taskCount?:numb
 export interface DocumentStore {
   getContext(userId: string, projectId: string, requirementId: string): Promise<DocumentContext>;
   list(userId: string, projectId: string): Promise<ProjectDocument[]>;
+  page(userId:string,projectId:string,query:DocumentListQuery):Promise<DocumentPage>;
   get(userId: string, projectId: string, id: string): Promise<ProjectDocument | null>;
   create(userId: string, projectId: string, requirementId: string, type: DocumentType, content: string, model: string, snapshot?:EvidenceSnapshot|null): Promise<ProjectDocument | null>;
   update(userId: string, projectId: string, id: string, content: string, expectedRevision: number): Promise<ProjectDocument | null>;
   history(userId: string, projectId: string, id: string, beforeRevision?: number): Promise<DocumentRevision[]>;
   evidence(userId:string,projectId:string):Promise<EvidenceSnapshot|null>;
 }
-const fields = `d.id,d.project_id AS "projectId",d.requirement_version_id AS "requirementVersionId",d.type,d.content,d.model_name AS "modelName",d.revision,d.source_snapshot AS "sourceSnapshot",d.created_at AS "createdAt",d.updated_at AS "updatedAt"`;
+const fields = documentFields;
 export class PgDocumentStore implements DocumentStore {
   constructor(private pool: Pool) {}
   async getContext(userId: string, projectId: string, requirementId: string): Promise<DocumentContext> {
@@ -40,6 +42,7 @@ export class PgDocumentStore implements DocumentStore {
     } catch(error){await client.query('ROLLBACK');throw error;}finally{client.release();}
   }
   evidence(userId:string,projectId:string){return readEvidenceSnapshot(this.pool,userId,projectId);}
+  page(userId:string,projectId:string,query:DocumentListQuery){return readDocumentPage(this.pool,userId,projectId,query);}
   async list(userId: string, projectId: string) {
     const r = await this.pool.query(`SELECT ${fields} FROM project_documents d JOIN projects p ON p.id=d.project_id WHERE p.owner_id=$1 AND p.id=$2 ORDER BY d.created_at DESC LIMIT 100`, [userId,projectId]);
     return r.rows;

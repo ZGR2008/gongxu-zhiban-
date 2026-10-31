@@ -8,6 +8,7 @@ import {PgProjectStore} from '../apps/api/dist/project-store.js';
 import {registerProjectRoutes} from '../apps/api/dist/project-routes.js';
 import {registerPracticeRoutes} from '../apps/api/dist/practice/routes.js';
 import {registerGrowthRoutes} from '../apps/api/dist/growth/routes.js';
+import {registerAgentRoutes} from '../apps/api/dist/agent/routes.js';
 import {PgDocumentStore} from '../apps/api/dist/documents/store.js';
 import {registerDocumentRoutes} from '../apps/api/dist/documents/routes.js';
 const require=createRequire(new URL('../apps/api/package.json',import.meta.url));
@@ -18,13 +19,11 @@ const originalFetch=globalThis.fetch;globalThis.fetch=(input,init)=>{if(!local(i
 const {Pool}=require('pg'),Fastify=require('fastify');
 const pool=new Pool({connectionString:config.DATABASE_URL,connectionTimeoutMillis:3000,statement_timeout:15000,query_timeout:18000});
 const store=new PgProjectStore(pool),app=Fastify({logger:false});
-await registerProjectRoutes(app,store);await registerPracticeRoutes(app,store,pool);await registerGrowthRoutes(app,store,pool);await registerDocumentRoutes(app,store,new PgDocumentStore(pool));
+await registerProjectRoutes(app,store);await registerPracticeRoutes(app,store,pool);await registerGrowthRoutes(app,store,pool);await registerDocumentRoutes(app,store,new PgDocumentStore(pool));await registerAgentRoutes(app,store,pool);
 app.get('/health',async()=>({status:'ok',service:'gongxu-api'}));app.get('/ready',async()=>({status:'ready'}));app.get('/ai/status',async()=>({configured:false}));
-// The page's unrelated plan panel is an explicit fixture. Case, project,
-// growth and document routes below are the real registered implementations.
-app.get('/projects/:projectId/agent/runs',async()=>({runs:[]}));
+// Genuine database routes are used; no chat provider is configured.
 const directory=new URL(`../.runtime/test-list-local-${randomUUID()}/`,import.meta.url);await mkdir(directory,{recursive:true});
-const report={scope:'real_local_database_http_browser_test_pagination_with_empty_plan_fixture',realModel:false,syntheticRecords:true,startedAt:new Date().toISOString(),checks:[]};
+const report={scope:'real_local_database_http_browser_test_pagination',realModel:false,syntheticRecords:true,startedAt:new Date().toISOString(),checks:[]};
 let owner,foreign,browser,browserPage,stage='setup',projectId,version,oldVersion,first;
 const call=(method,url,payload,identity=owner)=>app.inject({method,url,headers:{authorization:`Bearer ${identity.token}`},...(payload===undefined?{}:{payload})});
 async function check(name,run){stage=name;await run();report.checks.push({name,status:'passed'});console.log(`PASS ${name}`);}

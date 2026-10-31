@@ -1,6 +1,7 @@
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 import { z } from 'zod';
 import { authorizeRequest } from '../project-routes.js';
+import {documentListQuery,DocumentListError} from './listing.js';
 import type { ProjectStore } from '../project-store.js';
 import { AiError, aiErrorStatus, completeChat, type AiConfig, type AiMessage } from '../ai/model.js';
 import { DocumentConflictError, documentTypes, type DocumentStore, type DocumentType } from './store.js';
@@ -28,7 +29,12 @@ export async function registerDocumentRoutes(app: FastifyInstance, projects?: Pr
   }
   app.get('/projects/:projectId/documents', async (request, reply) => {
     const ctx = await access(request, reply); if (!ctx) return;
-    return { documents:await documents!.list(ctx.user.id, ctx.project.id),evidence:await documents!.evidence(ctx.user.id,ctx.project.id) };
+    const query=documentListQuery.safeParse(request.query);if(!query.success)return reply.code(400).send({error:'invalid_input'});
+    // Preserve the old bounded read contract for existing callers, while making
+    // its limits explicit. The application now opts into pages or full summaries.
+    if(!Object.keys(request.query as object).length){const rows=await documents!.list(ctx.user.id,ctx.project.id);return{documents:rows,evidence:await documents!.evidence(ctx.user.id,ctx.project.id),scope:'latest_100_legacy',summaryComplete:false,mayBeTruncated:rows.length>=100};}
+    try{return await documents!.page(ctx.user.id,ctx.project.id,query.data);}
+    catch(error){if(error instanceof DocumentListError)return reply.code(error.status).send({error:error.code});throw error;}
   });
   app.get('/projects/:projectId/evidence',async(request,reply)=>{
     const ctx=await access(request,reply);if(!ctx)return;
