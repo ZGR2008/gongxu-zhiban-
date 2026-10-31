@@ -31,6 +31,8 @@
     "eval:prepare": "pnpm --filter @gongxu/api build && node scripts/evaluate-prepare.mjs",
     "eval:report": "node scripts/evaluate-report.mjs",
     "test:eval-report": "node --test scripts/evaluation-report.test.mjs",
+    "test:retrieval-evaluation": "node --test scripts/retrieval-evaluation.test.mjs",
+    "eval:retrieval-local": "pnpm --filter @gongxu/api build && node scripts/evaluate-retrieval-local.mjs",
     "verify:review-context": "pnpm --filter @gongxu/api build && cd apps/api && node ../../scripts/review-context-local.mjs",
     "verify:growth-scope": "pnpm --filter @gongxu/api build && cd apps/api && node ../../scripts/growth-scope-local.mjs"
   },
