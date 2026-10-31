@@ -11,6 +11,7 @@
     :root { color-scheme:dark; --space:#0a0614; --text:#f7f0ff; --muted:#b5a6ce; --line:rgb(185 141 255 / .17); }
     * { box-sizing:border-box; }
     html { min-width:320px; background:var(--space); }
+    html[data-embedded="true"] { background:transparent; }
     body { margin:0; color:var(--text); background:var(--space); font-family:"Segoe UI","Microsoft YaHei",system-ui,sans-serif; -webkit-font-smoothing:antialiased; }
     button,a { -webkit-tap-highlight-color:transparent; }
     button { font:inherit; cursor:pointer; }
@@ -99,6 +100,7 @@
   <noscript><p style="padding:24px;text-align:center;color:#d1c4e9">启用 JavaScript 后可查看三维星环。<a href="./archive/planet-orbit-css-v2.html" style="color:#d1c4e9">查看上一版静态预览</a></p></noscript>
   <script type="module">
     document.body.dataset.embedded = String(new URLSearchParams(location.search).has('embed'));
+    document.documentElement.dataset.embedded = document.body.dataset.embedded;
     import('./orbit-scene.js').catch(() => {
       const loading = document.querySelector('#loading');
       loading.hidden = false;

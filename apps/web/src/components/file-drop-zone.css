@@ -1,0 +1,104 @@
+.file-drop-zone {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+  border: 1px dashed #6f438a;
+  padding: 22px 19px;
+  border-radius: 10px;
+  background: radial-gradient(ellipse at 0% 0%, #61388e24, transparent 75%), #140c20;
+  transition:
+    border-color 0.2s,
+    background-color 0.2s,
+    box-shadow 0.2s;
+}
+.file-drop-zone--active,
+.file-drop-zone:focus-within {
+  border-color: #cb92f6;
+  box-shadow: 0 0 0 3px #8a4cc52b;
+  background-color: #241237;
+}
+.file-drop-icon {
+  width: 42px;
+  height: 45px;
+  display: grid;
+  place-items: center;
+  border-radius: 11px;
+  border: 1px solid #65427d;
+  color: #c294e6;
+  background: #372046;
+  flex-shrink: 0;
+}
+.file-drop-copy {
+  min-width: 0;
+  flex: 1;
+}
+.file-drop-copy strong {
+  display: block;
+  color: #d9bdec;
+  font-size: 12px;
+  font-weight: 500;
+  overflow-wrap: anywhere;
+  line-height: 1.8;
+}
+.file-drop-copy p {
+  margin: 7px 0;
+  color: #ac8cc2;
+  font-size: 10px;
+  line-height: 1.9;
+}
+.file-drop-copy small {
+  color: #9479a9;
+  font:
+    9px/1.9 Consolas,
+    'Microsoft YaHei',
+    monospace;
+}
+.file-picker-button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 30px;
+  border: 1px solid #684084;
+  background: #3b2250;
+  color: #dfc1f3;
+  padding: 9px 13px;
+  border-radius: 6px;
+  font-size: 10px;
+  margin-left: 56px;
+}
+.file-picker-button:hover {
+  border-color: #b581d6;
+  background: #4a295f;
+  transform: translateY(-2px);
+}
+.file-drop-feedback {
+  flex-basis: 100%;
+  color: #e8a4b8;
+  font-size: 11px;
+  margin: 0;
+}
+.file-drop-zone input.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+}
+@media (max-width: 650px) {
+  .file-drop-zone {
+    padding: 18px 15px;
+    gap: 11px;
+  }
+  .file-drop-icon {
+    width: 34px;
+    height: 39px;
+  }
+  .file-picker-button {
+    margin-left: 45px;
+  }
+}

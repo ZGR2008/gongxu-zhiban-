@@ -1,4 +1,19 @@
-type IconName = 'dashboard' | 'projects' | 'knowledge' | 'growth' | 'search' | 'spark' | 'agent' | 'code' | 'test' | 'document' | 'arrow' | 'grid' | 'list' | 'plus' | 'clock';
+type IconName =
+  | 'dashboard'
+  | 'projects'
+  | 'knowledge'
+  | 'growth'
+  | 'search'
+  | 'spark'
+  | 'agent'
+  | 'code'
+  | 'test'
+  | 'document'
+  | 'arrow'
+  | 'grid'
+  | 'list'
+  | 'plus'
+  | 'clock';
 const paths: Record<IconName, string> = {
   dashboard: 'M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM14 14h7v7h-7z',
   projects: 'M3 7V5a1 1 0 0 1 1-1h5l3 3h8a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V7Zm0 3h18',
@@ -17,6 +32,21 @@ const paths: Record<IconName, string> = {
   clock: 'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18Zm0 4v5l3 2',
 };
 export function UiIcon({ name, size = 20 }: { name: IconName; size?: number }) {
-  return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false"><path d={paths[name]} /></svg>;
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <path d={paths[name]} />
+    </svg>
+  );
 }
 export type { IconName };

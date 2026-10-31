@@ -11,7 +11,9 @@
 
 ## 工作台界面
 
-当前界面统一采用深空紫黑主题，提供项目工具入口、项目搜索与筛选、列表/网格切换、项目内导航、Markdown 编辑预览、代码编辑辅助以及测试用例筛选。项目概况和成长数据来自当前账号的真实记录。具体实现和竞赛要求核对见 [界面升级记录](docs/UI-REVIEW.md)。
+当前界面统一采用深空紫黑主题，提供项目工具入口、项目搜索与筛选、列表/网格切换、项目内导航、Markdown 编辑预览与文档大纲、代码编辑辅助以及测试用例筛选。Agent 页面展示实际阶段、工具记录、任务依赖图和可操作任务看板；知识资料支持拖放选择，检索片段可展开并复制。项目概况和成长数据来自当前账号的真实记录，读取失败时不会显示成零条数据。具体实现和竞赛要求核对见 [界面升级记录](docs/UI-REVIEW.md)。
+
+右上角“快速导航”支持 `Ctrl/Cmd + K` 打开，搜索页面、项目和当前项目的工具；方向键选择，Enter 打开，Esc 关闭。“显示设置”可调整信息密度、内容字号和侧栏宽度，偏好只保存在当前浏览器。代码输入区用 Tab 缩进，先按 Esc 再按 Tab 可移出编辑器；星环可手动暂停，并遵循系统减少动态效果设置。
 
 工作台的三维星环是独立的装饰场景，支持暂停、拖动和减少动态效果，不参与模型调用。独立预览位于 `/previews/planet-orbit.html`，旧版 CSS/SVG 留在 `/previews/archive/planet-orbit-css-v2.html`。当前三维版通过本地 HTTP 服务加载模块，需要 WebGL2；所有运行资源本地提供，不依赖 CDN。轨道代码适配自 MIT 许可的 [SaturnWebGL](https://github.com/adelmassimo/SaturnWebGL)，使用 Three.js 0.187.0，来源和版权声明见 `apps/web/public/previews/vendor/NOTICE.txt`，前端依赖许可见 `apps/web/public/THIRD-PARTY-LICENSES.txt`。
 
@@ -96,10 +98,12 @@ pnpm smoke --with-rag           # 额外验证真实向量索引与来源检索
 pnpm smoke --with-ai            # 额外调用真实云模型，验证完整流程，会产生 API 用量
 pnpm smoke:browser             # 浏览器操作、页面路由及移动布局；需要本地向量服务
 pnpm smoke:browser --with-ai    # 额外验证 Agent 运行过程与审核按钮，会产生 API 用量
+pnpm smoke:ui                  # 新界面回归：导航、显示偏好、编辑、检索、响应式；需要向量服务
+pnpm smoke:ui --with-ai        # 增加真实 Agent、审查、RAG、测试用例及文档交互，会产生 API 用量
 ```
 
-浏览器检查在 Windows 默认使用已安装的 Edge；其他系统可先运行 `pnpm exec playwright install chromium`，或通过 `SMOKE_BROWSER_CHANNEL` 选择已安装的兼容浏览器。测试地址可通过 `SMOKE_API_URL`、`SMOKE_WEB_URL` 指定，两个脚本都只允许无凭证的本机回环地址，避免误写线上业务数据。常规自动化测试中的数据库和模型替身不等同于这些真实联调结果。
+浏览器检查在 Windows 默认使用已安装的 Edge；其他系统可先运行 `pnpm exec playwright install chromium`，或通过 `SMOKE_BROWSER_CHANNEL` 选择已安装的兼容浏览器。接口测试地址使用 `SMOKE_API_URL`，浏览器地址使用 `SMOKE_WEB_URL`；这些脚本只允许无凭证的本机回环地址，避免误写线上业务数据。`smoke:ui` 默认包含 8 组检查，`--with-ai` 包含 11 组；它保留原有两套联调脚本及断言，单独记录新交互。其人工测试状态样例明确记录为“阻塞”，不声称执行了示例项目代码。常规自动化测试中的数据库和模型替身不等同于这些真实联调结果。
 
 ## 竞赛与团队信息
 
-赛项要求和待确认项目见 [竞赛核对清单](docs/competition-checklist.md)。参赛团队、学校及指导教师信息由实际参赛人员确认后填写，不预填或虚构。
+赛项要求和待确认项目见 [竞赛核对清单](docs/competition-checklist.md)，连续演示的操作与讲解准备稿见 [6 分 40 秒演示路线](docs/DEMO-WALKTHROUGH.md)。准备稿不代表已交付正式视频。参赛团队、学校及指导教师信息由实际参赛人员确认后填写，不预填或虚构。

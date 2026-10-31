@@ -1,0 +1,2 @@
+# Vendor hashes refer to these exact LF-normalized bytes on every platform.
+apps/web/public/previews/vendor/** text eol=lf
