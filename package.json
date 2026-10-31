@@ -16,6 +16,8 @@
     "smoke:browser": "node scripts/browser-smoke.mjs",
     "smoke:ui": "node scripts/ui-smoke.mjs",
     "smoke:visual": "node scripts/visual-smoke.mjs",
+    "test:ui-models": "node --test scripts/ui-models.test.mjs",
+    "smoke:project-controls": "node scripts/project-controls-smoke.mjs",
     "start:local": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/start-local.ps1"
   },
   "devDependencies": {

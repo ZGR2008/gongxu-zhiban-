@@ -1,0 +1,66 @@
+.history-heading { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; }
+.history-heading h3 { margin: 0; }
+.history-heading .text-link { font-size: 12px; }
+.history-version { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; text-align: left; width: 100%; background: transparent; border: 0; color: #e2d0f2; padding: 2px 0; cursor: pointer; }
+.history-version > span:first-child { display: flex; gap: 10px; align-items: center; }
+.history-version time { margin-left: auto; font-size: 11px; color: #b5a0c8; }
+.history-version .history-view { display: block; width: 100%; font-size: 11px; color: #ca9beb; margin-top: 4px; }
+.history-notice { color: #9bdccf !important; font-size: 12px; line-height: 1.7; }
+.history-dialog { width: min(1100px, calc(100vw - 40px)); max-width: none; max-height: calc(100dvh - 48px); padding: 0; background: #110a1c; color: #eadff5; border: 1px solid #be78ee45; border-radius: 18px; box-shadow: 0 28px 120px #030106c9, 0 0 48px #8a2be21a; overflow: auto; color-scheme: dark; }
+.history-dialog::backdrop { background: #030109b3; backdrop-filter: blur(9px); }
+.history-dialog-header { display: flex; justify-content: space-between; gap: 18px; padding: 28px 28px 22px; }
+.history-dialog-header h2 { font-size: 24px; font-weight: 550; margin: 9px 0 10px; }
+.history-dialog-header p { font-size: 12px; color: #bca5cf; margin: 0; }
+.history-dialog-header .icon-button { flex-shrink: 0; }
+.history-controls { display: flex; align-items: flex-end; flex-wrap: wrap; gap: 16px; padding: 0 28px 22px; border-bottom: 1px solid #b97ee826; }
+.history-selector { flex: 1; min-width: 180px; }
+.history-selector label { color: #c6addb; display: block; font-size: 11px; margin: 0 0 8px; }
+.history-selector select { width: 100%; min-width: 0; height: 40px; }
+.history-view-tabs { display: flex; background: #a16dcc0d; border: 1px solid #ad7bd42a; border-radius: 9px; padding: 3px; }
+.history-view-tabs button { background: transparent; color: #bda6ce; border: 0; border-radius: 6px; padding: 8px 13px; font: inherit; font-size: 12px; cursor: pointer; }
+.history-view-tabs [aria-pressed="true"] { background: #7b409542; color: #f0d6ff; }
+.history-diff-summary { display: flex; flex-wrap: wrap; align-items: center; gap: 15px; padding: 16px 28px; font-size: 12px; }
+.history-diff-summary > span:first-child { color: #e9d5f7; margin-right: auto; }
+.diff-added-count { color: #8ee0bd; }
+.diff-removed-count { color: #efb1c4; }
+.history-diff-summary label { display: flex; align-items: center; gap: 7px; margin: 0; color: #cab5dd; font-size: 11px; }
+.history-diff-summary input[type="checkbox"] { width: 14px; height: 14px; min-height: 0; padding: 0; accent-color: #bc70df; box-shadow: none; }
+.history-diff { max-height: min(48vh, 510px); overflow: auto; overscroll-behavior: contain; border-top: 1px solid #b97ee822; border-bottom: 1px solid #b97ee822; background: #090610; }
+.diff-line, .diff-column-labels { display: grid; grid-template-columns: 48px 48px 38px minmax(0, 1fr); align-items: start; font-size: 12px; line-height: 1.8; min-height: 29px; }
+.diff-column-labels { position: sticky; top: 0; z-index: 1; background: #20132d; color: #cbb5dd; font-size: 10px; line-height: 2.6; text-align: center; }
+.diff-column-labels > :last-child { text-align: left; padding-left: 13px; }
+.diff-line-number { text-align: right; padding: 4px 9px 3px 2px; color: #a08cb3; border-right: 1px solid #a379be15; font-size: 11px; font-variant-numeric: tabular-nums; user-select: none; }
+.diff-line-kind { text-align: center; padding: 4px 0 3px; font-size: 11px; user-select: none; }
+.diff-line code { font-family: 'Cascadia Code', Consolas, monospace; white-space: pre-wrap; overflow-wrap: anywhere; padding: 4px 14px 3px; color: #d2bfdc; min-width: 0; }
+.diff-line--added { background: #17513a31; }
+.diff-line--added code, .diff-line--added .diff-line-kind { color: #9be6c7; }
+.diff-line--removed { background: #65233b33; }
+.diff-line--removed code, .diff-line--removed .diff-line-kind { color: #efb1c4; }
+.history-more { display: block; width: 100%; border: 0; padding: 15px; background: #38214a5e; color: #e7c7ff; font: inherit; font-size: 12px; cursor: pointer; }
+.history-diff-hint, .history-identical { margin: 0; padding: 10px 28px 18px; font-size: 12px; color: #c9b0dc; }
+.history-identical { color: #94d8c6; }
+.history-preview { padding: 24px 34px; max-height: min(48vh, 510px); overflow: auto; overscroll-behavior: contain; border-block: 1px solid #a16dcc26; }
+.history-dialog .history-dialog-footer { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; padding: 20px 28px; margin: 0; border: 0; }
+.history-dialog-footer p { color: #bba5cd; font-size: 11px; margin: 0; max-width: 440px; line-height: 1.8; }
+.history-dialog-footer > div { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; }
+.history-dialog-footer .copy-control { margin: 0; }
+.history-restore-confirm { display: flex; align-items: center; flex-wrap: wrap; gap: 18px; padding: 20px 28px; border-top: 1px solid #e0aa7736; background: #7c4d1e20; }
+.history-restore-confirm > div:first-child { flex: 1; min-width: 200px; }
+.history-restore-confirm strong { color: #f1d6b9; font-size: 14px; font-weight: 500; }
+.history-restore-confirm p { color: #d1bba8; font-size: 12px; margin: 9px 0 0; }
+.history-restore-confirm > div:last-child { display: flex; flex-wrap: wrap; gap: 10px; }
+@media (max-width: 640px) {
+  .history-dialog { width: calc(100vw - 20px); max-height: calc(100dvh - 20px); border-radius: 12px; }
+  .history-dialog-header { padding: 20px 16px; }
+  .history-dialog-header h2 { font-size: 20px; }
+  .history-dialog-header p { line-height: 1.7; }
+  .history-controls { padding: 0 16px 16px; gap: 12px; }
+  .history-selector { min-width: 100%; }
+  .history-diff-summary { padding: 14px 16px; gap: 9px; }
+  .history-diff-summary > span:first-child { flex-basis: 100%; }
+  .diff-line, .diff-column-labels { grid-template-columns: 31px 31px 25px minmax(0, 1fr); }
+  .diff-line code { padding-inline: 8px; font-size: 11px; }
+  .diff-line-number { padding-right: 5px; font-size: 10px; }
+  .history-preview { padding: 18px; }
+  .history-dialog .history-dialog-footer, .history-restore-confirm { padding: 16px; }
+}

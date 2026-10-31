@@ -1,0 +1,410 @@
+{
+  "date": "2026-10-31",
+  "timezone": "Asia/Shanghai",
+  "baseline": "123d046",
+  "scope": "Read-only project overview and requirement history interaction. Suites overlap; counts are not additive.",
+  "originalTests": {
+    "api": 48,
+    "embedding": 4,
+    "failed": 0,
+    "skipped": 0,
+    "source": "pnpm test console result, 2026-10-31 evening",
+    "usesTestDoubles": true
+  },
+  "uiModels": {
+    "passed": 15,
+    "failed": 0,
+    "source": "pnpm test:ui-models console result; scripts/ui-models.test.mjs",
+    "callsExternalServices": false
+  },
+  "suites": [
+    {
+      "name": "real_api",
+      "source": ".runtime/smoke-337055a6-c3c4-4238-ab97-fc4ff50997d2.json",
+      "sourceSha256": "e2fd582f32ebb8b42c03b103a27c29fae655cdd79cf961d2c930e17daf1470d7",
+      "status": "passed",
+      "startedAt": "2026-10-31T12:56:45.968Z",
+      "finishedAt": "2026-10-31T12:57:22.126Z",
+      "realServices": true,
+      "syntheticInput": true,
+      "remoteAiRequested": true,
+      "checks": [
+        {
+          "name": "service_and_database_readiness",
+          "status": "passed",
+          "durationMs": 52
+        },
+        {
+          "name": "register_two_isolated_accounts",
+          "status": "passed",
+          "durationMs": 62
+        },
+        {
+          "name": "project_and_requirement_persistence",
+          "status": "passed",
+          "durationMs": 15
+        },
+        {
+          "name": "ownership_and_anonymous_access",
+          "status": "passed",
+          "durationMs": 4
+        },
+        {
+          "name": "text_and_pdf_parsing_persistence",
+          "status": "passed",
+          "durationMs": 12
+        },
+        {
+          "name": "real_vectors_and_source_retrieval",
+          "status": "passed",
+          "durationMs": 39
+        },
+        {
+          "name": "real_ai_requirement_analysis",
+          "status": "passed",
+          "durationMs": 9924
+        },
+        {
+          "name": "real_rag_answer_and_citations",
+          "status": "passed",
+          "durationMs": 1002
+        },
+        {
+          "name": "real_agent_tools_review_gate_and_tasks",
+          "status": "passed",
+          "durationMs": 5622
+        },
+        {
+          "name": "real_code_review_evidence_separation",
+          "status": "passed",
+          "durationMs": 4124
+        },
+        {
+          "name": "real_test_design_and_result_invalidation",
+          "status": "passed",
+          "durationMs": 4137
+        },
+        {
+          "name": "real_document_generation_edit_and_export",
+          "status": "passed",
+          "durationMs": 11067
+        },
+        {
+          "name": "growth_counts_come_from_recorded_work",
+          "status": "passed",
+          "durationMs": 52
+        },
+        {
+          "name": "logout_login_and_persistent_project",
+          "status": "passed",
+          "durationMs": 42
+        }
+      ]
+    },
+    {
+      "name": "original_browser",
+      "source": ".runtime/browser-1b9880c4-1bd3-4953-a9cf-3d97d158ed14/report.json",
+      "sourceSha256": "61432fd5e2e22001629cacde543ebc6fb2c5483734710f18463b97e2462c0560",
+      "status": "passed",
+      "startedAt": "2026-10-31T12:57:22.789Z",
+      "finishedAt": "2026-10-31T12:57:31.109Z",
+      "realServices": true,
+      "syntheticInput": true,
+      "remoteAiRequested": true,
+      "checks": [
+        {
+          "name": "desktop_registration",
+          "status": "passed",
+          "durationMs": 448
+        },
+        {
+          "name": "project_create_reload_and_requirements",
+          "status": "passed",
+          "durationMs": 885
+        },
+        {
+          "name": "knowledge_upload_and_real_index",
+          "status": "passed",
+          "durationMs": 239
+        },
+        {
+          "name": "agent_live_progress_and_review_gate",
+          "status": "passed",
+          "durationMs": 4386
+        },
+        {
+          "name": "all_project_routes_and_mobile_layout",
+          "status": "passed",
+          "durationMs": 1567
+        },
+        {
+          "name": "logout_clears_browser_session",
+          "status": "passed",
+          "durationMs": 61
+        }
+      ]
+    },
+    {
+      "name": "complete_ui",
+      "source": ".runtime/ui-4c638855-678c-44c2-a43e-62b45507668e/report.json",
+      "sourceSha256": "321e9118959a4812f26d47b089fc9ac018db7b8777b6ce200d69dda5e445ee79",
+      "status": "passed",
+      "startedAt": "2026-10-31T12:55:09.075Z",
+      "finishedAt": "2026-10-31T12:55:43.098Z",
+      "realServices": true,
+      "syntheticInput": true,
+      "remoteAiRequested": true,
+      "checks": [
+        {
+          "name": "registration_and_honest_empty_workspace",
+          "status": "passed",
+          "durationMs": 674
+        },
+        {
+          "name": "display_preferences_and_quick_navigation",
+          "status": "passed",
+          "durationMs": 910
+        },
+        {
+          "name": "project_creation_filters_and_view_switch",
+          "status": "passed",
+          "durationMs": 870
+        },
+        {
+          "name": "markdown_preview_outline_safety_and_save",
+          "status": "passed",
+          "durationMs": 399
+        },
+        {
+          "name": "code_draft_keyboard_copy_and_size_controls",
+          "status": "passed",
+          "durationMs": 8211
+        },
+        {
+          "name": "knowledge_sources_real_index_and_copy",
+          "status": "passed",
+          "durationMs": 1646
+        },
+        {
+          "name": "agent_trace_dependency_graph_and_task_board",
+          "status": "passed",
+          "durationMs": 5581
+        },
+        {
+          "name": "test_filter_and_explicit_manual_result",
+          "status": "passed",
+          "durationMs": 3579
+        },
+        {
+          "name": "document_preview_edit_save_and_export",
+          "status": "passed",
+          "durationMs": 5621
+        },
+        {
+          "name": "responsive_layout_and_dark_surfaces",
+          "status": "passed",
+          "durationMs": 5744
+        },
+        {
+          "name": "session_logout",
+          "status": "passed",
+          "durationMs": 41
+        }
+      ]
+    },
+    {
+      "name": "edge_project_controls_production",
+      "source": ".runtime/project-controls-b12f308d-d205-428b-8fae-cd83e6f40b13/report.json",
+      "sourceSha256": "388ec2b4187d96d7c8d69f5be09960c47828a31897ceb646ee56662edeff4568",
+      "status": "passed",
+      "startedAt": "2026-10-31T12:59:07.519Z",
+      "finishedAt": "2026-10-31T12:59:13.034Z",
+      "realServices": true,
+      "syntheticInput": true,
+      "remoteAiRequested": false,
+      "controlledResponseChecks": true,
+      "automaticModelCalls": 0,
+      "checks": [
+        {
+          "name": "real_registration_project_and_empty_overview",
+          "status": "passed",
+          "durationMs": 1083
+        },
+        {
+          "name": "two_real_versions_saved_and_confirmed",
+          "status": "passed",
+          "durationMs": 166
+        },
+        {
+          "name": "historic_preview_diff_targets_and_read_only_behavior",
+          "status": "passed",
+          "durationMs": 160
+        },
+        {
+          "name": "restore_requires_confirmation_and_explicit_version_save",
+          "status": "passed",
+          "durationMs": 254
+        },
+        {
+          "name": "partial_failure_refresh_and_snapshot_copy",
+          "status": "passed",
+          "durationMs": 377
+        },
+        {
+          "name": "controlled_cross_version_evidence_and_status_counts",
+          "status": "passed",
+          "durationMs": 959
+        },
+        {
+          "name": "responsive_long_diff_and_safe_markdown",
+          "status": "passed",
+          "durationMs": 1682
+        },
+        {
+          "name": "no_automatic_model_calls_and_logout",
+          "status": "passed",
+          "durationMs": 44
+        }
+      ]
+    },
+    {
+      "name": "webkit_project_controls_production",
+      "source": ".runtime/project-controls-651bc45b-f4d0-44d1-bb76-4aef3951bb15/report.json",
+      "sourceSha256": "a4620fbfa9193821e4fe6cec287abe16e96aa3ce8e3ba693fef3717253d1b156",
+      "status": "passed",
+      "startedAt": "2026-10-31T12:59:08.037Z",
+      "finishedAt": "2026-10-31T12:59:19.019Z",
+      "realServices": true,
+      "syntheticInput": true,
+      "remoteAiRequested": false,
+      "controlledResponseChecks": true,
+      "automaticModelCalls": 0,
+      "checks": [
+        {
+          "name": "real_registration_project_and_empty_overview",
+          "status": "passed",
+          "durationMs": 2730
+        },
+        {
+          "name": "two_real_versions_saved_and_confirmed",
+          "status": "passed",
+          "durationMs": 1206
+        },
+        {
+          "name": "historic_preview_diff_targets_and_read_only_behavior",
+          "status": "passed",
+          "durationMs": 673
+        },
+        {
+          "name": "restore_requires_confirmation_and_explicit_version_save",
+          "status": "passed",
+          "durationMs": 2096
+        },
+        {
+          "name": "partial_failure_refresh_and_snapshot_copy",
+          "status": "passed",
+          "durationMs": 524
+        },
+        {
+          "name": "controlled_cross_version_evidence_and_status_counts",
+          "status": "passed",
+          "durationMs": 306
+        },
+        {
+          "name": "responsive_long_diff_and_safe_markdown",
+          "status": "passed",
+          "durationMs": 2768
+        },
+        {
+          "name": "no_automatic_model_calls_and_logout",
+          "status": "passed",
+          "durationMs": 183
+        }
+      ]
+    }
+  ],
+  "accessibility": [
+    {
+      "state": "project_overview",
+      "violations": 0,
+      "incomplete": [
+        {
+          "id": "aria-prohibited-attr",
+          "count": 1
+        },
+        {
+          "id": "color-contrast",
+          "count": 121
+        }
+      ]
+    },
+    {
+      "state": "requirements_history",
+      "violations": 0,
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "count": 51
+        }
+      ]
+    },
+    {
+      "state": "version_comparison",
+      "violations": 0,
+      "incomplete": [
+        {
+          "id": "aria-prohibited-attr",
+          "count": 9
+        },
+        {
+          "id": "color-contrast",
+          "count": 9
+        }
+      ]
+    },
+    {
+      "state": "restore_confirmation",
+      "violations": 0,
+      "incomplete": [
+        {
+          "id": "aria-prohibited-attr",
+          "count": 9
+        },
+        {
+          "id": "color-contrast",
+          "count": 11
+        }
+      ]
+    }
+  ],
+  "boundary": {
+    "baseline": "096ca68",
+    "scope": "Async handlers, data callbacks and original effects; UI callbacks are checked separately in browser flows.",
+    "files": [
+      {
+        "file": "apps/web/src/App.tsx",
+        "originalChecks": 16,
+        "changed": []
+      },
+      {
+        "file": "apps/web/src/Modules.tsx",
+        "originalChecks": 17,
+        "changed": []
+      },
+      {
+        "file": "apps/web/src/Practice.tsx",
+        "originalChecks": 14,
+        "changed": []
+      }
+    ],
+    "protectedChanges": [],
+    "status": "passed"
+  },
+  "limitations": [
+    "Developer-generated local evidence, not independent certification.",
+    "Windows WebKit is not Safari hardware validation.",
+    "Some new UI checks use explicitly controlled GET responses; real-service suites do not replace model responses.",
+    "Task and test states are manually maintained; submitted code was not executed.",
+    "No new production deployment or full contest-delivery claim."
+  ]
+}

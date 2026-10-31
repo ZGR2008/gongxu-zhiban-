@@ -15,6 +15,10 @@
 
 右上角“快速导航”支持 `Ctrl/Cmd + K` 打开，搜索页面、项目和当前项目的工具；方向键选择，Enter 打开，Esc 关闭。“显示设置”可调整信息密度、内容字号和侧栏宽度，偏好只保存在当前浏览器。代码输入区用 Tab 缩进，先按 Esc 再按 Tab 可移出编辑器；星环可手动暂停，并遵循系统减少动态效果设置。
 
+项目概览新增“项目推进概览”：汇总已确认需求、项目任务、当前需求的人工测试记录与六类文档，显示待处理事项并提供下一步入口，可刷新或复制实践快照。它只读取既有接口，不自动调用模型或改变状态；任务统计包含项目全部计划，测试与文档按最近已确认需求过滤。部分读取失败显示“暂不可用”，接口返回达到上限时提示历史数据可能不完整。
+
+需求页的“版本记录”支持历史正文预览、历史版本之间或与当前编辑区逐行对比、“只看变化”和复制。使用旧版本编辑前需确认替换当前未保存内容，之后仍需手动保存才会创建新版本。大段差异采用有上限的比较与分批展示，保留旧记录。两个新增视图按页面加载，不在首页提前下载。操作与验收结果见 [项目推进与需求版本记录](docs/PROJECT-CONTROLS.md)。
+
 以下为独立演示账号的实际浏览器截图，数据来自操作验证，不代表真实学生成绩：
 
 ![深空主题工作台：真实项目概况、实训工具入口和项目列表](docs/screenshots/workspace.png)
@@ -106,11 +110,16 @@ pnpm smoke:ui                  # 新界面回归：导航、显示偏好、编�
 pnpm smoke:ui --with-ai        # 增加真实 Agent、审查、RAG、测试用例及文档交互，会产生 API 用量
 pnpm smoke:visual              # 星环真实画面、方向、倍速、暂停、拖动、减少动画和图形恢复；不调用模型
 pnpm smoke:visual --webkit     # 同样的 9 组检查，使用 Playwright WebKit
+pnpm test:ui-models            # 15 项纯前端规则检查：版本隔离、真实状态、边界与逐行比较
+pnpm smoke:project-controls    # 8 组项目概览/版本对比检查，使用真实本地数据库，不调用模型
+pnpm smoke:project-controls --webkit # 同样检查，使用 Playwright WebKit
 ```
 
 浏览器检查在 Windows 默认使用已安装的 Edge；其他系统可先运行 `pnpm exec playwright install chromium`，或通过 `SMOKE_BROWSER_CHANNEL` 选择已安装的兼容浏览器。接口测试地址使用 `SMOKE_API_URL`，浏览器地址使用 `SMOKE_WEB_URL`；这些脚本只允许无凭证的本机回环地址，避免误写线上业务数据。`smoke:ui` 默认包含 8 组检查，`--with-ai` 包含 11 组；它保留原有两套联调脚本及断言，单独记录新交互。其人工测试状态样例明确记录为“阻塞”，不声称执行了示例项目代码。常规自动化测试中的数据库和模型替身不等同于这些真实联调结果。
 
 `smoke:visual` 只需前端服务和可用的 WebGL2 环境，不要求登录或调用 API。它比较实际截图像素并观察 GPU 时间与绘制次数，避免“存在动画样式但画面没有旋转”的假阳性。WebKit 可先通过 `pnpm exec playwright install webkit` 安装；Windows 上的自动化 WebKit 结果不是 Safari 真机结论。各脚本保留本轮报告与截图，不覆盖旧报告。
+
+`smoke:project-controls` 使用隔离演示账号，实际保存、确认与恢复需求版本；额外的读取失败和跨版本统计场景通过明确标识的浏览器受控响应检查，不冒充模型调用。测试结束后注销账号，报告不保存凭证。`test:ui-models` 使用 Node 的 TypeScript 类型剥离能力，本机已在 Node 24.22.1 验证。
 
 本工作区的 WebKit 已下载在 `.runtime/browsers/`；复用这一缓存时，在仓库根目录的 PowerShell 中先运行 `$env:PLAYWRIGHT_BROWSERS_PATH="$PWD/.runtime/browsers"`，再执行 `pnpm smoke:visual --webkit`。新环境可使用 Playwright 的默认安装目录，无需设置该变量。
 
