@@ -1,0 +1,34 @@
+{
+  "version": "1.0.0",
+  "corpus": "retrieval.v1.json",
+  "purpose": "Predeclared local query instruction comparison; not a teacher-labelled benchmark",
+  "source": "https://huggingface.co/BAAI/bge-small-zh-v1.5",
+  "requiredModel": "bge-small-zh-v1.5-q8-75c43b0-cls-w400-v1",
+  "variants": [
+    {"id":"plain","queryPrefix":""},
+    {"id":"bge_instruction","queryPrefix":"为这个句子生成表示以用于检索相关文章："}
+  ],
+  "controls": {"maximumCosineDistance":0.5,"returnedChunks":5,"sameCorpusAndModel":true,"alternateVariantOrder":true,"automaticProductionChange":false},
+  "limitations": [
+    "Original development questions were already measured; preserve their first result.",
+    "Additional developer-authored questions are frozen before this run, not independent blind teacher labels.",
+    "A returned source for an unanswerable question is an observation, not a model-answer error.",
+    "No chat or semantic support evaluation; no statistical generalization from this small set."
+  ],
+  "additionalQueries": [
+    {"id":"h01","kind":"answerable","question":"把两张表的修改组成一次操作，第二步抛出异常后，第一步已经写入的数据应该怎么处理？","expectedDocuments":["transaction"]},
+    {"id":"h02","kind":"answerable","question":"弱网下同一张借用申请反复到达，避免多份记录应该依靠什么，而非只把提交按钮变灰？","expectedDocuments":["idempotency"]},
+    {"id":"h03","kind":"answerable","question":"为了支持忘记密码找回，可以存一份可解密的原始密码吗？认证失败时日志应该记录什么？","expectedDocuments":["secrets"]},
+    {"id":"h04","kind":"answerable","question":"切换项目后又按浏览器返回键，之前尚未结束的请求该怎样处理，才能保证保存的是当前内容？","expectedDocuments":["response-owner"]},
+    {"id":"h05","kind":"answerable","question":"我读取了文档后其他人又保存了一次，服务器该用什么判断我手里的版本已经过时，并保留双方修改？","expectedDocuments":["revision"]},
+    {"id":"h06","kind":"answerable","question":"借用功能允许填任意数字，除了正常申请，哪些输入能检查资源数量会不会变成负数？","expectedDocuments":["inventory"]},
+    {"id":"h07","kind":"answerable","question":"前端已经隐藏别人的项目，如果有人自己构造读写请求，后端还需要检查什么？","expectedDocuments":["authorization"]},
+    {"id":"h08","kind":"answerable","question":"导入的讲义实际是图片，没有可选择的文字，为什么直接解析没有结果，怎样向用户解释能力边界？","expectedDocuments":["pdf"]},
+    {"id":"h09","kind":"answerable","question":"修改了一个用例的操作步骤，先前登记的通过和旧需求版本的结果，还能当作现在的验收证据吗？","expectedDocuments":["versions"]},
+    {"id":"h10","kind":"answerable","question":"语法分析器没有发现问题是否意味着程序已经跑过？让外部代码自动运行前还缺少什么环境保障？","expectedDocuments":["sandbox"]},
+    {"id":"h11","kind":"answerable","question":"搜索结果相似度很高且来源真实存在，人工还要怎样核对它是否真的支持回答中的具体判断？","expectedDocuments":["citation"]},
+    {"id":"h12","kind":"answerable","question":"索引任务和学生查询共用一个推理服务时，怎样限制等待人数、处理超时及避免重复重试拥塞？","expectedDocuments":["queue"]},
+    {"id":"h13","kind":"unanswerable","question":"设备借用规则里提到管理员，管理员的真实姓名和联系电话分别是什么？","expectedDocuments":[]},
+    {"id":"h14","kind":"unanswerable","question":"软件实训平台每学期收取多少元服务费，可以提供正式金额和付款账号吗？","expectedDocuments":[]}
+  ]
+}

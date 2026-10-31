@@ -31,6 +31,7 @@ DOCS.add('ACCESSIBILITY-V3.md')
 CURATED_SCREENSHOTS={'docs/screenshots/review-v2/trace-desktop.png','docs/screenshots/review-v3/task-test-chain-desktop.png','docs/screenshots/review-v3/documents-desktop.png','docs/screenshots/review-v3/review-source-desktop.png','docs/screenshots/review-v3/growth-current-desktop.png','docs/screenshots/review-v3/workspace-desktop.png'}
 JSON_FILES={'package.json','evaluation/record-template.json','evaluation/cases.v1.json','evaluation/retrieval.v1.json','apps/embedding/model-manifest.json','apps/web/public/previews/vendor/manifest.json','docs/verification/review-v2.json','docs/verification/review-v3.json','docs/demo-v3/storyboard.json'}
 TEXT = {'.ts','.tsx','.js','.mjs','.cjs','.json','.yaml','.yml','.md','.css','.html','.sql','.txt','.svg','.glsl','.ps1','.py','.sh','.toml'}
+JSON_FILES.add('evaluation/retrieval-query-study.v1.json')
 FORBIDDEN = {'.log','.tsbuildinfo','.pem','.key','.p12','.pfx','.jks','.keystore','.sqlite','.sqlite3','.db','.dump','.backup','.bak','.zip','.7z','.mp4','.webm','.onnx','.bin'}
 excluded = []
 redactions = []

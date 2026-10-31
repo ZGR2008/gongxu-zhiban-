@@ -55,3 +55,22 @@ export function summarizeRetrieval(data, results) {
     semanticSupport:'not_evaluated', generatedAnswers:'not_requested', teacherReview:'not_executed'
   };
 }
+
+/** Compare paired queries, never replace a failed case with a new denominator. */
+export function summarizeQueryStudy(data,plain,instructed,additionalIds){
+  const original={...data,queries:data.queries.filter(query=>!additionalIds.includes(query.id))};
+  const additional={...data,queries:data.queries.filter(query=>additionalIds.includes(query.id))};
+  assert.equal(new Set(additionalIds).size,additionalIds.length);
+  assert.equal(additional.queries.length,additionalIds.length);
+  const summary=(subset,rows)=>summarizeRetrieval(subset,rows.filter(row=>subset.queries.some(query=>query.id===row.id)));
+  // Full validation also rejects duplicate or extra records outside either split.
+  const before=summarizeRetrieval(data,plain),after=summarizeRetrieval(data,instructed);
+  const changes=before.rows.map(row=>{
+    const next=after.rows.find(value=>value.id===row.id);
+    return {id:row.id,kind:row.kind,split:additionalIds.includes(row.id)?'additional_frozen_questions':'previous_development_questions',
+      plainStatus:row.status,instructedStatus:next.status,top1Delta:next.expectedFoundAt1-row.expectedFoundAt1,top3Delta:next.expectedFoundAt3-row.expectedFoundAt3,
+      plainReturnedChunks:row.returnedChunks,instructedReturnedChunks:next.returnedChunks};
+  });
+  return {original:{plain:summary(original,plain),instructed:summary(original,instructed)},additional:{plain:summary(additional,plain),instructed:summary(additional,instructed)},
+    changes,productionChange:'not_applied',semanticSupport:'not_evaluated',independentTeacherLabels:false};
+}

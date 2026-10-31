@@ -34,6 +34,7 @@
     "test:eval-report": "node --test scripts/evaluation-report.test.mjs",
     "test:retrieval-evaluation": "node --test scripts/retrieval-evaluation.test.mjs",
     "eval:retrieval-local": "pnpm --filter @gongxu/api build && node scripts/evaluate-retrieval-local.mjs",
+    "eval:retrieval-query-study": "pnpm --filter @gongxu/api build && node scripts/evaluate-retrieval-local.mjs --compare-query-instruction",
     "verify:review-context": "pnpm --filter @gongxu/api build && cd apps/api && node ../../scripts/review-context-local.mjs",
     "verify:document-context": "pnpm --filter @gongxu/api build && node scripts/document-context-local.mjs",
     "verify:knowledge-answer": "pnpm --filter @gongxu/api build && node scripts/knowledge-answer-local.mjs",

@@ -35,6 +35,8 @@
 
 ## 原创实现与证据
 
+向量查询实验只参考[BAAI bge-small-zh-v1.5官方模型卡](https://huggingface.co/BAAI/bge-small-zh-v1.5)的使用方法：短查询可以比较检索指令，文档无需添加；是否采用要结合具体任务测量。没有把模型卡上的公开基准成绩写成本项目成绩。原始资料、30个测量问题和对照工具由本项目编写；本地模型仍沿用已核验版本与现有许可，不因实验重新下载或替换模型。
+
 - 稳定条目标识、明确版本和人工关联：`apps/api/src/trace/domain.ts`、`trace/routes.ts`及迁移011。
 - 任务—用例明确配对、修订失效与审核历史：`trace/task-test.ts`、迁移017和本地隔离验证。
 - 同版本证据变化使文档/交付待复核：迁移013、`documents/evidence.ts`与前端`evidence-state.ts`。

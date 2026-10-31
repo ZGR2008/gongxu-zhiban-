@@ -8,11 +8,12 @@ import {PgProjectStore} from '../apps/api/dist/project-store.js';
 import {registerProjectRoutes} from '../apps/api/dist/project-routes.js';
 import {loadConfig} from '../apps/api/dist/config.js';
 import {loadEmbeddingConfig,savePages,indexDocument,retrieveKnowledge} from '../apps/api/dist/rag/service.js';
-import {validateRetrievalDataset,summarizeRetrieval} from '../evaluation/retrieval.mjs';
+import {validateRetrievalDataset,summarizeRetrieval,summarizeQueryStudy} from '../evaluation/retrieval.mjs';
 
 // Only the existing local services and new synthetic accounts are used. Never
 // print configuration, identities, credentials, API responses or existing data.
-if(process.argv.length>2)throw Error('This entry accepts no remote or model-call options');
+const compareInstruction=process.argv.slice(2).length===1&&process.argv[2]==='--compare-query-instruction';
+if(process.argv.length>2&&!compareInstruction)throw Error('Only the fixed local query-instruction comparison is supported');
 const require=createRequire(new URL('../apps/api/package.json',import.meta.url));
 require('dotenv').config({path:fileURLToPath(new URL('../apps/api/.env',import.meta.url))});
 const local=value=>['127.0.0.1','localhost','[::1]'].includes(new URL(value).hostname);
@@ -25,7 +26,12 @@ globalThis.fetch=(input,init)=>{
 };
 const hash=value=>createHash('sha256').update(value).digest('hex');
 const datasetBytes=await readFile(new URL('../evaluation/retrieval.v1.json',import.meta.url));
-const dataset=validateRetrievalDataset(JSON.parse(datasetBytes));
+const originalDataset=validateRetrievalDataset(JSON.parse(datasetBytes));
+const studyBytes=compareInstruction?await readFile(new URL('../evaluation/retrieval-query-study.v1.json',import.meta.url)):undefined;
+const study=studyBytes?JSON.parse(studyBytes):undefined;
+const dataset=study?validateRetrievalDataset({...originalDataset,queries:[...originalDataset.queries,...study.additionalQueries]}):originalDataset;
+const variants=study?study.variants:[{id:'plain',queryPrefix:''}];
+if(study){assert.deepEqual(variants.map(row=>row.id),['plain','bge_instruction']);assert.equal(variants[0].queryPrefix,'');assert.equal(study.controls.maximumCosineDistance,.5);assert.equal(study.controls.returnedChunks,5);assert.equal(study.controls.automaticProductionChange,false);}
 const expectedManifest=JSON.parse(await readFile(new URL('../apps/embedding/model-manifest.json',import.meta.url)));
 const directory=new URL(`../.runtime/retrieval-local-${randomUUID()}/`,import.meta.url);await mkdir(directory,{recursive:true});
 const report={scope:'real_local_pgvector_and_embedding_original_synthetic_corpus',datasetVersion:dataset.version,
@@ -36,9 +42,10 @@ const report={scope:'real_local_pgvector_and_embedding_original_synthetic_corpus
  'Small developer-authored synthetic set; no teacher labels or student trial.',
  'Source page numbers are synthetic fixtures; this runner does not test PDF parsing.',
  'Retrieval distance and valid references do not prove semantic support.',
- 'No chat calls, generated answers, prompt-injection resistance claim or baseline improvement comparison.',
+ compareInstruction?'Query transformation comparison only; no chat calls, generated-answer quality or full-workflow improvement claim.':'No chat calls, generated answers, prompt-injection resistance claim or baseline improvement comparison.',
  'Local timing includes actual service wait and is not a throughput benchmark.'
  ]};
+if(study)report.queryStudy={version:study.version,sha256:hash(studyBytes),source:study.source,variants,controls:study.controls,additionalQueries:study.additionalQueries.map(q=>({id:q.id,sha256:hash(q.question)})),results:[],limitations:study.limitations};
 try{
  report.source.commit=execFileSync('git',['rev-parse','HEAD'],{cwd:fileURLToPath(new URL('../',import.meta.url)),encoding:'utf8'}).trim();
  report.source.modified=Boolean(execFileSync('git',['status','--porcelain'],{cwd:fileURLToPath(new URL('../',import.meta.url)),encoding:'utf8'}).trim());
@@ -58,6 +65,7 @@ async function check(name,run){stage=name;await run();report.checks.push({name,s
 try{
  const ready=await fetch(new URL('/ready',embedding.baseUrl),{signal:AbortSignal.timeout(5000)});assert.equal(ready.status,200);
  const identity=await ready.json();assert.equal(identity.model,expectedManifest.id);assert.equal(identity.dimensions,expectedManifest.dimensions);assert.equal(embedding.model,expectedManifest.id);
+ if(study)assert.equal(identity.model,study.requiredModel);
  report.model={id:identity.model,dimensions:identity.dimensions,revision:expectedManifest.revision,pooling:expectedManifest.pooling,normalize:expectedManifest.normalize,windowCharacters:expectedManifest.windowCharacters};
  const owner=await account(),foreign=await account(),empty=await account();
  stage='index_synthetic_corpus';
@@ -70,11 +78,12 @@ try{
  }
  const foreignDoc=await savePages(pool,foreign.id,'外账号同文资料 · 合成','text/plain',[{page:1,text:dataset.documents[0].text}]);
  await indexDocument(pool,foreign.id,foreignDoc.id,embedding,options());
- for(const query of dataset.queries){
-  stage=query.id;total.throwIfAborted();const start=performance.now();
-  const result={id:query.id,status:'completed',questionSha256:hash(query.question),durationMs:0,hits:[]};
+ for(const [queryIndex,query] of dataset.queries.entries())for(const variant of queryIndex%2?[...variants].reverse():variants){
+  stage=query.id+'_'+variant.id;total.throwIfAborted();const start=performance.now();
+  const transformed=variant.queryPrefix+query.question;
+  const result={id:query.id,status:'completed',questionSha256:hash(query.question),encodedInputSha256:hash(transformed),durationMs:0,hits:[]};
   try{
-   const hits=await retrieveKnowledge(pool,owner.id,query.question,embedding,options());assert.ok(hits.length<=5);
+   const hits=await retrieveKnowledge(pool,owner.id,transformed,embedding,options());assert.ok(hits.length<=5);
    for(const hit of hits){
     const source=idToDocument.get(hit.document_id);assert.ok(source,'Foreign or unknown source');
     assert.equal(hit.document_name,source.title);assert.equal(hit.page,source.page);assert.equal(hit.content,source.text);
@@ -89,7 +98,7 @@ try{
    if(error instanceof assert.AssertionError)throw error;
    result.status='failed';result.errorType=error.constructor.name;result.hits=[];
   }
-  result.durationMs=Math.round(performance.now()-start);report.queries.push(result);console.log(`${result.status==='completed'?'MEASURED':'FAILED'} ${query.id}`);
+  result.durationMs=Math.round(performance.now()-start);(variant.id==='plain'?report.queries:report.queryStudy.results).push(result);console.log(`${result.status==='completed'?'MEASURED':'FAILED'} ${query.id} ${variant.id}`);
  }
  await check('other_account_receives_only_its_identical_source',async()=>{
   const hits=await retrieveKnowledge(pool,foreign.id,dataset.queries[0].question,embedding,options());assert.ok(hits.length>0);assert.ok(hits.every(hit=>hit.document_id===foreignDoc.id));
@@ -103,6 +112,7 @@ try{
   for(const row of rows.rows){const source=idToDocument.get(row.id);assert.ok(source);assert.equal(row.status,'ready');assert.equal(row.content,source.text);assert.equal(row.page,source.page);assert.equal(row.dimensions,expectedManifest.dimensions);}
  });
  report.summary=summarizeRetrieval(dataset,report.queries);report.status=report.queries.some(row=>row.status==='failed')?'completed_with_service_failures':'measured';
+ if(study){report.queryStudy.comparison=summarizeQueryStudy(dataset,report.queries,report.queryStudy.results,study.additionalQueries.map(q=>q.id));if(report.queryStudy.results.some(row=>row.status==='failed'))report.status='completed_with_service_failures';}
  console.log(`MEASURED answerable=${report.summary.answerable.cases} top1=${report.summary.answerable.hitAt1} top3=${report.summary.answerable.hitAt3}; semantic support not evaluated`);
  if(report.status==='completed_with_service_failures')process.exitCode=1;
 }catch(error){report.status='failed';report.failedStage=stage;report.errorType=error.constructor.name;process.exitCode=1;console.log(`FAILED ${stage} (${error.constructor.name})`);}
