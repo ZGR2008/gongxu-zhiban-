@@ -16,7 +16,7 @@ const params = z.object({ projectId: z.string().uuid() });
 const runParams = params.extend({ runId: z.string().uuid() });
 const body = z.object({ requirementId: z.string().uuid() }).strict();
 const runFields = `id, project_id AS "projectId", requirement_version_id AS "requirementVersionId", model_name AS "modelName", status, plan, error_code AS "errorCode", created_at AS "createdAt", finished_at AS "finishedAt", confirmed_at AS "confirmedAt"`;
-const taskFields = `t.id,t.plan_key AS "planKey",t.title,t.stage,t.description,t.deliverable,t.status,COALESCE(array_agg(d.depends_on_task_id) FILTER (WHERE d.depends_on_task_id IS NOT NULL),'{}') AS "dependsOn"`;
+const taskFields = `t.id,t.requirement_version_id AS "requirementVersionId",t.agent_run_id AS "agentRunId",t.plan_key AS "planKey",t.title,t.stage,t.description,t.deliverable,t.status,COALESCE(array_agg(d.depends_on_task_id) FILTER (WHERE d.depends_on_task_id IS NOT NULL),'{}') AS "dependsOn"`;
 
 type Dependencies = {
   complete?: (config: AiConfig | undefined, messages: AiMessage[]) => Promise<string>;

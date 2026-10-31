@@ -20,7 +20,7 @@ async function scenario(name,work){
  const context=await browser.newContext({viewport:{width:1440,height:950},reducedMotion:'reduce'});
  await context.addInitScript(()=>localStorage.setItem('gongxu_token','controlled-browser-fixture'));
  const page=await context.newPage();page.setDefaultTimeout(6000);
- const state={detailCounts:{},delay:()=>0,makeDetail:id=>detail(id),saveDelay:0,docSaveDelay:0,docReadDelay:()=>0,docReads:0,docResponse:null,docConflict:false,docHistory:[],writes:[],failSave:false,errors:[],cases:[],documents:[],detailOverride:null,detailStatus:200,runs:[],runCounts:{},runDelay:()=>0,searchDelay:0,searches:0};
+ const state={detailCounts:{},delay:()=>0,makeDetail:id=>detail(id),saveDelay:0,docSaveDelay:0,docReadDelay:()=>0,docReads:0,docResponse:null,docConflict:false,docHistory:[],evidence:null,writes:[],failSave:false,errors:[],tasks:[],cases:[],documents:[],detailOverride:null,detailStatus:200,runs:[],runCounts:{},runDelay:()=>0,searchDelay:0,searches:0};
  page.on('pageerror',()=>state.errors.push('page_error'));
  await page.route('**/*',async route=>{
   const url=new URL(route.request().url());
@@ -39,7 +39,7 @@ async function scenario(name,work){
    state.writes.push({path,body:route.request().postDataJSON()});
    await new Promise(resolve=>setTimeout(resolve,state.saveDelay));
    if(state.failSave){status=503;body={error:'database_unavailable'};} else body={requirement:{...detail(path.split('/')[2]).requirements[0],id:'cccccccc-cccc-4ccc-8ccc-cccccccccccc',version:2,content:route.request().postDataJSON().content}};
-  } else if(path.endsWith('/documents')) {state.docReads++;body={documents:(state.docResponse?state.docResponse(state.docReads):state.documents).map(row=>({revision:1,...row}))};await new Promise(resolve=>setTimeout(resolve,state.docReadDelay(state.docReads)));}
+  } else if(path.endsWith('/documents')) {state.docReads++;body={documents:(state.docResponse?state.docResponse(state.docReads):state.documents).map(row=>({revision:1,...row})),evidence:state.evidence};await new Promise(resolve=>setTimeout(resolve,state.docReadDelay(state.docReads)));}
   else if(/\/documents\/[^/]+$/.test(path)&&method==='PATCH'){
    state.writes.push({path,body:route.request().postDataJSON()});
    await new Promise(resolve=>setTimeout(resolve,state.docSaveDelay));
@@ -53,7 +53,7 @@ async function scenario(name,work){
   else if(path==='/knowledge')body={documents:[],embeddingConfigured:true,pdfAvailable:true};
   else if(path==='/knowledge/activity')body={activities:[]};
   else if(path==='/knowledge/search'){state.searches++;await new Promise(r=>setTimeout(r,state.searchDelay));body={hits:[{id:RA,document_name:'取消后重试资料',content:'成功检索的合成片段',page:1,distance:0.1}]};}
-  else if(path.endsWith('/tasks'))body={tasks:[]};
+  else if(path.endsWith('/tasks'))body={tasks:state.tasks};
   else if(path.endsWith('/code-reviews'))body={reviews:[]};
   else {status=404;body={error:'not_found'};}
   await route.fulfill({status,json:body}).catch(()=>{});
@@ -143,6 +143,27 @@ try{
   await page.getByRole('button',{name:'使用修订 1 编辑'}).click();await page.getByRole('dialog').getByRole('button',{name:'放弃并继续'}).click();assert.equal(await page.locator('#doc-content').inputValue(),'历史正文');
   await page.getByRole('link',{name:'我的项目',exact:true}).first().click();await page.getByRole('dialog').getByRole('button',{name:'保存并继续'}).click();await page.waitForURL('**/projects');
   assert.equal(state.writes.length,1);assert.equal(state.writes[0].body.content,'历史正文');assert.equal(state.writes[0].body.expectedRevision,2);
+ });
+ await scenario('agent_task_board_defaults_to_current_version_and_history_is_read_only',async(page,state)=>{
+  state.detailOverride={project:project(A),requirements:[{id:RA,version:2,status:'confirmed',content:'当前需求',createdAt:now},{id:RB,version:1,status:'confirmed',content:'历史需求',createdAt:now}]};
+  const common={stage:'开发',description:'合成任务说明',deliverable:'合成交付物',dependsOn:[]};
+  state.tasks=[{...common,id:'old-task',title:'历史已完成任务',status:'done',requirementVersionId:RB},{...common,id:'current-task',title:'当前待开始任务',status:'todo',requirementVersionId:RA}];
+  await page.goto(`${origin.origin}/projects/${A}/agent`);await page.getByText('当前待开始任务',{exact:true}).waitFor();assert.equal(await page.getByText('历史已完成任务',{exact:true}).count(),0);
+  assert.equal(await page.getByLabel('当前待开始任务状态').isEnabled(),true);
+  await page.getByLabel('任务来源需求版本').selectOption(RB);await page.getByText('历史已完成任务',{exact:true}).waitFor();assert.equal(await page.getByLabel('历史已完成任务状态').isDisabled(),true);assert.equal(await page.getByText('当前待开始任务',{exact:true}).count(),0);
+ });
+ await scenario('delivery_rechecks_changed_evidence_without_discarding_manual_notes',async(page,state)=>{
+  state.detailOverride={project:project(A),requirements:[{id:RA,version:1,status:'confirmed',content:'合成需求',createdAt:now}]};
+  state.evidence={requirementVersionId:RA,requirementVersion:1,taskRevision:0,caseRevision:1,traceRevision:0,documentRevision:0,capturedAt:now};
+  await page.goto(`${origin.origin}/delivery`);await page.locator('#delivery-tests-status').waitFor();await waitFor(()=>state.docReads>0);
+  await page.locator('#delivery-tests-note').fill('此前人工核对的备注必须保留');await page.locator('#delivery-tests-status').selectOption('checked');
+  assert.equal(await page.locator('.delivery-count strong').innerText(),'1');
+  state.evidence={...state.evidence,caseRevision:2};await page.getByRole('button',{name:'刷新成果记录'}).click();
+  await page.getByRole('button',{name:'已核对当前资料',exact:true}).waitFor();assert.equal(await page.locator('.delivery-count strong').innerText(),'0');
+  assert.equal(await page.locator('#delivery-tests-note').inputValue(),'此前人工核对的备注必须保留');assert.equal(await page.locator('#delivery-tests-status').inputValue(),'checked');
+  await page.getByRole('button',{name:'已核对当前资料',exact:true}).click();assert.equal(await page.locator('.delivery-count strong').innerText(),'1');
+  await page.reload();await page.locator('#delivery-tests-status').waitFor();await page.waitForFunction(()=>document.querySelector('.delivery-count strong')?.textContent==='1');
+  assert.equal(await page.locator('#delivery-tests-note').inputValue(),'此前人工核对的备注必须保留');
  });
  await scenario('test_center_defaults_to_latest_confirmed_version_not_old_passes',async(page,state)=>{
   state.detailOverride={project:project(A),requirements:[{id:RA,version:2,status:'confirmed',content:'新版本',createdAt:now},{id:RB,version:1,status:'confirmed',content:'旧版本',createdAt:now}]};

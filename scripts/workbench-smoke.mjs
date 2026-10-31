@@ -243,6 +243,7 @@ try {
         .fill("尚未执行并发借阅场景，请在独立环境补测。");
       await page.reload();
       await page.locator(".delivery-check").first().waitFor();
+      await page.locator('.delivery-grid[aria-busy="false"]').waitFor();
       assert(
         (await page
           .getByLabel("测试与证据核对状态", { exact: true })

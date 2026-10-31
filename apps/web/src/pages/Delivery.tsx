@@ -2,6 +2,7 @@ import { useState } from "react";
 import { UiIcon, type IconName } from "../components/UiIcon";
 import { CopyButton } from "../components/ContentView";
 import { documentNames } from "../components/project-pulse-model";
+import {documentEvidence,evidenceStamp,manualCheckFresh,type EvidenceSnapshot} from '../components/evidence-state';
 import {
   blankDelivery,
   deliveryChecks,
@@ -29,6 +30,7 @@ type Doc = {
   requirementVersionId: string;
   type: string;
   createdAt: string;
+  sourceSnapshot?:EvidenceSnapshot|null;
 };
 export default function Delivery({
   projects,
@@ -162,7 +164,7 @@ function DeliveryBoard({
     `${base}/test-cases`,
     revision,
   );
-  const docs = useApiResource<{ documents: Doc[] }>(
+  const docs = useApiResource<{ documents: Doc[];evidence?:EvidenceSnapshot|null }>(
     request,
     `${base}/documents`,
     revision,
@@ -186,6 +188,11 @@ function DeliveryBoard({
         item.requirementVersionId === requirement?.id &&
         item.status === "confirmed",
     ) ?? [];
+  const currentEvidence=!docs.loading&&!docs.error&&docs.data?.evidence?.requirementVersionId===requirement?.id?docs.data?.evidence:null;
+  const trackedChecks=new Set<CheckId>(['requirements','plan','tests','documents']);
+  const isCurrent=(id:CheckId)=>!trackedChecks.has(id)||manualCheckFresh(saved.record.items[id].status,saved.record.items[id].evidenceStamp,evidenceStamp(currentEvidence,id));
+  const staleChecks=deliveryChecks.filter(item=>saved.record.items[item.id].status==='checked'&&!isCurrent(item.id));
+  const staleDocumentTypes=new Set(versionDocs.filter(doc=>documentEvidence(doc,currentEvidence).status!=='current').map(doc=>doc.type));
   const evidence: Record<CheckId, string> = {
     requirements: requirement
       ? `已有已确认需求 V${requirement.version}`
@@ -209,11 +216,11 @@ function DeliveryBoard({
       ? "文档暂不可用"
       : docs.loading
         ? "正在读取文档记录…"
-        : `${new Set(versionDocs.map((item) => item.type)).size} 类当前需求文档已保存，内容仍需核对`,
+        : `${new Set(versionDocs.map((item) => item.type)).size} 类当前需求文档已保存；${staleDocumentTypes.size} 类有来源变化或缺少快照，须复核内容`,
     demo: "平台没有自动检查部署、仓库访问或正式竞赛材料",
   };
   const completed = deliveryChecks.filter(
-    (item) => saved.record.items[item.id].status === "checked",
+    (item) => saved.record.items[item.id].status === "checked"&&isCurrent(item.id),
   ).length;
   const blocked = deliveryChecks.filter(
     (item) => saved.record.items[item.id].status === "blocked",
@@ -224,7 +231,7 @@ function DeliveryBoard({
       updatedAt: new Date().toISOString(),
       items: {
         ...saved.record.items,
-        [id]: { ...saved.record.items[id], ...patch },
+        [id]: { ...saved.record.items[id], ...patch,...(patch.status==='checked'&&trackedChecks.has(id)?{evidenceStamp:evidenceStamp(currentEvidence,id)}:{}) },
       },
     };
     try {
@@ -243,10 +250,12 @@ function DeliveryBoard({
     `导出时间：${new Date().toLocaleString("zh-CN")}`,
     `依据：${requirement ? `已确认需求 V${requirement.version}` : "尚无已确认需求"}`,
     `人工确认 ${completed}/6 项，${blocked} 项待处理。此统计不是自动验收或项目完成结论。`,
+    `另有 ${staleChecks.length} 项旧核对缺少当前依据，需重新核对；原备注保留。`,
     "核对记录保存在当前浏览器；下方成果摘要来自本次读取。",
     ...deliveryChecks.flatMap((item) => [
       `## ${item.title}`,
       `人工状态：${{ todo: "待核对", checked: "已人工核对", blocked: "待处理" }[saved.record.items[item.id].status]}`,
+      `依据核对：${saved.record.items[item.id].status==='checked'&&!isCurrent(item.id)?'已变化或不可核对，旧结论不计入本次确认':'以本次读取范围为准，非自动验收'}`,
       `成果摘要：${evidence[item.id]}`,
       `备注：${saved.record.items[item.id].note || "尚未填写"}`,
     ]),
@@ -254,7 +263,7 @@ function DeliveryBoard({
     "规划、文档和审查最多读取最近 100 条；测试用例最多 200 条。测试与文档按当前已确认需求过滤，测试结果由人工登记。没有运行用户代码，也没有检查线上部署。",
   ].join("\n\n");
   return (
-    <div className="delivery-grid">
+    <div className="delivery-grid" aria-busy={docs.loading}>
       <div>
         <div className="delivery-local-note">
           <UiIcon name="bookmark" size={19} />
@@ -277,6 +286,7 @@ function DeliveryBoard({
             {saved.error}
           </p>
         )}
+        {!docs.loading&&staleChecks.length>0&&<p className="wb-warning" role="status">{staleChecks.length} 项旧核对的依据已变化、不可读取或尚未记录。原备注仍然保留，请核对当前资料后重新确认。</p>}
         {!requirement && (
           <p className="wb-warning">
             当前没有已确认需求，清单用于准备工作；确认需求后会使用独立的新版本清单。
@@ -305,6 +315,7 @@ function DeliveryBoard({
                 </label>
                 <select
                   id={`delivery-${item.id}-status`}
+                  disabled={trackedChecks.has(item.id)&&docs.loading}
                   value={saved.record.items[item.id].status}
                   onChange={(event) =>
                     update(item.id, {
@@ -313,7 +324,7 @@ function DeliveryBoard({
                   }
                 >
                   <option value="todo">待核对</option>
-                  <option value="checked">已人工核对</option>
+                  <option value="checked" disabled={trackedChecks.has(item.id)&&!currentEvidence}>已人工核对</option>
                   <option value="blocked">待处理</option>
                 </select>
               </div>
@@ -321,6 +332,7 @@ function DeliveryBoard({
                 <span>当前成果</span>
                 <p>{evidence[item.id]}</p>
               </div>
+              {!docs.loading&&saved.record.items[item.id].status==='checked'&&!isCurrent(item.id)&&<div className="delivery-recheck"><span>旧结论待复核 · 不计入当前确认</span><button className="button secondary" type="button" disabled={!currentEvidence} onClick={()=>update(item.id,{status:'checked'})}>已核对当前资料</button></div>}
               <label htmlFor={`delivery-${item.id}-note`}>
                 {item.title}核对备注
               </label>
@@ -342,7 +354,7 @@ function DeliveryBoard({
         <span className="eyebrow">YOUR HANDOFF CHECKLIST</span>
         <h3>交付前，最后一次核对</h3>
         <div className="delivery-count">
-          <strong>{completed}</strong>
+          <strong>{docs.loading?'—':completed}</strong>
           <span>/ 6 项人工确认</span>
         </div>
         <div
@@ -351,7 +363,7 @@ function DeliveryBoard({
           aria-label="人工交付核对进度"
           aria-valuemin={0}
           aria-valuemax={6}
-          aria-valuenow={completed}
+          aria-valuenow={docs.loading?undefined:completed}
         >
           <span style={{ width: `${(completed / 6) * 100}%` }} />
         </div>

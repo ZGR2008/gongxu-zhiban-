@@ -288,6 +288,7 @@ export type CheckId = (typeof deliveryChecks)[number]["id"];
 export type CheckRecord = {
   status: "todo" | "checked" | "blocked";
   note: string;
+  evidenceStamp?:string|null;
 };
 export type DeliveryRecord = {
   version: 1;
@@ -318,7 +319,7 @@ export function readDelivery(raw: string | null): DeliveryRecord {
         typeof item.note === "string" &&
         item.note.length <= 2000
       )
-        fallback.items[check.id] = { status: item.status, note: item.note };
+        fallback.items[check.id] = { status: item.status, note: item.note,...(typeof item.evidenceStamp==='string'&&item.evidenceStamp.length<=200?{evidenceStamp:item.evidenceStamp}:item.evidenceStamp===null?{evidenceStamp:null}:{}) };
     }
     fallback.updatedAt =
       typeof value.updatedAt === "string" &&

@@ -63,6 +63,13 @@ test('old requirement tests and documents do not count toward current progress',
   const result = summarizeProject(requirements, data);
   assert.equal(result.cases.length, 1); assert.equal(result.recorded, 0); assert.equal(result.passed, 0); assert.equal(result.docKinds.length, 0);
 });
+
+test('historical or unversioned task completion cannot count toward current requirement', () => {
+  const data=empty();data.runs=resource([currentRun]);
+  data.tasks=resource([{id:'old',title:'旧需求已完成',status:'done',requirementVersionId:'old'},{id:'unknown',title:'来源未知',status:'done'},{id:'current',title:'当前待开始',status:'todo',requirementVersionId:'current'}]);
+  const summary=summarizeProject(requirements,data);
+  assert.equal(summary.tasks.length,1);assert.equal(summary.done,0);assert.equal(summary.tasks[0].id,'current');
+});
 test('awaiting review and failed plans remain explicit human actions', () => {
   for (const status of ['awaiting_review', 'failed']) {
     const data = empty(); data.runs = resource([{ ...currentRun, status }]);
@@ -82,7 +89,7 @@ test('limited history is not treated as proof that a plan never existed', () => 
 });
 test('blocked tasks and failed tests take precedence over document preparation', () => {
   const data = empty(); data.runs = resource([currentRun]);
-  data.tasks = resource([{ id: 'blocked', title: '待处理', status: 'blocked' }]);
+  data.tasks = resource([{ id: 'blocked', title: '待处理', status: 'blocked', requirementVersionId:'current' }]);
   data.cases = resource([{ id: 'failed', requirementVersionId: 'current', result: 'failed' }]);
   assert.equal(summarizeProject(requirements, data).next.route, 'agent');
   data.tasks = resource([]);
@@ -95,7 +102,7 @@ test('duplicate document types are not counted twice', () => {
 });
 test('a fully recorded project still requires review rather than automatic acceptance', () => {
   const data = empty(); data.runs = resource([currentRun]);
-  data.tasks = resource([{ id: 'done', title: '任务', status: 'done' }]);
+  data.tasks = resource([{ id: 'done', title: '任务', status: 'done', requirementVersionId:'current' }]);
   data.cases = resource([{ id: 'pass', requirementVersionId: 'current', result: 'passed' }]);
   data.docs = resource(['readme', 'requirements', 'design', 'api', 'test_report', 'summary'].map(type => ({ id: type, type, requirementVersionId: 'current' })));
   assert.match(summarizeProject(requirements, data).next.detail, /不等于项目已验收/);

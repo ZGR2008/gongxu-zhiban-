@@ -1145,6 +1145,7 @@
   gap: 12px;
   margin: 24px 0 18px;
 }
+.delivery-recheck {display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:12px 0;color:#e5c894;font-size:13px}
 .delivery-count strong {
   font-size: 46px;
   font-weight: 450;

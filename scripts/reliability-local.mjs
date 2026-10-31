@@ -118,6 +118,32 @@ try{
    const {checkLocalDesktop}=await import('./local-desktop-check.mjs');report.desktop=await checkLocalDesktop({apiAddress,authorization:auth.authorization,projectId:project,directory});
   });
  }
+ await check('document_source_snapshot_detects_same_version_changes_without_rewriting_document',async()=>{
+  const docs=new PgDocumentStore(pool),context=await docs.getContext(user,project,secondVersion);
+  const original=await docs.create(user,project,secondVersion,'test_report','合成测试报告，依据读取时未执行记录','controlled-fixture',context.snapshot);
+  assert.equal(original.sourceSnapshot.caseRevision,context.snapshot.caseRevision);
+  const initial=(await call('GET',`${root}/evidence`)).json().evidence;assert.equal(initial.documentRevision,context.snapshot.documentRevision+1);
+  await call('GET',`${root}/trace`);const afterRead=(await call('GET',`${root}/evidence`)).json().evidence;assert.equal(afterRead.traceRevision,initial.traceRevision);
+  const currentCase=(await call('GET',`${root}/test-cases`)).json().cases[0];
+  assert.equal((await call('PATCH',`${root}/test-cases/${currentCase.id}/execution`,{result:'blocked',note:'合成故障：环境不可用，未执行',expectedRevision:currentCase.revision})).statusCode,200);
+  const changed=(await call('GET',`${root}/documents/${original.id}`)).json();assert.equal(changed.evidence.caseRevision,initial.caseRevision+1);assert.equal(changed.document.sourceSnapshot.caseRevision,initial.caseRevision);assert.equal(changed.document.content,original.content);
+  const trace=(await call('GET',`${root}/trace`)).json();
+  assert.equal((await call('POST',`${root}/trace/links`,{itemId:trace.items[0].id,targetId:currentCase.id,targetKind:'case',expectedCaseRevision:currentCase.revision,decision:'confirmed',note:'合成核对，仍没有通过执行证据'})).statusCode,200);
+  const reviewed=(await call('GET',`${root}/evidence`)).json().evidence;assert.equal(reviewed.traceRevision,changed.evidence.traceRevision+1);
+  const edit=await call('PATCH',`${root}/documents/${original.id}`,{content:'人工改写合成报告，来源记录仍保留',expectedRevision:1});assert.equal(edit.statusCode,200);assert.deepEqual(edit.json().document.sourceSnapshot,original.sourceSnapshot);assert.equal(edit.json().evidence.documentRevision,reviewed.documentRevision+1);
+  assert.equal((await call('GET',`${root}/evidence`,undefined,foreign)).statusCode,404);
+ });
+ await check('document_context_and_source_counters_share_one_database_snapshot',async()=>{
+  const before=(await call('GET',`${root}/evidence`)).json().evidence;
+  const currentCase=(await call('GET',`${root}/test-cases`)).json().cases[0];let interleaved=false;
+  const wrapper={connect:async()=>{const client=await pool.connect();return {release:()=>client.release(),query:async(sql,values)=>{
+   const result=await client.query(sql,values);
+   if(sql.startsWith('SELECT c.title')&&!interleaved){interleaved=true;await pool.query("UPDATE practice_test_cases SET result='passed',execution_note='合成并发登记，不代表自动执行',executed_at=now() WHERE id=$1 AND project_id=$2",[currentCase.id,project]);}
+   return result;
+  }};}};
+  const context=await new PgDocumentStore(wrapper).getContext(user,project,secondVersion);assert.equal(interleaved,true);assert.equal(context.testCounts.passed,0);assert.equal(context.snapshot.caseRevision,before.caseRevision);
+  const after=await new PgDocumentStore(pool).getContext(user,project,secondVersion);assert.equal(after.testCounts.passed,1);assert.equal(after.snapshot.caseRevision,before.caseRevision+1);
+ });
  let embedding;
  try{embedding=loadEmbeddingConfig();}catch{report.checks.push({name:'real_local_embedding',status:'not_run',reason:'configuration_invalid'});}
  if(embedding&&['localhost','127.0.0.1','[::1]'].includes(new URL(embedding.baseUrl).hostname)){

@@ -4,11 +4,12 @@ import { useEditGuard, useUnsavedEdit } from './EditGuard';
 import { RequestScope } from './request-scope';
 import { DocumentRevisionHistory } from './DocumentRevisionHistory';
 import './document-workspace.css';
+import { documentEvidence, type EvidenceSnapshot } from './evidence-state';
 
 type Api = <T>(path: string, options?: RequestInit) => Promise<T>;
 const types = { readme: 'README', requirements: '需求分析文档', design: '软件设计文档', api: 'API 说明文档', test_report: '测试报告', summary: '项目总结' } as const;
 type DocType = keyof typeof types;
-type Doc = { id: string; type: DocType; content: string; modelName: string; revision: number; createdAt: string; requirementVersionId: string };
+type Doc = { id: string; type: DocType; content: string; modelName: string; revision: number; createdAt: string; requirementVersionId: string; sourceSnapshot?:EvidenceSnapshot|null };
 type Props = { request: Api; projectId: string; requirements: { id: string; version: number; status: string }[] };
 const errorText = (error: unknown) => error instanceof Error ? error.message : '操作失败，请重试。';
 
@@ -18,6 +19,7 @@ export function DocumentWorkspace({ request, projectId, requirements }: Props) {
   const [type, setType] = useState<DocType>('readme'), [error, setError] = useState(''), [notice, setNotice] = useState('');
   const [loading, setLoading] = useState(true), [busy, setBusy] = useState<'saving' | 'generating' | 'exporting' | null>(null);
   const [conflicted, setConflicted] = useState(false), [remote, setRemote] = useState<Doc | null>(null), [checking, setChecking] = useState(false);
+  const [evidence,setEvidence]=useState<EvidenceSnapshot|null>(null);
   const active = useRef(true), savePending = useRef<Promise<boolean> | null>(null), working = useRef(false);
   const reads = useRef(new RequestScope()), conflictReads = useRef(new RequestScope());
   const selection = useRef(0), editor = useRef({ selected, content });
@@ -36,9 +38,10 @@ export function DocumentWorkspace({ request, projectId, requirements }: Props) {
     const ticket = reads.current.begin(base);
     setLoading(true);
     try {
-      const data = await request<{ documents: Doc[] }>(base, { signal: ticket.signal });
+      const data = await request<{ documents: Doc[]; evidence?:EvidenceSnapshot|null }>(base, { signal: ticket.signal });
       if (!active.current || !reads.current.accepts(ticket, base)) return;
       setDocs(data.documents);
+      setEvidence(data.evidence??null);
       choose(data.documents.find(row => row.id === editor.current.selected?.id) || data.documents[0] || null);
     } catch (error) { if (active.current && reads.current.accepts(ticket, base)) setError(errorText(error)); }
     finally { if (active.current && reads.current.accepts(ticket, base)) setLoading(false); }
@@ -57,10 +60,11 @@ export function DocumentWorkspace({ request, projectId, requirements }: Props) {
     working.current = true; setBusy('saving'); setError(''); setNotice('');
     const pending = (async () => {
       try {
-        const result = await request<{ document: Doc }>(base + '/' + target, { method: 'PATCH', body: JSON.stringify({ content: snapshot, expectedRevision: revision }) });
+        const result = await request<{ document: Doc; evidence?:EvidenceSnapshot|null }>(base + '/' + target, { method: 'PATCH', body: JSON.stringify({ content: snapshot, expectedRevision: revision }) });
         if (!active.current) return false;
         if (result.document.id !== target || result.document.revision < revision) throw new Error('返回文档归属或修订不一致，已保留编辑内容。');
         setDocs(rows => rows.map(row => row.id === target ? result.document : row));
+        setEvidence(result.evidence??null);
         // A late save may update the list, but never the selection or a newer draft.
         if (selection.current !== epoch || editor.current.selected?.id !== target) return false;
         const unchanged = editor.current.content === snapshot;
@@ -84,10 +88,11 @@ export function DocumentWorkspace({ request, projectId, requirements }: Props) {
     const target = selected.id, epoch = selection.current, ticket = conflictReads.current.begin(target);
     setChecking(true);
     try {
-      const response = await request<{ document: Doc }>(base + '/' + target, { signal: ticket.signal });
+      const response = await request<{ document: Doc; evidence?:EvidenceSnapshot|null }>(base + '/' + target, { signal: ticket.signal });
       if (active.current && selection.current === epoch && conflictReads.current.accepts(ticket, target)) {
         if (response.document.id !== target) throw new Error('服务器文档归属不一致，已保留草稿。');
         setRemote(response.document);
+        setEvidence(response.evidence??null);
       }
     } catch (error) { if (active.current && conflictReads.current.accepts(ticket, target)) setError(errorText(error)); }
     finally { if (active.current && conflictReads.current.accepts(ticket, target)) setChecking(false); }
@@ -96,8 +101,8 @@ export function DocumentWorkspace({ request, projectId, requirements }: Props) {
     if (working.current || loading) return;
     working.current = true; setBusy('generating'); setError(''); setNotice('');
     try {
-      const response = await request<{ document: Doc }>(base + '/generate', { method: 'POST', body: JSON.stringify({ type }) });
-      if (active.current) { setDocs(rows => [response.document, ...rows]); choose(response.document); setNotice('已生成草稿，请核实并编辑。'); }
+      const response = await request<{ document: Doc; evidence?:EvidenceSnapshot|null }>(base + '/generate', { method: 'POST', body: JSON.stringify({ type }) });
+      if (active.current) { setDocs(rows => [response.document, ...rows]); setEvidence(response.evidence??null);choose(response.document); setNotice('已生成草稿，请核实并编辑。'); }
     } catch (error) { if (active.current) setError(errorText(error)); }
     finally { working.current = false; if (active.current) setBusy(null); }
   }
@@ -128,11 +133,12 @@ export function DocumentWorkspace({ request, projectId, requirements }: Props) {
     </div>
       {selected ? <div className="document-editor-column"><form className="editor-panel" onSubmit={save} aria-busy={loading || busy === 'generating'}>
         <div className="panel-heading"><div><h3>{types[selected.type]}</h3><p>来源需求 v{requirements.find(row => row.id === selected.requirementVersionId)?.version ?? '未找到'} · 修订 {selected.revision} · {selected.requirementVersionId !== req?.id ? '历史需求，须复核' : '当前已确认需求'} · {dirty ? '有未保存编辑' : '已保存'}</p></div></div>
+        <div className="document-source-state" data-state={documentEvidence(selected,evidence).status} role="status"><strong>{documentEvidence(selected,evidence).label}</strong><p>{selected.sourceSnapshot?`生成依据读取于 ${new Date(selected.sourceSnapshot.capturedAt).toLocaleString('zh-CN')}。来源变化不会自动改写文档，也不代表所有段落失效。`:'此前文档没有生成依据快照，不能从创建日期推定资料仍然有效。'} 刷新文档可重新检查。</p></div>
         {conflicted && <div className="document-conflict" role="group" aria-label="文档保存冲突"><p>另一处编辑已更新此文档。你的输入仍在下方；核对服务器版本后，再决定如何合并。</p><button className="button secondary" type="button" disabled={checking} onClick={() => void inspectRemote()}>{checking ? '正在读取最新修订…' : '查看服务器版本'}</button>
           {remote && <><div className="document-remote" tabIndex={0} role="region" aria-label={'服务器修订 ' + remote.revision}><strong>服务器修订 {remote.revision}（只读）</strong><RichContent value={remote.content} /></div><div className="form-actions"><button type="button" className="button secondary" onClick={() => protect(() => choose(remote))}>使用服务器版本</button><button type="button" className="button secondary" onClick={() => { editor.current.selected = remote; setSelected(remote); setDocs(rows => rows.map(row => row.id === remote.id ? remote : row)); setConflicted(false); setRemote(null); setError(''); setNotice('已选择服务器最新修订作为保存依据，编辑区内容保留。请合并核对后再次保存。'); }}>保留我的内容继续合并</button></div></>}
         </div>}
         <label className="sr-only" htmlFor="doc-content">文档内容</label><MarkdownEditor id="doc-content" value={content} onChange={edit} required maxLength={50000} disabled={loading || busy === 'generating'} />
-        <div className="form-actions"><span className="muted-text" role="status">{busy === 'saving' ? '正在保存当前快照，可继续输入' : content.length.toLocaleString() + ' / 50,000 字符'}</span><button type="button" className="button secondary" onClick={() => void download()} disabled={Boolean(busy) || loading || dirty}>导出 Markdown</button><button className="button primary" disabled={Boolean(busy) || loading || conflicted || !content.trim() || !dirty}>{busy === 'saving' ? '正在保存…' : '保存文档'} <span>↗</span></button></div>
+        <div className="form-actions"><span className="muted-text" role="status">{busy === 'saving' ? '正在保存当前快照，可继续输入' : dirty?'有修改待保存':'当前修订已保存'}</span><button type="button" className="button secondary" onClick={() => void download()} disabled={Boolean(busy) || loading || dirty}>导出 Markdown</button><button className="button primary" disabled={Boolean(busy) || loading || conflicted || !content.trim() || !dirty}>{busy === 'saving' ? '正在保存…' : '保存文档'} <span>↗</span></button></div>
       </form><DocumentRevisionHistory key={selected.id} request={request} base={base + '/' + selected.id} revision={selected.revision} disabled={Boolean(busy) || loading} onRestore={value => protect(() => { edit(value); setNotice('历史文本已放入编辑区，尚未保存；原修订记录会保留。'); })} /></div> : !loading && <ModuleGuide kind="document" />}
     </div>
   </section>;

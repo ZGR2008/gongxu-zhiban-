@@ -40,8 +40,14 @@ export async function checkLocalDesktop({apiAddress,authorization,projectId,dire
     await page.evaluate(()=>{document.documentElement.style.zoom='1';});await page.setViewportSize({width:1536,height:960});
     stage='tests_page';await page.goto(`${origin}/projects/${projectId}/tests`);await page.getByLabel('测试来源需求版本').waitFor();await page.locator('.case-item').first().waitFor();
     await page.screenshot({path:fileURLToPath(new URL('tests-desktop.png',directory))});
+    stage='real_document_edit_and_history';await page.goto(`${origin}/projects/${projectId}/documents`);await page.locator('#doc-content').waitFor();
+    await page.getByText('无生成来源快照，须人工核对',{exact:true}).waitFor();
+    await page.locator('#doc-content').fill('真实本机HTTP保存的合成文档，用于核对修订历史。');await page.getByRole('button',{name:/保存文档/}).click();await page.getByText('已保存修订 4。',{exact:true}).waitFor();
+    await page.getByRole('button',{name:/修订记录 展开/}).click();await page.locator('.document-history summary').first().waitFor();assert.equal(await page.locator('.document-history summary').count(),3);
+    await page.locator('.document-history summary').first().click();await page.getByRole('region',{name:'历史修订 3'}).waitFor();
+    await page.screenshot({path:fileURLToPath(new URL('documents-desktop.png',directory))});
     assert.equal(errors.length,0);
-    return {scope:'real_local_http_and_database_synthetic_account_model_fixture',screenshots:6,layouts:['1366x768','1536x864 CSS zoom 125%','1920x1080 CSS zoom 150%'],nativeBrowserMenuZoom:'not_executed',keyboardAndTraceSave:'passed'};
+    return {scope:'real_local_http_and_database_synthetic_account_model_fixture',screenshots:7,layouts:['1366x768','1536x864 CSS zoom 125%','1920x1080 CSS zoom 150%'],nativeBrowserMenuZoom:'not_executed',keyboardAndTraceSave:'passed',documentSaveAndHistory:'passed'};
   }catch(error){console.log(`Desktop failure at ${stage}`);console.log((error.stack??'').split('\n').filter(line=>line.includes('local-desktop-check.mjs')).slice(0,2).join('\n'));await page.screenshot({path:fileURLToPath(new URL('desktop-failed.png',directory))});throw error;}
   finally{await context.close();await browser.close();}
 }

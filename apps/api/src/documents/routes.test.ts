@@ -16,7 +16,7 @@ test('model generation uses confirmed project context, persists source and suppo
  let saved:ProjectDocument | undefined; let messages='';
  const docs={getContext:async()=>({tasks:[{title:'实现登录',stage:'开发',status:'todo'}],testCases:[{title:'空输入',category:'boundary',result:'not_run',executionNote:'',executedAt:null}],testCounts:{total:1,notRun:1,passed:0,failed:0,blocked:0}}),list:async()=>saved?[saved]:[],get:async()=>saved??null,create:async(_u:string,p:string,r:string,type:string,content:string,model:string)=>{
    assert.equal(r,requirement); saved={id,projectId:p,requirementVersionId:r,type,content,modelName:model,revision:1,createdAt:new Date(),updatedAt:new Date()} as ProjectDocument; return saved;
- },history:async()=>[],update:async(_u:string,_p:string,_id:string,content:string,revision:number)=>{ if (!saved) return null; assert.equal(revision,saved.revision);saved={...saved,content,revision:revision+1}; return saved; }} as DocumentStore;
+ },history:async()=>[],evidence:async()=>null,update:async(_u:string,_p:string,_id:string,content:string,revision:number)=>{ if (!saved) return null; assert.equal(revision,saved.revision);saved={...saved,content,revision:revision+1}; return saved; }} as DocumentStore;
  const app=Fastify(); await registerDocumentRoutes(app,store,docs,config,async(_config,m)=>{messages=m.map(x=>x.content).join('\n');return '# 测试报告\n待补充';}); t.after(()=>app.close());
  const url=`/projects/${project}/documents`;
  assert.equal((await app.inject({method:'POST',url:`${url}/generate`,payload:{type:'test_report'}})).statusCode,401);
@@ -38,19 +38,29 @@ test('generation requires configuration and a confirmed requirement without writ
  assert.equal((await second.inject({method:'POST',url,headers,payload:{type:'api'}})).statusCode,409); assert.equal(writes,0);
 });
 
+test('generation retains the context snapshot even if evidence changes during the model call',async t=>{
+ const snapshot={requirementVersionId:requirement,requirementVersion:2,taskRevision:1,caseRevision:2,traceRevision:0,documentRevision:0,capturedAt:new Date().toISOString()};
+ let current={...snapshot},savedSnapshot:unknown;
+ const docs={getContext:async()=>({snapshot,tasks:[],testCases:[],testCounts:{total:0,notRun:0,passed:0,failed:0,blocked:0}}),evidence:async()=>current,create:async(_u:string,_p:string,_r:string,_type:string,_content:string,_model:string,source:unknown)=>{savedSnapshot=source;return{id,sourceSnapshot:source};}} as unknown as DocumentStore;
+ const app=Fastify();await registerDocumentRoutes(app,store,docs,config,async()=>{current={...current,caseRevision:3};return '# 合成草稿';});t.after(()=>app.close());
+ const response=await app.inject({method:'POST',url:`/projects/${project}/documents/generate`,headers,payload:{type:'test_report'}});
+ assert.equal(response.statusCode,201);assert.equal(response.json().document.sourceSnapshot.caseRevision,2);assert.equal(response.json().evidence.caseRevision,3);assert.deepEqual(savedSnapshot,snapshot);
+});
+
 
 test('document context queries are scoped to owner, project and requirement and preserve real counts', async () => {
   const calls: {sql:string;values:unknown[]}[]=[];
-  const pool={query:async(sql:string,values:unknown[])=>{
+  let released=false;
+  const client={release:()=>{released=true;},query:async(sql:string,values:unknown[])=>{
     calls.push({sql,values});
     if (sql.includes('practice_test_cases')) return {rows:[{title:'边界',category:'boundary',result:'not_run',executionNote:'',executedAt:null,total:'70',notRun:'68',passed:'1',failed:'1',blocked:'0'}]};
     return {rows:[{title:'任务',stage:'开发',status:'done'}]};
   }};
   const { PgDocumentStore }=await import('./store.js');
-  const context=await new PgDocumentStore(pool as never).getContext('owner',project,requirement);
+  const context=await new PgDocumentStore({connect:async()=>client} as never).getContext('owner',project,requirement);
   assert.deepEqual(context.testCounts,{total:70,notRun:68,passed:1,failed:1,blocked:0});
   assert.equal(context.testCases[0].result,'not_run');
-  assert.equal(calls.length,2);
-  for(const call of calls){ assert.deepEqual(call.values,['owner',project,requirement]); assert.match(call.sql,/p\.owner_id=\$1/); assert.match(call.sql,/requirement_version_id=\$3/); }
+  assert.equal(calls.length,5);assert.equal(calls[0].sql,'BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY');assert.equal(calls.at(-1)?.sql,'COMMIT');assert.ok(released);
+  for(const call of calls.filter(call=>call.values)){ assert.deepEqual(call.values,['owner',project,requirement]); assert.match(call.sql,/p\.owner_id=\$1/);assert.match(call.sql,call.sql.includes('statement_timestamp')?/r\.id=\$3/:/requirement_version_id=\$3/); }
   assert.ok(calls.some(call=>call.sql.includes("a.status='confirmed'")));
 });

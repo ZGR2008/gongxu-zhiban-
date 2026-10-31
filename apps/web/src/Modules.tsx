@@ -57,7 +57,7 @@ type Run = {id:string;requirementVersionId:string;status:string;plan:{tasks:Task
 type Tool = {id:string;toolName:string;status:string;inputSummary:string;outputSummary:string};
 type Step = {id:string;stage:string;status:string;outputSummary:string;tools:Tool[]};
 type RunDetail = {run:Run; steps:Step[]};
-type Task = {id:string;title:string;stage:string;description:string;deliverable:string;status:string;dependsOn:string[]};
+type Task = {id:string;title:string;stage:string;description:string;deliverable:string;status:string;dependsOn:string[];requirementVersionId?:string};
 const statuses: Record<string,string> = {running:'运行中',succeeded:'成功',failed:'失败',skipped:'已跳过',awaiting_review:'待审核',confirmed:'已确认',pending:'待开始',todo:'待开始',doing:'进行中',review:'待审核',done:'已完成',blocked:'阻塞'};
 const stages: Record<string,string> = {knowledge_search:'知识检索',plan_1:'计划生成（第 1 次）',plan_2:'计划生成（第 2 次）',validate_1:'计划校验（第 1 次）',validate_2:'计划校验（第 2 次）',validate_plan:'计划校验'};
 export function Agent({ request, projectId, requirements }: {request:Api;projectId:string;requirements:Requirement[]}) {
@@ -68,7 +68,10 @@ export function Agent({ request, projectId, requirements }: {request:Api;project
   useEffect(()=>()=>runSelection.current.cancel(),[]);
   useEffect(()=>setReviewed(false),[selected?.run.id]);
   const [loading,setLoading] = useState(true); const [busy,setBusy] = useState(false); const [error,setError] = useState(''); const [notice,setNotice] = useState('');
-  const base = `/projects/${encodeURIComponent(projectId)}`; const latestConfirmed = requirements.find(r => r.status === 'confirmed');
+  const base = `/projects/${encodeURIComponent(projectId)}`; const latestConfirmed = [...requirements].filter(r => r.status === 'confirmed').sort((a,b)=>b.version-a.version)[0];
+  const [taskVersion,setTaskVersion]=useState('current');
+  const visibleTaskVersion=taskVersion==='current'?latestConfirmed?.id:taskVersion;
+  const visibleTasks=taskVersion==='all'?tasks:tasks.filter(task=>Boolean(visibleTaskVersion)&&task.requirementVersionId===visibleTaskVersion);
   const refresh = useCallback(async () => { setLoading(true); try { const [history,taskData] = await Promise.all([request<{runs:Run[]}>(`${base}/agent/runs`),request<{tasks:Task[]}>(`${base}/tasks`)]); setRuns(history.runs); setTasks(taskData.tasks); if (history.runs[0]) setSelected(await request<RunDetail>(`${base}/agent/runs/${encodeURIComponent(history.runs[0].id)}`)); else setSelected(null); } catch (e) { setError(errorMessage(e)); } finally { setLoading(false); } }, [base,request]);
   useEffect(() => { void refresh(); }, [refresh]);
   useEffect(() => {
@@ -116,7 +119,7 @@ export function Agent({ request, projectId, requirements }: {request:Api;project
         {selected.run.status === 'awaiting_review' && <div className="form-actions"><button type="button" className="button primary" onClick={() => void confirm()} disabled={busy || !reviewed}>确认计划并创建任务 <span>✓</span></button></div>}
       </details>}
       <RequirementTrace request={request} projectId={projectId} versionId={latestConfirmed?.id} refreshKey={selected?.run.status}/>
-      <section className="editor-panel confirmed-task-panel"><div className="panel-heading"><div><h3>已确认的项目任务</h3><p>展示本项目已入库任务，可在列表或看板中更新状态。</p></div></div><TaskBoard tasks={tasks} busy={busy} onChange={(id,status)=>void updateTask(id,status)}/></section>
+      <section className="editor-panel confirmed-task-panel"><div className="panel-heading"><div><h3>已确认的项目任务</h3><p>{taskVersion==='current'?'当前已确认需求的任务，状态由人工维护。':'历史任务仅供核对，不计入当前需求进度。'}</p></div><label>任务来源版本<select aria-label="任务来源需求版本" value={taskVersion} onChange={event=>setTaskVersion(event.target.value)}><option value="current">当前需求 V{latestConfirmed?.version??'—'}</option>{requirements.filter(row=>row.status==='confirmed'&&row.id!==latestConfirmed?.id).map(row=><option value={row.id} key={row.id}>历史需求 V{row.version}（只读）</option>)}<option value="all">全部任务（只读，含来源待核对）</option></select></label></div><TaskBoard tasks={visibleTasks} busy={busy||taskVersion!=='current'} onChange={(id,status)=>void updateTask(id,status)}/></section>
     </>}
   </section>;
 }

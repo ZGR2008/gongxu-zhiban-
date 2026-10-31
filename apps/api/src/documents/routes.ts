@@ -28,7 +28,11 @@ export async function registerDocumentRoutes(app: FastifyInstance, projects?: Pr
   }
   app.get('/projects/:projectId/documents', async (request, reply) => {
     const ctx = await access(request, reply); if (!ctx) return;
-    return { documents:await documents!.list(ctx.user.id, ctx.project.id) };
+    return { documents:await documents!.list(ctx.user.id, ctx.project.id),evidence:await documents!.evidence(ctx.user.id,ctx.project.id) };
+  });
+  app.get('/projects/:projectId/evidence',async(request,reply)=>{
+    const ctx=await access(request,reply);if(!ctx)return;
+    return {evidence:await documents!.evidence(ctx.user.id,ctx.project.id),scope:'source_change_counters_not_validation'};
   });
   app.post('/projects/:projectId/documents/generate', async (request, reply) => {
     const ctx = await access(request, reply); if (!ctx) return;
@@ -54,9 +58,9 @@ export async function registerDocumentRoutes(app: FastifyInstance, projects?: Pr
       ]);
       if (!result.trim() || result.length > 45000) throw new AiError('ai_provider_error');
       const content = `> AI 生成草稿，依据：已确认需求第 ${requirement.version} 版及其已确认任务、测试记录快照。未提供代码、真实 API 或部署资料；相关内容须人工核实。${evidence}\n\n${result.trim()}`;
-      const document = await documents!.create(ctx.user.id,ctx.project.id,requirement.id,body.data.type,content,ai.model);
+      const document = await documents!.create(ctx.user.id,ctx.project.id,requirement.id,body.data.type,content,ai.model,context.snapshot);
       if (!document) return reply.code(409).send({ error:'source_unavailable' });
-      return reply.code(201).send({ document });
+      return reply.code(201).send({ document,evidence:await documents!.evidence(ctx.user.id,ctx.project.id) });
     } catch (error) {
       if (!(error instanceof AiError)) throw error;
       return reply.code(aiErrorStatus(error.code)).send({ error:error.code });
@@ -66,7 +70,7 @@ export async function registerDocumentRoutes(app: FastifyInstance, projects?: Pr
     const ctx = await access(request, reply); if (!ctx) return;
     const params=documentParams.safeParse(request.params); if (!params.success) return reply.code(400).send({error:'invalid_input'});
     const document=await documents!.get(ctx.user.id,ctx.project.id,params.data.id);
-    return document ? { document } : reply.code(404).send({error:'not_found'});
+    return document ? { document,evidence:await documents!.evidence(ctx.user.id,ctx.project.id) } : reply.code(404).send({error:'not_found'});
   });
   app.patch('/projects/:projectId/documents/:id', async (request, reply) => {
     const ctx = await access(request, reply); if (!ctx) return;
@@ -75,7 +79,7 @@ export async function registerDocumentRoutes(app: FastifyInstance, projects?: Pr
     if (body.data.expectedRevision === undefined) return reply.code(428).send({error:'document_revision_required'});
     try {
       const document=await documents!.update(ctx.user.id,ctx.project.id,params.data.id,body.data.content,body.data.expectedRevision);
-      return document ? { document } : reply.code(404).send({error:'not_found'});
+      return document ? { document,evidence:await documents!.evidence(ctx.user.id,ctx.project.id) } : reply.code(404).send({error:'not_found'});
     } catch(error) {
       if (!(error instanceof DocumentConflictError)) throw error;
       return reply.code(409).send({error:'document_conflict',currentRevision:error.currentRevision});

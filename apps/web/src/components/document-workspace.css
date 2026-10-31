@@ -1,4 +1,7 @@
 .document-editor-column{min-width:0;display:grid;gap:18px;align-content:start}
+.document-source-state{padding:12px 16px;margin-bottom:18px;border-left:2px solid #9a74c8;background:#22173366;font-size:13px}
+.document-source-state p{margin:6px 0 0;color:#d1c4e9;line-height:1.7}
+.document-source-state[data-state=changed],.document-source-state[data-state=historical]{border-color:#e5b76e}
 .document-conflict{padding:18px;border:1px solid #e5b76e66;background:#382a2044;border-radius:12px;margin-bottom:18px}
 .document-conflict p,.document-history p{line-height:1.7;color:#d1c4e9}
 .document-remote{max-height:340px;overflow:auto;overflow-wrap:anywhere;border:1px solid #bc13fe33;border-radius:10px;padding:16px;margin:14px 0;background:#0a0614a6;scrollbar-gutter:stable}

@@ -18,6 +18,7 @@
     "smoke:visual": "node scripts/visual-smoke.mjs",
     "test:ui-models": "node --test scripts/ui-models.test.mjs",
     "test:workbench": "node --test scripts/workbench-models.test.mjs",
+    "test:evidence": "node --test scripts/evidence-state.test.mjs",
     "smoke:workbench": "node scripts/workbench-smoke.mjs",
     "smoke:project-controls": "node scripts/project-controls-smoke.mjs",
     "start:local": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/start-local.ps1",

@@ -1,33 +1,42 @@
 import type { Pool } from 'pg';
+import { readEvidenceSnapshot, type EvidenceSnapshot } from './evidence.js';
 
 export const documentTypes = ['readme', 'requirements', 'design', 'api', 'test_report', 'summary'] as const;
 export type DocumentType = typeof documentTypes[number];
-export type ProjectDocument = { id: string; projectId: string; requirementVersionId: string; type: DocumentType; content: string; modelName: string; revision: number; createdAt: Date; updatedAt: Date };
+export type ProjectDocument = { id: string; projectId: string; requirementVersionId: string; type: DocumentType; content: string; modelName: string; revision: number; sourceSnapshot?:EvidenceSnapshot|null; createdAt: Date; updatedAt: Date };
 export type DocumentRevision = { revision: number; content: string; savedAt: Date; recordedAt: Date };
 export class DocumentConflictError extends Error {
   constructor(public currentRevision: number) { super('document_conflict'); }
 }
-export type DocumentContext = { tasks: { title: string; stage: string; status: string }[]; testCases: { title: string; category: string; result: string; executionNote: string; executedAt: Date | null }[]; testCounts: { total: number; notRun: number; passed: number; failed: number; blocked: number } };
+export type DocumentContext = { snapshot?:EvidenceSnapshot|null; tasks: { title: string; stage: string; status: string }[]; testCases: { title: string; category: string; result: string; executionNote: string; executedAt: Date | null }[]; testCounts: { total: number; notRun: number; passed: number; failed: number; blocked: number } };
 export interface DocumentStore {
   getContext(userId: string, projectId: string, requirementId: string): Promise<DocumentContext>;
   list(userId: string, projectId: string): Promise<ProjectDocument[]>;
   get(userId: string, projectId: string, id: string): Promise<ProjectDocument | null>;
-  create(userId: string, projectId: string, requirementId: string, type: DocumentType, content: string, model: string): Promise<ProjectDocument | null>;
+  create(userId: string, projectId: string, requirementId: string, type: DocumentType, content: string, model: string, snapshot?:EvidenceSnapshot|null): Promise<ProjectDocument | null>;
   update(userId: string, projectId: string, id: string, content: string, expectedRevision: number): Promise<ProjectDocument | null>;
   history(userId: string, projectId: string, id: string, beforeRevision?: number): Promise<DocumentRevision[]>;
+  evidence(userId:string,projectId:string):Promise<EvidenceSnapshot|null>;
 }
-const fields = `d.id,d.project_id AS "projectId",d.requirement_version_id AS "requirementVersionId",d.type,d.content,d.model_name AS "modelName",d.revision,d.created_at AS "createdAt",d.updated_at AS "updatedAt"`;
+const fields = `d.id,d.project_id AS "projectId",d.requirement_version_id AS "requirementVersionId",d.type,d.content,d.model_name AS "modelName",d.revision,d.source_snapshot AS "sourceSnapshot",d.created_at AS "createdAt",d.updated_at AS "updatedAt"`;
 export class PgDocumentStore implements DocumentStore {
   constructor(private pool: Pool) {}
   async getContext(userId: string, projectId: string, requirementId: string): Promise<DocumentContext> {
     // Include only records tied to the confirmed requirement being documented.
-    const [tasks, cases] = await Promise.all([
-      this.pool.query(`SELECT t.title,t.stage,t.status FROM tasks t JOIN projects p ON p.id=t.project_id JOIN agent_runs a ON a.id=t.agent_run_id AND a.project_id=p.id WHERE p.owner_id=$1 AND p.id=$2 AND t.requirement_version_id=$3 AND a.status='confirmed' ORDER BY t.created_at,t.id LIMIT 50`, [userId,projectId,requirementId]),
-      this.pool.query(`SELECT c.title,c.category,c.result,c.execution_note AS "executionNote",c.executed_at AS "executedAt",COUNT(*) OVER() AS total,COUNT(*) FILTER (WHERE c.result='not_run') OVER() AS "notRun",COUNT(*) FILTER (WHERE c.result='passed') OVER() AS passed,COUNT(*) FILTER (WHERE c.result='failed') OVER() AS failed,COUNT(*) FILTER (WHERE c.result='blocked') OVER() AS blocked FROM practice_test_cases c JOIN projects p ON p.id=c.project_id WHERE p.owner_id=$1 AND p.id=$2 AND c.requirement_version_id=$3 ORDER BY c.created_at,c.id LIMIT 50`, [userId,projectId,requirementId]),
-    ]);
-    const count = cases.rows[0];
-    return { tasks:tasks.rows, testCases:cases.rows.map(({title,category,result,executionNote,executedAt}) => ({title,category,result,executionNote,executedAt})), testCounts:{ total:Number(count?.total ?? 0), notRun:Number(count?.notRun ?? 0), passed:Number(count?.passed ?? 0), failed:Number(count?.failed ?? 0), blocked:Number(count?.blocked ?? 0) } };
+    const client=await this.pool.connect();
+    try {
+      // Context and source counters share one database snapshot. The transaction
+      // ends before the model call, so generation never holds database locks.
+      await client.query('BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY');
+      const tasks=await client.query(`SELECT t.title,t.stage,t.status FROM tasks t JOIN projects p ON p.id=t.project_id JOIN agent_runs a ON a.id=t.agent_run_id AND a.project_id=p.id WHERE p.owner_id=$1 AND p.id=$2 AND t.requirement_version_id=$3 AND a.status='confirmed' ORDER BY t.created_at,t.id LIMIT 50`, [userId,projectId,requirementId]);
+      const cases=await client.query(`SELECT c.title,c.category,c.result,c.execution_note AS "executionNote",c.executed_at AS "executedAt",COUNT(*) OVER() AS total,COUNT(*) FILTER (WHERE c.result='not_run') OVER() AS "notRun",COUNT(*) FILTER (WHERE c.result='passed') OVER() AS passed,COUNT(*) FILTER (WHERE c.result='failed') OVER() AS failed,COUNT(*) FILTER (WHERE c.result='blocked') OVER() AS blocked FROM practice_test_cases c JOIN projects p ON p.id=c.project_id WHERE p.owner_id=$1 AND p.id=$2 AND c.requirement_version_id=$3 ORDER BY c.created_at,c.id LIMIT 50`, [userId,projectId,requirementId]);
+      const snapshot=await readEvidenceSnapshot(client,userId,projectId,requirementId);
+      await client.query('COMMIT');
+      const count=cases.rows[0];
+      return {snapshot,tasks:tasks.rows,testCases:cases.rows.map(({title,category,result,executionNote,executedAt})=>({title,category,result,executionNote,executedAt})),testCounts:{total:Number(count?.total??0),notRun:Number(count?.notRun??0),passed:Number(count?.passed??0),failed:Number(count?.failed??0),blocked:Number(count?.blocked??0)}};
+    } catch(error){await client.query('ROLLBACK');throw error;}finally{client.release();}
   }
+  evidence(userId:string,projectId:string){return readEvidenceSnapshot(this.pool,userId,projectId);}
   async list(userId: string, projectId: string) {
     const r = await this.pool.query(`SELECT ${fields} FROM project_documents d JOIN projects p ON p.id=d.project_id WHERE p.owner_id=$1 AND p.id=$2 ORDER BY d.created_at DESC LIMIT 100`, [userId,projectId]);
     return r.rows;
@@ -36,8 +45,8 @@ export class PgDocumentStore implements DocumentStore {
     const r = await this.pool.query(`SELECT ${fields} FROM project_documents d JOIN projects p ON p.id=d.project_id WHERE p.owner_id=$1 AND p.id=$2 AND d.id=$3`, [userId,projectId,id]);
     return r.rows[0] ?? null;
   }
-  async create(userId: string, projectId: string, requirementId: string, type: DocumentType, content: string, model: string) {
-    const r = await this.pool.query(`INSERT INTO project_documents AS d(project_id,requirement_version_id,type,content,model_name) SELECT p.id,r.id,$4,$5,$6 FROM projects p JOIN requirement_versions r ON r.project_id=p.id WHERE p.owner_id=$1 AND p.id=$2 AND r.id=$3 AND r.status='confirmed' RETURNING ${fields}`, [userId,projectId,requirementId,type,content,model]);
+  async create(userId: string, projectId: string, requirementId: string, type: DocumentType, content: string, model: string, snapshot?:EvidenceSnapshot|null) {
+    const r = await this.pool.query(`INSERT INTO project_documents AS d(project_id,requirement_version_id,type,content,model_name,source_snapshot) SELECT p.id,r.id,$4,$5,$6,$7::jsonb FROM projects p JOIN requirement_versions r ON r.project_id=p.id WHERE p.owner_id=$1 AND p.id=$2 AND r.id=$3 AND r.status='confirmed' RETURNING ${fields}`, [userId,projectId,requirementId,type,content,model,snapshot?JSON.stringify(snapshot):null]);
     return r.rows[0] ?? null;
   }
   async update(userId: string, projectId: string, id: string, content: string, expectedRevision: number) {
