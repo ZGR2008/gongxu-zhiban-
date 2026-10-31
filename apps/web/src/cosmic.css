@@ -126,7 +126,7 @@ button:disabled:hover {
   width: 2px;
   background: linear-gradient(#ad61ed, #e3b6ff, #9869f2);
   background-size: 100% 220%;
-  animation: nav-indicator-flow 3.6s ease-in-out infinite alternate;
+  animation: none;
   box-shadow: 0 0 10px #b86cff;
   border-radius: 3px;
 }

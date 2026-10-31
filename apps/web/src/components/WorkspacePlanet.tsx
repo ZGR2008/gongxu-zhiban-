@@ -3,12 +3,14 @@ import { useEffect, useRef, useState } from 'react';
 
 /** Isolated open-source WebGL artwork; it never receives project or account data. */
 export function WorkspacePlanet() {
-  const [paused, setPaused] = useState(false);
+  // The workbench starts with a still frame; animation is an explicit preference.
+  const [paused, setPaused] = useState(true);
+  const [reduced, setReduced] = useState(() => matchMedia('(prefers-reduced-motion: reduce)').matches);
   const frame = useRef<HTMLIFrameElement>(null);
   const container = useRef<HTMLDivElement>(null);
   const pausedRef = useRef(paused);
   const visibleRef = useRef(true);
-  pausedRef.current = paused;
+  pausedRef.current = paused || reduced;
   function sync() {
     frame.current?.contentWindow?.postMessage(
       { type: 'gongxu:orbit-motion', paused: pausedRef.current || !visibleRef.current },
@@ -16,6 +18,12 @@ export function WorkspacePlanet() {
     );
   }
   useEffect(() => {
+    const preference=matchMedia('(prefers-reduced-motion: reduce)');
+    const changed=()=>setReduced(preference.matches);
+    preference.addEventListener('change',changed);
+    // Embedded Chromium can update .matches without emitting the change event.
+    const timer=setInterval(()=>{if(!document.hidden)changed();},1000);
+    document.addEventListener('visibilitychange',changed);
     const observer = new IntersectionObserver(
       (entries) => {
         visibleRef.current = entries[0]?.isIntersecting ?? true;
@@ -35,15 +43,18 @@ export function WorkspacePlanet() {
     window.addEventListener('message', onReady);
     return () => {
       observer.disconnect();
+      preference.removeEventListener('change',changed);
+      clearInterval(timer);
+      document.removeEventListener('visibilitychange',changed);
       window.removeEventListener('message', onReady);
     };
   }, []);
-  useEffect(sync, [paused]);
+  useEffect(sync, [paused,reduced]);
   return (
     <div
       ref={container}
       className="hero-visual workspace-visual workspace-visual--webgl"
-      data-motion={paused ? 'paused' : 'running'}
+      data-motion={paused || reduced ? 'paused' : 'running'}
     >
       <iframe
         ref={frame}
@@ -60,10 +71,11 @@ export function WorkspacePlanet() {
       <button
         type="button"
         className="workspace-motion-toggle"
-        aria-pressed={paused}
+        aria-pressed={paused || reduced}
+        disabled={reduced}
         onClick={() => setPaused((value) => !value)}
       >
-        {paused ? '继续动效' : '暂停动效'}
+        {reduced ? '静态预览' : paused ? '开启动效' : '暂停动效'}
       </button>
     </div>
   );

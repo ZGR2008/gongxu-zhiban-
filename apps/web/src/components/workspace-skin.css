@@ -294,7 +294,7 @@
   .workspace-visual *,
   .workspace-visual *::before,
   .workspace-visual *::after { animation: none; will-change: auto; }
-  .hero--cosmic .workspace-motion-toggle { display: none; }
+  .hero--cosmic .workspace-motion-toggle { display: inline-flex; }
   .hero.hero--cosmic .button.primary { transition: none; }
   .hero.hero--cosmic .button.primary:hover { transform: none; }
 }

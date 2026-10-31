@@ -536,6 +536,6 @@ body[data-text-size='large'] .project-info small {
 }
 @media (prefers-reduced-motion: reduce) {
   .hero--cosmic .workspace-motion-toggle {
-    display: none;
+    display: inline-flex;
   }
 }

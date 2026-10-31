@@ -32,6 +32,7 @@ const testCaseSchema = z.object({
   preconditions: z.string().trim().max(2000),
   steps: z.string().trim().min(1).max(4000),
   expected: z.string().trim().min(1).max(3000),
+  requirementIds: z.array(z.string().regex(/^REQ-[a-f0-9]{16}$/)).max(200).optional(),
 }).strict();
 const generatedSchema = z.object({ cases: z.array(testCaseSchema).min(3).max(30) }).strict();
 export type GeneratedCase = z.infer<typeof testCaseSchema>;

@@ -5,6 +5,8 @@ import assert from 'node:assert/strict';
 import { PgProjectStore } from '../apps/api/dist/project-store.js';
 import { registerProjectRoutes } from '../apps/api/dist/project-routes.js';
 import { registerPracticeRoutes } from '../apps/api/dist/practice/routes.js';
+import { registerTraceRoutes } from '../apps/api/dist/trace/routes.js';
+import { registerAgentRoutes } from '../apps/api/dist/agent/routes.js';
 import { PgDocumentStore } from '../apps/api/dist/documents/store.js';
 import { loadConfig } from '../apps/api/dist/config.js';
 import { loadEmbeddingConfig,saveText,indexDocument,retrieveKnowledge } from '../apps/api/dist/rag/service.js';
@@ -23,7 +25,10 @@ const report={scope:'real_local_database_and_optional_local_embedding',model:'co
 let stage='setup',auth={},foreign={},user,foreignUser,project,firstVersion,secondVersion,testCase;
 const cases={cases:['normal','boundary','exception'].map(category=>({category,title:`合成${category}用例`,preconditions:'本机隔离回归',steps:'人工检查边界',expected:'保留审批记录'}))};
 await registerProjectRoutes(app,store);
-await registerPracticeRoutes(app,store,pool,{baseUrl:'https://example.invalid',apiKey:'test-only-placeholder',model:'controlled-fixture',timeoutMs:1000},{complete:async()=>JSON.stringify(cases)});
+await registerPracticeRoutes(app,store,pool,{baseUrl:'https://example.invalid',apiKey:'test-only-placeholder',model:'controlled-fixture',timeoutMs:1000},{complete:async(_config,messages)=>{const key=messages[1].content.match(/REQ-[a-f0-9]{16}/)?.[0];return JSON.stringify({cases:cases.cases.map(item=>({...item,requirementIds:key?[key]:[]}))});}});
+await registerTraceRoutes(app,store,pool);
+await registerAgentRoutes(app,store,pool,{baseUrl:'https://example.invalid',apiKey:'test-only-placeholder',model:'controlled-fixture',timeoutMs:1000},undefined,{complete:async(_config,messages)=>JSON.stringify({tasks:[{key:'task1',stage:'开发',title:'合成审批任务',description:'实现审批及留档',deliverable:'可复核的审批记录',dependsOn:[],citations:[],requirementIds:[messages[1].content.match(/REQ-[a-f0-9]{16}/)[0]]}]})});
+app.get('/health',async()=>({status:'ok',service:'gongxu-api'}));app.get('/ready',async()=>{await pool.query('SELECT 1');return {status:'ready'};});app.get('/ai/status',async()=>({configured:false}));
 async function call(method,url,payload,headers=auth){return app.inject({method,url,headers,...(payload===undefined?{}:{payload})});}
 async function check(name,work){stage=name;await work();report.checks.push({name,status:'passed'});console.log(`PASS ${name}`);}
 try{
@@ -40,11 +45,24 @@ try{
   assert.equal((await call('POST',`${root}/requirements/${firstVersion}/confirm`)).statusCode,200);
   response=await call('POST',`${root}/test-cases`,{requirementId:firstVersion});assert.equal(response.statusCode,201);testCase=response.json().cases[0];assert.equal(testCase.revision,1);assert.equal(testCase.result,'not_run');
  });
+ await check('trace_suggestions_require_human_review_and_never_fake_execution',async()=>{
+  const run=await call('POST',`${root}/agent/runs`,{requirementId:firstVersion});assert.equal(run.statusCode,201);assert.ok(run.json().run.plan.review.warnings.some(w=>w.code==='no_source'));
+  assert.equal((await call('POST',`${root}/agent/runs/${run.json().run.id}/confirm`)).statusCode,200);
+  let response=await call('GET',`${root}/trace`);assert.equal(response.statusCode,200);let trace=response.json();assert.equal(trace.items.length,1);assert.equal(trace.links.length,4);assert.ok(trace.links.every(link=>link.origin==='model'&&link.status==='suggested'));assert.equal(trace.items[0].coverage.manualEvidence,0);
+  const item=trace.items[0];
+  for(const [targetKind,target] of [['task',trace.tasks[0]],['case',trace.cases.find(c=>c.id===testCase.id)]]){
+   response=await call('POST',`${root}/trace/links`,{itemId:item.id,targetId:target.id,targetKind,decision:'confirmed',note:'合成审核记录，关联对应审批留档',...(targetKind==='case'?{expectedCaseRevision:target.revision}:{})});assert.equal(response.statusCode,200);
+  }
+  trace=(await call('GET',`${root}/trace`)).json();assert.equal(trace.items[0].coverage.confirmedTasks,1);assert.equal(trace.items[0].coverage.confirmedCases,1);assert.equal(trace.items[0].coverage.manualEvidence,0);
+  assert.equal((await call('GET',`${root}/trace`,undefined,foreign)).statusCode,404);
+ });
  await check('editing_invalidates_current_result_but_retains_previous_evidence',async()=>{
   const url=`${root}/test-cases/${testCase.id}`;
   let response=await call('PATCH',url+'/execution',{result:'passed',note:'合成人工记录：仅用于验证历史留存，不代表执行了示例代码',expectedRevision:1});assert.equal(response.statusCode,200);
+  assert.equal((await call('GET',`${root}/trace`)).json().items[0].coverage.manualEvidence,1);
   const {category,title,preconditions,steps}=testCase;
   response=await call('PATCH',url,{category,title,preconditions,steps,expected:'新版必须双人审批',expectedRevision:1});assert.equal(response.statusCode,200);assert.equal(response.json().case.revision,2);assert.equal(response.json().case.result,'not_run');
+  const trace=(await call('GET',`${root}/trace`)).json();assert.equal(trace.items[0].coverage.manualEvidence,0);assert.equal(trace.items[0].coverage.stale,1);
   const history=(await call('GET',url+'/history')).json().history;assert.ok(history.some(row=>row.kind==='definition_changed'&&row.snapshot.result==='passed'&&row.snapshot.execution_note.includes('合成人工记录')));
   response=await call('PATCH',url+'/execution',{result:'passed',note:'旧定义的迟到记录',expectedRevision:1});assert.equal(response.statusCode,409);
  });
@@ -52,13 +70,36 @@ try{
   const url=`${root}/test-cases/${testCase.id}`;assert.equal((await call('GET',url+'/history',undefined,foreign)).statusCode,404);assert.equal((await call('PATCH',url+'/execution',{result:'passed',note:'越权合成请求',expectedRevision:2},foreign)).statusCode,404);
  });
  await check('current_version_statistics_do_not_inherit_historical_passes',async()=>{
-  const response=await call('POST',`${root}/requirements`,{content:'需求版本二：审批必须由两人确认，并保留原记录。'});assert.equal(response.statusCode,201);secondVersion=response.json().requirement.id;
+  const response=await call('POST',`${root}/requirements`,{content:'需求版本二：审批必须由两人确认，并保留原记录。\n失败必须回滚，不能产生重复审批记录。\n普通学生不得查看其他人的审批材料。\n验收时必须提供操作步骤、结果及对应版本。'});assert.equal(response.statusCode,201);secondVersion=response.json().requirement.id;
   assert.equal((await call('POST',`${root}/requirements/${secondVersion}/confirm`)).statusCode,200);
   assert.equal((await call('GET',`${root}/test-cases`)).json().cases.length,0);
   assert.equal((await call('GET',`${root}/test-cases?requirementVersionId=${firstVersion}`)).json().cases.length,3);
   assert.equal((await call('POST',`${root}/test-cases`,{requirementId:secondVersion})).statusCode,201);
   const context=await new PgDocumentStore(pool).getContext(user,project,secondVersion);assert.equal(context.testCounts.total,3);assert.equal(context.testCounts.notRun,3);assert.equal(context.testCounts.passed,0);
  });
+ await check('trace_version_change_impact_is_reviewed_without_copying_evidence',async()=>{
+  let trace=(await call('GET',`${root}/trace`)).json();assert.equal(trace.version.id,secondVersion);assert.equal(trace.items[0].coverage.manualEvidence,0);assert.equal(trace.items[0].coverage.confirmedTasks,0);assert.equal(trace.impact.historicalAssets.tasks,1);assert.equal(trace.impact.historicalAssets.cases,3);
+  const itemId=trace.items[0].id,predecessorId=trace.previousItems[0].id;
+  assert.equal((await call('POST',`${root}/trace/links`,{itemId,targetId:testCase.id,targetKind:'case',expectedCaseRevision:2,decision:'confirmed',note:'不能使用旧版本用例'})).statusCode,404);
+  assert.equal((await call('POST',`${root}/trace/change-review`,{itemId,predecessorId,note:'原审批修改为双人审批，须重新验收'})).statusCode,200);
+  trace=(await call('GET',`${root}/trace`)).json();assert.equal(trace.items[0].change,'changed_reviewed');assert.equal(trace.items[0].coverage.manualEvidence,0);
+  assert.equal((await call('POST',`${root}/trace/change-review`,{itemId,predecessorId,note:'越权变更关系'},foreign)).statusCode,404);
+  const old=(await call('GET',`${root}/trace?requirementVersionId=${firstVersion}`)).json();assert.equal(old.version.current,false);assert.ok(old.history.length>=2);
+ });
+ await check('cross_project_trace_target_rejected_even_for_same_owner',async()=>{
+  let response=await call('POST','/projects',{name:'追踪隔离 · 第二个合成项目',description:'仅验证同一账号的项目边界'});assert.equal(response.statusCode,201);const otherRoot=`/projects/${response.json().project.id}`;
+  response=await call('POST',`${otherRoot}/requirements`,{content:'其他项目必须单独验收'});assert.equal(response.statusCode,201);const otherRequirement=response.json().requirement.id;
+  assert.equal((await call('POST',`${otherRoot}/requirements/${otherRequirement}/confirm`)).statusCode,200);
+  response=await call('POST',`${otherRoot}/test-cases`,{requirementId:otherRequirement});assert.equal(response.statusCode,201);const otherCase=response.json().cases[0];
+  const trace=(await call('GET',`${root}/trace`)).json();
+  assert.equal((await call('POST',`${root}/trace/links`,{itemId:trace.items[0].id,targetId:otherCase.id,targetKind:'case',expectedCaseRevision:otherCase.revision,decision:'confirmed',note:'禁止跨项目关联'})).statusCode,404);
+ });
+ if(process.argv.includes('--browser')){
+  await check('real_database_desktop_trace_review_keyboard_and_layout',async()=>{
+   const apiAddress=await app.listen({host:'127.0.0.1',port:0});
+   const {checkLocalDesktop}=await import('./local-desktop-check.mjs');report.desktop=await checkLocalDesktop({apiAddress,authorization:auth.authorization,projectId:project,directory});
+  });
+ }
  let embedding;
  try{embedding=loadEmbeddingConfig();}catch{report.checks.push({name:'real_local_embedding',status:'not_run',reason:'configuration_invalid'});}
  if(embedding&&['localhost','127.0.0.1','[::1]'].includes(new URL(embedding.baseUrl).hostname)){
@@ -70,5 +111,5 @@ try{
    const foreignHits=await retrieveKnowledge(pool,foreignUser,text,embedding);assert.equal(foreignHits.some(hit=>hit.document_id===doc.id),false);
   });
  }else if(!report.checks.some(row=>row.name==='real_local_embedding'))report.checks.push({name:'real_local_embedding',status:'not_run',reason:'no_authorized_local_provider'});
-}catch(error){report.checks.push({name:stage,status:'failed',errorType:error.constructor.name});console.log(`FAIL ${stage}`);process.exitCode=1;}
+}catch(error){report.checks.push({name:stage,status:'failed',errorType:error.constructor.name});console.log(`FAIL ${stage}`);console.log((error.stack??'').split('\n').filter(line=>line.includes('reliability-local.mjs')).slice(0,2).join('\n'));process.exitCode=1;}
 finally{for(const headers of [auth,foreign])if(headers.authorization)await call('POST','/auth/logout',undefined,headers).catch(()=>{});await app.close();await pool.end();report.finishedAt=new Date().toISOString();await writeFile(new URL('report.json',directory),JSON.stringify(report,null,2));}

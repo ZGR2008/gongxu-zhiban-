@@ -1,3 +1,4 @@
+import { preventPaidModelRequests } from './no-paid-model-guard.mjs';
 import { chromium } from 'playwright';
 import { randomBytes, randomUUID } from 'node:crypto';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
@@ -66,6 +67,7 @@ try {
     locale: 'zh-CN',
     permissions: ['clipboard-read', 'clipboard-write'],
   });
+  if (!withAi) await preventPaidModelRequests(context);
   page = await context.newPage();
   page.setDefaultTimeout(15000);
   page.on('pageerror', () => {

@@ -1,3 +1,4 @@
+import { preventPaidModelRequests } from './no-paid-model-guard.mjs';
 import { chromium, webkit } from 'playwright';
 import { randomBytes, randomUUID } from 'node:crypto';
 import { mkdir, writeFile } from 'node:fs/promises';
@@ -34,6 +35,7 @@ try {
   const channel = process.env.SMOKE_BROWSER_CHANNEL || (process.platform === 'win32' ? 'msedge' : undefined);
   browser = await (useWebkit ? webkit : chromium).launch({ headless: true, ...(!useWebkit && channel ? { channel } : {}) });
   context = await browser.newContext({ viewport: { width: 1440, height: 1000 }, locale: 'zh-CN', ...(!useWebkit ? { permissions: ['clipboard-read', 'clipboard-write'] } : {}) });
+  await preventPaidModelRequests(context);
   page = await context.newPage(); page.setDefaultTimeout(15000);
   page.on('pageerror', () => pageErrors++);
   page.on('request', request => { if (request.method() === 'POST' && /\/(analyze|generate|agent\/runs|code-reviews|knowledge\/ask)$/.test(new URL(request.url()).pathname)) aiCalls++; });
@@ -94,6 +96,10 @@ try {
     await page.getByRole('button', { name: '使用此版本编辑', exact: true }).click();
     await page.getByRole('button', { name: '替换编辑区内容', exact: true }).click();
     await page.locator('.history-dialog[open]').waitFor({ state: 'hidden' });
+    const unsaved = page.getByRole('dialog', { name: '保留未保存的编辑' });
+    await unsaved.waitFor();
+    assert(await page.locator('#requirement').inputValue() === oldDraft, 'restore_changed_draft_before_choice');
+    await unsaved.getByRole('button', { name: '放弃并继续', exact: true }).click();
     assert(await page.locator('#requirement').inputValue() === firstText, 'restore_content_mismatch');
     assert((await api(projectPath)).requirements.length === 2, 'restore_persisted_without_save');
     await saveRequirement(firstText);

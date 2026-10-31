@@ -16,10 +16,11 @@ const now='2026-10-31T12:00:00Z';
 const project=id=>({id,name:id===A?'受控项目 A':'受控项目 B',description:'合成测试，不是真实业务数据',status:'active',createdAt:now,updatedAt:now});
 const detail=(id,content)=>({project:project(id),requirements:[{id:id===A?RA:RB,projectId:id,version:1,status:'draft',content:content||`项目 ${id===A?'A':'B'} 的需求正文`,createdAt:now}]});
 async function scenario(name,work){
+ const filter=process.argv.find(arg=>arg.startsWith('--case='))?.slice(7);if(filter&&!name.includes(filter))return;
  const context=await browser.newContext({viewport:{width:1440,height:950},reducedMotion:'reduce'});
  await context.addInitScript(()=>localStorage.setItem('gongxu_token','controlled-browser-fixture'));
  const page=await context.newPage();page.setDefaultTimeout(6000);
- const state={detailCounts:{},delay:()=>0,makeDetail:id=>detail(id),saveDelay:0,writes:[],failSave:false,errors:[],cases:[],documents:[],detailOverride:null};
+ const state={detailCounts:{},delay:()=>0,makeDetail:id=>detail(id),saveDelay:0,writes:[],failSave:false,errors:[],cases:[],documents:[],detailOverride:null,detailStatus:200,runs:[],runCounts:{},runDelay:()=>0,searchDelay:0,searches:0};
  page.on('pageerror',()=>state.errors.push('page_error'));
  await page.route('**/*',async route=>{
   const url=new URL(route.request().url());
@@ -33,7 +34,7 @@ async function scenario(name,work){
   else if(path==='/projects')body={projects:[project(A),project(B)]};
   else if(/^\/projects\/[^/]+$/.test(path)){
    const id=path.split('/')[2];state.detailCounts[id]=(state.detailCounts[id]||0)+1;
-   const count=state.detailCounts[id];body=state.detailOverride||state.makeDetail(id,count);await new Promise(resolve=>setTimeout(resolve,state.delay(id,count)));
+   const count=state.detailCounts[id];body=state.detailOverride||state.makeDetail(id,count);await new Promise(resolve=>setTimeout(resolve,state.delay(id,count)));if(state.detailStatus!==200){status=state.detailStatus;body={error:state.detailStatus===401?'unauthorized':'database_unavailable'};}
   } else if(path.endsWith('/requirements')&&method==='POST'){
    state.writes.push({path,body:route.request().postDataJSON()});
    await new Promise(resolve=>setTimeout(resolve,state.saveDelay));
@@ -43,14 +44,19 @@ async function scenario(name,work){
    state.writes.push({path,body:route.request().postDataJSON()});
    if(state.failSave){status=503;body={error:'database_unavailable'};}else{const doc=state.documents.find(row=>path.endsWith('/'+row.id));body={document:{...doc,content:route.request().postDataJSON().content}};}
   } else if(path.endsWith('/test-cases'))body={cases:state.cases};
-  else if(path.endsWith('/agent/runs'))body={runs:[]};
+  else if(path.endsWith('/agent/runs'))body={runs:state.runs};
+  else if(/\/agent\/runs\/[^/]+$/.test(path)){const id=path.split('/').at(-1);state.runCounts[id]=(state.runCounts[id]||0)+1;await new Promise(r=>setTimeout(r,state.runDelay(id)));body={run:state.runs.find(r=>r.id===id),steps:[{id:'s',stage:'plan_1',status:'succeeded',outputSummary:id===RA?'运行A输出':'运行B输出',tools:[]}]};}
+  else if(path.endsWith('/trace'))body={version:null,items:[],links:[],tasks:[],cases:[],previousItems:[],impact:null};
+  else if(path==='/knowledge')body={documents:[],embeddingConfigured:true,pdfAvailable:true};
+  else if(path==='/knowledge/activity')body={activities:[]};
+  else if(path==='/knowledge/search'){state.searches++;await new Promise(r=>setTimeout(r,state.searchDelay));body={hits:[{id:RA,document_name:'取消后重试资料',content:'成功检索的合成片段',page:1,distance:0.1}]};}
   else if(path.endsWith('/tasks'))body={tasks:[]};
   else if(path.endsWith('/code-reviews'))body={reviews:[]};
   else {status=404;body={error:'not_found'};}
   await route.fulfill({status,json:body}).catch(()=>{});
  });
  try{await work(page,state);assert.equal(state.errors.length,0);report.checks.push({name,status:'passed'});console.log(`PASS ${name}`);}
- catch(error){report.checks.push({name,status:'failed',errorType:error.constructor.name});console.log(`FAIL ${name}`);process.exitCode=1;}
+ catch(error){report.checks.push({name,status:'failed',errorType:error.constructor.name});console.log(`FAIL ${name}`);if(name.startsWith('workspace_motion'))console.log(await page.evaluate(()=>({hidden:document.hidden,reduced:matchMedia('(prefers-reduced-motion: reduce)').matches,label:document.querySelector('.workspace-motion-toggle')?.textContent,motion:document.querySelector('.workspace-visual')?.getAttribute('data-motion')})));console.log((error.stack??'').split('\n').filter(line=>line.includes('reliability-browser.mjs')).slice(0,2).join('\n'));await page.screenshot({path:new URL(`${name}.png`,directory).pathname.replace(/^\/([A-Za-z]:)/,'$1')}).catch(()=>{});process.exitCode=1;}
  finally{await context.close();}
 }
 async function routeTo(page,id){await page.evaluate(path=>{history.pushState({},'',path);dispatchEvent(new PopStateEvent('popstate'));},`/projects/${id}/requirements`);}
@@ -112,5 +118,41 @@ try{
   await page.getByRole('button',{name:/保存需求草稿/}).click();await waitFor(()=>state.writes.length===1);await routeTo(page,B);
   await page.getByRole('dialog',{name:'保留未保存的编辑'}).getByRole('button',{name:'放弃并继续'}).click();await page.locator('#requirement').waitFor();await page.waitForTimeout(600);
   assert.ok(page.url().includes(B));assert.equal(await page.locator('#requirement').inputValue(),'项目 B 的需求正文');assert.equal(state.writes.length,1);assert.ok(state.writes[0].path.includes(A));
+ });
+ await scenario('workspace_motion_is_opt_in_and_reduced_motion_disables_playback',async(page)=>{
+  await page.emulateMedia({reducedMotion:'no-preference'});await page.goto(`${origin.origin}/dashboard`);const visual=page.locator('.workspace-visual--webgl');await visual.waitFor();assert.equal(await visual.getAttribute('data-motion'),'paused');
+  await page.getByRole('button',{name:'开启动效',exact:true}).click();assert.equal(await visual.getAttribute('data-motion'),'running');
+  await page.emulateMedia({reducedMotion:'reduce'});await page.getByRole('button',{name:'静态预览',exact:true}).waitFor();assert.ok(await page.getByRole('button',{name:'静态预览',exact:true}).isDisabled());assert.equal(await visual.getAttribute('data-motion'),'paused');
+ });
+ await scenario('restoring_history_requires_a_choice_and_cancel_does_not_claim_success',async(page)=>{
+  await page.goto(`${origin.origin}/projects/${A}/requirements`);await page.locator('#requirement').fill('恢复历史时不能静默覆盖的草稿');await page.getByRole('button',{name:'查看需求版本 1',exact:true}).click();
+  await page.getByRole('button',{name:'使用此版本编辑',exact:true}).click();await page.getByRole('button',{name:'替换编辑区内容',exact:true}).click();
+  const guard=page.getByRole('dialog',{name:'保留未保存的编辑'});await guard.waitFor();await guard.getByRole('button',{name:'留在此页'}).click();assert.equal(await page.locator('#requirement').inputValue(),'恢复历史时不能静默覆盖的草稿');assert.equal(await page.locator('.history-notice').count(),0);
+ });
+ await scenario('failed_project_load_recovers_without_editing_the_wrong_project',async(page,state)=>{
+  state.detailStatus=503;await page.goto(`${origin.origin}/projects/${B}/requirements`);await page.getByRole('alert').waitFor();assert.equal(await page.locator('#requirement').count(),0);
+  state.detailStatus=200;await page.getByRole('button',{name:'重试',exact:true}).click();await page.locator('#requirement').waitFor();assert.equal(await page.locator('#requirement').inputValue(),'项目 B 的需求正文');
+ });
+ await scenario('old_unauthorized_response_cannot_clear_a_newer_session',async(page,state)=>{
+  state.detailStatus=401;state.delay=()=>450;await page.goto(`${origin.origin}/projects/${A}/requirements`,{waitUntil:'domcontentloaded'});await waitFor(()=>state.detailCounts[A]);
+  await page.evaluate(()=>localStorage.setItem('gongxu_token','newer-session-fixture'));await page.waitForTimeout(600);assert.equal(await page.evaluate(()=>localStorage.getItem('gongxu_token')),'newer-session-fixture');
+ });
+ await scenario('repeated_save_is_single_write_and_keyboard_cancel_restores_focus',async(page,state)=>{
+  state.saveDelay=250;await page.goto(`${origin.origin}/projects/${A}/requirements`);await page.locator('#requirement').fill('重复点击只能保存一次');
+  await page.getByRole('button',{name:/保存需求草稿/}).evaluate(button=>{button.click();button.click();});await waitFor(()=>state.writes.length);await page.waitForTimeout(350);assert.equal(state.writes.length,1);
+  await page.locator('#requirement').fill('键盘保护草稿');const link=page.getByRole('link',{name:'我的项目',exact:true}).first();await link.focus();await page.keyboard.press('Enter');const dialog=page.getByRole('dialog',{name:'保留未保存的编辑'});await dialog.waitFor();
+  for(let i=0;i<7;i++){await page.keyboard.press('Tab');assert.ok(await dialog.evaluate(el=>el.contains(document.activeElement)));}
+  await page.keyboard.press('Escape');assert.equal(await dialog.isVisible(),false);assert.ok(await link.evaluate(el=>el===document.activeElement));assert.equal(await page.locator('#requirement').inputValue(),'键盘保护草稿');
+ });
+ await scenario('late_agent_run_detail_does_not_replace_the_new_selection',async(page,state)=>{
+  state.runs=[RA,RB].map((id,i)=>({id,requirementVersionId:RA,status:'confirmed',plan:null,errorCode:null,createdAt:i?now:'2026-10-31T11:00:00Z'}));state.runDelay=id=>id===RA?400:0;
+  await page.goto(`${origin.origin}/projects/${A}/agent`);await page.getByText('运行A输出',{exact:true}).waitFor();
+  const runs=page.locator('.module-list .run-link');await runs.first().click();await waitFor(()=>state.runCounts[RA]>=2);await runs.nth(1).click();await page.waitForTimeout(600);
+  assert.equal(await runs.nth(1).getAttribute('aria-pressed'),'true');assert.equal(await page.getByText('运行B输出',{exact:true}).count(),1);
+ });
+ await scenario('knowledge_cancel_ignores_late_result_and_allows_retry',async(page,state)=>{
+  state.searchDelay=450;await page.goto(`${origin.origin}/knowledge`);await page.getByLabel('检索问题').fill('检索合成资料');await page.getByRole('button',{name:/检索知识/}).click();await waitFor(()=>state.searches===1);
+  await page.getByRole('button',{name:'取消检索或索引',exact:true}).click();await page.waitForTimeout(550);assert.equal(await page.getByText('成功检索的合成片段',{exact:true}).count(),0);
+  state.searchDelay=0;await page.getByRole('button',{name:/检索知识/}).click();await page.getByText('成功检索的合成片段',{exact:true}).waitFor();
  });
 }finally{await browser.close();report.finishedAt=new Date().toISOString();await writeFile(new URL('report.json',directory),JSON.stringify(report,null,2));}

@@ -49,7 +49,14 @@ export function EditGuardProvider({ children }: { children: ReactNode }) {
     window.addEventListener('beforeunload', beforeUnload);
     return () => window.removeEventListener('beforeunload', beforeUnload);
   }, [hasDirty]);
-  return <Context.Provider value={{ register, protect, hasDirty }}>{children}<dialog ref={dialog} className="edit-guard-dialog" aria-labelledby="edit-guard-title" onCancel={event => { event.preventDefault(); finish(false); }}>
+  return <Context.Provider value={{ register, protect, hasDirty }}>{children}<dialog ref={dialog} className="edit-guard-dialog" aria-labelledby="edit-guard-title" onCancel={event => { event.preventDefault(); finish(false); }} onKeyDown={event=>{
+    if(event.key!=='Tab')return;
+    const buttons=[...event.currentTarget.querySelectorAll<HTMLButtonElement>('button:not(:disabled)')];
+    const first=buttons[0],last=buttons.at(-1);
+    if(!first){event.preventDefault();return;}
+    if(event.shiftKey&&document.activeElement===first){event.preventDefault();last?.focus();}
+    else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}
+  }}>
     <h2 id="edit-guard-title">保留未保存的编辑</h2><p>以下内容尚未保存：{labels.join('、')}。保存成功后才能继续离开。</p>
     {error && <p role="alert" className="alert error">{error}</p>}
     <div className="form-actions"><button className="button secondary" type="button" disabled={busy} onClick={() => finish(false)} autoFocus>留在此页</button><button className="button secondary" type="button" disabled={busy} onClick={() => finish(true)}>放弃并继续</button><button className="button primary" type="button" disabled={busy} onClick={() => void saveAndContinue()}>{busy ? '正在保存…' : '保存并继续'}</button></div>

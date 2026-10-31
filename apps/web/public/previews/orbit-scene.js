@@ -10,7 +10,7 @@ const resetButton = document.querySelector('#reset-view');
 const status = document.querySelector('#motion-status');
 const speedButtons = [...document.querySelectorAll('[data-speed]')];
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
-let paused = false, speed = 1, elapsed = 0, previousTime = null, frame = null;
+let paused = new URLSearchParams(location.search).has('embed'), speed = 1, elapsed = 0, previousTime = null, frame = null;
 let contextLost = false, disposed = false, drag = null, renderer;
 
 function setImmersive(value) {

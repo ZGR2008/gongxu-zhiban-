@@ -8,6 +8,7 @@ const item = z.object({
   deliverable: z.string().trim().min(1).max(500),
   dependsOn: z.array(z.string()).max(30),
   citations: z.array(z.string().uuid()).max(5),
+  requirementIds: z.array(z.string().regex(/^REQ-[a-f0-9]{16}$/)).max(200).optional(),
 }).strict();
 const schema = z.object({ tasks: z.array(item).min(1).max(30) }).strict();
 export type Plan = z.infer<typeof schema>;

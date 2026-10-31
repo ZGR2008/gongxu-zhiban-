@@ -1,3 +1,4 @@
+import { preventPaidModelRequests } from './no-paid-model-guard.mjs';
 import { chromium } from 'playwright';
 import { randomBytes, randomUUID } from 'node:crypto';
 import { mkdir, writeFile } from 'node:fs/promises';
@@ -25,6 +26,7 @@ try {
   const channel = process.env.SMOKE_BROWSER_CHANNEL || (process.platform === 'win32' ? 'msedge' : undefined);
   browser = await chromium.launch({ headless: true, ...(channel ? { channel } : {}) });
   context = await browser.newContext({ viewport: { width: 1440, height: 1000 }, locale: 'zh-CN' });
+  if (!withAi) await preventPaidModelRequests(context);
   page = await context.newPage();
   page.setDefaultTimeout(15000);
   page.on('pageerror', () => { pageErrors++; });

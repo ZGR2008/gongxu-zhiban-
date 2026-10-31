@@ -5,7 +5,7 @@ import './requirement-history.css';
 
 type Version = { id: string; version: number; content: unknown; status: string; createdAt: string };
 export function RequirementHistory({ versions, draft, onRestore, busy, formatDate }: {
-  versions: Version[]; draft: string; onRestore: (text: string) => void; busy: boolean; formatDate: (value: string) => string;
+  versions: Version[]; draft: string; onRestore: (text: string, onApplied: () => void) => void; busy: boolean; formatDate: (value: string) => string;
 }) {
   const [open, setOpen] = useState(false);
   const [sourceId, setSourceId] = useState('');
@@ -55,7 +55,7 @@ export function RequirementHistory({ versions, draft, onRestore, busy, formatDat
           <div className="history-diff" tabIndex={0} role="region" aria-label="需求逐行差异"><div className="diff-column-labels"><span>原行</span><span>新行</span><span>变化</span><span>文本内容</span></div>{rows.slice(0, limit).map((row, index) => <div key={index} className={`diff-line diff-line--${row.kind}`}><span className="diff-line-number">{row.before ?? ''}</span><span className="diff-line-number">{row.after ?? ''}</span><span className="diff-line-kind" aria-label={row.kind === 'added' ? '新增' : row.kind === 'removed' ? '删除' : '相同'}>{row.kind === 'added' ? '+' : row.kind === 'removed' ? '−' : '·'}</span><code>{row.text || ' '}</code></div>)}{rows.length > limit && <button className="history-more" type="button" onClick={() => setLimit(value => value + 400)}>继续显示后续行（剩余 {rows.length - limit} 行）</button>}</div>
         </> : <div className="history-preview" tabIndex={0} role="region" aria-label={`需求版本 ${source?.version} 正文`}><RichContent value={before} /></div>}
         <footer className="history-dialog-footer"><p>复制到编辑区后，需点击“保存需求草稿”才会形成新版本。</p><div><CopyButton value={before} label="复制历史文本"/><button className="button secondary" type="button" disabled={busy || !source || before === draft} onClick={() => setConfirmRestore(true)}>使用此版本编辑</button></div></footer>
-        {confirmRestore && <div className="history-restore-confirm" role="group" aria-label="确认替换编辑区"><div><strong>将版本 {source?.version} 放入编辑区？</strong><p>当前未保存的编辑内容会被替换，已保存的历史版本会保留。</p></div><div><button ref={restoreCancel} className="button secondary" type="button" onClick={() => setConfirmRestore(false)}>保留当前编辑</button><button className="button primary" type="button" disabled={busy} onClick={() => { onRestore(before); setNotice(`版本 ${source?.version} 已放入编辑区，尚未保存。`); setOpen(false); setConfirmRestore(false); }}>替换编辑区内容</button></div></div>}
+        {confirmRestore && <div className="history-restore-confirm" role="group" aria-label="确认替换编辑区"><div><strong>将版本 {source?.version} 放入编辑区？</strong><p>下一步可选择保存、放弃或取消；已保存的历史版本会保留。</p></div><div><button ref={restoreCancel} className="button secondary" type="button" onClick={() => setConfirmRestore(false)}>保留当前编辑</button><button className="button primary" type="button" disabled={busy} onClick={() => { dialog.current?.close(); setOpen(false); setConfirmRestore(false); onRestore(before, () => setNotice(`版本 ${source?.version} 已放入编辑区，尚未保存。`)); }}>替换编辑区内容</button></div></div>}
       </>}
     </dialog>
   </div>;

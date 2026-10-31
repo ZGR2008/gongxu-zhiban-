@@ -1,0 +1,7 @@
+import './requirement-trace.css';
+type Plan={review?:{scope:string;warnings:{code:string;taskKey?:string;message:string;itemKeys:string[]}[]};requirementItems?:{id:string;key:string;text:string;start:number;end:number}[]};
+export function PlanReview({plan,outputs}:{plan:Plan;outputs:(string|null)[]}){
+  const hits: {id:string;documentName:string;page:number|null;excerpt:string}[]=[];
+  for(const output of outputs){try{const parsed=JSON.parse(output??'');const candidates=Array.isArray(parsed)?parsed:parsed.hits;for(const hit of candidates??[])if(hit.id&&typeof hit.excerpt==='string'&&!hits.some(h=>h.id===hit.id))hits.push(hit);}catch{/* Older human-readable tool output remains available in the execution view. */}}
+  return <div className="plan-audit-note"><h4>完整性与依据检查</h4><p>{plan.review?.scope??'此历史计划只有结构校验，尚未进行条目覆盖与验收提示检查。请人工检查原文。'}</p>{plan.review?.warnings.length?<ul>{plan.review.warnings.map((w,i)=><li key={i}>{w.taskKey&&<strong>{w.taskKey} · </strong>}{w.message}{w.itemKeys.length>0&&<details><summary>核对 {w.itemKeys.length} 个条目原文</summary>{w.itemKeys.map(key=><blockquote key={key}><code>{key}</code><p>{plan.requirementItems?.find(item=>item.key===key)?.text??'当前版本找不到该条目，不能计入覆盖。'}</p></blockquote>)}</details>}</li>)}</ul>:<p>即使没有规则提示，也仍需人工检查需求语义、验收条件和引用支持性。</p>}<details><summary>核对实际检索原文（{hits.length} 条）</summary>{hits.length?hits.map(hit=><blockquote key={hit.id}><strong>{hit.documentName}{hit.page?` · 第${hit.page}页`:''}</strong><p>{hit.excerpt}</p><code>{hit.id}</code></blockquote>):<p>没有可核对的检索原文，请勿把计划当作已有知识依据的结论。</p>}</details></div>;
+}
