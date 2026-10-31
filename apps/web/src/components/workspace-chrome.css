@@ -600,3 +600,25 @@ body[data-text-size='large'] .project-info small {
     display: inline-flex;
   }
 }
+
+/* Forced colors may remove fills and glow. Keep selection distinct without
+   opting out of the user's system palette or changing the default dark skin. */
+@media (forced-colors: active) {
+  .app-shell [aria-current='page'],
+  .app-shell button[aria-pressed='true'],
+  .preference-options input:checked + span {
+    text-decoration-line: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 4px;
+    font-weight: 700;
+  }
+
+  .quick-nav-results button.highlighted {
+    outline: 2px solid Highlight;
+    outline-offset: -4px;
+  }
+
+  .preference-options input:focus-visible + span {
+    outline-color: Highlight;
+  }
+}

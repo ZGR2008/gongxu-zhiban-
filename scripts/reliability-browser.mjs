@@ -5,6 +5,7 @@ import { randomUUID } from 'node:crypto';
 import assert from 'node:assert/strict';
 import {execFileSync} from 'node:child_process';
 import {createRequire} from 'node:module';
+import {fileURLToPath} from 'node:url';
 
 // Optional read-only reproduction of a known local historical Knowledge module.
 // Only this browser sees it; no checkout, source overwrite, DB or external calls.
@@ -61,6 +62,12 @@ async function scenario(name,work){
  const filter=process.argv.find(arg=>arg.startsWith('--case='))?.slice(7);if(filter&&!name.includes(filter))return;
  if(engine!=='chromium'&&name==='code_draft_save_and_leave_checks_committed_state_under_cpu_throttle'){
   report.checks.push({name,status:'not_run',reason:'This case requires Chromium CDP CPU emulation; not supported by this engine.'});console.log(`NOT RUN ${name} (Chromium-only CPU emulation)`);return;
+ }
+ if(engine!=='chromium'&&name==='forced_colors_keeps_headings_controls_selection_and_keyboard_visible'){
+  // Windows WebKit changes the media query but did not force the palette in
+  // our captured run. Keep the rendering assertions for Chromium; CSS-only
+  // selection checks below remain active on the other engine.
+  report.checks.push({name,status:'not_run',reason:'Forced palette rendering was not reproduced in this engine; media-query selection rules are checked separately.'});console.log(`NOT RUN ${name} (forced palette rendering unavailable)`);return;
  }
  const context=await browser.newContext({viewport:{width:1440,height:950},reducedMotion:'reduce'});
  if(name!=='accessibility_auth')await context.addInitScript(()=>localStorage.setItem('gongxu_token','controlled-browser-fixture'));
@@ -712,6 +719,30 @@ try{
   await page.getByRole('button',{name:/保存需求草稿/}).click();await waitFor(()=>state.writes.length===1);await routeTo(page,B);
   await page.getByRole('dialog',{name:'保留未保存的编辑'}).getByRole('button',{name:'放弃并继续'}).click();await page.locator('#requirement').waitFor();await page.waitForTimeout(600);
   assert.ok(page.url().includes(B));assert.equal(await page.locator('#requirement').inputValue(),'项目 B 的需求正文');assert.equal(state.writes.length,1);assert.ok(state.writes[0].path.includes(A));
+ });
+ await scenario('forced_colors_keeps_headings_controls_selection_and_keyboard_visible',async(page)=>{
+  await page.emulateMedia({forcedColors:'active',colorScheme:'dark'});await page.goto(`${origin.origin}/dashboard`);await page.locator('.hero h2 em').waitFor();
+  const heading=await page.locator('.hero h2 em').evaluate(el=>({color:getComputedStyle(el).color,image:getComputedStyle(el).backgroundImage}));
+  await page.screenshot({path:fileURLToPath(new URL('forced-colors-before-controls.png',directory))});
+  assert.notEqual(heading.color,'rgba(0, 0, 0, 0)','forced-colors heading needs an actual foreground when gradients are suppressed');
+  const primary=page.getByRole('button',{name:/创建实训项目/});const style=await primary.evaluate(el=>{const s=getComputedStyle(el);return {border:s.borderTopWidth,borderStyle:s.borderTopStyle,shadow:s.boxShadow};});
+  assert.ok(parseFloat(style.border)>=1&&style.borderStyle!=='none','primary action needs a real border when forced colors remove its glow/background image');
+  const current=page.locator('.side-nav [aria-current="page"]');assert.ok(await current.count());
+  assert.match(await current.evaluate(el=>getComputedStyle(el).textDecorationLine),/underline/,'current navigation needs a non-color distinction');
+  await page.keyboard.press('Tab');await page.keyboard.press('Enter');assert.equal(await page.evaluate(()=>document.activeElement?.id),'workspace-main');
+  await page.getByRole('button',{name:'快速导航 Ctrl K',exact:true}).click();const dialog=page.getByRole('dialog');await dialog.waitFor();await page.keyboard.press('Escape');assert.equal(await dialog.isVisible(),false);
+  await page.screenshot({path:fileURLToPath(new URL('forced-colors-after-controls.png',directory))});
+  await page.emulateMedia({forcedColors:'none',colorScheme:'dark'});assert.notEqual(await page.locator('.hero h2 em').evaluate(el=>getComputedStyle(el).backgroundImage),'none');
+ });
+ await scenario('forced_colors_display_choices_and_quick_selection_remain_distinct',async(page)=>{
+  await page.emulateMedia({forcedColors:'active',colorScheme:'dark'});await page.goto(`${origin.origin}/dashboard`);await page.locator('.display-settings summary').click();
+  await page.getByRole('radio',{name:'紧凑',exact:true}).check();await page.getByRole('radio',{name:'较大',exact:true}).check();
+  const selected=page.locator('.preference-options input:checked + span');assert.equal(await selected.count(),2);
+  await page.screenshot({path:fileURLToPath(new URL('forced-colors-display-choices.png',directory))});
+  for(const label of await selected.all())assert.match(await label.evaluate(el=>getComputedStyle(el).textDecorationLine),/underline/,'checked custom radio labels need a non-color selection cue');
+  await page.keyboard.press('Escape');await page.getByRole('button',{name:'快速导航 Ctrl K',exact:true}).click();await page.locator('#quick-nav-query').fill('项目');await page.keyboard.press('ArrowDown');
+  const active=page.locator('.quick-nav-results button.highlighted');assert.equal(await active.count(),1);assert.ok(await active.evaluate(el=>parseFloat(getComputedStyle(el).outlineWidth)>=2),'keyboard-selected operation needs an outline when its fill is forced');
+  await page.screenshot({path:fileURLToPath(new URL('forced-colors-quick-selection.png',directory))});await page.keyboard.press('Escape');assert.ok(await page.getByRole('button',{name:'快速导航 Ctrl K',exact:true}).evaluate(el=>el===document.activeElement));
  });
  await scenario('workspace_motion_is_opt_in_and_reduced_motion_disables_playback',async(page)=>{
   await page.emulateMedia({reducedMotion:'no-preference'});await page.goto(`${origin.origin}/dashboard`);const visual=page.locator('.workspace-visual--webgl');await visual.waitFor();assert.equal(await visual.getAttribute('data-motion'),'paused');

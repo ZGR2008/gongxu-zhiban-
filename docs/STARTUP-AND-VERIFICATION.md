@@ -44,6 +44,7 @@ API `/health`只证明进程在响应；`/ready`会核对数据库、迁移和pg
 | `pnpm verify:document-list` | 102份目录分页、隐藏类型完整摘要、历史/账号隔离、修订/导出与三个桌面页面 | 真实本地DB/HTTP/浏览器；新建合成文档，没有聊天或向量调用 |
 | `pnpm verify:knowledge-list` | 201份资料完整分页、最早资料手动索引、草稿保留、账号/游标边界 | 真实本地DB/向量/HTTP/桌面；只索引新建合成资料，无聊天 |
 | `pnpm verify:index-compatibility` | 当前索引、旧模型标识排除、手动重建失败与恢复、原文和上传草稿 | 真实本地DB/向量/HTTP/桌面，新建合成资料；旧身份及断网为受控注入，无聊天 |
+| `pnpm verify:embedding-mixed` | 三账号实际索引/检索与Agent共用推理队列，第四账号排队取消及恢复、资料/活动隔离 | 真实回环HTTP/DB/向量；4个新合成账号，聊天替身1次；不注入服务延迟、不代表课堂容量 |
 | `pnpm verify:accessibility` | 19个桌面页面/弹窗的axe规则、可访问名称和ARIA | 全部合成API；自动结果不含人工对比度/屏幕阅读器验收；见ACCESSIBILITY-V3.md |
 | `pnpm eval:retrieval-local` | 冻结15篇合成资料及16问题的实际检索测量 | 真实本地向量/pgvector，不执行聊天；保留未召回和未评估语义支持 |
 | `pnpm verify:growth-scope` | 当前/历史统计、多个项目、账号隔离与桌面范围切换 | 真实本地DB/HTTP/浏览器；新建合成记录，无模型调用 |
@@ -53,7 +54,7 @@ API `/health`只证明进程在响应；`/ready`会核对数据库、迁移和pg
 
 上述真实联调会保留明确标为合成的测试项目，不清理用户数据。结果存放于被忽略的 `.runtime/`，对外报告只保留汇总和合成截图。不要把原始目录整体上传。
 
-受控可靠性脚本支持`--engine=webkit`和`--engine=firefox`；Windows可先设置`$env:PLAYWRIGHT_BROWSERS_PATH="$PWD/.runtime/browsers"`复用已装缓存。引擎30秒内未启动就标为未执行；CDP CPU减速场景只在Chromium执行，其他引擎不冒报通过。本轮WebKit 27.2实际55组通过、该专用1组未执行；Firefox启动超时、测试未运行。Windows WebKit结果不是Safari真机验收。
+受控可靠性脚本支持`--engine=webkit`和`--engine=firefox`；Windows可先设置`$env:PLAYWRIGHT_BROWSERS_PATH="$PWD/.runtime/browsers"`复用已装缓存。引擎30秒内未启动就标为未执行；CDP CPU减速场景只在Chromium执行，其他引擎不冒报通过。U4后Edge实际72组通过；Windows WebKit 27.2实际70组通过，CDP CPU减速及完整系统强制调色板渲染2组未执行（该引擎仅触发媒体规则，未模拟系统调色板；选中状态CSS用例仍执行通过）。Firefox启动超时、测试未运行。Windows WebKit结果不是Safari真机验收，浏览器模拟也不等于Windows高对比度或屏幕阅读器真机验收。
 
 ## 尚未获授权的操作
 

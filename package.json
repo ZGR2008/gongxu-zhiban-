@@ -42,6 +42,7 @@
     "verify:document-list": "pnpm --filter @gongxu/api build && node scripts/document-list-local.mjs",
     "verify:knowledge-list": "pnpm --filter @gongxu/api build && node scripts/knowledge-list-local.mjs",
     "verify:index-compatibility": "pnpm --filter @gongxu/api build && node scripts/index-compatibility-local.mjs",
+    "verify:embedding-mixed": "pnpm --filter @gongxu/api build && node scripts/embedding-mixed-local.mjs",
     "verify:growth-scope": "pnpm --filter @gongxu/api build && cd apps/api && node ../../scripts/growth-scope-local.mjs"
   },
   "devDependencies": {
