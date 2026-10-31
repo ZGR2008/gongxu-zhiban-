@@ -26,8 +26,9 @@ for(const sample of dataset.cases){
  }
  const requirement=sample.requirement??(sample.kind==='long_tail'?'需'.repeat(sample.repeat)+sample.tail:sample.question);
  const input={requirement,documents:sample.documents??[]};
- frames.push({...common,pipeline:'plain_chat',status:'prepared_not_executed',inputHash:hash(input),messages:[{role:'system',content:'你是软件工程实训助手。请根据用户给出的需求或问题及资料回答；不确定时说明。'},{role:'user',content:JSON.stringify(input)}]});
- frames.push({...common,pipeline:'pre_optimization',status:'not_executed',baselineCommit:'5740ec3',inputHash:hash(input),reason:'Safe isolated full-workflow baseline has not been reproduced. Do not substitute a reconstructed prompt or current workflow.'});
+ const knowledgeHash=hash(input.documents);
+ frames.push({...common,pipeline:'plain_chat',status:'prepared_not_executed',inputHash:hash(input),knowledgeHash,messages:[{role:'system',content:'你是软件工程实训助手。请根据用户给出的需求或问题及资料回答；不确定时说明。'},{role:'user',content:JSON.stringify(input)}]});
+ frames.push({...common,pipeline:'pre_optimization',status:'not_executed',baselineCommit:'5740ec3',inputHash:hash(input),knowledgeHash,reason:'Safe isolated full-workflow baseline has not been reproduced. Do not substitute a reconstructed prompt or current workflow.'});
  const hits=input.documents.map((content,i)=>({id:`00000000-0000-4000-8000-${String(i+1).padStart(12,'0')}`,document_id:version,document_name:`版本化合成资料${i+1}`,page:1,content,distance:.1}));
  const app=Fastify({logger:false});let captured=null;
  const complete=async(_config,messages)=>{captured=structuredClone(messages);throw Error('intentional_capture_only_stop');};
@@ -46,11 +47,17 @@ for(const sample of dataset.cases){
   if(sample.kind==='long_tail'){assert.equal(captured,null);assert.equal(response.statusCode,413);}
   else if(sample.kind==='empty'){assert.equal(captured,null);assert.equal(response.json().answer,null);}
   else{assert.ok(captured?.length);for(const doc of input.documents)assert.ok(captured[1].content.includes(doc));}
-  frames.push({...common,pipeline:'current_workflow',inputHash:hash(input),retrievalScope:'fixed_synthetic_hits_not_live_ranking',status:captured?'prepared_not_executed':'model_not_invoked_by_policy',policy:captured?null:sample.kind==='long_tail'?'explicit_length_rejection':'no_source_no_answer',messages:captured,promptHash:captured?hash(captured):null,rawModelOutput:null});
+  frames.push({...common,pipeline:'current_workflow',inputHash:hash(input),knowledgeHash,retrievalScope:'fixed_synthetic_hits_not_live_ranking',status:captured?'prepared_not_executed':'model_not_invoked_by_policy',policy:captured?null:sample.kind==='long_tail'?'explicit_length_rejection':'no_source_no_answer',messages:captured,promptHash:captured?hash(captured):null,rawModelOutput:null});
  }finally{await app.close();}
  console.log(`PREPARED ${sample.id}`);
 }
 const manifest={createdAt:new Date().toISOString(),datasetVersion:dataset.version,commit,workingTreeClean,sourceHashes,scope:'production_route_prompt_capture_with_fixed_synthetic_retrieval',externalCalls:0,paidCalls:0,comparisonResults:'not_executed',frames};
-const review={status:'not_executed',instructions:'No outputs exist yet. After authorized identical-model runs, blind reviewers mark coverage, omissions and citation support using actual output excerpts.',cases:dataset.cases.map(sample=>({caseId:sample.id,criteria:sample.acceptance.map(text=>({text,judgment:'unjudged',outputEvidence:null})),citationJudgments:[],humanEdits:null,humanMinutes:null,reviewerCodes:[]}))};
+const review={status:'not_executed',instructions:'No outputs exist yet. After authorized identical-model runs, blind reviewers mark coverage, omissions and citation support using actual output excerpts.',cases:dataset.cases.map(sample=>({caseId:sample.id,criteria:sample.acceptance.map((text,i)=>({id:`${sample.id}:${i+1}`,text,judgment:'unjudged',outputEvidence:null,note:null,reviewerCodes:[]})),citationJudgments:[],humanEdits:null,humanMinutes:null,reviewerCodes:[]}))};
+const template=JSON.parse(await readFile(new URL('../evaluation/record-template.json',import.meta.url),'utf8'));
+const records=frames.filter(frame=>frame.pipeline).map(frame=>({...structuredClone(template),caseId:frame.caseId,pipeline:frame.pipeline,datasetVersion:dataset.version,commit:frame.pipeline==='pre_optimization'?null:commit,
+ status:frame.status==='model_not_invoked_by_policy'?'policy_blocked':'not_executed',reason:frame.policy??frame.reason??'prepared_inputs_without_model_execution',inputHash:frame.inputHash,knowledgeHash:frame.knowledgeHash,
+ settings:{...template.settings,temperature:.3,maxOutputTokens:4096},conditionJudgments:structuredClone(review.cases.find(sample=>sample.caseId===frame.caseId).criteria)}));
 await writeFile(new URL('prepared-inputs.json',output),JSON.stringify(manifest,null,2));await writeFile(new URL('review-sheet.json',output),JSON.stringify(review,null,2));
+await writeFile(new URL('run-records.json',output),JSON.stringify({schemaVersion:template.schemaVersion,records},null,2));
 console.log(`Prepared ${frames.length} records; no model execution or semantic scores.`);
+console.log(`Reviewable records: ${new URL('run-records.json',output).pathname}`);
