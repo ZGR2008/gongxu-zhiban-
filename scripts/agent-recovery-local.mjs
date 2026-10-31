@@ -67,5 +67,17 @@ try{
   const before=calls,requestKey=randomUUID();const first=await call('POST',base,{requirementId:requirement,requestKey});assert.equal(first.statusCode,201);assert.equal(first.json().run.requestKey,requestKey);
   const repeat=await call('POST',base,{requirementId:requirement,requestKey});assert.equal(repeat.statusCode,409);assert.equal(repeat.json().error,'agent_request_exists');assert.equal(calls,before+1);
  });
+ await check('human_plan_adoption_is_persisted_and_cannot_be_forged_by_client_metadata',async()=>{
+  const run=(await call('GET',base)).json().runs.find(row=>row.status==='awaiting_review');assert.ok(run);assert.equal(run.humanReview,null);
+  const url=`${base}/${run.id}/confirm`;
+  assert.equal((await call('POST',url)).statusCode,428);
+  assert.equal((await call('POST',url,{acknowledged:true,reviewedBy:'forged'})).statusCode,428);
+  assert.equal((await call('POST',url,{acknowledged:true,note:'已核对合成需求和计划；无资料引用仍需补充'},foreign)).statusCode,404);
+  const response=await call('POST',url,{acknowledged:true,note:'已核对合成需求和计划；无资料引用仍需补充'});assert.equal(response.statusCode,200);assert.equal(response.json().tasks.length,1);
+  const detail=(await call('GET',`${base}/${run.id}`)).json();assert.equal(detail.run.status,'confirmed');const audit=detail.run.humanReview;
+  assert.equal(audit.scope,'human_plan_adoption_not_execution_verification');assert.equal(audit.requirementVersionId,requirement);assert.match(audit.planSha256,/^[a-f0-9]{64}$/);assert.ok(audit.reviewedAt);assert.ok(audit.warningCount>0);assert.equal(audit.note,'已核对合成需求和计划；无资料引用仍需补充');
+  assert.equal((await call('POST',url,{acknowledged:true,note:'重复确认不得覆盖审核'})).statusCode,409);
+  assert.deepEqual((await call('GET',`${base}/${run.id}`)).json().run.humanReview,audit);
+ });
 }catch(error){report.checks.push({name:stage,status:'failed',errorType:error.constructor.name});console.log(`FAIL ${stage}`);console.log((error.stack??'').split('\n').filter(line=>line.includes('agent-recovery-local.mjs')).slice(0,2).join('\n'));process.exitCode=1;}
 finally{release?.();for(const headers of [auth,foreign])if(headers.authorization)await call('POST','/auth/logout',undefined,headers).catch(()=>{});await app.close();await pool.end();report.finishedAt=new Date().toISOString();await writeFile(new URL('report.json',directory),JSON.stringify(report,null,2));}

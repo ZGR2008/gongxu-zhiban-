@@ -9,6 +9,17 @@ const requirement='d3d80f1c-5c71-4f7d-b3a6-cd8af99c3e9d';
 const id='22222222-2222-4222-8222-222222222222';
 const auth={authorization:`Bearer ${'a'.repeat(64)}`};
 
+test('plan approval requires explicit human review before opening a transaction',async t=>{
+ let connections=0;const pool={connect:async()=>{connections++;throw Error('must not connect');}} as unknown as Pool;
+ const store={userBySession:async()=>({id:'user'}),getProject:async()=>({id:project})} as unknown as ProjectStore;
+ const app=Fastify();await registerAgentRoutes(app,store,pool);t.after(()=>app.close());
+ for(const payload of [undefined,{acknowledged:false,note:'unchecked'}]){
+  const response=await app.inject({method:'POST',url:`/projects/${project}/agent/runs/${id}/confirm`,headers:auth,payload});
+  assert.equal(response.statusCode,428);assert.equal(response.json().error,'plan_review_required');
+ }
+ assert.equal(connections,0);
+});
+
 test('missing embedding is recorded as skipped and never fakes a tool call', async t => {
   const writes:{sql:string; values:unknown[]}[]=[]; let plan:unknown; let modelInput='';
   const pool={query:async(sql:string,values:unknown[])=>{
@@ -84,7 +95,7 @@ test('plan approval takes project lock before checking version and rejects a new
   const pool={connect:async()=>client} as unknown as Pool;
   const store={userBySession:async()=>({id:'user'}),getProject:async()=>({id:project})} as unknown as ProjectStore;
   const app=Fastify(); await registerAgentRoutes(app,store,pool); t.after(()=>app.close());
-  const response=await app.inject({method:'POST',url:`/projects/${project}/agent/runs/${id}/confirm`,headers:auth});
+  const response=await app.inject({method:'POST',url:`/projects/${project}/agent/runs/${id}/confirm`,headers:auth,payload:{acknowledged:true,note:'Reviewed current requirement'}});
   assert.equal(response.statusCode,409); assert.equal(response.json().error,'requirement_version_outdated');
   const projectLock=queries.findIndex(q=>q.includes('FROM projects') && q.includes('FOR UPDATE'));
   const runLock=queries.findIndex(q=>q.includes('FROM agent_runs') && q.includes('FOR UPDATE'));

@@ -49,7 +49,7 @@ try{
  });
  await check('trace_suggestions_require_human_review_and_never_fake_execution',async()=>{
   const run=await call('POST',`${root}/agent/runs`,{requirementId:firstVersion});assert.equal(run.statusCode,201);assert.ok(run.json().run.plan.review.warnings.some(w=>w.code==='no_source'));
-  assert.equal((await call('POST',`${root}/agent/runs/${run.json().run.id}/confirm`)).statusCode,200);
+  assert.equal((await call('POST',`${root}/agent/runs/${run.json().run.id}/confirm`,{acknowledged:true,note:'合成计划的人工审核登记，用于本地接口验证'})).statusCode,200);
   let response=await call('GET',`${root}/trace`);assert.equal(response.statusCode,200);let trace=response.json();assert.equal(trace.items.length,1);assert.equal(trace.links.length,4);assert.ok(trace.links.every(link=>link.origin==='model'&&link.status==='suggested'));assert.equal(trace.items[0].coverage.manualEvidence,0);
   const item=trace.items[0];
   for(const [targetKind,target] of [['task',trace.tasks[0]],['case',trace.cases.find(c=>c.id===testCase.id)]]){

@@ -8,6 +8,7 @@ import { RequirementTrace } from './components/RequirementTrace';
 import { PlanReview } from './components/PlanReview';
 import { PlanMap } from './components/PlanMap';
 import { FileDropZone } from './components/FileDropZone';
+import {useEditGuard,useUnsavedEdit} from './components/EditGuard';
 
 type Api = <T>(path: string, options?: RequestInit) => Promise<T>;
 type Document = { id: string; name: string; status: string; createdAt: string };
@@ -53,7 +54,7 @@ export function Knowledge({ request }: { request: Api }) {
 
 type Requirement = { id:string; version:number; status:string };
 type TaskPlan = {key:string;stage:string;title:string;description:string;deliverable:string;dependsOn:string[];citations:string[]};
-type Run = {id:string;requirementVersionId:string;status:string;plan:{tasks:TaskPlan[]} | null;errorCode:string|null;createdAt:string;heartbeatAt?:string|null;deadlineAt?:string|null;requestKey?:string|null};
+type Run = {id:string;requirementVersionId:string;status:string;plan:{tasks:TaskPlan[]} | null;errorCode:string|null;createdAt:string;heartbeatAt?:string|null;deadlineAt?:string|null;requestKey?:string|null;humanReview?:{reviewedAt:string;note:string;warningCount:number;scope:string}|null};
 type Tool = {id:string;toolName:string;status:string;inputSummary:string;outputSummary:string};
 type Step = {id:string;stage:string;status:string;outputSummary:string;tools:Tool[]};
 type RunDetail = {run:Run; steps:Step[]};
@@ -61,19 +62,40 @@ type Task = {id:string;title:string;stage:string;description:string;deliverable:
 const statuses: Record<string,string> = {running:'运行中',succeeded:'成功',failed:'失败',skipped:'已跳过',awaiting_review:'待审核',confirmed:'已确认',pending:'待开始',todo:'待开始',doing:'进行中',review:'待审核',done:'已完成',blocked:'阻塞'};
 const stages: Record<string,string> = {knowledge_search:'知识检索',plan_1:'计划生成（第 1 次）',plan_2:'计划生成（第 2 次）',validate_1:'计划校验（第 1 次）',validate_2:'计划校验（第 2 次）',validate_plan:'计划校验'};
 export function Agent({ request, projectId, requirements }: {request:Api;projectId:string;requirements:Requirement[]}) {
+  const editGuard=useEditGuard();
   const [runs,setRuns] = useState<Run[]>([]); const [selected,setSelected] = useState<RunDetail | null>(null); const [tasks,setTasks] = useState<Task[]>([]);
   const [planning,setPlanning] = useState(false);
   const [cancelling,setCancelling]=useState(false);const cancelPending=useRef(false),requestKey=useRef<string|null>(null);
   const [reviewed,setReviewed]=useState(false);
-  const runSelection=useRef(new RequestScope());const working=useRef(false);
-  useEffect(()=>()=>runSelection.current.cancel(),[]);
-  useEffect(()=>setReviewed(false),[selected?.run.id]);
+  const [reviewNote,setReviewNote]=useState('');
+  const runSelection=useRef(new RequestScope()),historyScope=useRef(new RequestScope());const working=useRef(false);
+  const selectedRunId=useRef<string|null>(null),selectionEpoch=useRef(0);
+  const [pendingRun,setPendingRun]=useState<string|null>(null);
+  useEffect(()=>()=>{runSelection.current.cancel();historyScope.current.cancel();selectionEpoch.current++;},[]);
+  const chooseRun=useCallback((id:string|null)=>{selectionEpoch.current++;selectedRunId.current=id;runSelection.current.cancel();setSelected(null);setPendingRun(id);setReviewed(false);setReviewNote('');},[]);
   const [loading,setLoading] = useState(true); const [busy,setBusy] = useState(false); const [error,setError] = useState(''); const [notice,setNotice] = useState('');
+  useUnsavedEdit(`plan-review:${projectId}`,{label:'计划审核备注（需主动确认计划）',dirty:Boolean(reviewNote.trim()&&selected?.run.status==='awaiting_review'),save:async()=>{setError('审核备注在主动确认采用计划时保存。请留在此页完成审核；离开保护不会代你确认计划。');return false;}});
   const base = `/projects/${encodeURIComponent(projectId)}`; const latestConfirmed = [...requirements].filter(r => r.status === 'confirmed').sort((a,b)=>b.version-a.version)[0];
   const [taskVersion,setTaskVersion]=useState('current');
   const visibleTaskVersion=taskVersion==='current'?latestConfirmed?.id:taskVersion;
   const visibleTasks=taskVersion==='all'?tasks:tasks.filter(task=>Boolean(visibleTaskVersion)&&task.requirementVersionId===visibleTaskVersion);
-  const refresh = useCallback(async () => { setLoading(true); try { const [history,taskData] = await Promise.all([request<{runs:Run[]}>(`${base}/agent/runs`),request<{tasks:Task[]}>(`${base}/tasks`)]); setRuns(history.runs); setTasks(taskData.tasks); if (history.runs[0]) setSelected(await request<RunDetail>(`${base}/agent/runs/${encodeURIComponent(history.runs[0].id)}`)); else setSelected(null); } catch (e) { setError(errorMessage(e)); } finally { setLoading(false); } }, [base,request]);
+  const readRun=useCallback(async(id:string)=>{
+    const ticket=runSelection.current.begin(id);
+    try{const next=await request<RunDetail>(`${base}/agent/runs/${encodeURIComponent(id)}`,{signal:ticket.signal});
+      if(runSelection.current.accepts(ticket,selectedRunId.current??undefined)&&next.run.id===id)setSelected(next);
+    }catch(error){if(runSelection.current.accepts(ticket,selectedRunId.current??undefined))setError(errorMessage(error));}
+    finally{if(runSelection.current.accepts(ticket,selectedRunId.current??undefined))setPendingRun(null);}
+  },[base,request]);
+  const refresh = useCallback(async () => {
+    const ticket=historyScope.current.begin(base),epoch=selectionEpoch.current;setLoading(true);setError('');
+    try{const [history,taskData]=await Promise.all([request<{runs:Run[]}>(`${base}/agent/runs`,{signal:ticket.signal}),request<{tasks:Task[]}>(`${base}/tasks`,{signal:ticket.signal})]);
+      if(!historyScope.current.accepts(ticket,base))return;setRuns(history.runs);setTasks(taskData.tasks);
+      if(epoch!==selectionEpoch.current)return;
+      const id=selectedRunId.current??history.runs[0]?.id;
+      if(id){if(!selectedRunId.current)chooseRun(id);await readRun(id);}else chooseRun(null);
+    }catch(error){if(historyScope.current.accepts(ticket,base))setError(errorMessage(error));}
+    finally{if(historyScope.current.accepts(ticket,base))setLoading(false);}
+  },[base,request,chooseRun,readRun]);
   useEffect(() => { void refresh(); }, [refresh]);
   useEffect(() => {
     if (!planning && selected?.run.status !== 'running') return;
@@ -83,22 +105,22 @@ export function Agent({ request, projectId, requirements }: {request:Api;project
     async function poll() {
       try {
         const history = await request<{runs:Run[]}>(`${base}/agent/runs`, { signal: controller.signal });
-        const id = planning ? history.runs.find(run=>run.requestKey===requestKey.current)?.id : selected?.run.id;
-        const detail = id ? await request<RunDetail>(`${base}/agent/runs/${encodeURIComponent(id)}`, { signal: controller.signal }) : null;
-        if (active) { setRuns(history.runs); if (detail) setSelected(detail); }
+        if(!active)return;setRuns(history.runs);
+        const id = planning ? history.runs.find(run=>run.requestKey===requestKey.current)?.id : selectedRunId.current;
+        if(id){if(!selectedRunId.current)chooseRun(id);if(selectedRunId.current===id)await readRun(id);}
       } catch (error) { if (active) setError(errorMessage(error)); }
       finally { if (active) timer = setTimeout(() => void poll(), 1500); }
     }
     void poll();
     return () => { active = false; clearTimeout(timer); controller.abort(); };
-  }, [planning, selected?.run.id, selected?.run.status, base, request]);
-  async function selectRun(id:string) {const ticket=runSelection.current.begin(id);setError('');try{const next=await request<RunDetail>(`${base}/agent/runs/${encodeURIComponent(id)}`,{signal:ticket.signal});if(runSelection.current.accepts(ticket,id)&&next.run.id===id)setSelected(next);}catch(e){if(runSelection.current.accepts(ticket,id))setError(errorMessage(e));}}
-  async function start() { if (!latestConfirmed||working.current) return;working.current=true;requestKey.current=crypto.randomUUID();runSelection.current.cancel();setSelected(null); setBusy(true); setPlanning(true); setError(''); setNotice(''); try { const result = await request<RunDetail>(`${base}/agent/runs`, {method:'POST',body:JSON.stringify({requirementId:latestConfirmed.id,requestKey:requestKey.current})}); await refresh(); setSelected(result); setNotice('规划已生成，请审阅任务及实际工具记录。'); } catch (e) { await refresh();if((e as {code?:string}).code==='agent_cancelled')setNotice('运行已取消，已完成步骤保留。重新规划会创建新运行。');else setError(errorMessage(e)); } finally { working.current=false;setBusy(false); setPlanning(false); } }
+  }, [planning, selected?.run.id, selected?.run.status, base, request,chooseRun,readRun]);
+  function selectRun(id:string) {if(id===selectedRunId.current&&selected){void readRun(id);return;}editGuard.protect(()=>{chooseRun(id);setError('');void readRun(id);});}
+  async function start() { if (!latestConfirmed||working.current) return;working.current=true;requestKey.current=crypto.randomUUID();chooseRun(null); setBusy(true); setPlanning(true); setError(''); setNotice(''); try { const result = await request<RunDetail>(`${base}/agent/runs`, {method:'POST',body:JSON.stringify({requirementId:latestConfirmed.id,requestKey:requestKey.current})}); if(!selectedRunId.current)chooseRun(result.run.id);await refresh(); setNotice('规划已生成，请审阅任务及实际工具记录。'); } catch (e) { await refresh();if((e as {code?:string}).code==='agent_cancelled')setNotice('运行已取消，已完成步骤保留。重新规划会创建新运行。');else setError(errorMessage(e)); } finally { working.current=false;setBusy(false); setPlanning(false); } }
   async function cancelRun(){if(!selected||selected.run.status!=='running'||cancelPending.current)return;cancelPending.current=true;setCancelling(true);setError('');runSelection.current.cancel();try{await request(`${base}/agent/runs/${selected.run.id}/cancel`,{method:'POST'});await refresh();setNotice('运行已取消，已完成步骤保留。取消不承诺撤销供应商计费。');}catch(error){setError(errorMessage(error));}finally{cancelPending.current=false;setCancelling(false);}}
   async function updateTask(id:string,status:string) { if(working.current)return;working.current=true;setBusy(true); setError(''); try { await request(`${base}/tasks/${encodeURIComponent(id)}`, {method:'PATCH',body:JSON.stringify({status})}); setTasks(prev=>prev.map(task=>task.id===id?{...task,status}:task)); } catch(e) { setError(errorMessage(e)); } finally { working.current=false;setBusy(false); } }
-  async function confirm() { if (!selected||!reviewed||working.current) return;working.current=true; setBusy(true); setError(''); setNotice(''); try { await request(`${base}/agent/runs/${encodeURIComponent(selected.run.id)}/confirm`,{method:'POST'}); await refresh(); setNotice('计划已确认，任务已保存。'); } catch(e) { setError(errorMessage(e)); } finally { working.current=false;setBusy(false); } }
+  async function confirm() { if (!selected||selected.run.id!==selectedRunId.current||!reviewed||working.current) return;working.current=true; setBusy(true); setError(''); setNotice(''); try { await request(`${base}/agent/runs/${encodeURIComponent(selected.run.id)}/confirm`,{method:'POST',body:JSON.stringify({acknowledged:true,note:reviewNote})}); await refresh(); setNotice('计划已确认，任务和人工审核记录已保存。'); } catch(e) { setError(errorMessage(e)); } finally { working.current=false;setBusy(false); } }
   return <section className="module-page module-page--agent">
-    <div className="section-heading compact"><div><div className="eyebrow">AGENT / PLANNING</div><h2>让计划有依据，也能被检查</h2><p>使用已确认的需求，检索知识并生成任务计划。所有步骤和工具调用来自实际运行。</p></div><div className="form-actions">{selected?.run.status==='running'&&<button type="button" className="button secondary" disabled={cancelling} onClick={()=>void cancelRun()}>{cancelling?'正在取消…':'取消本次运行'}</button>}<button type="button" className="button primary" onClick={() => void start()} disabled={busy || cancelling || !latestConfirmed || runs.some(run=>run.status==='running')}>{busy ? '执行中…' : selected?.run.status==='failed'?'重新规划当前需求':'开始规划'} <span>↗</span></button></div></div>
+    <div className="section-heading compact"><div><div className="eyebrow">AGENT / PLANNING</div><h2>让计划有依据，也能被检查</h2><p>使用已确认的需求，检索知识并生成任务计划。所有步骤和工具调用来自实际运行。</p></div><div className="form-actions">{selected?.run.status==='running'&&<button type="button" className="button secondary" disabled={cancelling} onClick={()=>void cancelRun()}>{cancelling?'正在取消…':'取消本次运行'}</button>}<button type="button" className="button primary" onClick={() => editGuard.protect(()=>void start())} disabled={busy || cancelling || !latestConfirmed || runs.some(run=>run.status==='running')}>{busy ? '执行中…' : selected?.run.status==='failed'?'重新规划当前需求':'开始规划'} <span>↗</span></button></div></div>
     {selected?.run.status==='running'&&<p className="agent-recovery-note" role="status">最近活动：{selected.run.heartbeatAt?date(selected.run.heartbeatAt):'待读取'}。单次运行最多 10 分钟；失去心跳后，刷新会将运行标记为中断，不会自动重试模型。</p>}
     {selected?.run.status==='failed'&&<p className="agent-recovery-note" role="status">本次运行已停止。{selected.run.errorCode==='agent_cancelled'?'由用户取消。':selected.run.errorCode==='agent_interrupted'?'服务心跳中断，已保留已完成步骤。':selected.run.errorCode==='agent_deadline_exceeded'?'已达到单次运行截止时间。':'请核对失败步骤。'}重新规划由你主动触发，创建新运行，原记录保留。</p>}
     {planning&&!selected&&<p className="agent-recovery-note" role="status">正在等待本次请求的真实运行记录；不会把其他运行的步骤当作本次进度。</p>}
@@ -109,18 +131,19 @@ export function Agent({ request, projectId, requirements }: {request:Api;project
     {!loading && selected && <AgentProgress run={selected.run} steps={selected.steps}/>}
     {loading ? <div className="state-block">正在读取运行记录…</div> : <>
       <div className="agent-audit-grid">
-        <section className="editor-panel"><div className="panel-heading"><div><h3>运行记录</h3><p>选择记录查看执行过程与结果。</p></div></div>
+        <section className="editor-panel"><div className="panel-heading"><div><h3>运行记录</h3><p>选择记录查看执行过程与结果。</p></div><button type="button" className="button secondary" disabled={busy||cancelling} onClick={()=>void refresh()}>刷新运行记录</button></div>
           {runs.length ? <ul className="module-list">{runs.map(run => <li key={run.id}><button type="button" className="run-link" aria-pressed={selected?.run.id === run.id} data-status={run.status} disabled={busy} onClick={() => void selectRun(run.id)}><strong>{date(run.createdAt)}</strong><small>{run.id.slice(0,8)} · {statuses[run.status] || run.status}</small></button></li>)}</ul> : <p className="muted-text">还没有运行记录。先确认需求，再开始规划。</p>}
         </section>
         {selected ? <section className="editor-panel"><div className="panel-heading"><div><h3>执行过程</h3><p>状态：{statuses[selected.run.status] || selected.run.status}{selected.run.errorCode ? ` · ${selected.run.errorCode}` : ''}</p></div></div>
           {selected.steps.length ? <div className="steps-list">{selected.steps.map(step => <article key={step.id} data-status={step.status}><strong>{stages[step.stage] || step.stage} · {statuses[step.status] || step.status}</strong><p>{step.outputSummary}</p>{step.tools.map(tool => <details key={tool.id}><summary>工具：{stages[tool.toolName] || tool.toolName} · {statuses[tool.status] || tool.status}</summary><pre>输入：{tool.inputSummary}{'\n'}输出：{tool.outputSummary}</pre></details>)}</article>)}</div> : <p className="muted-text">暂无步骤记录。</p>}
-        </section> : <ModuleGuide kind="agent"/>}
+        </section> : pendingRun?<div className="state-block" role="status">正在读取所选运行…</div>:selectedRunId.current?<div className="state-block">运行读取失败，请刷新记录重试。</div>:<ModuleGuide kind="agent"/>}
       </div>
       {selected?.run.plan && <details className="editor-panel agent-plan-panel" key={`${selected.run.id}-${selected.run.status}`} open={selected.run.status !== 'confirmed'}>
         <summary><span><h3>{selected.run.status === 'confirmed' ? '已确认计划' : '待审阅计划'}</h3><span>{selected.run.plan.tasks.length} 项任务 · 核对任务、依赖及来源后再确认</span></span><span className="plan-disclosure-mark">⌄</span></summary>
         <PlanMap tasks={selected.run.plan.tasks} key={selected.run.id}/>
         <PlanReview plan={selected.run.plan as Parameters<typeof PlanReview>[0]['plan']} outputs={selected.steps.flatMap(step=>step.tools.map(tool=>tool.outputSummary))}/>
-        {selected.run.status==='awaiting_review'&&<label className="plan-review-check"><input type="checkbox" checked={reviewed} onChange={e=>setReviewed(e.target.checked)}/>我已核对缺项、验收方法及知识原文；确认只创建任务，不代表需求已验证。模型条目关联仍需逐项审核。</label>}
+        {selected.run.status==='awaiting_review'&&<><label htmlFor="plan-review-note">人工审核备注（可选）</label><textarea id="plan-review-note" rows={3} maxLength={2000} value={reviewNote} disabled={busy} onChange={e=>setReviewNote(e.target.value)} placeholder="记录已核对的缺项、验收条件、引用依据或仍需处理的问题"/><label className="plan-review-check"><input type="checkbox" checked={reviewed} disabled={busy} onChange={e=>setReviewed(e.target.checked)}/>我已核对缺项、验收方法及知识原文；确认只创建任务，不代表需求已验证。模型条目关联仍需逐项审核。</label></>}
+        {selected.run.status==='confirmed'&&<div className="plan-audit-note">{selected.run.humanReview?<><strong>人工审核记录 · {date(selected.run.humanReview.reviewedAt)}</strong><p>{selected.run.humanReview.note||'未填写补充备注'}</p><p>确认时有 {selected.run.humanReview.warningCount} 项规则提示。审核仅确认采用此计划，不等于执行或验证完成。</p></>:<p>此历史计划没有可追溯的人工审核记录，不补造审核时间或结论。</p>}</div>}
         {selected.run.status === 'awaiting_review' && <div className="form-actions"><button type="button" className="button primary" onClick={() => void confirm()} disabled={busy || !reviewed}>确认计划并创建任务 <span>✓</span></button></div>}
       </details>}
       <RequirementTrace request={request} projectId={projectId} versionId={latestConfirmed?.id} refreshKey={selected?.run.status}/>

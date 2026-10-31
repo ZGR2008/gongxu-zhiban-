@@ -13,11 +13,13 @@ import { requirementGenerationIssue, requirementSegments } from '../requirement-
 import { requirementItems, assessPlan } from '../trace/domain.js';
 import {AgentStopError,executionLease,finishInterruptedRuns} from './lifecycle.js';
 import type {CompletionOptions} from '../ai/model.js';
+import {createHash} from 'node:crypto';
 
 const params = z.object({ projectId: z.string().uuid() });
 const runParams = params.extend({ runId: z.string().uuid() });
 const body = z.object({ requirementId: z.string().uuid(),requestKey:z.string().uuid().optional() }).strict();
-const runFields = `id, project_id AS "projectId", requirement_version_id AS "requirementVersionId", model_name AS "modelName", status, plan, error_code AS "errorCode", created_at AS "createdAt", finished_at AS "finishedAt", confirmed_at AS "confirmedAt",heartbeat_at AS "heartbeatAt",deadline_at AS "deadlineAt",request_key AS "requestKey"`;
+const approvalBody=z.object({acknowledged:z.literal(true),note:z.string().trim().max(2000).default('')}).strict();
+const runFields = `id, project_id AS "projectId", requirement_version_id AS "requirementVersionId", model_name AS "modelName", status, plan, error_code AS "errorCode", created_at AS "createdAt", finished_at AS "finishedAt", confirmed_at AS "confirmedAt",heartbeat_at AS "heartbeatAt",deadline_at AS "deadlineAt",request_key AS "requestKey",human_review AS "humanReview"`;
 const taskFields = `t.id,t.requirement_version_id AS "requirementVersionId",t.agent_run_id AS "agentRunId",t.plan_key AS "planKey",t.title,t.stage,t.description,t.deliverable,t.status,COALESCE(array_agg(d.depends_on_task_id) FILTER (WHERE d.depends_on_task_id IS NOT NULL),'{}') AS "dependsOn"`;
 
 type Dependencies = {
@@ -174,6 +176,7 @@ export async function registerAgentRoutes(app: FastifyInstance, store?: ProjectS
   app.post('/projects/:projectId/agent/runs/:runId/confirm', async (req,reply) => {
     const access = await authorize(req,reply); if (!access) return;
     const p=runParams.safeParse(req.params); if (!p.success) return reply.code(400).send({error:'invalid_input'});
+    const input=approvalBody.safeParse(req.body);if(!input.success)return reply.code(428).send({error:'plan_review_required'});
     const client=await pool!.connect();
     try {
       await client.query('BEGIN');
@@ -193,7 +196,12 @@ export async function registerAgentRoutes(app: FastifyInstance, store?: ProjectS
         ids.set(task.key,inserted.rows[0].id);
       }
       for (const task of plan.tasks) for (const dep of task.dependsOn) await client.query(`INSERT INTO task_dependencies(task_id,depends_on_task_id) VALUES($1,$2)`,[ids.get(task.key),ids.get(dep)]);
-      await client.query(`UPDATE agent_runs SET status='confirmed',confirmed_at=now() WHERE id=$1`,[run.id]);
+      const review={policy:'plan-adoption-v1',scope:'human_plan_adoption_not_execution_verification',reviewedAt:new Date().toISOString(),reviewedBy:access.user.id,
+        requirementVersionId:run.requirement_version_id,note:input.data.note,planSha256:createHash('sha256').update(JSON.stringify(run.plan)).digest('hex'),
+        warningCount:Array.isArray(run.plan?.review?.warnings)?run.plan.review.warnings.length:0,
+        warningCodes:Array.isArray(run.plan?.review?.warnings)?run.plan.review.warnings.map((w:{code:string})=>w.code):[],
+        completenessAssessmentAvailable:Boolean(run.plan?.review)};
+      await client.query(`UPDATE agent_runs SET status='confirmed',confirmed_at=now(),human_review=$2::jsonb WHERE id=$1`,[run.id,JSON.stringify(review)]);
       await client.query('COMMIT'); return {tasks:await getTasks(access.projectId,run.id)};
     } catch (error) { await client.query('ROLLBACK'); throw error; } finally { client.release(); }
   });

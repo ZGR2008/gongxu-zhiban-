@@ -164,10 +164,10 @@ try {
       const before = await request(`/projects/${project.id}/tasks`, { token: ownerToken });
       ensure(before.tasks.length === 0, 'tasks_created_before_approval');
       await request(`/projects/${project.id}/agent/runs/${planned.run.id}/confirm`, { method: 'POST', token: otherToken, expected: 404 });
-      ({ tasks } = await request(`/projects/${project.id}/agent/runs/${planned.run.id}/confirm`, { method: 'POST', token: ownerToken }));
+      ({ tasks } = await request(`/projects/${project.id}/agent/runs/${planned.run.id}/confirm`, { method: 'POST', token: ownerToken, body:{acknowledged:true,note:'联调人员主动采用本次计划；不代表执行结果'} }));
       ensure(tasks.length === planned.run.plan.tasks.length && tasks.length > 0, 'approved_tasks_not_persisted');
       ensure(tasks.every(item => item.status === 'todo' && item.dependsOn.every(id => tasks.some(task => task.id === id))), 'invalid_task_dependency');
-      await request(`/projects/${project.id}/agent/runs/${planned.run.id}/confirm`, { method: 'POST', token: ownerToken, expected: 409 });
+      await request(`/projects/${project.id}/agent/runs/${planned.run.id}/confirm`, { method: 'POST', token: ownerToken, body:{acknowledged:true}, expected: 409 });
       await request(`/projects/${project.id}/tasks/${tasks[0].id}`, { method: 'PATCH', token: ownerToken, body: { status: 'doing' } });
       await request(`/projects/${project.id}/tasks/${tasks[0].id}`, { method: 'PATCH', token: otherToken, body: { status: 'done' }, expected: 404 });
     });

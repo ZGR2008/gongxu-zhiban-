@@ -68,6 +68,24 @@ async function scenario(name,work){
 async function routeTo(page,id){await page.evaluate(path=>{history.pushState({},'',path);dispatchEvent(new PopStateEvent('popstate'));},`/projects/${id}/requirements`);}
 async function waitFor(check){for(let i=0;i<100;i++){if(check())return;await new Promise(resolve=>setTimeout(resolve,20));}throw Error('Fixture request not observed');}
 try{
+ await scenario('agent_selection_hides_previous_actions_while_new_run_loads',async(page,state)=>{
+  state.runs=[{id:RA,requirementVersionId:RA,status:'awaiting_review',createdAt:now,plan:{tasks:[]},errorCode:null},{id:RB,requirementVersionId:RA,status:'confirmed',createdAt:now,plan:{tasks:[]},errorCode:null}];
+  await page.goto(`${origin.origin}/projects/${A}/agent`);await page.getByText('运行A输出',{exact:true}).waitFor();
+  state.runDelay=id=>id===RB?700:0;await page.locator('.run-link').nth(1).click();await waitFor(()=>state.runCounts[RB]);
+  assert.equal(await page.getByText('运行A输出',{exact:true}).count(),0,'Old actions must be removed immediately when a different run is selected');
+  assert.equal(await page.getByRole('button',{name:/确认计划并创建任务/}).count(),0);
+  await page.getByText('运行B输出',{exact:true}).waitFor();await page.getByRole('button',{name:'刷新运行记录',exact:true}).click();
+  await page.waitForTimeout(850);assert.equal(await page.getByText('运行B输出',{exact:true}).count(),1);assert.equal(await page.getByText('运行A输出',{exact:true}).count(),0);
+ });
+ await scenario('agent_review_note_cannot_be_discarded_or_implicitly_approved_by_navigation',async(page,state)=>{
+  state.runs=[{id:RA,requirementVersionId:RA,status:'awaiting_review',createdAt:now,plan:{tasks:[]},errorCode:null},{id:RB,requirementVersionId:RA,status:'confirmed',createdAt:now,plan:{tasks:[]},errorCode:null}];
+  await page.goto(`${origin.origin}/projects/${A}/agent`);await page.locator('#plan-review-note').fill('待核对的验收条件');
+  await page.locator('.run-link').nth(1).click();const dialog=page.getByRole('dialog',{name:'保留未保存的编辑'});await dialog.waitFor();
+  await dialog.getByRole('button',{name:'留在此页'}).click();assert.equal(await page.locator('#plan-review-note').inputValue(),'待核对的验收条件');
+  await page.getByRole('link',{name:'我的项目',exact:true}).first().click();await dialog.getByRole('button',{name:'保存并继续'}).click();
+  await dialog.getByText(/保存未成功/).waitFor();assert.ok(page.url().endsWith('/agent'));assert.equal(state.writes.length,0);
+  await dialog.getByRole('button',{name:'留在此页'}).click();await page.locator('.run-link').nth(1).click();await dialog.getByRole('button',{name:'放弃并继续'}).click();await page.getByText('运行B输出',{exact:true}).waitFor();
+ });
  await scenario('late_A_response_cannot_replace_B_or_change_save_target',async(page,state)=>{
   state.delay=id=>id===A?450:0;
   await page.goto(`${origin.origin}/projects/${A}/requirements`,{waitUntil:'domcontentloaded'});
