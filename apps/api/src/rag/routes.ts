@@ -10,6 +10,7 @@ import { AiError, aiErrorStatus, completeChat, type AiConfig } from '../ai/model
 import { extractPdf, pdfParserAvailable, PdfError } from './pdf.js';
 import { listEmbeddingActivities, openEmbeddingActivity } from './activity.js';
 import {withAbort} from '../ai/abortable.js';
+import {knowledgeListQuery,KnowledgeListError,readKnowledgePage} from './listing.js';
 
 const docInput = z.object({ name: z.string().trim().min(1).max(160), text: z.string().trim().min(1).max(200_000) });
 const queryInput = z.object({ query: z.string().trim().min(1).max(4000) });
@@ -37,6 +38,11 @@ export async function registerKnowledgeRoutes(app: FastifyInstance, store?: Proj
   app.get('/knowledge', async (request, reply) => {
     if (!store || !pool) return reply.code(503).send({ error: 'database_not_configured' });
     const user = await authorizeRequest(request, store); if (!user) return reply.code(401).send({ error: 'unauthorized' });
+    const query=knowledgeListQuery.safeParse(request.query);if(!query.success)return reply.code(400).send({error:'invalid_input'});
+    if(Object.keys(request.query as object).length){
+      try{return{...await readKnowledgePage(pool,user.id,embedding?modelId(embedding):null,query.data),embeddingConfigured:Boolean(embedding),pdfAvailable:await pdfParserAvailable(),capturedAt:new Date().toISOString()};}
+      catch(error){if(error instanceof KnowledgeListError)return reply.code(error.status).send({error:error.code});throw error;}
+    }
     // Storage readiness is not compatibility with today's configured model.
     // Aggregate only the bounded visible documents; the window count covers all
     // owned documents. Never send the internal provider identity to the browser.
@@ -50,7 +56,7 @@ export async function registerKnowledgeRoutes(app: FastifyInstance, store?: Proj
       GROUP BY d.id,d.name,d.media_type,d.status,d.created_at,d.total_documents ORDER BY d.created_at DESC,d.id`, [user.id,embedding?modelId(embedding):null]);
     const documents=result.rows.map(({totalDocuments:_,...row})=>({...row,indexCompatibility:indexCompatibility(row.status,Boolean(embedding),row.chunkCount,row.indexedChunks,row.currentChunks)}));
     const totalDocuments=result.rows[0]?.totalDocuments??0;
-    return { documents,totalDocuments,listLimited:totalDocuments>documents.length,embeddingConfigured: Boolean(embedding), pdfAvailable: await pdfParserAvailable(),capturedAt:new Date().toISOString() };
+    return { documents,totalDocuments,listLimited:totalDocuments>documents.length,scope:'latest_200_legacy',embeddingConfigured: Boolean(embedding), pdfAvailable: await pdfParserAvailable(),capturedAt:new Date().toISOString() };
   });
   app.post('/knowledge/text', async (request, reply) => {
     if (!store || !pool) return reply.code(503).send({ error: 'database_not_configured' });

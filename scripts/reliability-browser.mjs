@@ -144,7 +144,13 @@ async function scenario(name,work){
   else if(/\/agent\/runs\/[^/]+$/.test(path)){const id=path.split('/').at(-1);state.runCounts[id]=(state.runCounts[id]||0)+1;await new Promise(r=>setTimeout(r,state.runDelay(id)));body={run:state.runs.find(r=>r.id===id),steps:[{id:'s',stage:'plan_1',status:'succeeded',outputSummary:id===RA?'运行A输出':'运行B输出',tools:[]}]};}
   else if(path.endsWith('/trace')){state.traceReads=(state.traceReads??0)+1;status=state.traceStatus??200;body=structuredClone(status===200?(state.traceData??{version:null,items:[],links:[],tasks:[],cases:[],previousItems:[],impact:null}):{error:'trace_refresh_required'});await new Promise(r=>setTimeout(r,state.traceDelay??0));}
   else if(/\/trace\/(links|task-tests)$/.test(path)&&method==='POST'){const input=route.request().postDataJSON();state.writes.push({path,body:input});if(path.endsWith('/links')&&state.traceData){state.traceData.links=state.traceData.links.map(link=>(input.targetKind==='case'?link.caseId:link.taskId)===input.targetId?{...link,status:input.decision,reviewNote:input.note}:link);}body={status:'confirmed'};}
-  else if(path==='/knowledge'){state.knowledgeReads=(state.knowledgeReads??0)+1;status=state.knowledgeStatus??200;body=status===200?{documents:state.knowledgeDocuments??[],totalDocuments:state.knowledgeTotal??(state.knowledgeDocuments?.length??0),listLimited:state.knowledgeLimited??false,embeddingConfigured:true,pdfAvailable:true}:{error:'database_unavailable'};}
+  else if(path==='/knowledge'){
+   state.knowledgeReads=(state.knowledgeReads??0)+1;status=state.knowledgeStatus??200;
+   const documents=state.knowledgeDocuments??[],total=state.knowledgeTotal??documents.length,limit=Number(url.searchParams.get('limit')??200),cursor=url.searchParams.get('cursor'),offset=cursor?Number(cursor.split('-')[1]):0;
+   body=status===200?{documents:documents.slice(offset,offset+limit),totalDocuments:total,listLimited:state.knowledgeLimited??total>limit,page:{total,limit,hasMore:offset+limit<total,nextCursor:offset+limit<total?`knowledge-${offset+limit}-${total}`:null},embeddingConfigured:true,pdfAvailable:true}:{error:'database_unavailable'};
+   if(cursor&&Number(cursor.split('-')[2])!==total){status=409;body={error:'knowledge_list_changed'};}
+   await new Promise(resolve=>setTimeout(resolve,state.knowledgeReadDelay?.(offset)??0));
+  }
   else if(path==='/knowledge/text'||path==='/knowledge/pdf'){state.writes.push({path,body:route.request().postDataJSON()});await new Promise(r=>setTimeout(r,state.uploadDelay??0));status=state.uploadBoundary?413:state.failUpload?503:201;body=state.uploadBoundary?{error:state.uploadBoundary}:state.failUpload?{error:'database_unavailable'}:{id:RA,status:'awaiting_embedding',chunks:1};if(state.failKnowledgeAfterUpload)state.knowledgeStatus=503;}
   else if(path==='/knowledge/activity')body={activities:[]};
   else if(/^\/knowledge\/[^/]+\/index$/.test(path)&&method==='POST'){
@@ -754,9 +760,25 @@ try{
   await page.getByText('本次回答问题：实际发出的第二个问题',{exact:true}).waitFor();
   assert.deepEqual(state.answerQueries,['第一次回答的问题','实际发出的第二个问题']);
  });
+ await scenario('knowledge_catalogue_paging_failure_and_reindex_keep_upload_and_question_drafts',async(page,state)=>{
+  state.knowledgeDocuments=Array.from({length:41},(_,i)=>({id:`kb-${i}`,name:`分页资料 ${i}`,status:'awaiting_embedding',createdAt:now,chunkCount:1,indexedChunks:0,currentChunks:0,indexCompatibility:'awaiting_embedding'}));
+  await page.goto(`${origin.origin}/knowledge`);const list=page.getByRole('region',{name:'知识资料与索引来源'});await list.getByText('读取时共 41 份 · 第 1 页 · 本页 20 份',{exact:true}).waitFor();
+  await page.getByLabel('文档名称',{exact:true}).fill('不能因分页丢弃的草稿');await page.getByLabel('文档内容',{exact:true}).fill('完整上传内容');await page.getByLabel('检索问题').fill('仍未提交的提问');
+  const before=state.knowledgeReads;state.knowledgeReadDelay=()=>250;await list.getByRole('button',{name:'下一页资料',exact:true}).click();assert.ok(await list.getByRole('button',{name:'下一页资料',exact:true}).isDisabled());await list.getByText('读取时共 41 份 · 第 2 页 · 本页 20 份',{exact:true}).waitFor();assert.equal(state.knowledgeReads,before+1);
+  state.knowledgeStatus=503;await list.getByRole('button',{name:'下一页资料',exact:true}).click();await page.getByRole('alert').waitFor();assert.equal(await page.getByLabel('文档内容',{exact:true}).inputValue(),'完整上传内容');assert.ok(await list.getByRole('button',{name:'下一页资料',exact:true}).isDisabled());assert.ok(await list.getByRole('button',{name:'建立索引',exact:true}).first().isDisabled());await list.getByText('分页资料 20',{exact:true}).waitFor();
+  state.knowledgeStatus=200;state.knowledgeReadDelay=()=>0;await list.getByRole('button',{name:'刷新资料状态',exact:true}).click();await list.getByText('读取时共 41 份 · 第 1 页 · 本页 20 份',{exact:true}).waitFor();
+  for(const i of [2,3]){await list.getByRole('button',{name:'下一页资料',exact:true}).click();await list.getByText(`读取时共 41 份 · 第 ${i} 页 · 本页 ${i===3?1:20} 份`,{exact:true}).waitFor();}
+  await list.getByRole('button',{name:'建立索引',exact:true}).click();await list.getByText('当前模型索引',{exact:true}).waitFor();await list.getByText('读取时共 41 份 · 第 3 页 · 本页 1 份',{exact:true}).waitFor();assert.equal(state.indexRequests,1);assert.equal(await page.getByLabel('文档名称',{exact:true}).inputValue(),'不能因分页丢弃的草稿');assert.equal(await page.getByLabel('文档内容',{exact:true}).inputValue(),'完整上传内容');assert.equal(await page.getByLabel('检索问题').inputValue(),'仍未提交的提问');
+ });
+ await scenario('knowledge_catalogue_membership_change_requires_refresh_and_retains_original_list',async(page,state)=>{
+  state.knowledgeDocuments=Array.from({length:21},(_,i)=>({id:`kb-${i}`,name:`原有资料 ${i}`,status:'ready',createdAt:now,indexCompatibility:'current'}));
+  await page.goto(`${origin.origin}/knowledge`);const list=page.getByRole('region',{name:'知识资料与索引来源'});await list.getByText('读取时共 21 份 · 第 1 页 · 本页 20 份',{exact:true}).waitFor();state.knowledgeTotal=22;
+  await list.getByRole('button',{name:'下一页资料',exact:true}).click();await page.getByRole('alert').filter({hasText:'知识资料目录已变化'}).waitFor();await list.getByText('原有资料 0',{exact:true}).waitFor();assert.ok(await list.getByRole('button',{name:'下一页资料',exact:true}).isDisabled());
+  await list.getByRole('button',{name:'刷新资料状态',exact:true}).click();await list.getByText('读取时共 22 份 · 第 1 页 · 本页 20 份',{exact:true}).waitFor();
+ });
  await scenario('knowledge_index_origin_is_explicit_and_rebuild_is_manual_and_recoverable',async(page,state)=>{
   state.knowledgeDocuments=[{id:RA,name:'另一模型的合成资料',status:'ready',createdAt:now,chunkCount:2,indexedChunks:2,currentChunks:0,indexCompatibility:'model_changed'}];state.knowledgeTotal=201;state.knowledgeLimited=true;
-  await page.goto(`${origin.origin}/knowledge`);const list=page.getByRole('region',{name:'知识资料与索引来源'});await list.getByText('模型已变化 · 待重建',{exact:true}).waitFor();assert.equal(state.indexRequests??0,0);assert.match(await list.innerText(),/1 \/ 201 份资料/);
+  await page.goto(`${origin.origin}/knowledge`);const list=page.getByRole('region',{name:'知识资料与索引来源'});await list.getByText('模型已变化 · 待重建',{exact:true}).waitFor();assert.equal(state.indexRequests??0,0);await list.getByText('读取时共 201 份 · 第 1 页 · 本页 1 份',{exact:true}).waitFor();assert.ok(!await list.getByRole('button',{name:'下一页资料',exact:true}).isDisabled());assert.match(await list.innerText(),/不受当前页限制/);
   await page.getByLabel('文档内容',{exact:true}).fill('索引失败仍保留上传内容');state.failIndex=true;await list.getByRole('button',{name:'重建索引',exact:true}).click();await page.getByRole('alert').filter({hasText:'向量服务暂不可用'}).waitFor();assert.equal(await list.getByText('当前模型索引',{exact:true}).count(),0);assert.equal(await page.getByLabel('文档内容',{exact:true}).inputValue(),'索引失败仍保留上传内容');
   state.failIndex=false;await list.getByRole('button',{name:'重建索引',exact:true}).click();await list.getByText('当前模型索引',{exact:true}).waitFor();assert.equal(state.indexRequests,2);assert.match(await list.innerText(),/2\/2 片段匹配当前模型/);assert.equal(await page.getByLabel('文档内容',{exact:true}).inputValue(),'索引失败仍保留上传内容');
   state.knowledgeDocuments[0].indexCompatibility=undefined;await list.getByRole('button',{name:'刷新资料状态',exact:true}).click();await list.getByText('索引来源待核对',{exact:true}).waitFor();assert.equal(state.indexRequests,2);

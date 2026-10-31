@@ -52,6 +52,7 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
     const documentCodes:Record<string,string>={
       test_list_changed:'用例记录或需求来源已变化，已保留当前页面。请先保存或处理编辑，再刷新用例与完整统计后继续分页。',
       document_list_changed:'文档目录在其他操作中发生变化，已保留当前编辑。请先保存或处理草稿，再刷新文档，从第一页重新读取目录。',
+      knowledge_list_changed:'知识资料目录已变化，原有输入和当前列表已保留。请刷新资料状态，从第一页重新读取。',
       pdf_text_too_large:'PDF 提取的文本超过 200000 字符，已停止导入，未保存不完整资料。请按章节拆分文件后分别上传；这与文件是否超过 3 MB 不同。',
       document_too_many_chunks:'资料分块超过 250 块，未保存或删减任何片段。请按章节拆成多份资料，并保留末尾内容后分别上传。当前上传内容仍保留在编辑区。',
       invalid_document:'资料没有可用的文本片段，请检查原文后重试；本次没有生成可检索内容。',
