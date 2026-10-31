@@ -1,4 +1,4 @@
-import { chromium } from 'playwright';
+import { chromium, firefox, webkit } from 'playwright';
 import { mkdir, writeFile } from 'node:fs/promises';
 import {existsSync} from 'node:fs';
 import { randomUUID } from 'node:crypto';
@@ -39,8 +39,15 @@ if(baselineModule){
 }
 const directory = new URL(`../.runtime/reliability-ui-${randomUUID()}/`,import.meta.url);
 await mkdir(directory,{recursive:true});
-const report={scope:'controlled_browser_responses',historicalKnowledgeModule:knowledgeBaseline??null,historicalWorkspaceModule:workspaceBaseline??null,realDatabase:false,realModel:false,checks:[],startedAt:new Date().toISOString()};
-const browser=await chromium.launch({headless:true,channel:process.env.SMOKE_BROWSER_CHANNEL || (process.platform==='win32'?'msedge':undefined)});
+const engine=process.argv.find(arg=>arg.startsWith('--engine='))?.slice(9)??'chromium';
+if(!['chromium','firefox','webkit'].includes(engine))throw Error('Unsupported browser engine');
+const report={scope:'controlled_browser_responses',browserEngine:engine,historicalKnowledgeModule:knowledgeBaseline??null,historicalWorkspaceModule:workspaceBaseline??null,realDatabase:false,realModel:false,checks:[],startedAt:new Date().toISOString()};
+let browser;
+try{
+ browser=await ({chromium,firefox,webkit}[engine]).launch({headless:true,timeout:30000,...(engine==='chromium'?{channel:process.env.SMOKE_BROWSER_CHANNEL || (process.platform==='win32'?'msedge':undefined)}:{})});report.browserVersion=browser.version();
+}catch(error){
+ report.status='not_run';report.launchErrorType=error.constructor.name;report.finishedAt=new Date().toISOString();await writeFile(new URL('report.json',directory),JSON.stringify(report,null,2));console.log(`Browser launch not completed (${report.launchErrorType}); report: ${directory.pathname}`);process.exit(1);
+}
 const A='11111111-1111-4111-8111-111111111111', B='22222222-2222-4222-8222-222222222222';
 const RA='aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', RB='bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
 const now='2026-10-31T12:00:00Z';
@@ -48,6 +55,9 @@ const project=id=>({id,name:id===A?'受控项目 A':'受控项目 B',description
 const detail=(id,content)=>({project:project(id),requirements:[{id:id===A?RA:RB,projectId:id,version:1,status:'draft',content:content||`项目 ${id===A?'A':'B'} 的需求正文`,createdAt:now}]});
 async function scenario(name,work){
  const filter=process.argv.find(arg=>arg.startsWith('--case='))?.slice(7);if(filter&&!name.includes(filter))return;
+ if(engine!=='chromium'&&name==='code_draft_save_and_leave_checks_committed_state_under_cpu_throttle'){
+  report.checks.push({name,status:'not_run',reason:'This case requires Chromium CDP CPU emulation; not supported by this engine.'});console.log(`NOT RUN ${name} (Chromium-only CPU emulation)`);return;
+ }
  const context=await browser.newContext({viewport:{width:1440,height:950},reducedMotion:'reduce'});
  await context.addInitScript(()=>localStorage.setItem('gongxu_token','controlled-browser-fixture'));
  const page=await context.newPage();page.setDefaultTimeout(6000);

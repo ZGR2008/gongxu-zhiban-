@@ -1,6 +1,6 @@
 {
   "artifact": "gongxu-zhiban-technical-v3.pdf",
-  "pages": 23,
+  "pages": 26,
   "chapters": [
     {
       "number": 1,
@@ -72,33 +72,45 @@
     },
     {
       "number": 18,
-      "title": "实际验证证据"
+      "title": "审查依据可回看"
     },
     {
       "number": 19,
-      "title": "版本化效果评测准备"
+      "title": "当前进度与历史记录分开"
     },
     {
       "number": 20,
-      "title": "创新与公开案例借鉴"
+      "title": "首屏资源与排版失败恢复"
     },
     {
       "number": 21,
-      "title": "启动、迁移与交付"
+      "title": "实际验证证据"
     },
     {
       "number": 22,
-      "title": "剩余工作与验收结论"
+      "title": "版本化效果评测准备"
     },
     {
       "number": 23,
+      "title": "创新与公开案例借鉴"
+    },
+    {
+      "number": 24,
+      "title": "启动、迁移与交付"
+    },
+    {
+      "number": 25,
+      "title": "剩余工作与验收结论"
+    },
+    {
+      "number": 26,
       "title": "来源与原创实现说明"
     }
   ],
   "scope": "technical_review_draft_not_official_acceptance",
   "screenshots": "synthetic_local_account_real_db_model_fixture",
   "visualReview": "all_rendered_pages_inspected",
-  "sha256": "7d931fd597f050498782917d045f630cf90c761d886471d5e68f6b846bb595b8",
+  "sha256": "c344f0226eab0bf0b145a932685e2774f406dceeae82df87cb59eda9c4d4c44f",
   "layoutBounds": [
     {
       "page": 1,
@@ -112,7 +124,7 @@
     },
     {
       "page": 3,
-      "textCharacters": 653,
+      "textCharacters": 669,
       "outsideSafeBounds": 0
     },
     {
@@ -132,7 +144,7 @@
     },
     {
       "page": 7,
-      "textCharacters": 710,
+      "textCharacters": 732,
       "outsideSafeBounds": 0
     },
     {
@@ -162,17 +174,17 @@
     },
     {
       "page": 13,
-      "textCharacters": 499,
+      "textCharacters": 517,
       "outsideSafeBounds": 0
     },
     {
       "page": 14,
-      "textCharacters": 470,
+      "textCharacters": 480,
       "outsideSafeBounds": 0
     },
     {
       "page": 15,
-      "textCharacters": 448,
+      "textCharacters": 453,
       "outsideSafeBounds": 0
     },
     {
@@ -187,31 +199,46 @@
     },
     {
       "page": 18,
-      "textCharacters": 621,
+      "textCharacters": 329,
       "outsideSafeBounds": 0
     },
     {
       "page": 19,
-      "textCharacters": 546,
+      "textCharacters": 348,
       "outsideSafeBounds": 0
     },
     {
       "page": 20,
-      "textCharacters": 604,
+      "textCharacters": 564,
       "outsideSafeBounds": 0
     },
     {
       "page": 21,
-      "textCharacters": 597,
+      "textCharacters": 692,
       "outsideSafeBounds": 0
     },
     {
       "page": 22,
-      "textCharacters": 597,
+      "textCharacters": 576,
       "outsideSafeBounds": 0
     },
     {
       "page": 23,
+      "textCharacters": 604,
+      "outsideSafeBounds": 0
+    },
+    {
+      "page": 24,
+      "textCharacters": 597,
+      "outsideSafeBounds": 0
+    },
+    {
+      "page": 25,
+      "textCharacters": 597,
+      "outsideSafeBounds": 0
+    },
+    {
+      "page": 26,
       "textCharacters": 677,
       "outsideSafeBounds": 0
     }

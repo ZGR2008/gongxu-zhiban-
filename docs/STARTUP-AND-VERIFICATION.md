@@ -45,6 +45,8 @@ API `/health`只证明进程在响应；`/ready`会核对数据库、迁移和pg
 
 上述真实联调会保留明确标为合成的测试项目，不清理用户数据。结果存放于被忽略的 `.runtime/`，对外报告只保留汇总和合成截图。不要把原始目录整体上传。
 
+受控可靠性脚本支持`--engine=webkit`和`--engine=firefox`；Windows可先设置`$env:PLAYWRIGHT_BROWSERS_PATH="$PWD/.runtime/browsers"`复用已装缓存。引擎30秒内未启动就标为未执行；CDP CPU减速场景只在Chromium执行，其他引擎不冒报通过。本轮WebKit 27.2实际55组通过、该专用1组未执行；Firefox启动超时、测试未运行。Windows WebKit结果不是Safari真机验收。
+
 ## 尚未获授权的操作
 
 本轮没有运行 `ai:check` 或任何 `--with-ai`，也没有推送、部署、上传或联系参与者。下一轮若要测试真实新提示词，先明确调用范围、费用和仅使用合成输入，得到授权后再执行。费用上限不能只靠本地程序猜测，供应商计费应另行核对。

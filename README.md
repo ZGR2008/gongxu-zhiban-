@@ -43,7 +43,7 @@ Markdown排版按需加载，等待或资源下载失败时保留完整原文、
 
 工作台另外提供三个独立入口：`/missions` 实训任务库（六份原创任务书、筛选、收藏并创建项目）、`/runs` Agent 运行记录（实际步骤、耗时、工具证据与 JSON 导出）、`/delivery` 交付检查（按项目和需求版本记录人工核对、备注与 Markdown 导出）。创建项目使用原有数据库接口；收藏和人工清单仅保存在本机，页面明确提示，不会自动确认计划或执行测试。参考案例、功能边界和最新验证见 [新增工作台页面说明](docs/WORKBENCH-EXPANSION.md)。
 
-![深空主题工作台：真实项目概况、实训工具入口和项目列表](docs/screenshots/workspace.png)
+![深空主题工作台：真实项目概况、实训工具入口和项目列表](docs/screenshots/review-v3/workspace-desktop.png)
 
 工作台的三维星环是独立的装饰场景，在工作台默认静态、主动开启后播放，支持暂停、拖动和减少动态效果，不参与模型调用。独立预览位于 `/previews/planet-orbit.html`，旧版 CSS/SVG 留在 `/previews/archive/planet-orbit-css-v2.html`。当前三维版通过本地 HTTP 服务加载模块，需要 WebGL2；所有运行资源本地提供，不依赖 CDN。轨道代码适配自 MIT 许可的 [SaturnWebGL](https://github.com/adelmassimo/SaturnWebGL)，使用 Three.js 0.187.0，来源和版权声明见 `apps/web/public/previews/vendor/NOTICE.txt`，前端依赖许可见 `apps/web/public/THIRD-PARTY-LICENSES.txt`。
 
