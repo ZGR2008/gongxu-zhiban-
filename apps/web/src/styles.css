@@ -13,3 +13,5 @@ select{width:100%;border:1px solid #dce7de;border-radius:8px;background:#fbfcfa;
 .document-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}.document-actions .button{padding:7px 9px;font-size:10px;gap:4px}
 
 .connection-dot.preparing{background:#b68532}.auth-form>.connection{margin:18px 0}.connection button:disabled{cursor:wait;opacity:.55}
+/* Keep pending case writes visible and prevent edits from being hidden by a late save. */
+.case-editor-fields{min-inline-size:0;border:0;padding:0;margin:0}.case-editor-fields:disabled{opacity:.85}.case-editor-fields:disabled input,.case-editor-fields:disabled textarea{cursor:wait}

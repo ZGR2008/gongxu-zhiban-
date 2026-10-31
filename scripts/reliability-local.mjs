@@ -58,10 +58,22 @@ try{
   trace=(await call('GET',`${root}/trace`)).json();assert.equal(trace.items[0].coverage.confirmedTasks,1);assert.equal(trace.items[0].coverage.confirmedCases,1);assert.equal(trace.items[0].coverage.manualEvidence,0);
   assert.equal((await call('GET',`${root}/trace`,undefined,foreign)).statusCode,404);
  });
+ await check('task_test_pair_requires_reviewed_sources_and_never_infers_execution',async()=>{
+  const trace=(await call('GET',`${root}/trace`)).json();assert.deepEqual(trace.taskTests,[]);
+  const body={itemId:trace.items[0].id,taskId:trace.tasks[0].id,caseId:testCase.id,expectedCaseRevision:1,decision:'confirmed',note:'合成配对审核：检查审批任务的持久化结果'};
+  const unreviewed=trace.cases.find(row=>row.id!==testCase.id);
+  assert.equal((await call('POST',`${root}/trace/task-tests`,{...body,caseId:unreviewed.id})).json().error,'trace_source_review_required');
+  assert.equal((await call('POST',`${root}/trace/task-tests`,body,foreign)).statusCode,404);
+  const before=(await call('GET',`${root}/evidence`)).json().evidence.traceRevision;
+  assert.equal((await call('POST',`${root}/trace/task-tests`,body)).statusCode,200);
+  const current=(await call('GET',`${root}/trace`)).json();assert.equal(current.taskTests.length,1);assert.equal(current.taskTests[0].evidence.state,'not_run');assert.equal(current.taskTests[0].evidence.manualEvidence,false);
+  assert.ok((await call('GET',`${root}/evidence`)).json().evidence.traceRevision>before);
+ });
  await check('editing_invalidates_current_result_but_retains_previous_evidence',async()=>{
   const url=`${root}/test-cases/${testCase.id}`;
   let response=await call('PATCH',url+'/execution',{result:'passed',note:'合成人工记录：仅用于验证历史留存，不代表执行了示例代码',expectedRevision:1});assert.equal(response.statusCode,200);
   assert.equal((await call('GET',`${root}/trace`)).json().items[0].coverage.manualEvidence,1);
+  assert.equal((await call('GET',`${root}/trace`)).json().taskTests[0].evidence.manualEvidence,true);
   const {category,title,preconditions,steps}=testCase;
   const beforeHistory=(await call('GET',url+'/history')).json().history.length;
   response=await call('PATCH',url,{category,title,preconditions,steps,expected:testCase.expected,expectedRevision:1});assert.equal(response.statusCode,200);assert.equal(response.json().case.result,'passed');assert.equal(response.json().case.revision,1);assert.equal((await call('GET',url+'/history')).json().history.length,beforeHistory);
@@ -69,8 +81,17 @@ try{
   assert.equal((await call('PATCH',url+'/execution',{result:'passed',note:'  ',expectedRevision:1})).statusCode,422);
   response=await call('PATCH',url,{category,title,preconditions,steps,expected:'新版必须双人审批',expectedRevision:1});assert.equal(response.statusCode,200);assert.equal(response.json().case.revision,2);assert.equal(response.json().case.result,'not_run');
   const trace=(await call('GET',`${root}/trace`)).json();assert.equal(trace.items[0].coverage.manualEvidence,0);assert.equal(trace.items[0].coverage.stale,1);
+  assert.equal(trace.taskTests[0].evidence.state,'stale_case');assert.equal(trace.taskTests[0].evidence.manualEvidence,false);
   const history=(await call('GET',url+'/history')).json().history;assert.ok(history.some(row=>row.kind==='definition_changed'&&row.snapshot.result==='passed'&&row.snapshot.execution_note.includes('合成人工记录')));
   response=await call('PATCH',url+'/execution',{result:'passed',note:'旧定义的迟到记录',expectedRevision:1});assert.equal(response.statusCode,409);
+ });
+ await check('pair_recheck_preserves_previous_review_and_never_inherits_old_pass',async()=>{
+  let trace=(await call('GET',`${root}/trace`)).json();const pair=trace.taskTests[0];const body={itemId:pair.itemId,taskId:pair.taskId,caseId:pair.caseId,expectedCaseRevision:2,decision:'confirmed',note:'变更后人工重新核对双人审批验收方法'};
+  assert.equal((await call('POST',`${root}/trace/task-tests`,body)).statusCode,409);
+  assert.equal((await call('POST',`${root}/trace/links`,{itemId:pair.itemId,targetId:pair.caseId,targetKind:'case',expectedCaseRevision:2,decision:'confirmed',note:'新定义涵盖双人审批'})).statusCode,200);
+  assert.equal((await call('POST',`${root}/trace/task-tests`,{...body,expectedCaseRevision:1})).json().error,'test_case_changed');
+  assert.equal((await call('POST',`${root}/trace/task-tests`,body)).statusCode,200);
+  trace=(await call('GET',`${root}/trace`)).json();assert.equal(trace.taskTests[0].evidence.state,'not_run');assert.equal(trace.taskTests[0].caseRevision,2);assert.equal(trace.taskTestHistory.length,1);assert.equal(trace.taskTestHistory[0].snapshot.case_revision,1);
  });
  await check('foreign_account_cannot_read_or_write_execution_evidence',async()=>{
   const url=`${root}/test-cases/${testCase.id}`;assert.equal((await call('GET',url+'/history',undefined,foreign)).statusCode,404);assert.equal((await call('PATCH',url+'/execution',{result:'passed',note:'越权合成请求',expectedRevision:2},foreign)).statusCode,404);
@@ -91,6 +112,7 @@ try{
   trace=(await call('GET',`${root}/trace`)).json();assert.equal(trace.items[0].change,'changed_reviewed');assert.equal(trace.items[0].coverage.manualEvidence,0);
   assert.equal((await call('POST',`${root}/trace/change-review`,{itemId,predecessorId,note:'越权变更关系'},foreign)).statusCode,404);
   const old=(await call('GET',`${root}/trace?requirementVersionId=${firstVersion}`)).json();assert.equal(old.version.current,false);assert.ok(old.history.length>=2);
+  assert.equal(trace.taskTests.length,0);const pair=old.taskTests[0];assert.equal((await call('POST',`${root}/trace/task-tests`,{itemId:pair.itemId,taskId:pair.taskId,caseId:pair.caseId,expectedCaseRevision:2,decision:'confirmed',note:'不能把旧需求关联当作当前验证'})).json().error,'trace_version_outdated');
  });
  await check('cross_project_trace_target_rejected_even_for_same_owner',async()=>{
   let response=await call('POST','/projects',{name:'追踪隔离 · 第二个合成项目',description:'仅验证同一账号的项目边界'});assert.equal(response.statusCode,201);const otherRoot=`/projects/${response.json().project.id}`;

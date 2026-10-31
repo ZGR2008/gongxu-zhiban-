@@ -31,6 +31,16 @@ export async function checkLocalDesktop({apiAddress,authorization,projectId,dire
     assert.ok((await trace.getByLabel('审核依据',{exact:true}).inputValue()).includes('合成桌面审核'));
     stage='save_trace';await trace.getByRole('button',{name:'确认关联',exact:true}).click();await trace.getByText('审核已保存。关联确认不等于需求已验证。',{exact:true}).waitFor();
     const detail=await page.request.get(`${apiAddress}/projects/${projectId}/trace`,{headers:{authorization}});const data=await detail.json();assert.ok(data.items.some(i=>i.coverage.confirmedCases===1));assert.ok(data.items.every(i=>i.coverage.manualEvidence===0));
+    stage='task_test_chain_real_write';
+    // This ephemeral API uses the script's explicit model fixture; no remote model calls.
+    const generated=await page.request.post(`${apiAddress}/projects/${projectId}/agent/runs`,{headers:{authorization},data:{requirementId:data.version.id}});assert.equal(generated.status(),201);
+    const run=(await generated.json()).run;const adopted=await page.request.post(`${apiAddress}/projects/${projectId}/agent/runs/${run.id}/confirm`,{headers:{authorization},data:{acknowledged:true,note:'本机浏览器联调合成计划审核，不代表实训成果已通过'}});assert.equal(adopted.status(),200);const task=(await adopted.json()).tasks[0];
+    await trace.getByRole('button',{name:'刷新追踪',exact:true}).click();await trace.getByLabel('关联类型',{exact:true}).selectOption('task');await trace.getByLabel('当前版本对象',{exact:true}).selectOption(task.id);
+    await trace.getByLabel('审核依据',{exact:true}).fill('合成任务直接实现此条审批需求');await trace.getByRole('button',{name:'确认关联',exact:true}).click();await trace.getByText('审核已保存。关联确认不等于需求已验证。',{exact:true}).waitFor();
+    const chain=trace.getByRole('region',{name:'任务与测试验证链'});await chain.getByLabel('验证链开发任务').selectOption(task.id);await chain.getByLabel('验证链测试用例').selectOption(values[0]);await chain.getByLabel('任务验证依据').fill('用例检查审批任务的登记结果，执行仍为未执行');
+    await chain.getByRole('button',{name:'确认任务与用例配对',exact:true}).click();await chain.getByText(/尚无当前修订执行记录/).waitFor();
+    const paired=await page.request.get(`${apiAddress}/projects/${projectId}/trace`,{headers:{authorization}});const pair=(await paired.json()).taskTests[0];assert.equal(pair.taskId,task.id);assert.equal(pair.caseId,values[0]);assert.equal(pair.evidence.manualEvidence,false);
+    await chain.scrollIntoViewIfNeeded();await page.screenshot({path:fileURLToPath(new URL('task-test-chain-desktop.png',directory))});
     stage='desktop_layout';for(const [width,height,zoom] of [[1366,768,1],[1536,864,1.25],[1920,1080,1.5]]){
       await page.setViewportSize({width,height});await page.evaluate(value=>{document.documentElement.style.zoom=String(value);},zoom);await page.waitForTimeout(120);
       const metrics=await page.evaluate(()=>({viewport:document.documentElement.clientWidth,width:document.documentElement.scrollWidth}));assert.ok(metrics.width<=metrics.viewport+2,`layout overflow at ${width}/${zoom}`);
@@ -47,7 +57,7 @@ export async function checkLocalDesktop({apiAddress,authorization,projectId,dire
     await page.locator('.document-history summary').first().click();await page.getByRole('region',{name:'历史修订 3'}).waitFor();
     await page.screenshot({path:fileURLToPath(new URL('documents-desktop.png',directory))});
     assert.equal(errors.length,0);
-    return {scope:'real_local_http_and_database_synthetic_account_model_fixture',screenshots:7,layouts:['1366x768','1536x864 CSS zoom 125%','1920x1080 CSS zoom 150%'],nativeBrowserMenuZoom:'not_executed',keyboardAndTraceSave:'passed',documentSaveAndHistory:'passed'};
+    return {scope:'real_local_http_and_database_synthetic_account_model_fixture',screenshots:8,layouts:['1366x768','1536x864 CSS zoom 125%','1920x1080 CSS zoom 150%'],nativeBrowserMenuZoom:'not_executed',keyboardAndTraceSave:'passed',taskTestPairing:'passed',documentSaveAndHistory:'passed'};
   }catch(error){console.log(`Desktop failure at ${stage}`);console.log((error.stack??'').split('\n').filter(line=>line.includes('local-desktop-check.mjs')).slice(0,2).join('\n'));await page.screenshot({path:fileURLToPath(new URL('desktop-failed.png',directory))});throw error;}
   finally{await context.close();await browser.close();}
 }
