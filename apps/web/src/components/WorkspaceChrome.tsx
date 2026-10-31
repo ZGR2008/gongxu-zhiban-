@@ -173,6 +173,9 @@ export function QuickNavigation({
   const entries: Entry[] = [
     { key: 'dashboard', title: '项目工作台', detail: '返回工作空间', icon: 'dashboard', path: '/dashboard' },
     { key: 'projects', title: '我的项目', detail: '搜索与管理实训项目', icon: 'projects', path: '/projects' },
+    { key: 'missions', title: '实训任务库', detail: '挑选原创任务书，开始工程实践', icon: 'layers', path: '/missions' },
+    { key: 'runs', title: '运行记录', detail: '查看 Agent 步骤、耗时与工具证据', icon: 'activity', path: '/runs' },
+    { key: 'delivery', title: '交付检查', detail: '人工核对成果并导出清单', icon: 'delivery', path: '/delivery' },
     {
       key: 'knowledge',
       title: '知识库',

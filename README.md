@@ -21,6 +21,8 @@
 
 以下为独立演示账号的实际浏览器截图，数据来自操作验证，不代表真实学生成绩：
 
+工作台另外提供三个独立入口：`/missions` 实训任务库（六份原创任务书、筛选、收藏并创建项目）、`/runs` Agent 运行记录（实际步骤、耗时、工具证据与 JSON 导出）、`/delivery` 交付检查（按项目和需求版本记录人工核对、备注与 Markdown 导出）。创建项目使用原有数据库接口；收藏和人工清单仅保存在本机，页面明确提示，不会自动确认计划或执行测试。参考案例、功能边界和最新验证见 [新增工作台页面说明](docs/WORKBENCH-EXPANSION.md)。
+
 ![深空主题工作台：真实项目概况、实训工具入口和项目列表](docs/screenshots/workspace.png)
 
 工作台的三维星环是独立的装饰场景，支持暂停、拖动和减少动态效果，不参与模型调用。独立预览位于 `/previews/planet-orbit.html`，旧版 CSS/SVG 留在 `/previews/archive/planet-orbit-css-v2.html`。当前三维版通过本地 HTTP 服务加载模块，需要 WebGL2；所有运行资源本地提供，不依赖 CDN。轨道代码适配自 MIT 许可的 [SaturnWebGL](https://github.com/adelmassimo/SaturnWebGL)，使用 Three.js 0.187.0，来源和版权声明见 `apps/web/public/previews/vendor/NOTICE.txt`，前端依赖许可见 `apps/web/public/THIRD-PARTY-LICENSES.txt`。
@@ -113,6 +115,10 @@ pnpm smoke:visual --webkit     # 同样的 9 组检查，使用 Playwright WebKi
 pnpm test:ui-models            # 15 项纯前端规则检查：版本隔离、真实状态、边界与逐行比较
 pnpm smoke:project-controls    # 8 组项目概览/版本对比检查，使用真实本地数据库，不调用模型
 pnpm smoke:project-controls --webkit # 同样检查，使用 Playwright WebKit
+pnpm test:workbench            # 10 项规则检查：任务书、时间显示、人工清单存储与版本隔离
+pnpm smoke:workbench           # 11 组新页面检查；真实数据库，不调用云模型
+pnpm smoke:workbench --with-ai # 12 组，增加一次真实规划与运行证据比对，会产生 API 用量
+pnpm smoke:workbench --with-ai --webkit # 同样检查，使用 Playwright WebKit
 ```
 
 浏览器检查在 Windows 默认使用已安装的 Edge；其他系统可先运行 `pnpm exec playwright install chromium`，或通过 `SMOKE_BROWSER_CHANNEL` 选择已安装的兼容浏览器。接口测试地址使用 `SMOKE_API_URL`，浏览器地址使用 `SMOKE_WEB_URL`；这些脚本只允许无凭证的本机回环地址，避免误写线上业务数据。`smoke:ui` 默认包含 8 组检查，`--with-ai` 包含 11 组；它保留原有两套联调脚本及断言，单独记录新交互。其人工测试状态样例明确记录为“阻塞”，不声称执行了示例项目代码。常规自动化测试中的数据库和模型替身不等同于这些真实联调结果。
@@ -120,6 +126,8 @@ pnpm smoke:project-controls --webkit # 同样检查，使用 Playwright WebKit
 `smoke:visual` 只需前端服务和可用的 WebGL2 环境，不要求登录或调用 API。它比较实际截图像素并观察 GPU 时间与绘制次数，避免“存在动画样式但画面没有旋转”的假阳性。WebKit 可先通过 `pnpm exec playwright install webkit` 安装；Windows 上的自动化 WebKit 结果不是 Safari 真机结论。各脚本保留本轮报告与截图，不覆盖旧报告。
 
 `smoke:project-controls` 使用隔离演示账号，实际保存、确认与恢复需求版本；额外的读取失败和跨版本统计场景通过明确标识的浏览器受控响应检查，不冒充模型调用。测试结束后注销账号，报告不保存凭证。`test:ui-models` 使用 Node 的 TypeScript 类型剥离能力，本机已在 Node 24.22.1 验证。
+
+`smoke:workbench` 同样使用隔离演示账号，验证任务筛选收藏、真实项目创建、人工清单保存与导出、跨项目及需求版本隔离、运行证据、自动刷新和响应式导航。存储拒绝、接口读取失败、长文本及脚本字符串属于明确标识的受控边界检查；开启 `--with-ai` 后另行验证真实 DeepSeek 记录。`test:workbench` 也使用 Node 的 TypeScript 类型剥离能力。
 
 本工作区的 WebKit 已下载在 `.runtime/browsers/`；复用这一缓存时，在仓库根目录的 PowerShell 中先运行 `$env:PLAYWRIGHT_BROWSERS_PATH="$PWD/.runtime/browsers"`，再执行 `pnpm smoke:visual --webkit`。新环境可使用 Playwright 的默认安装目录，无需设置该变量。
 

@@ -1,0 +1,201 @@
+{
+  "recordedAt": "2026-10-31T13:36:47.261Z",
+  "scope": "Local workbench expansion; no public deployment or contest submission.",
+  "routes": [
+    "/missions",
+    "/missions/:id",
+    "/runs",
+    "/delivery"
+  ],
+  "originalMissionBriefs": 6,
+  "commandsVerifiedInThisSession": [
+    {
+      "command": "pnpm test",
+      "status": "passed",
+      "checks": 52,
+      "skipped": 0
+    },
+    {
+      "command": "pnpm test:ui-models",
+      "status": "passed",
+      "checks": 15
+    },
+    {
+      "command": "pnpm test:workbench",
+      "status": "passed",
+      "checks": 10
+    },
+    {
+      "command": "pnpm typecheck",
+      "status": "passed",
+      "packages": 3
+    },
+    {
+      "command": "pnpm build",
+      "status": "passed",
+      "packages": 3
+    }
+  ],
+  "suites": [
+    {
+      "name": "live_interfaces",
+      "localReport": ".runtime/smoke-c4f6eb78-f705-411b-8351-eb4d97badff9.json",
+      "status": "passed",
+      "checks": 14,
+      "passed": 14,
+      "startedAt": "2026-10-31T13:30:40.071Z",
+      "finishedAt": "2026-10-31T13:31:13.374Z",
+      "remoteAiRequested": true,
+      "syntheticInput": true
+    },
+    {
+      "name": "original_browser_production",
+      "localReport": ".runtime/browser-ea94cf71-34fb-4a7a-86af-bbfcb7019a3d/report.json",
+      "status": "passed",
+      "checks": 6,
+      "passed": 6,
+      "startedAt": "2026-10-31T13:32:03.223Z",
+      "finishedAt": "2026-10-31T13:32:11.222Z",
+      "remoteAiRequested": true,
+      "syntheticInput": true
+    },
+    {
+      "name": "existing_ui_production",
+      "localReport": ".runtime/ui-128d4102-c7ee-40b0-a51a-6b14dc600854/report.json",
+      "status": "passed",
+      "checks": 11,
+      "passed": 11,
+      "startedAt": "2026-10-31T13:32:12.072Z",
+      "finishedAt": "2026-10-31T13:32:45.536Z",
+      "remoteAiRequested": true,
+      "syntheticInput": true
+    },
+    {
+      "name": "workbench_edge_production",
+      "localReport": ".runtime/workbench-a49e8e43-f43f-4831-b25d-b96328c20e5a/report.json",
+      "status": "passed",
+      "checks": 12,
+      "passed": 12,
+      "startedAt": "2026-10-31T13:29:57.536Z",
+      "finishedAt": "2026-10-31T13:30:16.247Z",
+      "remoteAiRequested": true,
+      "syntheticInput": true
+    },
+    {
+      "name": "workbench_webkit_production",
+      "localReport": ".runtime/workbench-92bba03a-2603-428a-8db3-ce8f3d544956/report.json",
+      "status": "passed",
+      "checks": 12,
+      "passed": 12,
+      "startedAt": "2026-10-31T13:31:21.714Z",
+      "finishedAt": "2026-10-31T13:31:48.066Z",
+      "remoteAiRequested": true,
+      "syntheticInput": true
+    }
+  ],
+  "responsive": {
+    "status": "passed",
+    "pageKinds": 4,
+    "widths": [
+      320,
+      390,
+      768,
+      1440,
+      1920
+    ],
+    "combinations": 20,
+    "overflow": 0,
+    "pageErrors": 0,
+    "localReport": ".runtime/workbench/layout.json"
+  },
+  "accessibility": {
+    "views": 6,
+    "automatedViolations": 0,
+    "incompleteChecks": [
+      {
+        "view": "/missions",
+        "checks": [
+          {
+            "id": "color-contrast",
+            "count": 99
+          }
+        ]
+      },
+      {
+        "view": "filtered_empty",
+        "checks": [
+          {
+            "id": "color-contrast",
+            "count": 41
+          }
+        ]
+      },
+      {
+        "view": "/missions/campus-books",
+        "checks": [
+          {
+            "id": "color-contrast",
+            "count": 72
+          }
+        ]
+      },
+      {
+        "view": "/runs",
+        "checks": [
+          {
+            "id": "aria-prohibited-attr",
+            "count": 1
+          },
+          {
+            "id": "color-contrast",
+            "count": 86
+          }
+        ]
+      },
+      {
+        "view": "expanded_tool_evidence",
+        "checks": [
+          {
+            "id": "aria-prohibited-attr",
+            "count": 1
+          },
+          {
+            "id": "color-contrast",
+            "count": 93
+          }
+        ]
+      },
+      {
+        "view": "/delivery",
+        "checks": [
+          {
+            "id": "color-contrast",
+            "count": 79
+          }
+        ]
+      }
+    ],
+    "scope": "Automated checks only; gradient and glass contrast need manual evaluation. Not a full WCAG claim.",
+    "localReport": ".runtime/workbench/accessibility.json"
+  },
+  "originalBusinessBoundary": {
+    "baseline": "096ca68",
+    "functionsAndEffects": 47,
+    "changed": 0,
+    "protectedBackendOrOriginalSmokeFilesChanged": 0,
+    "localReport": ".runtime/cosmic-ui-review/business-boundary.json"
+  },
+  "presentation": {
+    "lazyRoutes": true,
+    "newDependencies": 0,
+    "mainJsApproxKb": 489.18,
+    "mainJsGzipApproxKb": 149.97
+  },
+  "limitations": [
+    "Windows WebKit is not real Safari hardware.",
+    "Manual delivery checklists and bookmarks are browser-local, not cloud-synchronized.",
+    "Controlled responses test read failures, stored data validation and unsafe text; these are separate from live model evidence.",
+    "Agent plans remain subject to human review; viewing, downloading or checking a delivery item does not execute code or mark tests as passed.",
+    "No new public deployment, formal MP4, contest PDF, or presentation has been delivered in this change."
+  ]
+}

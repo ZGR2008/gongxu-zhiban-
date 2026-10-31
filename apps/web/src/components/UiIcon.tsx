@@ -13,7 +13,11 @@ type IconName =
   | 'grid'
   | 'list'
   | 'plus'
-  | 'clock';
+  | 'clock'
+  | 'bookmark'
+  | 'layers'
+  | 'activity'
+  | 'delivery';
 const paths: Record<IconName, string> = {
   dashboard: 'M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM14 14h7v7h-7z',
   projects: 'M3 7V5a1 1 0 0 1 1-1h5l3 3h8a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V7Zm0 3h18',
@@ -30,6 +34,10 @@ const paths: Record<IconName, string> = {
   list: 'M8 5h13M8 12h13M8 19h13M3 5h.01M3 12h.01M3 19h.01',
   plus: 'M12 4v16M4 12h16',
   clock: 'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18Zm0 4v5l3 2',
+  bookmark: 'M6 3h12v18l-6-4-6 4V3Z',
+  layers: 'm12 3 10 5-10 5L2 8l10-5ZM2 12l10 5 10-5M2 16l10 5 10-5',
+  activity: 'M2 12h4l3-8 5 16 3-8h5',
+  delivery: 'M9 4H5v17h14V4h-4M9 2h6v5H9V2Zm-1 12 3 3 5-6',
 };
 export function UiIcon({ name, size = 20 }: { name: IconName; size?: number }) {
   return (
