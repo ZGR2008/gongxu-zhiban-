@@ -8,7 +8,7 @@ export type TaskTestPair={id:string;itemId:string;taskId:string;caseId:string;ca
 export type PairHistory={id:string;linkId:string;recordedAt:string;snapshot:{case_revision:number;status:string;review_note:string}};
 const states:Record<string,string>={rejected:'已排除配对',stale_case:'用例已改动 · 配对待复核',source_review_required:'需求关联待审核',not_run:'尚无当前修订执行记录',missing_evidence:'执行说明不足',manual_pass_record:'有人工通过记录',manual_fail_record:'有人工失败记录',manual_blocked_record:'人工登记阻塞'};
 
-export function TaskTestEvidence({projectId,itemId,current,tasks,cases,links,pairs,history,request,refresh}:{projectId:string;itemId:string;current:boolean;tasks:ChainTarget[];cases:ChainTarget[];links:ChainLink[];pairs:TaskTestPair[];history:PairHistory[];request:Api;refresh:()=>Promise<void>}){
+export function TaskTestEvidence({projectId,itemId,current,blocked=false,tasks,cases,links,pairs,history,request,refresh}:{projectId:string;itemId:string;current:boolean;blocked?:boolean;tasks:ChainTarget[];cases:ChainTarget[];links:ChainLink[];pairs:TaskTestPair[];history:PairHistory[];request:Api;refresh:()=>Promise<void>}){
  const [taskId,setTaskId]=useState(''),[caseId,setCaseId]=useState(''),[note,setNote]=useState(''),[error,setError]=useState(''),[busy,setBusy]=useState(false);
  const pending=useRef<Promise<boolean>|null>(null);const {protect}=useEditGuard();
  const selectedCase=cases.find(row=>row.id===caseId);
@@ -16,6 +16,7 @@ export function TaskTestEvidence({projectId,itemId,current,tasks,cases,links,pai
  const related=pairs.filter(pair=>pair.itemId===itemId);
  function save(decision:'confirmed'|'rejected'='confirmed'):Promise<boolean>{
   if(pending.current)return pending.current;
+  if(blocked||!current){setError('请先刷新并核对当前需求快照，再提交配对。');return Promise.resolve(false);}
   if(!taskId||!selectedCase?.revision||note.trim().length<3||(decision==='confirmed'&&!sourceReady)){setError('请先审核任务、用例与需求条目的关联，再填写配对依据（至少3个字符）。');return Promise.resolve(false);}
   setBusy(true);setError('');
   const promise=(async()=>{try{

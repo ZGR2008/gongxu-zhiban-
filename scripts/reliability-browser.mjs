@@ -58,7 +58,8 @@ async function scenario(name,work){
   }
   else if(path.endsWith('/agent/runs'))body={runs:state.runs};
   else if(/\/agent\/runs\/[^/]+$/.test(path)){const id=path.split('/').at(-1);state.runCounts[id]=(state.runCounts[id]||0)+1;await new Promise(r=>setTimeout(r,state.runDelay(id)));body={run:state.runs.find(r=>r.id===id),steps:[{id:'s',stage:'plan_1',status:'succeeded',outputSummary:id===RA?'运行A输出':'运行B输出',tools:[]}]};}
-  else if(path.endsWith('/trace'))body=state.traceData??{version:null,items:[],links:[],tasks:[],cases:[],previousItems:[],impact:null};
+  else if(path.endsWith('/trace')){status=state.traceStatus??200;body=status===200?(state.traceData??{version:null,items:[],links:[],tasks:[],cases:[],previousItems:[],impact:null}):{error:'trace_refresh_required'};}
+  else if(/\/trace\/(links|task-tests)$/.test(path)&&method==='POST'){state.writes.push({path,body:route.request().postDataJSON()});body={status:'confirmed'};}
   else if(path==='/knowledge')body={documents:[],embeddingConfigured:true,pdfAvailable:true};
   else if(path==='/knowledge/activity')body={activities:[]};
   else if(path==='/knowledge/search'){state.searches++;await new Promise(r=>setTimeout(r,state.searchDelay));body={hits:[{id:RA,document_name:'取消后重试资料',content:'成功检索的合成片段',page:1,distance:0.1}]};}
@@ -73,7 +74,30 @@ async function scenario(name,work){
 }
 async function routeTo(page,id){await page.evaluate(path=>{history.pushState({},'',path);dispatchEvent(new PopStateEvent('popstate'));},`/projects/${id}/requirements`);}
 async function waitFor(check){for(let i=0;i<100;i++){if(check())return;await new Promise(resolve=>setTimeout(resolve,20));}throw Error('Fixture request not observed');}
+function traceFixture(state){
+ const test={id:RB,title:'合成配对用例',requirementVersionId:RA,category:'normal',revision:1,preconditions:'',steps:'核对登记',expected:'审批留存',result:'not_run',executionNote:'',executedAt:null};
+ state.detailOverride={project:project(A),requirements:[{id:RA,version:1,status:'confirmed',content:'审批留档',createdAt:now}]};state.cases=[test];
+ state.traceData={version:{id:RA,number:1,current:true},items:[{id:RA,key:'REQ-fixture',position:1,start:0,end:4,text:'审批留档',change:'initial',coverage:{suggested:0,confirmedTasks:1,confirmedCases:1,stale:0,manualEvidence:0}}],links:[{id:'task-link',itemId:RA,taskId:RA,caseId:null,status:'confirmed',origin:'human'},{id:'case-link',itemId:RA,taskId:null,caseId:RB,caseRevision:1,status:'confirmed',origin:'human'}],tasks:[{id:RA,title:'合成审批任务'}],cases:[test],previousItems:[],impact:null,taskTests:[],taskTestHistory:[],scope:'受控浏览器替身，不是业务数据'};
+}
 try{
+ await scenario('trace_parallel_review_drafts_survive_either_form_save',async(page,state)=>{
+  traceFixture(state);await page.goto(`${origin.origin}/projects/${A}/tests`);
+  const trace=page.getByRole('region',{name:'需求到验证证据追踪'});
+  await trace.getByLabel('当前版本对象',{exact:true}).selectOption(RA);await trace.getByLabel('审核依据',{exact:true}).fill('上方关联审核准备保存');
+  await trace.getByLabel('验证链开发任务').selectOption(RA);await trace.getByLabel('验证链测试用例').selectOption(RB);await trace.getByLabel('任务验证依据').fill('下方配对审核不能随上方刷新丢失');
+  await trace.getByRole('button',{name:'确认关联',exact:true}).click();await waitFor(()=>state.writes.length===1);await page.waitForTimeout(200);
+  assert.equal(await trace.getByLabel('任务验证依据').inputValue(),'下方配对审核不能随上方刷新丢失');
+  await trace.getByLabel('审核依据',{exact:true}).fill('这次上方审核草稿不得被配对保存卸载');
+  await trace.getByRole('button',{name:'确认任务与用例配对',exact:true}).click();await waitFor(()=>state.writes.length===2);await page.waitForTimeout(200);
+  assert.equal(await trace.getByLabel('审核依据',{exact:true}).inputValue(),'这次上方审核草稿不得被配对保存卸载');assert.ok((await trace.innerText()).includes('来源记录已更新'));
+ });
+ await scenario('trace_read_failure_marks_old_snapshot_readonly_until_recovery',async(page,state)=>{
+  traceFixture(state);await page.goto(`${origin.origin}/projects/${A}/tests`);const trace=page.getByRole('region',{name:'需求到验证证据追踪'});await trace.getByLabel('审核依据',{exact:true}).waitFor();
+  state.traceStatus=409;await trace.getByRole('button',{name:'刷新追踪'}).click();await trace.getByText(/读取期间需求版本发生变化/).waitFor();
+  assert.equal(await trace.getByRole('button',{name:'确认关联',exact:true}).isDisabled(),true);assert.equal(await trace.getByLabel('验证链开发任务').isDisabled(),true);assert.ok((await trace.innerText()).includes('上次读取快照'));
+  state.traceStatus=200;await trace.getByRole('button',{name:'刷新追踪'}).click();await trace.getByLabel('审核依据',{exact:true}).waitFor();await page.waitForTimeout(80);
+  assert.equal(await trace.getByRole('button',{name:'确认关联',exact:true}).isEnabled(),true);assert.equal(await trace.getByLabel('验证链开发任务').isEnabled(),true);
+ });
  await scenario('test_definition_save_locks_inputs_until_response_and_retains_saved_text',async(page,state)=>{
   state.caseSaveDelay=650;state.detailOverride={project:project(A),requirements:[{id:RA,version:1,status:'confirmed',content:'合成需求',createdAt:now}]};state.cases=[{id:RB,title:'合成用例',requirementVersionId:RA,category:'normal',revision:1,preconditions:'',steps:'检查',expected:'保留',result:'not_run',executionNote:'',executedAt:null}];
   await page.goto(`${origin.origin}/projects/${A}/tests`);await page.getByRole('button',{name:'编辑用例 →',exact:true}).click();await page.locator(`#${RB}-title`).fill('保存中的定义');await page.getByRole('button',{name:'保存用例',exact:true}).click();await waitFor(()=>state.writes.length===1);
