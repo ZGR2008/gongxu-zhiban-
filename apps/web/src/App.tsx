@@ -28,8 +28,9 @@ function ConnectionStatus({ connection, onCheck }: { connection: Connection; onC
   return <div className="connection" role="status" aria-live="polite"><span className={`connection-dot ${connection}`} />{labels[connection]}<button onClick={onCheck} disabled={connection === 'checking'} type="button" title="重新检查服务">↻</button></div>;
 }
 
+function readSession() { try { return localStorage.getItem('gongxu_token') || ''; } catch { return ''; } }
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
-  const session = localStorage.getItem('gongxu_token');
+  const session = readSession();
   let response: Response;
   try {
     response = await fetch(`/api${path}`, { ...options, headers: { ...(options?.body != null ? { 'Content-Type': 'application/json' } : {}), ...(session ? { Authorization: `Bearer ${session}` } : {}), ...options?.headers } });
@@ -38,6 +39,9 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
     throw new Error('无法连接服务，请检查后端是否启动。');
   }
   const data: unknown = await response.json().catch(() => ({}));
+  // A reply belongs to the session that started it, even after logout/login in
+  // another tab. Do not allow old success callbacks to navigate or populate UI.
+  if (session !== readSession()) throw Object.assign(new Error('登录会话已变化，旧请求结果已忽略。'), {code:'session_changed'});
   if (!response.ok) {
     if (response.status === 401 && session && localStorage.getItem('gongxu_token') === session) { localStorage.removeItem('gongxu_token'); window.dispatchEvent(new Event('gongxu:expired')); }
     const result = data as { message?: string; error?: string };
@@ -85,10 +89,19 @@ function Auth({ onAuthenticated, connection, onCheck }: { onAuthenticated: (toke
   return <div className="auth-page"><div className="auth-intro"><a className="brand" href="/"><span className="brand-mark">工</span><span><strong>工序智伴</strong><small>GONGXU AI</small></span></a><div><div className="auth-kicker">SOFTWARE ENGINEERING · AI</div><h1>让每个想法，<br/>走完真正的开发流程。</h1><p>从需求到交付，在真实项目中练习软件工程。</p></div><small>AI 软件工程实训平台 · 工序智伴</small></div><div className="auth-main"><div className="auth-form"><div className="eyebrow">WELCOME TO GONGXU</div><h2>{mode === 'login' ? '欢迎回来' : '创建你的账号'}</h2><p>登录工作空间，继续你的项目实践。</p><ConnectionStatus connection={connection} onCheck={onCheck} />{connection === 'preparing' && <p role="status">数据服务暂未就绪，请稍后重新检查，再登录或注册。</p>}<div className="auth-tabs"><button type="button" className={mode === 'login' ? 'selected' : ''} onClick={() => { setMode('login'); setError(''); }}>登录</button><button type="button" className={mode === 'register' ? 'selected' : ''} onClick={() => { setMode('register'); setError(''); }}>注册</button></div>{error && <div className="alert error" role="alert">{error}</div>}<form onSubmit={submit}>{mode === 'register' && <><label htmlFor="auth-name">姓名</label><input id="auth-name" value={name} onChange={e => setName(e.target.value)} required maxLength={80} autoComplete="name" placeholder="你的名字"/></>}<label htmlFor="email">邮箱</label><input id="email" type="email" value={email} onChange={e => setEmail(e.target.value)} required autoComplete="email" placeholder="you@example.com"/><label htmlFor="password">密码</label><input id="password" type="password" value={password} onChange={e => setPassword(e.target.value)} required minLength={10} maxLength={128} autoComplete={mode === 'login' ? 'current-password' : 'new-password'} placeholder="至少 10 位"/><button type="submit" className="button primary auth-submit" disabled={busy || connection !== 'online'}>{busy ? '处理中…' : mode === 'login' ? '登录工作空间' : '注册并进入'} <span>↗</span></button></form><p className="auth-help">项目数据与当前账号关联保存。请勿使用重要密码进行公开演示。</p></div></div></div>;
 }
 
-export default function App() { return <EditGuardProvider><Workspace /></EditGuardProvider>; }
-function Workspace() {
-  const [token, setToken] = useState(() => localStorage.getItem('gongxu_token') || '');
-  useEffect(() => { const onExpired = () => setToken(''); window.addEventListener('gongxu:expired', onExpired); return () => window.removeEventListener('gongxu:expired', onExpired); }, []);
+export default function App() {
+  const [token, setToken] = useState(readSession);
+  useEffect(() => {
+    const onExpired = () => setToken('');
+    const onStorage = (event: StorageEvent) => { if (event.key === 'gongxu_token' || event.key === null) setToken(readSession()); };
+    window.addEventListener('gongxu:expired', onExpired); window.addEventListener('storage', onStorage);
+    return () => { window.removeEventListener('gongxu:expired', onExpired); window.removeEventListener('storage', onStorage); };
+  }, []);
+  // All caches, pending UI callbacks and editor registrations belong to one
+  // session. A different account must never reuse the previous workspace state.
+  return <EditGuardProvider key={token || 'signed-out'}><Workspace token={token} onAuthenticated={setToken} /></EditGuardProvider>;
+}
+function Workspace({token,onAuthenticated}:{token:string;onAuthenticated:(token:string)=>void}) {
   const [connection, setConnection] = useState<Connection>('checking');
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
@@ -116,6 +129,7 @@ function Workspace() {
   const baselineDraft = useRef('');
   const savePending = useRef<Promise<boolean> | null>(null);
   const operationEpoch = useRef(0);
+  useEffect(() => () => { detailScope.current.cancel(); projectScope.current.cancel(); operationEpoch.current++; }, []);
   const { protect } = useEditGuard();
   const { path, navigate } = useGuardedRoute(next => {
     const owner = next.match(/^\/projects\/([^/]+)/)?.[1];
@@ -241,10 +255,10 @@ function Workspace() {
     try { const result = await request<{ requirement: Requirement }>(`/projects/${encodeURIComponent(projectId)}/requirements/${encodeURIComponent(latest.id)}/confirm`, { method: 'POST' }); if (current()) { setDetail(value => value?.project.id === projectId ? { ...value, requirements: value.requirements.map(row => row.id === latest.id ? result.requirement : row) } : value); setNotice('需求版本已确认。'); } }
     catch (err) { if (current()) setError(message(err)); } finally { if (current()) setSaving(false); }
   }
-  async function logout() { try { await request('/auth/logout', { method: 'POST' }); } catch { /* Local logout remains available if the service is offline. */ } finally { detailScope.current.cancel(); projectScope.current.cancel(); localStorage.removeItem('gongxu_token'); setToken(''); } }
+  async function logout() { try { await request('/auth/logout', { method: 'POST' }); } catch { /* Local logout remains available if the service is offline. */ } finally { if(readSession()===token){detailScope.current.cancel(); projectScope.current.cancel(); localStorage.removeItem('gongxu_token'); onAuthenticated('');} } }
   const link = (event: React.MouseEvent<HTMLAnchorElement>, to: string) => { if (!event.metaKey && !event.ctrlKey && !event.shiftKey && event.button === 0) { event.preventDefault(); navigate(to); } };
 
-  if (!token) return <Auth onAuthenticated={setToken} connection={connection} onCheck={() => void checkHealth()} />;
+  if (!token) return <Auth onAuthenticated={onAuthenticated} connection={connection} onCheck={() => void checkHealth()} />;
   return <div className="app-shell">
     <aside className="sidebar" aria-label="工作空间导航">
       <a className="brand" href="/dashboard" onClick={e => link(e, '/dashboard')}><span className="brand-mark">工</span><span><strong>工序智伴</strong><small>GONGXU AI</small></span></a>

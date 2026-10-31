@@ -1,5 +1,6 @@
 import { chromium } from 'playwright';
 import { mkdir, writeFile } from 'node:fs/promises';
+import {existsSync} from 'node:fs';
 import { randomUUID } from 'node:crypto';
 import assert from 'node:assert/strict';
 import {execFileSync} from 'node:child_process';
@@ -8,23 +9,37 @@ import {createRequire} from 'node:module';
 // Optional read-only reproduction of a known local historical Knowledge module.
 // Only this browser sees it; no checkout, source overwrite, DB or external calls.
 const knowledgeBaseline=process.argv.find(arg=>arg.startsWith('--knowledge-baseline='))?.split('=')[1];
+const workspaceBaseline=process.argv.find(arg=>arg.startsWith('--workspace-baseline='))?.split('=')[1];
+const baselineCommit=knowledgeBaseline??workspaceBaseline;
+const baselineSource=workspaceBaseline?'App.tsx':'Modules.tsx';
 let baselineModule;
-if(knowledgeBaseline){
- if(!/^[a-f0-9]{7,40}$/.test(knowledgeBaseline)||!process.argv.some(arg=>arg.startsWith('--case=knowledge_')))throw Error('Historical reproduction requires a commit hash and Knowledge-only case filter');
+if(baselineCommit){
+ if((knowledgeBaseline&&workspaceBaseline)||!/^[a-f0-9]{7,40}$/.test(baselineCommit)||!process.argv.some(arg=>arg.startsWith(workspaceBaseline?'--case=session_':'--case=knowledge_')))throw Error('Historical reproduction requires a commit hash and matching case filter');
  const ts=createRequire(new URL('../apps/web/package.json',import.meta.url))('typescript');
- const source=execFileSync('git',['show',`${knowledgeBaseline}:apps/web/src/Modules.tsx`],{cwd:new URL('../',import.meta.url),encoding:'utf8'});
+ const source=execFileSync('git',['show',`${baselineCommit}:apps/web/src/${baselineSource}`],{cwd:new URL('../',import.meta.url),encoding:'utf8'});
  baselineModule=ts.transpileModule(source,{compilerOptions:{jsx:ts.JsxEmit.ReactJSX,target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ESNext}}).outputText.replace(/import \{([^}]+)\} from ["'](react(?:\/jsx-runtime)?)["'];/g,(_match,bindings,module)=>{
   const key=module==='react'?'baselineReact':'baselineJsx',file=module==='react'?'react':'react_jsx-runtime';
   return `import ${key} from "/node_modules/.vite/deps/${file}.js";const {${bindings.replace(/\bas\b/g,':')}}=${key};`;
+ });
+ // Match Vite's canonical component URLs so React contexts are not instantiated
+ // twice by extensionless historical imports versus current transformed imports.
+ baselineModule=baselineModule.replace(/(["'])\.\/([^"'\n]+)\1/g,(original,quote,relative)=>{
+  const target=['','.tsx','.ts'].map(suffix=>relative+suffix).find(file=>existsSync(new URL('../apps/web/src/'+file,import.meta.url)));
+  return target?`${quote}/src/${target}${quote}`:original;
  });
 }
 
 // Controlled UI regression only: all API traffic is intercepted; no model or DB calls.
 const origin = new URL(process.env.SMOKE_WEB_URL || 'http://127.0.0.1:5173');
 if (!['127.0.0.1','localhost','[::1]'].includes(origin.hostname) || origin.username || origin.password || origin.pathname !== '/' || origin.search || origin.hash) throw Error('Loopback origin required');
+if(baselineModule){
+ const response=await fetch(new URL(`/src/${baselineSource}`,origin));if(!response.ok)throw Error('Local transformed module unavailable');
+ const current=await response.text();const imports=new Map([...current.matchAll(/["'](\/(?:src|node_modules)\/[^"']+)["']/g)].map(match=>[match[1].split('?')[0],match[1]]));
+ baselineModule=baselineModule.replace(/(["'])(\/(?:src|node_modules)\/[^"']+)\1/g,(original,quote,path)=>imports.has(path)?`${quote}${imports.get(path)}${quote}`:original);
+}
 const directory = new URL(`../.runtime/reliability-ui-${randomUUID()}/`,import.meta.url);
 await mkdir(directory,{recursive:true});
-const report={scope:'controlled_browser_responses',historicalKnowledgeModule:knowledgeBaseline??null,realDatabase:false,realModel:false,checks:[],startedAt:new Date().toISOString()};
+const report={scope:'controlled_browser_responses',historicalKnowledgeModule:knowledgeBaseline??null,historicalWorkspaceModule:workspaceBaseline??null,realDatabase:false,realModel:false,checks:[],startedAt:new Date().toISOString()};
 const browser=await chromium.launch({headless:true,channel:process.env.SMOKE_BROWSER_CHANNEL || (process.platform==='win32'?'msedge':undefined)});
 const A='11111111-1111-4111-8111-111111111111', B='22222222-2222-4222-8222-222222222222';
 const RA='aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', RB='bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
@@ -37,18 +52,20 @@ async function scenario(name,work){
  await context.addInitScript(()=>localStorage.setItem('gongxu_token','controlled-browser-fixture'));
  const page=await context.newPage();page.setDefaultTimeout(6000);
  const state={detailCounts:{},delay:()=>0,makeDetail:id=>detail(id),saveDelay:0,docSaveDelay:0,docReadDelay:()=>0,docReads:0,docResponse:null,docConflict:false,docHistory:[],evidence:null,writes:[],failSave:false,errors:[],tasks:[],cases:[],documents:[],detailOverride:null,detailStatus:200,runs:[],runCounts:{},runDelay:()=>0,searchDelay:0,searches:0};
- page.on('pageerror',()=>state.errors.push('page_error'));
+ page.on('pageerror',error=>{state.errors.push('page_error');if(baselineCommit)console.log(`Historical browser module error: ${error.message}`);});
  await page.route('**/*',async route=>{
   const url=new URL(route.request().url());
   if(url.origin!==origin.origin) return route.abort();
-  if(baselineModule&&url.pathname==='/src/Modules.tsx')return route.fulfill({contentType:'application/javascript',body:baselineModule});
+  if(baselineModule&&url.pathname===`/src/${baselineSource}`)return route.fulfill({contentType:'application/javascript',body:baselineModule});
   if(!url.pathname.startsWith('/api/')) return route.continue();
   const path=url.pathname.slice(4),method=route.request().method();
   let status=200,body={};
   if(path==='/health')body={status:'ok',service:'gongxu-api'};
   else if(path==='/ready')body={status:'ready'};
   else if(path==='/ai/status')body={configured:false};
-  else if(path==='/projects')body={projects:[project(A),project(B)]};
+  else if(path==='/auth/logout'){state.logoutRequests=(state.logoutRequests??0)+1;body={ok:true};}
+  else if(path==='/auth/login')body={token:'controlled-browser-next-session',user:{id:B,name:'合成账号B'}};
+  else if(path==='/projects'){body={projects:state.projectList??[project(A),project(B)]};await new Promise(r=>setTimeout(r,state.projectListDelay??0));}
   else if(/^\/projects\/[^/]+$/.test(path)){
    const id=path.split('/')[2];state.detailCounts[id]=(state.detailCounts[id]||0)+1;
    const count=state.detailCounts[id];body=state.detailOverride||state.makeDetail(id,count);await new Promise(resolve=>setTimeout(resolve,state.delay(id,count)));if(state.detailStatus!==200){status=state.detailStatus;body={error:state.detailStatus===401?'unauthorized':'database_unavailable'};}
@@ -106,6 +123,24 @@ function traceFixture(state){
  state.traceData={version:{id:RA,number:1,current:true},items:[{id:RA,key:'REQ-fixture',position:1,start:0,end:4,text:'审批留档',change:'initial',coverage:{suggested:0,confirmedTasks:1,confirmedCases:1,stale:0,manualEvidence:0}}],links:[{id:'task-link',itemId:RA,taskId:RA,caseId:null,status:'confirmed',origin:'human'},{id:'case-link',itemId:RA,taskId:null,caseId:RB,caseRevision:1,status:'confirmed',origin:'human'}],tasks:[{id:RA,title:'合成审批任务'}],cases:[test],previousItems:[],impact:null,taskTests:[],taskTestHistory:[],scope:'受控浏览器替身，不是业务数据'};
 }
 try{
+ await scenario('session_new_account_cannot_see_previous_project_cache',async(page,state)=>{
+  await page.goto(`${origin.origin}/dashboard`);await page.locator('.project-explorer').getByText('受控项目 A',{exact:true}).waitFor();
+  await page.getByRole('link',{name:'知识库',exact:true}).first().click();await page.locator('#knowledge-name').waitFor();await page.getByRole('button',{name:/退出登录/}).click();await page.locator('#email').waitFor();
+  state.projectList=[project(B)];await page.locator('#email').fill('synthetic-b@example.invalid');await page.locator('#password').fill('fixture-password-only');await page.getByRole('button',{name:/登录工作空间/}).click();await page.locator('#knowledge-name').waitFor();
+  await page.keyboard.press('Control+k');await page.locator('#quick-nav-query').fill('受控项目 A');assert.equal(await page.locator('.quick-nav-results').getByText('受控项目 A',{exact:true}).count(),0);
+ });
+ await scenario('session_storage_change_invalidates_old_editor_and_late_response',async(page,state)=>{
+  await page.goto(`${origin.origin}/projects/${A}/requirements`);await page.locator('#requirement').fill('账号A未保存的合成内容');
+  state.detailStatus=404;state.delay=()=>450;
+  await page.evaluate(()=>{const oldValue=localStorage.getItem('gongxu_token');localStorage.setItem('gongxu_token','controlled-browser-next-session');dispatchEvent(new StorageEvent('storage',{key:'gongxu_token',oldValue,newValue:'controlled-browser-next-session',storageArea:localStorage}));});
+  await page.waitForTimeout(650);assert.equal(await page.locator('#requirement').count(),0);assert.equal(await page.getByText('受控项目 A',{exact:true}).count(),0);assert.equal(await page.evaluate(()=>localStorage.getItem('gongxu_token')),'controlled-browser-next-session');
+ });
+ await scenario('session_normal_logout_still_requires_unsaved_choice',async(page,state)=>{
+  await page.goto(`${origin.origin}/projects/${A}/requirements`);await page.locator('#requirement').fill('正常退出前的合成草稿');await page.getByRole('button',{name:/退出登录/}).click();
+  const guard=page.getByRole('dialog',{name:'保留未保存的编辑'});await guard.waitFor();await page.keyboard.press('Escape');assert.equal(state.logoutRequests??0,0);assert.equal(await page.locator('#requirement').inputValue(),'正常退出前的合成草稿');
+  state.failSave=true;await page.getByRole('button',{name:/退出登录/}).click();await guard.getByRole('button',{name:'保存并继续'}).click();await guard.getByText(/保存未成功/).waitFor();assert.equal(state.logoutRequests??0,0);
+  await guard.getByRole('button',{name:'放弃并继续'}).click();await page.locator('#email').waitFor();assert.equal(state.logoutRequests,1);
+ });
  await scenario('code_workspace_desktop_primary_actions_and_long_input_fit',async(page,state)=>{
   for(const [width,height] of [[1366,768],[1536,864],[1920,1080]]){
    await page.setViewportSize({width,height});await page.goto(`${origin.origin}/projects/${A}/reviews`);await page.locator('#code-input').waitFor();
