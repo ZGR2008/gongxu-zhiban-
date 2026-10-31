@@ -106,6 +106,14 @@ function traceFixture(state){
  state.traceData={version:{id:RA,number:1,current:true},items:[{id:RA,key:'REQ-fixture',position:1,start:0,end:4,text:'审批留档',change:'initial',coverage:{suggested:0,confirmedTasks:1,confirmedCases:1,stale:0,manualEvidence:0}}],links:[{id:'task-link',itemId:RA,taskId:RA,caseId:null,status:'confirmed',origin:'human'},{id:'case-link',itemId:RA,taskId:null,caseId:RB,caseRevision:1,status:'confirmed',origin:'human'}],tasks:[{id:RA,title:'合成审批任务'}],cases:[test],previousItems:[],impact:null,taskTests:[],taskTestHistory:[],scope:'受控浏览器替身，不是业务数据'};
 }
 try{
+ await scenario('code_workspace_desktop_primary_actions_and_long_input_fit',async(page,state)=>{
+  for(const [width,height] of [[1366,768],[1536,864],[1920,1080]]){
+   await page.setViewportSize({width,height});await page.goto(`${origin.origin}/projects/${A}/reviews`);await page.locator('#code-input').waitFor();
+   for(const name of ['保存代码草稿','提交审查']){const box=await page.getByRole('button',{name,exact:true}).boundingBox();assert.ok(box&&box.y>=0&&box.y+box.height<=height,`Primary action not initially visible at ${width}`);}
+   await page.screenshot({path:new URL(`code-workspace-${width}.png`,directory).pathname.replace(/^\/([A-Za-z]:)/,'$1')});
+   await page.locator('#code-input').fill('const longIdentifier = "'+'x'.repeat(40000)+'";');assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth+2),true);
+  }
+ });
  await scenario('code_review_late_reply_preserves_selected_history_and_newer_draft',async(page,state)=>{
   state.reviewDelay=650;state.reviews=[RA,RB].map((id,i)=>({id,language:'typescript',code:'const old = 0;',syntaxFindings:[],aiAdvice:i?'历史B合成建议':'历史A合成建议',modelName:'fixture',createdAt:now}));
   state.codeDraft={language:'typescript',code:'const saved = 0;',revision:1,updatedAt:now};await page.goto(`${origin.origin}/projects/${A}/reviews`);await page.locator('#code-input').fill('const submitted = 1;');

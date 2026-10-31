@@ -69,17 +69,19 @@ export function CodeReviewWorkspace({request,projectId}:{request:Api;projectId:s
     finally{pendingReview.current=false;if(mounted.current)setReviewing(false);}
   }
 
-  return <section className="module-page">
+  return <section className="module-page code-review-page">
     <div className="section-heading compact"><div><div className="eyebrow">CODE REVIEW</div><h2>让每一次审查都有依据</h2><p>语法诊断由解析器产生；AI 建议未经运行验证。系统不会执行提交的代码。</p></div></div>
     {error&&<div className="alert error" role="alert">{error}</div>}{notice&&<p className="alert success" role="status">{notice}</p>}
     <div className="module-grid"><div><form className="editor-panel" onSubmit={submit}>
-      <div className="panel-heading"><div><h3>提交代码</h3><p>保存草稿仅写入本项目；提交审查才会将代码发送至配置的 AI 服务。</p></div><button type="button" className="text-link" disabled={reading||saving||reviewing} onClick={()=>protect(()=>void loadDraft())}>重新读取草稿</button></div>
+      <div className="panel-heading code-draft-heading"><h3>代码工作区</h3><button type="button" className="text-link" disabled={reading||saving||reviewing} onClick={()=>protect(()=>void loadDraft())}>重新读取草稿</button></div>
+      <p className="muted-text code-draft-scope">保存草稿仅写入本项目；提交审查才会将代码发送至配置的 AI 服务。</p>
       {reading&&<p role="status" className="muted-text">正在读取当前项目草稿…</p>}
       <fieldset className="code-draft-fields" disabled={!ready||reading}>
-        <label htmlFor="code-language">语言</label><select id="code-language" value={language} onChange={event=>setLanguage(event.target.value)}><option value="typescript">TypeScript</option><option value="javascript">JavaScript</option></select>
+        <div className="code-draft-toolbar"><div><label htmlFor="code-language">语言</label><select id="code-language" value={language} onChange={event=>setLanguage(event.target.value)}><option value="typescript">TypeScript</option><option value="javascript">JavaScript</option></select></div>
+          <div className="form-actions"><button type="button" className="button secondary" disabled={saving||reviewing||!dirty||!!conflict} onClick={()=>void saveDraft()}>{saving?'保存草稿中…':'保存代码草稿'}</button><button className="button primary" aria-label={reviewing?'审查中…':'提交审查'} disabled={saving||reviewing||!!conflict||!code.trim()}>{reviewing?'审查中…':'提交审查'} <span aria-hidden="true">↗</span></button></div>
+        </div>
+        <p className="muted-text code-draft-state" role="status">{dirty?'有尚未保存的编辑':saved.revision?`草稿修订 ${saved.revision} · 已保存`:'尚无已保存草稿'} · 最多 50000 字符</p>
         <label htmlFor="code-input">代码内容</label><CodeEditor value={code} onChange={setCode} language={language}/>
-        <p className="muted-text" role="status">{dirty?'有尚未保存的编辑':saved.revision?`草稿修订 ${saved.revision} · 已保存`:'尚无已保存草稿'} · 最多 50000 字符</p>
-        <div className="form-actions"><button type="button" className="button secondary" disabled={saving||reviewing||!dirty||!!conflict} onClick={()=>void saveDraft()}>{saving?'保存草稿中…':'保存代码草稿'}</button><button className="button primary" disabled={saving||reviewing||!!conflict||!code.trim()}>{reviewing?'审查中…':'提交审查'} <span>↗</span></button></div>
       </fieldset>
       {conflict&&<section className="code-draft-conflict" aria-label="代码草稿冲突"><h4>另一个窗口的草稿 · 修订 {conflict.revision}</h4><p>当前输入仍保留在编辑器中。请比较后手动合并，再明确选择继续编辑；这一步不会立即覆盖服务器草稿。</p><pre className="code-preview">{conflict.code||'（空草稿）'}</pre><CopyButton value={code} label="复制当前输入"/><button type="button" className="button secondary" onClick={()=>{setSaved(conflict);setConflict(null);setError('');setNotice('已采用最新修订作为保存依据；当前编辑内容尚未提交。');}}>已核对，以当前输入继续编辑</button></section>}
     </form>

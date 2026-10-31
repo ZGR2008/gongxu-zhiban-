@@ -1,5 +1,15 @@
 .code-draft-fields{margin:0;padding:0;border:0;min-inline-size:0}
 .code-draft-fields .form-actions{flex-wrap:wrap;gap:10px}
+.code-review-page .code-draft-heading{align-items:center;margin-bottom:8px;gap:12px}
+.code-review-page .code-draft-heading h3{margin:0}
+.code-draft-heading .text-link{flex-shrink:0;white-space:nowrap}
+.code-review-page .code-draft-scope{margin:0 0 16px;font-size:var(--gx-support-size,12px);line-height:1.7}
+.code-draft-toolbar{display:flex;flex-wrap:wrap;align-items:flex-end;gap:10px;justify-content:space-between}
+.code-draft-toolbar>div:first-child{min-width:112px;flex:0 1 140px}
+.code-draft-toolbar label{margin-top:0}
+.code-draft-toolbar .form-actions{margin:0;gap:8px}
+.code-draft-toolbar .button{white-space:nowrap}
+.code-review-page .code-draft-state{margin:12px 0 0;font-variant-numeric:tabular-nums}
 .code-draft-conflict{margin-top:20px;padding-top:16px;border-top:1px solid rgba(188,19,254,.2)}
 .code-draft-conflict p{color:var(--text-muted,#d1c4e9);line-height:1.7}
 .code-draft-conflict .code-preview{max-height:280px;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere}
