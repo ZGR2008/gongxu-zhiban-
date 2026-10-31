@@ -28,6 +28,7 @@ ROOT_FILES = {'.editorconfig','.gitattributes','.gitignore','compose.yaml','pack
 SKIP_DIRS = {'node_modules','.venv','venv','__pycache__','.git','.runtime','.models','models','.cache','.vite','.turbo','dist','build','coverage','uploads','storage','output','tmp','.setup','.vscode','.idea'}
 DOCS = {'CONTEST-ACCEPTANCE-2026-11.md','OPTIMIZATION-PROGRESS.md','TRACEABILITY-AND-RECOVERY.md','FINAL-REVIEW-2026-11.md','STARTUP-AND-VERIFICATION.md','TECHNICAL-MATERIAL.md','DEMO-WALKTHROUGH.md','SOURCE-PACKAGE.md','CONTINUATION-2026-11-01.md','REFERENCE-REVIEW-V3.md','FINAL-REVIEW-V3-2026-11-01.md','PERFORMANCE-V3.md'}
 DOCS.add('ACCESSIBILITY-V3.md')
+DOCS.add('RETRIEVAL-STUDY-V3.md')
 CURATED_SCREENSHOTS={'docs/screenshots/review-v2/trace-desktop.png','docs/screenshots/review-v3/task-test-chain-desktop.png','docs/screenshots/review-v3/documents-desktop.png','docs/screenshots/review-v3/review-source-desktop.png','docs/screenshots/review-v3/growth-current-desktop.png','docs/screenshots/review-v3/workspace-desktop.png'}
 JSON_FILES={'package.json','evaluation/record-template.json','evaluation/cases.v1.json','evaluation/retrieval.v1.json','apps/embedding/model-manifest.json','apps/web/public/previews/vendor/manifest.json','docs/verification/review-v2.json','docs/verification/review-v3.json','docs/demo-v3/storyboard.json'}
 TEXT = {'.ts','.tsx','.js','.mjs','.cjs','.json','.yaml','.yml','.md','.css','.html','.sql','.txt','.svg','.glsl','.ps1','.py','.sh','.toml'}
