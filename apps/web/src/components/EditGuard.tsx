@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import './edit-guard.css';
 
 type Editor = { label: string; dirty: boolean; save: () => Promise<boolean> };
@@ -13,6 +13,14 @@ export function EditGuardProvider({ children }: { children: ReactNode }) {
   const [busy, setBusy] = useState(false);
   const saving = useRef(false);
   const [error, setError] = useState('');
+  const [saveCommit, setSaveCommit] = useState(0);
+  const afterCommit = useRef<(() => void) | null>(null);
+  useLayoutEffect(() => {
+    // This runs after React commits the save's pending state changes. A browser
+    // animation frame alone may run before those changes render under load.
+    const resolve = afterCommit.current; afterCommit.current = null; resolve?.();
+  }, [saveCommit]);
+  useEffect(() => () => { pending.current = null; afterCommit.current?.(); afterCommit.current = null; }, []);
   const dirtyEditors = useCallback(() => [...editors.current.values()].map(read => read()).filter(editor => editor.dirty), []);
   const register = useCallback((key: string, read: () => Editor) => {
     editors.current.set(key, read);
@@ -40,8 +48,8 @@ export function EditGuardProvider({ children }: { children: ReactNode }) {
     saving.current = true; setBusy(true); setError('');
     try {
       for (const editor of dirtyEditors()) if (!(await editor.save())) throw new Error('save_failed');
-      // Re-read after the saved state renders: a previous save may not include new edits.
-      await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
+      // A newer input may still be dirty after a successful older snapshot save.
+      await new Promise<void>(resolve => { afterCommit.current = resolve; setSaveCommit(value => value + 1); });
       if (dirtyEditors().length) throw new Error('new_edits');
       saving.current = false; finish(true);
     } catch { setError('保存未成功，已留在当前编辑位置。请检查页面中的错误后重试，或选择留在此页。'); }

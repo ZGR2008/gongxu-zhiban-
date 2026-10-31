@@ -65,10 +65,14 @@ async function scenario(name,work){
   else if(path==='/ai/status')body={configured:false};
   else if(path==='/auth/logout'){state.logoutRequests=(state.logoutRequests??0)+1;body={ok:true};}
   else if(path==='/auth/login')body={token:'controlled-browser-next-session',user:{id:B,name:'合成账号B'}};
+  else if(path==='/projects'&&method==='POST'){
+   const input=route.request().postDataJSON();state.writes.push({path,body:input});await new Promise(r=>setTimeout(r,state.createDelay??0));
+   if(state.failCreate){status=503;body={error:'database_unavailable'};}else{const id=randomUUID();body={project:{...project(id),...input}};state.createdProjects??={};state.createdProjects[id]=body.project;state.projectList=[body.project,...(state.projectList??[project(A),project(B)])];status=201;}
+  }
   else if(path==='/projects'){body={projects:state.projectList??[project(A),project(B)]};await new Promise(r=>setTimeout(r,state.projectListDelay??0));}
   else if(/^\/projects\/[^/]+$/.test(path)){
    const id=path.split('/')[2];state.detailCounts[id]=(state.detailCounts[id]||0)+1;
-   const count=state.detailCounts[id];body=state.detailOverride||state.makeDetail(id,count);await new Promise(resolve=>setTimeout(resolve,state.delay(id,count)));if(state.detailStatus!==200){status=state.detailStatus;body={error:state.detailStatus===401?'unauthorized':'database_unavailable'};}
+   const count=state.detailCounts[id];body=state.detailOverride||(state.createdProjects?.[id]?{project:state.createdProjects[id],requirements:[]}:state.makeDetail(id,count));await new Promise(resolve=>setTimeout(resolve,state.delay(id,count)));if(state.detailStatus!==200){status=state.detailStatus;body={error:state.detailStatus===401?'unauthorized':'database_unavailable'};}
   } else if(path.endsWith('/requirements')&&method==='POST'){
    state.writes.push({path,body:route.request().postDataJSON()});
    await new Promise(resolve=>setTimeout(resolve,state.saveDelay));
@@ -123,6 +127,30 @@ function traceFixture(state){
  state.traceData={version:{id:RA,number:1,current:true},items:[{id:RA,key:'REQ-fixture',position:1,start:0,end:4,text:'审批留档',change:'initial',coverage:{suggested:0,confirmedTasks:1,confirmedCases:1,stale:0,manualEvidence:0}}],links:[{id:'task-link',itemId:RA,taskId:RA,caseId:null,status:'confirmed',origin:'human'},{id:'case-link',itemId:RA,taskId:null,caseId:RB,caseRevision:1,status:'confirmed',origin:'human'}],tasks:[{id:RA,title:'合成审批任务'}],cases:[test],previousItems:[],impact:null,taskTests:[],taskTestHistory:[],scope:'受控浏览器替身，不是业务数据'};
 }
 try{
+ await scenario('code_draft_save_and_leave_checks_committed_state_under_cpu_throttle',async(page,state)=>{
+  const session=await page.context().newCDPSession(page);await session.send('Emulation.setCPUThrottlingRate',{rate:4});page.setDefaultTimeout(12000);
+  try{await page.goto(`${origin.origin}/projects/${A}/reviews`);await page.locator('#code-input').fill('const committedSnapshot = 1;');await page.getByRole('link',{name:'知识库',exact:true}).first().click();
+   await page.getByRole('dialog',{name:'保留未保存的编辑'}).getByRole('button',{name:'保存并继续'}).click();await page.waitForURL('**/knowledge');assert.equal(state.writes.length,1);assert.equal(state.codeDraft.code,'const committedSnapshot = 1;');assert.ok(state.writes[0].path.endsWith('/code-draft'));
+  }finally{await session.send('Emulation.setCPUThrottlingRate',{rate:1});await session.detach();}
+ });
+ await scenario('project_creation_guard_blocks_loss_and_only_leaves_after_success',async(page,state)=>{
+  await page.goto(`${origin.origin}/dashboard`);await page.getByRole('button',{name:'创建实训项目'}).click();await page.locator('#name').fill('尚未创建的合成项目');await page.locator('#description').fill('切页前必须保留的想法');
+  await page.getByRole('link',{name:'知识库',exact:true}).first().click();const guard=page.getByRole('dialog',{name:'保留未保存的编辑'});await guard.waitFor();await page.keyboard.press('Escape');assert.equal(await page.locator('#description').inputValue(),'切页前必须保留的想法');
+  state.failCreate=true;await page.getByRole('link',{name:'知识库',exact:true}).first().click();await guard.getByRole('button',{name:'保存并继续'}).click();await guard.getByText(/保存未成功/).waitFor();assert.ok(page.url().endsWith('/dashboard'));assert.equal(await page.locator('#name').inputValue(),'尚未创建的合成项目');
+  state.failCreate=false;await guard.getByRole('button',{name:'保存并继续'}).click();await page.waitForURL('**/knowledge');assert.equal(state.writes.length,2);assert.ok(state.writes.every(write=>write.path==='/projects'));assert.equal(Object.keys(state.createdProjects).length,1);
+ });
+ await scenario('project_creation_single_flight_and_new_input_survive_response',async(page,state)=>{
+  state.createDelay=600;await page.goto(`${origin.origin}/dashboard`);await page.getByRole('button',{name:'创建实训项目'}).click();await page.locator('#name').fill('第一次项目提交');
+  await page.locator('#name').evaluate(input=>{input.form.dispatchEvent(new Event('submit',{bubbles:true,cancelable:true}));input.form.dispatchEvent(new Event('submit',{bubbles:true,cancelable:true}));});await waitFor(()=>state.writes.length>0);await page.locator('#name').fill('创建等待期间的新项目');await page.locator('#description').fill('不能被迟到创建响应清空');await page.waitForTimeout(850);
+  assert.equal(state.writes.length,1);assert.ok(page.url().endsWith('/dashboard'));assert.equal(await page.locator('#description').inputValue(),'不能被迟到创建响应清空');assert.equal(await page.locator('#name').inputValue(),'创建等待期间的新项目');
+  state.createDelay=0;await page.locator('#name').evaluate(input=>input.form.dispatchEvent(new Event('submit',{bubbles:true,cancelable:true})));await page.waitForURL('**/projects/*');assert.equal(state.writes.length,2);await page.locator('.detail-heading h2').filter({hasText:'创建等待期间的新项目'}).waitFor();
+ });
+ await scenario('project_creation_close_and_back_navigation_keep_cancelled_input',async(page)=>{
+  await page.goto(`${origin.origin}/dashboard`);await page.getByRole('link',{name:'我的项目',exact:true}).first().click();await page.waitForURL('**/projects');await page.getByRole('button',{name:'创建实训项目'}).click();await page.locator('#name').fill('返回时仍保留的项目');
+  await page.goBack();const guard=page.getByRole('dialog',{name:'保留未保存的编辑'});await guard.waitFor();await guard.getByRole('button',{name:'留在此页'}).click();assert.ok(page.url().endsWith('/projects'));assert.equal(await page.locator('#name').inputValue(),'返回时仍保留的项目');
+  await page.getByRole('button',{name:'关闭',exact:true}).click();await guard.waitFor();await page.keyboard.press('Escape');assert.equal(await page.locator('#name').inputValue(),'返回时仍保留的项目');await page.getByRole('button',{name:'关闭',exact:true}).click();await guard.getByRole('button',{name:'放弃并继续'}).click();await page.locator('#name').waitFor({state:'hidden'});
+  await page.getByRole('button',{name:'创建实训项目'}).click();assert.equal(await page.locator('#name').inputValue(),'');
+ });
  await scenario('session_new_account_cannot_see_previous_project_cache',async(page,state)=>{
   await page.goto(`${origin.origin}/dashboard`);await page.locator('.project-explorer').getByText('受控项目 A',{exact:true}).waitFor();
   await page.getByRole('link',{name:'知识库',exact:true}).first().click();await page.locator('#knowledge-name').waitFor();await page.getByRole('button',{name:/退出登录/}).click();await page.locator('#email').waitFor();

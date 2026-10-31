@@ -2,6 +2,7 @@ import { lazy, Suspense, useCallback, useEffect, useRef, useState, type FormEven
 import { RequestScope } from './components/request-scope';
 import { EditGuardProvider, useEditGuard, useUnsavedEdit } from './components/EditGuard';
 import { useGuardedRoute } from './components/useGuardedRoute';
+import { ProjectCreateForm } from './components/ProjectCreateForm';
 const Agent = lazy(() => import('./Modules').then(m => ({ default: m.Agent })));
 const Knowledge = lazy(() => import('./Modules').then(m => ({ default: m.Knowledge })));
 const Growth = lazy(() => import('./Modules').then(m => ({ default: m.Growth })));
@@ -114,8 +115,6 @@ function Workspace({token,onAuthenticated}:{token:string;onAuthenticated:(token:
     document.getElementById('name')?.focus({ preventScroll: true });
     return () => { if (trigger?.isConnected) trigger.focus({ preventScroll: true }); };
   }, [showCreate]);
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
   const [saving, setSaving] = useState(false);
   const [detail, setDetail] = useState<Detail | null>(null);
   const [draft, setDraft] = useState('');
@@ -198,14 +197,6 @@ function Workspace({token,onAuthenticated}:{token:string;onAuthenticated:(token:
     request<{ configured: boolean; model?: string }>('/ai/status').then(result => { setAiStatus(result.configured ? 'ready' : 'unconfigured'); setAiModel(result.model || ''); }).catch(() => setAiStatus('unavailable'));
   }, [token, projectId]);
 
-  async function createProject(event: FormEvent) {
-    event.preventDefault(); setSaving(true); setError('');
-    try {
-      const data = await request<{ project: Project }>('/projects', { method: 'POST', body: JSON.stringify({ name: name.trim(), description: description.trim() }) });
-      setName(''); setDescription(''); navigate(`/projects/${data.project.id}`);
-    } catch (err) { setError(message(err)); }
-    finally { setSaving(false); }
-  }
   function persistRequirement(): Promise<boolean> {
     if (savePending.current) return savePending.current;
     if (saving) { setError('当前操作尚未结束，请等待后再保存。'); return Promise.resolve(false); }
@@ -284,7 +275,7 @@ function Workspace({token,onAuthenticated}:{token:string;onAuthenticated:(token:
         </>}
         {error && <div className="alert error" role="alert"><span>!</span><div><strong>操作未完成</strong><p>{error}</p></div><button type="button" onClick={() => protect(() => projectId ? void loadDetail(projectId) : void loadProjects())}>重试</button></div>}
         {notice && <div className="alert success" role="status">✓ &nbsp;{notice}</div>}
-        {showCreate && <section className="editor-panel" aria-labelledby="create-title"><div className="panel-heading"><div><div className="eyebrow">NEW PROJECT</div><h2 id="create-title">开始一个新项目</h2><p>先写下初步想法，后续可以继续完善需求。</p></div><button className="icon-button" type="button" onClick={() => setShowCreate(false)} aria-label="关闭">×</button></div><form onSubmit={createProject}><label htmlFor="name">项目名称 <span>必填</span></label><input id="name" value={name} onChange={e => setName(e.target.value)} maxLength={120} required placeholder="例如：校园二手物品交易平台" /><label htmlFor="description">项目想法 <span>选填</span></label><textarea id="description" rows={4} value={description} onChange={e => setDescription(e.target.value)} maxLength={10000} placeholder="描述你想解决的问题、目标用户或核心功能…" /><div className="form-actions"><button className="button secondary" type="button" onClick={() => setShowCreate(false)}>取消</button><button className="button primary" type="submit" disabled={saving || !name.trim()}>{saving ? '创建中…' : '创建项目'} <span>↗</span></button></div></form></section>}
+        {showCreate && <ProjectCreateForm request={request} onCreated={project=>{projectScope.current.cancel();setProjects(rows=>[project,...rows.filter(row=>row.id!==project.id)]);if(!activeProject.current)setLoading(false);}} onOpen={project=>navigate(`/projects/${project.id}`)} onClose={()=>setShowCreate(false)}/>}
         {isKnowledge && <Suspense fallback={<div className="state-block" role="status">正在准备工作区…</div>}><Knowledge request={request} /></Suspense>}
         {isGrowth && <Suspense fallback={<div className="state-block" role="status">正在准备工作区…</div>}><Growth request={request} navigate={navigate} /></Suspense>}
         {isWorkbenchPage && <Suspense fallback={<div className="state-block" role="status">正在准备工作页面…</div>}><WorkbenchPages path={path} request={request} projects={projects} loading={loading} unavailable={Boolean(error)} navigate={navigate}/></Suspense>}
