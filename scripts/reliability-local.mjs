@@ -170,6 +170,87 @@ try{
   const context=await new PgDocumentStore(wrapper).getContext(user,project,secondVersion);assert.equal(interleaved,true);assert.equal(context.testCounts.passed,0);assert.equal(context.snapshot.caseRevision,before.caseRevision);
   const after=await new PgDocumentStore(pool).getContext(user,project,secondVersion);assert.equal(after.testCounts.passed,1);assert.equal(after.snapshot.caseRevision,before.caseRevision+1);
  });
+ await check('trace_pairs_and_case_results_share_one_read_snapshot',async()=>{
+  const generated=await call('POST',`${root}/agent/runs`,{requirementId:secondVersion});assert.equal(generated.statusCode,201);
+  const adopted=await call('POST',`${root}/agent/runs/${generated.json().run.id}/confirm`,{acknowledged:true,note:'合成并发快照回归'});assert.equal(adopted.statusCode,200);
+  const task=adopted.json().tasks[0],before=(await call('GET',`${root}/trace`)).json(),item=before.items[0],test=before.cases.find(c=>c.result==='passed');assert.ok(test);
+  const review=async revision=>{
+   for(const [targetKind,targetId] of [['task',task.id],['case',test.id]])assert.equal((await call('POST',`${root}/trace/links`,{itemId:item.id,targetKind,targetId,decision:'confirmed',note:'合成快照核对',...(targetKind==='case'?{expectedCaseRevision:revision}:{})})).statusCode,200);
+   assert.equal((await call('POST',`${root}/trace/task-tests`,{itemId:item.id,taskId:task.id,caseId:test.id,expectedCaseRevision:revision,decision:'confirmed',note:'合成任务与用例快照关系'})).statusCode,200);
+  };
+  await review(test.revision);
+  let changed=false,release;const changedGate=new Promise(resolve=>release=resolve);
+  const query=async(db,sql,values)=>{
+   if(sql.startsWith('SELECT id,item_id')&&sql.includes('FROM task_test_links'))await changedGate;
+   const result=await db.query(sql,values);
+   if(sql.startsWith('SELECT id,title,revision,result')&&!changed){
+    changed=true;
+    try{
+     const updated=await pool.query('UPDATE practice_test_cases SET expected=expected || $2 WHERE id=$1 RETURNING revision',[test.id,'；合成并发追加验收条件']);assert.equal(updated.rows[0].revision,test.revision+1);
+     await review(updated.rows[0].revision);
+    }finally{release();}
+   }
+   return result;
+  };
+  const wrapped={query:(sql,values)=>query(pool,sql,values),connect:async()=>{const client=await pool.connect();return {query:(sql,values)=>query(client,sql,values),release:()=>client.release()};}};
+  const probe=Fastify({logger:false});await registerTraceRoutes(probe,store,wrapped);
+  try{
+   const response=await probe.inject({method:'GET',url:`${root}/trace`,headers:auth});assert.equal(response.statusCode,200);assert.equal(changed,true);
+   const captured=response.json(),pair=captured.taskTests.find(p=>p.taskId===task.id&&p.caseId===test.id);
+   assert.equal(captured.cases.find(c=>c.id===test.id).revision,test.revision);
+   assert.equal(pair.caseRevision,test.revision,'A trace response must not combine an older case with a newer pairing.');
+   assert.equal(pair.evidence.manualEvidence,true);
+   const next=(await call('GET',`${root}/trace`)).json(),nextPair=next.taskTests.find(p=>p.taskId===task.id&&p.caseId===test.id);
+   assert.equal(nextPair.caseRevision,test.revision+1);assert.equal(nextPair.evidence.manualEvidence,false);assert.equal(nextPair.evidence.state,'not_run');
+  }finally{release();await probe.close();}
+ });
+ await check('task_test_pairing_rejects_foreign_project_targets_of_same_owner',async()=>{
+  const other=(await pool.query('SELECT c.id,c.revision,c.project_id AS project,c.requirement_version_id AS requirement FROM practice_test_cases c JOIN projects p ON p.id=c.project_id WHERE p.owner_id=$1 AND p.id<>$2 LIMIT 1',[user,project])).rows[0];assert.ok(other);
+  const otherRoot=`/projects/${other.project}`,run=await call('POST',`${otherRoot}/agent/runs`,{requirementId:other.requirement});assert.equal(run.statusCode,201);
+  const adopted=await call('POST',`${otherRoot}/agent/runs/${run.json().run.id}/confirm`,{acknowledged:true,note:'合成另一项目的隔离验证'});assert.equal(adopted.statusCode,200);
+  const before=(await call('GET',`${root}/trace`)).json(),pair=before.taskTests.at(-1);
+  const body={itemId:pair.itemId,taskId:pair.taskId,caseId:pair.caseId,expectedCaseRevision:pair.caseRevision,decision:'confirmed',note:'禁止同账号跨项目配对'};
+  assert.equal((await call('POST',`${root}/trace/task-tests`,{...body,caseId:other.id,expectedCaseRevision:other.revision})).statusCode,404);
+  assert.equal((await call('POST',`${root}/trace/task-tests`,{...body,taskId:adopted.json().tasks[0].id})).statusCode,404);
+  const after=(await call('GET',`${root}/trace`)).json();assert.deepEqual(after.taskTests,before.taskTests);assert.deepEqual(after.taskTestHistory,before.taskTestHistory);
+ });
+ await check('trace_version_change_during_preparation_requires_refresh',async()=>{
+  const draft=await store.createRequirement(user,project,'合成第三版：审批更新，需要重新验证。');let changed=false;
+  const wrapped={query:async(sql,values)=>{const result=await pool.query(sql,values);if(!changed&&sql.startsWith('INSERT INTO trace_links')&&sql.includes('FROM practice_test_cases')){changed=true;await store.confirmRequirement(user,project,draft.id);}return result;},connect:()=>pool.connect()};
+  const probe=Fastify({logger:false});await registerTraceRoutes(probe,store,wrapped);
+  try{
+   const response=await probe.inject({method:'GET',url:`${root}/trace`,headers:auth});assert.equal(changed,true);assert.equal(response.statusCode,409);assert.equal(response.json().error,'trace_refresh_required');
+   const refreshed=(await call('GET',`${root}/trace`)).json();assert.equal(refreshed.version.id,draft.id);assert.equal(refreshed.version.current,true);assert.equal(refreshed.items.length,1);
+   const historical=(await call('GET',`${root}/trace?requirementVersionId=${secondVersion}`)).json();assert.equal(historical.version.current,false);assert.ok(historical.taskTests.length);
+  }finally{await probe.close();}
+ });
+ await check('trace_snapshot_query_failure_releases_connection_and_recovers',async()=>{
+  let released=0,rolledBack=false;
+  const wrapped={query:(sql,values)=>pool.query(sql,values),connect:async()=>{const client=await pool.connect();return {query:(sql,values)=>{if(sql.startsWith('SELECT id,version FROM requirement_versions'))throw Error('controlled_read_failure');if(sql==='ROLLBACK')rolledBack=true;return client.query(sql,values);},release:()=>{released++;client.release();}};}};
+  const probe=Fastify({logger:false});await registerTraceRoutes(probe,store,wrapped);
+  try{assert.equal((await probe.inject({method:'GET',url:`${root}/trace`,headers:auth})).statusCode,500);assert.equal(released,1);assert.equal(rolledBack,true);assert.equal((await call('GET',`${root}/trace`)).statusCode,200);}finally{await probe.close();}
+ });
+ await check('change_review_cannot_overtake_an_earlier_requirement_confirmation',async()=>{
+  const trace=(await call('GET',`${root}/trace`)).json(),item=trace.items[0],predecessor=trace.previousItems[0];assert.ok(item&&predecessor);
+  const next=await store.createRequirement(user,project,'合成第四版：并发确认优先，旧变更登记必须拒绝。');
+  const blocker=await pool.connect();await blocker.query('BEGIN');await blocker.query('SELECT id FROM projects WHERE id=$1 FOR UPDATE',[project]);
+  let confirmationPid,reviewIssued;const reviewGate=new Promise(resolve=>reviewIssued=resolve);
+  const confirmationPool={query:(sql,values)=>pool.query(sql,values),connect:async()=>{const client=await pool.connect();confirmationPid=client.processID;return client;}};
+  const wrapped={query:(sql,values)=>{const result=pool.query(sql,values);if(sql.startsWith('UPDATE requirement_items'))reviewIssued();return result;},connect:async()=>{const client=await pool.connect();return {query:(sql,values)=>{const result=client.query(sql,values);if(sql.includes('FROM projects')&&sql.includes('FOR UPDATE'))reviewIssued();return result;},release:()=>client.release()};}};
+  const confirmation=Fastify({logger:false}),review=Fastify({logger:false});await registerProjectRoutes(confirmation,new PgProjectStore(confirmationPool));await registerTraceRoutes(review,store,wrapped);
+  let pendingConfirmation,pendingReview;
+  try{
+   pendingConfirmation=confirmation.inject({method:'POST',url:`${root}/requirements/${next.id}/confirm`,headers:auth}).then(r=>r);
+   const deadline=Date.now()+3000;let waiting=false;
+   while(Date.now()<deadline){if(confirmationPid){const state=await pool.query('SELECT wait_event_type FROM pg_stat_activity WHERE pid=$1',[confirmationPid]);if(state.rows[0]?.wait_event_type==='Lock'){waiting=true;break;}}await new Promise(r=>setTimeout(r,10));}
+   assert.equal(waiting,true,'The earlier confirmation must be waiting for the project lock.');
+   pendingReview=review.inject({method:'POST',url:`${root}/trace/change-review`,headers:auth,payload:{itemId:item.id,predecessorId:predecessor.id,note:'不应越过更早的需求确认'}}).then(r=>r);
+   await Promise.race([reviewGate,new Promise((_,reject)=>setTimeout(()=>reject(Error('review_not_issued')),3000))]);
+   assert.equal(await Promise.race([pendingReview.then(()=> 'completed'),new Promise(resolve=>setTimeout(()=>resolve('pending'),150))]),'pending','The later review must share the project lock, not update an about-to-be-historical version.');
+   await blocker.query('COMMIT');assert.equal((await pendingConfirmation).statusCode,200);assert.equal((await pendingReview).statusCode,409);
+   const stored=(await pool.query('SELECT predecessor_id,change_review_note FROM requirement_items WHERE id=$1',[item.id])).rows[0];assert.equal(stored.predecessor_id,item.predecessorId);assert.notEqual(stored.change_review_note,'不应越过更早的需求确认');
+  }finally{await blocker.query('ROLLBACK');blocker.release();await Promise.allSettled([pendingConfirmation,pendingReview].filter(Boolean));await confirmation.close();await review.close();}
+ });
  let embedding;
  try{embedding=loadEmbeddingConfig();}catch{report.checks.push({name:'real_local_embedding',status:'not_run',reason:'configuration_invalid'});}
  if(embedding&&['localhost','127.0.0.1','[::1]'].includes(new URL(embedding.baseUrl).hostname)){

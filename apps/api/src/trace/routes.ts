@@ -33,7 +33,7 @@ export async function registerTraceRoutes(app:FastifyInstance,store?:ProjectStor
     if(!q.success)return reply.code(400).send({error:'invalid_input'});
     const versions=(await store!.listRequirements(a.user.id,a.projectId)??[]).filter(v=>v.status==='confirmed').sort((x,y)=>y.version-x.version);
     const version=q.data.requirementVersionId?versions.find(v=>v.id===q.data.requirementVersionId):versions[0];
-    if(!version)return {version:null,items:[],links:[],tasks:[],cases:[],previousItems:[],history:[],impact:null};
+    if(!version)return {version:null,items:[],links:[],tasks:[],cases:[],previousItems:[],history:[],taskTests:[],taskTestHistory:[],impact:null};
     await materialize(a.projectId,version.id,version.content);
     const previous=versions.find(v=>v.version<version.version);
     if(previous)await materialize(a.projectId,previous.id,previous.content);
@@ -46,26 +46,39 @@ export async function registerTraceRoutes(app:FastifyInstance,store?:ProjectStor
       SELECT c.project_id,c.requirement_version_id,i.id,c.id,c.revision,'model','suggested' FROM practice_test_cases c
       JOIN requirement_items i ON i.project_id=c.project_id AND i.requirement_version_id=c.requirement_version_id AND i.stable_key=ANY(c.suggested_requirement_keys)
       WHERE c.project_id=$1 AND c.requirement_version_id=$2 ON CONFLICT DO NOTHING`,[a.projectId,version.id]);
-    const [itemRows,linkRows,taskRows,caseRows,impactRows,historyRows,pairRows,pairHistory]=await Promise.all([
-      pool!.query(`SELECT id,stable_key AS key,position,start_offset AS start,end_offset AS end,content AS text,acceptance_candidate AS "acceptanceCandidate",requirement_version_id AS "versionId",predecessor_id AS "predecessorId",change_review_note AS "changeReviewNote",change_reviewed_at AS "changeReviewedAt" FROM requirement_items WHERE project_id=$1 AND requirement_version_id=ANY($2::uuid[]) ORDER BY position`,[a.projectId,[version.id,...(previous?[previous.id]:[])]]),
-      pool!.query(`SELECT id,item_id AS "itemId",task_id AS "taskId",case_id AS "caseId",case_revision AS "caseRevision",origin,status,review_note AS "reviewNote",reviewed_at AS "reviewedAt" FROM trace_links WHERE project_id=$1 AND requirement_version_id=$2 ORDER BY created_at`,[a.projectId,version.id]),
-      pool!.query('SELECT id,title,status FROM tasks WHERE project_id=$1 AND requirement_version_id=$2 ORDER BY created_at',[a.projectId,version.id]),
-      pool!.query(`SELECT id,title,revision,result,steps,expected,execution_note AS "executionNote",executed_at AS "executedAt",model_name AS "modelName" FROM practice_test_cases WHERE project_id=$1 AND requirement_version_id=$2 ORDER BY created_at`,[a.projectId,version.id]),
-      pool!.query(`SELECT (SELECT count(*)::int FROM tasks WHERE project_id=$1 AND requirement_version_id<>$2) AS tasks,
+    const client=await pool!.connect();
+    try{
+    // Lazy materialization happens above. Only the coherent read uses this short
+    // snapshot; it neither locks writers nor holds a connection during model work.
+    await client.query('BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY');
+    const snapshotVersions=(await client.query<{id:string;version:number}>(`SELECT id,version FROM requirement_versions WHERE project_id=$1 AND status='confirmed' ORDER BY version DESC`,[a.projectId])).rows;
+    const selected=q.data.requirementVersionId?snapshotVersions.find(v=>v.id===q.data.requirementVersionId):snapshotVersions[0];
+    const snapshotPrevious=selected?snapshotVersions.find(v=>v.version<selected.version):undefined;
+    if(selected?.id!==version.id||snapshotPrevious?.id!==previous?.id){
+      await client.query('ROLLBACK');return reply.code(409).send({error:'trace_refresh_required'});
+    }
+    const [itemRows,linkRows,taskRows,caseRows,impactRows,historyRows,pairRows,pairHistory]=[
+      await client.query(`SELECT id,stable_key AS key,position,start_offset AS start,end_offset AS end,content AS text,acceptance_candidate AS "acceptanceCandidate",requirement_version_id AS "versionId",predecessor_id AS "predecessorId",change_review_note AS "changeReviewNote",change_reviewed_at AS "changeReviewedAt" FROM requirement_items WHERE project_id=$1 AND requirement_version_id=ANY($2::uuid[]) ORDER BY position`,[a.projectId,[version.id,...(previous?[previous.id]:[])]]),
+      await client.query(`SELECT id,item_id AS "itemId",task_id AS "taskId",case_id AS "caseId",case_revision AS "caseRevision",origin,status,review_note AS "reviewNote",reviewed_at AS "reviewedAt" FROM trace_links WHERE project_id=$1 AND requirement_version_id=$2 ORDER BY created_at`,[a.projectId,version.id]),
+      await client.query('SELECT id,title,status FROM tasks WHERE project_id=$1 AND requirement_version_id=$2 ORDER BY created_at',[a.projectId,version.id]),
+      await client.query(`SELECT id,title,revision,result,steps,expected,execution_note AS "executionNote",executed_at AS "executedAt",model_name AS "modelName" FROM practice_test_cases WHERE project_id=$1 AND requirement_version_id=$2 ORDER BY created_at`,[a.projectId,version.id]),
+      await client.query(`SELECT (SELECT count(*)::int FROM tasks WHERE project_id=$1 AND requirement_version_id<>$2) AS tasks,
       (SELECT count(*)::int FROM practice_test_cases WHERE project_id=$1 AND requirement_version_id<>$2) AS cases,
       (SELECT count(*)::int FROM project_documents WHERE project_id=$1 AND requirement_version_id<>$2) AS documents`,[a.projectId,version.id]),
-      pool!.query(`SELECT h.id,h.snapshot,h.recorded_at AS "recordedAt" FROM trace_link_history h JOIN trace_links l ON l.id=h.link_id WHERE l.project_id=$1 AND l.requirement_version_id=$2 ORDER BY h.recorded_at DESC LIMIT 100`,[a.projectId,version.id]),
-      pool!.query(`SELECT id,item_id AS "itemId",task_id AS "taskId",case_id AS "caseId",case_revision AS "caseRevision",status,review_note AS "reviewNote",reviewed_at AS "reviewedAt" FROM task_test_links WHERE project_id=$1 AND requirement_version_id=$2 ORDER BY created_at`,[a.projectId,version.id]),
-      pool!.query(`SELECT h.id,h.link_id AS "linkId",h.snapshot,h.recorded_at AS "recordedAt" FROM task_test_link_history h JOIN task_test_links l ON l.id=h.link_id WHERE l.project_id=$1 AND l.requirement_version_id=$2 ORDER BY h.recorded_at DESC,h.id LIMIT 100`,[a.projectId,version.id]),
-    ]);
+      await client.query(`SELECT h.id,h.snapshot,h.recorded_at AS "recordedAt" FROM trace_link_history h JOIN trace_links l ON l.id=h.link_id WHERE l.project_id=$1 AND l.requirement_version_id=$2 ORDER BY h.recorded_at DESC LIMIT 100`,[a.projectId,version.id]),
+      await client.query(`SELECT id,item_id AS "itemId",task_id AS "taskId",case_id AS "caseId",case_revision AS "caseRevision",status,review_note AS "reviewNote",reviewed_at AS "reviewedAt" FROM task_test_links WHERE project_id=$1 AND requirement_version_id=$2 ORDER BY created_at`,[a.projectId,version.id]),
+      await client.query(`SELECT h.id,h.link_id AS "linkId",h.snapshot,h.recorded_at AS "recordedAt" FROM task_test_link_history h JOIN task_test_links l ON l.id=h.link_id WHERE l.project_id=$1 AND l.requirement_version_id=$2 ORDER BY h.recorded_at DESC,h.id LIMIT 100`,[a.projectId,version.id]),
+    ];
     const items=itemRows.rows.filter(i=>i.versionId===version.id),old=itemRows.rows.filter(i=>i.versionId!==version.id);
     const priorKeys=new Set(old.map(i=>i.key)),newKeys=new Set(items.map(i=>i.key));
-    return {version:{id:version.id,number:version.version,current:versions[0]?.id===version.id},
+    const response={version:{id:version.id,number:version.version,current:snapshotVersions[0]?.id===version.id},
       items:items.map(i=>({...i,change:previous?(priorKeys.has(i.key)?'unchanged':i.predecessorId?'changed_reviewed':'new_or_changed'):'initial',coverage:itemEvidence(i.id,linkRows.rows as EvidenceLink[],caseRows.rows as EvidenceCase[])})),
       links:linkRows.rows,tasks:taskRows.rows,cases:caseRows.rows,previousItems:old,history:historyRows.rows,
       taskTests:pairRows.rows.map(pair=>({...pair,evidence:taskTestEvidence(pair as TaskTestLink,linkRows.rows as EvidenceLink[],caseRows.rows as EvidenceCase[])})),taskTestHistory:pairHistory.rows,
       impact:{previousVersion:previous?.version??null,removedOrChanged:old.filter(i=>!newKeys.has(i.key)),historicalAssets:impactRows.rows[0]},
       scope:'按原文行提取；超过200行合并连续片段，无语义完整性保证。执行证据为人工登记，不代表平台自动执行或验证代码。旧版本关联不会继承到新版本。'};
+    await client.query('COMMIT');return response;
+    }catch(error){await client.query('ROLLBACK');throw error;}finally{client.release();}
   });
   app.post('/projects/:projectId/trace/task-tests',async(req,reply)=>{
     const a=await access(req,reply);if(!a)return;
@@ -113,12 +126,19 @@ export async function registerTraceRoutes(app:FastifyInstance,store?:ProjectStor
   app.post('/projects/:projectId/trace/change-review',async(req,reply)=>{
     const a=await access(req,reply);if(!a)return;
     const parsed=changeInput.safeParse(req.body);if(!parsed.success)return reply.code(400).send({error:'invalid_input'});
-    const b=parsed.data;
+    const b=parsed.data,client=await pool!.connect();
+    try{
+    await client.query('BEGIN');
+    // Confirming a newer requirement uses this same lock. Check current version
+    // only after taking it, rather than carrying an earlier statement snapshot.
+    await client.query('SELECT id FROM projects WHERE id=$1 AND owner_id=$2 FOR UPDATE',[a.projectId,a.user.id]);
     // Only same-project earlier versions may be linked. No execution/link state is copied.
-    const result=await pool!.query(`UPDATE requirement_items i SET predecessor_id=p.id,change_review_note=$4,change_reviewed_by=$5,change_reviewed_at=now()
+    const result=await client.query(`UPDATE requirement_items i SET predecessor_id=p.id,change_review_note=$4,change_reviewed_by=$5,change_reviewed_at=now()
       FROM requirement_items p,requirement_versions iv,requirement_versions pv WHERE i.id=$1 AND p.id=$2 AND i.project_id=$3 AND p.project_id=$3
       AND iv.id=i.requirement_version_id AND pv.id=p.requirement_version_id AND pv.version<iv.version
       AND iv.id=(SELECT id FROM requirement_versions WHERE project_id=$3 AND status='confirmed' ORDER BY version DESC LIMIT 1) RETURNING i.id`,[b.itemId,b.predecessorId,a.projectId,b.note,a.user.id]);
+    await client.query('COMMIT');
     return result.rowCount?{status:'reviewed',copiedEvidence:false}:reply.code(409).send({error:'trace_version_outdated'});
+    }catch(error){await client.query('ROLLBACK');throw error;}finally{client.release();}
   });
 }
