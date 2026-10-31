@@ -1,0 +1,37 @@
+{
+  "three": {
+    "version": "0.187.0",
+    "source": "https://github.com/mrdoob/three.js/tree/r187",
+    "license": "MIT",
+    "build": "esbuild 0.25.12; bundle=true; minify=true; format=esm; target=es2022; legalComments=inline"
+  },
+  "saturnWebGL": {
+    "source": "https://github.com/adelmassimo/SaturnWebGL",
+    "commit": "c960494e221d6a722b8fb5d9973d6d649d806f72",
+    "license": "MIT",
+    "originalShader": "index.html#vertexShaderDEBRIS",
+    "adaptedModule": "saturn-webgl/particle-ring.js"
+  },
+  "files": [
+    {
+      "file": "three/three.module.min.js",
+      "sha256": "ccf5fbb596958fef03e81d631b3316730d9146d0d1cb6a4e99b1fd2388cef573"
+    },
+    {
+      "file": "three/LICENSE",
+      "sha256": "8b378ebe60e2fe500158cb0ac71cb5e8b7d92953c2abcc63a0eb90499653b5bc"
+    },
+    {
+      "file": "saturn-webgl/original-orbit.vert.glsl",
+      "sha256": "ca40e9ad7a2cc7b991d0a80cafe7b2b37cf5ece5e4296a1e59eb33152167de93"
+    },
+    {
+      "file": "saturn-webgl/particle-ring.js",
+      "sha256": "f4d6ae46d421f4fe84d71d55576a7ef83d853607300203d9fd6abc18ef4471e2"
+    },
+    {
+      "file": "saturn-webgl/LICENSE",
+      "sha256": "4e263b9700aae7d03ae1fe890faae62840536a64084025c063befb256f0b81d9"
+    }
+  ]
+}

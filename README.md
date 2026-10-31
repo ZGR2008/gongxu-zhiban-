@@ -9,6 +9,12 @@
 - 数据库：PostgreSQL，知识向量使用 pgvector；迁移文件在 `apps/api/migrations/`。
 - AI 服务通过后端接入，聊天与向量模型独立配置。密钥不放入前端或版本库。
 
+## 工作台界面
+
+当前界面统一采用深空紫黑主题，提供项目工具入口、项目搜索与筛选、列表/网格切换、项目内导航、Markdown 编辑预览、代码编辑辅助以及测试用例筛选。项目概况和成长数据来自当前账号的真实记录。具体实现和竞赛要求核对见 [界面升级记录](docs/UI-REVIEW.md)。
+
+工作台的三维星环是独立的装饰场景，支持暂停、拖动和减少动态效果，不参与模型调用。独立预览位于 `/previews/planet-orbit.html`，旧版 CSS/SVG 留在 `/previews/archive/planet-orbit-css-v2.html`。当前三维版通过本地 HTTP 服务加载模块，需要 WebGL2；所有运行资源本地提供，不依赖 CDN。轨道代码适配自 MIT 许可的 [SaturnWebGL](https://github.com/adelmassimo/SaturnWebGL)，使用 Three.js 0.187.0，来源和版权声明见 `apps/web/public/previews/vendor/NOTICE.txt`，前端依赖许可见 `apps/web/public/THIRD-PARTY-LICENSES.txt`。
+
 ## 环境准备
 
 需要 Node.js 22 或更高版本、pnpm，以及启用了 pgvector 的 PostgreSQL。可使用 Docker Compose 启动仓库内的本地开发数据库；如果使用外部数据库，需提前创建数据库并确认有安装 `pgcrypto`、`vector` 扩展的权限。Compose 中的默认账号密码仅供本地开发。

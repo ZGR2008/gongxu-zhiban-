@@ -1,0 +1,472 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta name="description" content="工序智伴 · 星云与轨道独立视觉预览。所有图形、材质与动画均包含在本文件中。">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath fill='%238a2be2' d='M16 0 32 16 16 32 0 16Z'/%3E%3C/svg%3E">
+  <title>星云与轨道 · 工序智伴</title>
+  <style>
+    /* Standalone visual study. No application styles, network calls, or business state. */
+    :root {
+      color-scheme: dark;
+      --space: #0a0614;
+      --text: #fff;
+      --muted: #d1c4e9;
+      --violet: #bc13fe;
+      --electric: #8a2be2;
+      --cyan: #00e5ff;
+      --line: rgb(188 19 254 / .2);
+    }
+    * { box-sizing: border-box; }
+    html { min-width: 320px; background: var(--space); }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      min-height: 100svh;
+      color: var(--text);
+      background: var(--space);
+      font-family: "Segoe UI", "Microsoft YaHei", system-ui, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+    button { font: inherit; }
+    button:focus-visible { outline: 2px solid var(--cyan); outline-offset: 5px; }
+    ::selection { color: #fff; background: #713ca7; }
+    .page { position: relative; isolation: isolate; min-height: 100svh; overflow: hidden; }
+    .topbar {
+      position: relative; z-index: 2; display: flex; align-items: center; justify-content: space-between;
+      gap: 20px; max-width: 1600px; padding: 32px 5%; margin: auto;
+    }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .brand-mark { width: 34px; height: 34px; color: #cf9aff; }
+    .brand-name { font-size: 17px; font-weight: 600; letter-spacing: .15em; }
+    .edition, .eyebrow, .legend-number { font: 10px/1.6 Consolas, monospace; letter-spacing: .2em; }
+    .edition { color: #a999c0; }
+    .preview-tag { color: #c1addc; font-size: 11px; letter-spacing: .12em; }
+    .preview-tag::before {
+      content: ""; display: inline-block; width: 5px; height: 5px; margin-right: 10px;
+      border-radius: 50%; background: #b784eb; box-shadow: 0 0 12px #9961cb;
+    }
+    .intro { position: relative; z-index: 2; margin: 30px 24px 0; text-align: center; }
+    .eyebrow { color: #af8ecf; }
+    h1 { margin: 15px 0 12px; font-size: clamp(28px, 3.2vw, 43px); font-weight: 450; letter-spacing: .09em; }
+    h1 span { color: #dbc6f5; }
+    .intro p { margin: 0; color: #b6a2cd; font-size: 12px; letter-spacing: .2em; line-height: 1.8; }
+
+    /* No card, panel, border, or rectangular backdrop around the planet. */
+    .observatory { position: relative; width: min(940px, 100%); margin: -10px auto -10px; }
+    .scene { position: relative; width: 100%; aspect-ratio: 10 / 6.7; isolation: isolate; }
+    .space-art { position: absolute; inset: 0; pointer-events: none; }
+    .stars { width: 100%; height: 100%; overflow: visible; }
+    .star-pulse { animation: twinkle 7s ease-in-out infinite alternate; }
+    .star-pulse:nth-child(2) { animation-delay: -4s; animation-duration: 11s; }
+    .nebula {
+      position: absolute; width: 49%; height: 49%; border-radius: 50%; pointer-events: none;
+      background: radial-gradient(ellipse, rgb(109 31 187 / .16), rgb(71 19 127 / .07) 40%, transparent 68%);
+      animation: nebula-drift 38s ease-in-out infinite alternate;
+    }
+    .nebula--one { left: 15%; top: 22%; transform: rotate(-28deg) scaleX(1.4); }
+    .nebula--two {
+      right: 9%; bottom: 13%; width: 42%; height: 42%; opacity: .7;
+      background: radial-gradient(ellipse, rgb(36 57 128 / .16), rgb(57 19 104 / .07) 45%, transparent 70%);
+      animation-delay: -17s; animation-duration: 47s;
+    }
+    .celestial { position: absolute; inset: 0; }
+    .orbit-layer { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+    .orbit-layer--back { z-index: 1; opacity: .52; }
+    .orbit-layer--front { z-index: 4; }
+    .orbit { --period: 14s; --phase: -3s; --direction: normal; }
+    .orbit--b { --period: 21s; --phase: -13s; --direction: reverse; }
+    .orbit--c { --period: 29s; --phase: -7s; --direction: normal; opacity: .67; }
+    .track { fill: none; stroke: url(#orbit-gradient); stroke-width: .9; }
+    .track--dust { stroke-width: 2.5; stroke-dasharray: .7 4 1.1 8 .4 2.8; opacity: .43; }
+    .track--filament { stroke-width: .45; opacity: .45; }
+    .track--broken { stroke-dasharray: 7 13 .6 4 .5 19; stroke-width: 1.1; opacity: .5; }
+    .flow {
+      --tail-length: 0;
+      fill: none; stroke-linecap: round;
+      animation: orbital-flow var(--period) linear var(--phase) infinite var(--direction);
+    }
+    .flow--haze { --tail-length: 78; stroke: #ae50ff; stroke-width: 7; stroke-dasharray: 78 922; opacity: .13; }
+    .flow--tail { --tail-length: 58; stroke: #a65aef; stroke-width: 2; stroke-dasharray: 58 942; opacity: .6; }
+    .flow--light { --tail-length: 27; stroke: #dbb7ff; stroke-width: 1.5; stroke-dasharray: 27 973; opacity: .96; }
+    .flow--head {
+      stroke: #fff; stroke-width: 2.8; stroke-dasharray: .8 999.2;
+      filter: drop-shadow(0 0 3px #e4b7ff) drop-shadow(0 0 7px #a23dff);
+    }
+    .orbit--b .flow--haze { stroke: #00d3ee; }
+    .orbit--b .flow { --tail-length: 0; }
+    .orbit--b .flow--tail { stroke: #298fae; }
+    .orbit--b .flow--light { stroke: #86f4ff; }
+    .orbit--b .flow--head { filter: drop-shadow(0 0 3px #b2faff) drop-shadow(0 0 8px #00c4ec); }
+    .orbit--c .flow--haze { stroke-width: 4; }
+    .orbit--c .flow--head { stroke-width: 2; }
+
+    .atmosphere {
+      position: absolute; z-index: 2; left: 31%; top: 21.65%; width: 38%; aspect-ratio: 1;
+      border-radius: 50%; pointer-events: none;
+      background: radial-gradient(circle, transparent 49%, rgb(119 55 230 / .13) 57%, rgb(129 35 222 / .04) 65%, transparent 70%);
+    }
+    .planet {
+      position: absolute; z-index: 3; left: 35%; top: 27.61%; width: 30%; aspect-ratio: 1;
+      border-radius: 50%; isolation: isolate;
+    }
+    .planet-body {
+      position: absolute; inset: 0; overflow: hidden; border-radius: inherit;
+      background:
+        radial-gradient(ellipse at 69% 26%, rgb(84 91 189 / .63), transparent 49%),
+        radial-gradient(ellipse at 27% 72%, rgb(139 31 185 / .46), transparent 50%),
+        radial-gradient(ellipse at 72% 75%, rgb(98 35 163 / .53), transparent 51%),
+        radial-gradient(ellipse at 37% 34%, #302059, #170d2e 61%, #0c0819 92%);
+    }
+    .gas-light {
+      position: absolute; inset: -12%; border-radius: 50%; opacity: .8;
+      background:
+        radial-gradient(ellipse at 60% 32%, rgb(96 110 206 / .38), transparent 31%),
+        radial-gradient(ellipse at 32% 62%, rgb(146 59 220 / .46), transparent 37%),
+        radial-gradient(ellipse at 68% 65%, rgb(106 40 205 / .37), transparent 29%);
+      animation: gas-drift 55s ease-in-out infinite alternate;
+    }
+    /* Static, bounded SVG noise: never animate feTurbulence seed/baseFrequency. */
+    .gas-texture { position: absolute; inset: -15%; width: 130%; height: 130%; opacity: .84; }
+    .gas-grain { position: absolute; inset: 0; width: 100%; height: 100%; opacity: .13; mix-blend-mode: screen; }
+    .terminator {
+      position: absolute; inset: 0; border-radius: inherit;
+      background:
+        radial-gradient(ellipse at 72% 26%, transparent 24%, rgb(9 4 25 / .12) 47%, rgb(6 3 17 / .78) 92%),
+        radial-gradient(ellipse at 39% 42%, transparent 45%, rgb(9 4 23 / .22) 76%, rgb(6 3 17 / .64));
+    }
+    .planet-rim {
+      position: absolute; inset: -.25%; border-radius: 50%;
+      box-shadow: inset -1.7px 1px 3px rgb(152 232 255 / .96), inset 2px -2px 4px rgb(208 114 255 / .8);
+      -webkit-mask-image: linear-gradient(34deg, #000 6%, transparent 38%, transparent 49%, #000 76%);
+      mask-image: linear-gradient(34deg, #000 6%, transparent 38%, transparent 49%, #000 76%);
+    }
+    .rim-bloom {
+      position: absolute; z-index: 5; left: 58.2%; top: 30.4%; width: 4%; aspect-ratio: 1;
+      background: radial-gradient(circle, rgb(143 239 255 / .44), rgb(39 157 226 / .13) 20%, transparent 64%);
+      transform: rotate(-30deg) scaleX(.46); pointer-events: none;
+    }
+    .annotation {
+      position: absolute; z-index: 5; color: #b9a2d4; font-size: 10px; letter-spacing: .16em;
+      display: flex; align-items: center; gap: 14px; pointer-events: none;
+    }
+    .annotation::after { content: ""; width: 48px; height: 1px; background: linear-gradient(90deg, #76539766, transparent); }
+    .annotation small { display: block; color: #846d9f; font: 8px/1.8 Consolas, monospace; letter-spacing: .16em; }
+    .annotation--left { left: 7%; top: 43%; }
+    .annotation--right { right: 3.5%; top: 61%; flex-direction: row-reverse; }
+    .annotation--right::after { transform: rotate(180deg); }
+    .under-caption { position: absolute; bottom: 9%; width: 100%; text-align: center; color: #8a73a3; font: 9px/2 Consolas, monospace; letter-spacing: .4em; }
+    .footer {
+      position: relative; z-index: 5; display: flex; justify-content: space-between; align-items: center;
+      gap: 24px; width: min(1090px, 90%); margin: auto; padding: 0 0 34px;
+    }
+    .legend { display: flex; gap: 31px; }
+    .legend-item { display: flex; align-items: center; gap: 10px; color: #c4aedb; font-size: 11px; }
+    .legend-number { color: #795496; font-size: 9px; }
+    .controls { display: flex; gap: 10px; align-items: center; }
+    .controls[hidden] { display: none; }
+    .control {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 42px;
+      padding: 10px 17px; border-radius: 7px; border: 1px solid var(--line);
+      color: #e2d2f1; background: rgb(27 14 45 / .52); cursor: pointer;
+      backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+      font-size: 11px; letter-spacing: .04em;
+      transition: transform .2s, border-color .2s, box-shadow .2s;
+    }
+    .control--accent { background: linear-gradient(120deg, rgb(139 38 173 / .3), rgb(77 46 158 / .3)); }
+    .control svg { width: 12px; height: 12px; }
+    .control:disabled { cursor: default; opacity: .65; }
+    @media (hover: hover) {
+      .control:hover:not(:disabled) { transform: translateY(-2px); border-color: #a563c76b; box-shadow: 0 4px 20px rgb(138 43 226 / .15); }
+    }
+    .motion-note { text-align: center; margin: -18px 20px 18px; color: #b4a0cb; font-size: 10px; }
+    .motion-note:empty { display: none; }
+    /* Pause every animated layer together, including flows inside both depth passes. */
+    body[data-paused="true"] .scene *, body[data-hidden="true"] .scene * { animation-play-state: paused !important; }
+    body[data-immersive="true"] .topbar, body[data-immersive="true"] .intro,
+    body[data-immersive="true"] .legend, body[data-immersive="true"] .annotation,
+    body[data-immersive="true"] .under-caption { visibility: hidden; }
+    body[data-immersive="true"] .observatory { margin-top: -110px; }
+    body[data-immersive="true"] .footer { justify-content: center; }
+    @keyframes orbital-flow {
+      from { stroke-dashoffset: var(--tail-length); }
+      to { stroke-dashoffset: calc(var(--tail-length) - 1000); }
+    }
+    @keyframes gas-drift { from { transform: rotate(-12deg) scale(1); } to { transform: rotate(15deg) scale(1.07); } }
+    @keyframes nebula-drift { from { transform: translate(-2%, 2%) rotate(-28deg) scaleX(1.3); } to { transform: translate(4%, -2%) rotate(-22deg) scaleX(1.5); } }
+    @keyframes twinkle { from { opacity: .3; } to { opacity: .75; } }
+    @media (min-width: 1600px) { .observatory { width: 980px; } .intro { margin-top: 45px; } }
+    @media (max-width: 700px) {
+      .topbar { padding: 24px 6%; } .edition { display: none; }
+      .brand-name { font-size: 15px; } .brand-mark { width: 29px; height: 29px; }
+      .intro { margin-top: 36px; } .intro p { font-size: 10px; letter-spacing: .1em; }
+      .observatory { width: 125%; max-width: none; margin: 0 -12.5% 4px; }
+      .annotation { display: none; } .under-caption { font-size: 8px; bottom: 4%; letter-spacing: .25em; }
+      .footer { flex-direction: column; gap: 28px; padding-bottom: 30px; }
+      .legend { gap: 22px; } .legend-item { font-size: 10px; gap: 7px; }
+      .controls { gap: 12px; } .control { min-height: 44px; padding: 12px 20px; }
+      body[data-immersive="true"] .observatory { margin-top: -45px; }
+      .motion-note { margin-top: -10px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .scene * { animation-play-state: paused !important; }
+      .control { transition: none; }
+    }
+  </style>
+</head>
+<body data-paused="false" data-immersive="false">
+  <div class="page">
+    <header class="topbar">
+      <div class="brand">
+        <svg class="brand-mark" viewBox="0 0 36 36" fill="none" aria-hidden="true">
+          <path d="m18 3 13 7.5v15L18 33 5 25.5v-15L18 3Z" stroke="currentColor" stroke-opacity=".7"/>
+          <path d="m11 22 7-12 7 12H11Zm0 0 7 5 7-5M18 10v17" stroke="currentColor" stroke-width="1.3"/>
+          <circle cx="18" cy="10" r="2" fill="#a9f4ff"/>
+        </svg>
+        <span class="brand-name">工序智伴</span>
+      </div>
+      <span class="edition">GONGXU / VISUAL STUDY 02</span>
+      <span class="preview-tag">独立动效预览</span>
+    </header>
+
+    <main>
+      <div class="intro">
+        <div class="eyebrow">THE GRAVITY OF IDEAS</div>
+        <h1>让灵感，<span>自成引力。</span></h1>
+        <p>在深空中，连接每一次创造。</p>
+      </div>
+
+      <figure class="observatory" aria-label="深紫色气态星球，三条倾斜轨道上的紫色与青色光流前后环绕">
+        <div class="scene" aria-hidden="true">
+          <div class="space-art">
+            <div class="nebula nebula--one"></div><div class="nebula nebula--two"></div>
+            <svg class="stars" viewBox="0 0 1000 670" fill="#d6bdf5">
+              <g opacity=".28">
+                <circle cx="159" cy="191" r=".8"/><circle cx="337" cy="74" r=".6"/><circle cx="655" cy="110" r=".65"/>
+                <circle cx="833" cy="252" r=".65"/><circle cx="762" cy="516" r=".7"/><circle cx="230" cy="489" r=".65"/>
+                <circle cx="536" cy="573" r=".5"/><circle cx="458" cy="116" r=".6"/><circle cx="114" cy="359" r=".6"/>
+                <circle cx="927" cy="435" r=".6"/><circle cx="411" cy="531" r=".55"/><circle cx="690" cy="562" r=".5"/>
+                <circle cx="290" cy="151" r=".5"/><circle cx="801" cy="126" r=".5"/><circle cx="910" cy="185" r=".7"/>
+                <circle cx="98" cy="470" r=".7"/><circle cx="174" cy="560" r=".5"/><circle cx="868" cy="568" r=".5"/>
+              </g>
+              <g class="star-pulse" fill="#b0cfff">
+                <circle cx="260" cy="228" r="1.1"/><circle cx="729" cy="160" r=".9"/><circle cx="660" cy="495" r="1"/>
+                <path d="M729 156v8m-4-4h8M260 224v8m-4-4h8" stroke="#bcd9ff" stroke-width=".4"/>
+              </g>
+              <g class="star-pulse" fill="#d8b8ff">
+                <circle cx="320" cy="465" r="1"/><circle cx="822" cy="367" r=".9"/><circle cx="530" cy="85" r=".9"/>
+              </g>
+            </svg>
+          </div>
+
+          <div class="celestial">
+            <!-- The same path is rendered in two clipped depth passes. Its phase is identical
+                 on both sides, so a light disappears behind the sphere and returns in front. -->
+            <svg class="orbit-layer orbit-layer--back" viewBox="0 0 1000 670" fill="none">
+              <defs>
+                <linearGradient id="orbit-gradient" x1="150" y1="430" x2="850" y2="230" gradientUnits="userSpaceOnUse">
+                  <stop stop-color="#b171f7" stop-opacity=".18"/><stop offset=".3" stop-color="#b49be9" stop-opacity=".8"/>
+                  <stop offset=".54" stop-color="#ae6de6" stop-opacity=".28"/><stop offset=".8" stop-color="#84dbef" stop-opacity=".67"/>
+                  <stop offset="1" stop-color="#9c6bdf" stop-opacity=".25"/>
+                </linearGradient>
+                <path id="path-a" d="M 158 335 A 342 106 0 1 0 842 335 A 342 106 0 1 0 158 335" pathLength="1000"/>
+                <path id="path-a-fine" d="M 150 335 A 350 111 0 1 0 850 335 A 350 111 0 1 0 150 335" pathLength="1000"/>
+                <path id="path-a-inner" d="M 165 335 A 335 101 0 1 0 835 335 A 335 101 0 1 0 165 335" pathLength="1000"/>
+                <path id="path-b" d="M 210 335 A 290 125 0 1 0 790 335 A 290 125 0 1 0 210 335" pathLength="1000"/>
+                <path id="path-c" d="M 263 335 A 237 129 0 1 0 737 335 A 237 129 0 1 0 263 335" pathLength="1000"/>
+                <clipPath id="far-half"><path d="M0 0H1000V335H0Z"/></clipPath>
+                <clipPath id="near-half"><path d="M0 335H1000V670H0Z"/></clipPath>
+              </defs>
+              <g transform="rotate(-24 500 335)"><g class="orbit orbit--a" clip-path="url(#far-half)">
+                <use href="#path-a" class="track"/><use href="#path-a-fine" class="track track--dust"/><use href="#path-a-inner" class="track track--filament"/>
+                <use href="#path-a" class="flow flow--haze"/><use href="#path-a" class="flow flow--tail"/><use href="#path-a" class="flow flow--light"/><use href="#path-a" class="flow flow--head"/>
+              </g></g>
+              <g transform="rotate(17 500 335)"><g class="orbit orbit--b" clip-path="url(#far-half)">
+                <use href="#path-b" class="track track--broken"/>
+                <use href="#path-b" class="flow flow--haze"/><use href="#path-b" class="flow flow--tail"/><use href="#path-b" class="flow flow--light"/><use href="#path-b" class="flow flow--head"/>
+              </g></g>
+              <g transform="rotate(-61 500 335)"><g class="orbit orbit--c" clip-path="url(#far-half)">
+                <use href="#path-c" class="track track--broken"/>
+                <use href="#path-c" class="flow flow--tail"/><use href="#path-c" class="flow flow--light"/><use href="#path-c" class="flow flow--head"/>
+              </g></g>
+            </svg>
+
+            <div class="atmosphere"></div>
+            <div class="planet">
+              <div class="planet-body">
+                <div class="gas-light"></div>
+                <svg class="gas-texture" viewBox="0 0 400 400">
+                  <defs>
+                    <filter id="cloud-noise" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">
+                      <feTurbulence type="fractalNoise" baseFrequency=".013 .022" numOctaves="5" seed="12" stitchTiles="stitch"/>
+                      <feColorMatrix type="saturate" values="0"/>
+                      <feComponentTransfer>
+                        <feFuncR type="table" tableValues=".015 .04 .19 .57 .83"/>
+                        <feFuncG type="table" tableValues=".005 .015 .06 .25 .67"/>
+                        <feFuncB type="table" tableValues=".04 .14 .38 .8 .98"/>
+                        <feFuncA type="table" tableValues="0 .04 .52 .86 1"/>
+                      </feComponentTransfer>
+                    </filter>
+                    <filter id="cloud-wisps" x="-25%" y="-25%" width="150%" height="150%" color-interpolation-filters="sRGB">
+                      <feTurbulence type="fractalNoise" baseFrequency=".016 .027" numOctaves="3" seed="4" result="warp"/>
+                      <feDisplacementMap in="SourceGraphic" in2="warp" scale="82" xChannelSelector="R" yChannelSelector="G" result="displaced"/>
+                      <feTurbulence type="fractalNoise" baseFrequency=".049" numOctaves="3" seed="9"/>
+                      <feColorMatrix type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  1.7 1.7 1.7 0 -1.9" result="vapor"/>
+                      <feComposite in="displaced" in2="vapor" operator="in"/>
+                      <feGaussianBlur stdDeviation=".65"/>
+                    </filter>
+                    <linearGradient id="cloud-color" x1="0" y1="1" x2="1" y2="0">
+                      <stop stop-color="#8610dc" stop-opacity=".12"/><stop offset=".4" stop-color="#9c4ed8" stop-opacity=".42"/>
+                      <stop offset=".76" stop-color="#7f9cd9" stop-opacity=".55"/><stop offset="1" stop-color="#335888" stop-opacity=".08"/>
+                    </linearGradient>
+                    <radialGradient id="cloud-fade"><stop offset=".22" stop-color="#fff"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+                    <mask id="cloud-mask"><rect width="400" height="400" fill="url(#cloud-fade)"/></mask>
+                  </defs>
+                  <g mask="url(#cloud-mask)">
+                    <rect width="400" height="400" filter="url(#cloud-noise)" opacity=".8"/>
+                    <g filter="url(#cloud-wisps)" fill="url(#cloud-color)">
+                      <path d="M20 298C91 305 105 221 157 218S259 230 271 171S225 108 267 75C223 96 220 123 236 160S199 194 159 185S77 279 20 298Z"/>
+                      <path d="M83 354C160 310 174 272 242 277S299 203 366 170C311 234 319 301 243 300S158 350 83 354Z" opacity=".7"/>
+                      <path d="M44 182C99 171 119 91 174 88S231 148 208 177C217 126 184 115 165 120S90 197 44 182Z" opacity=".65"/>
+                    </g>
+                  </g>
+                </svg>
+                <svg class="gas-grain" viewBox="0 0 300 300">
+                  <filter id="grain" x="0" y="0" width="100%" height="100%">
+                    <feTurbulence type="fractalNoise" baseFrequency=".71" numOctaves="3" seed="2" stitchTiles="stitch"/>
+                    <feColorMatrix type="saturate" values="0"/>
+                  </filter>
+                  <rect width="300" height="300" filter="url(#grain)"/>
+                </svg>
+                <div class="terminator"></div>
+              </div>
+              <div class="planet-rim"></div>
+            </div>
+            <div class="rim-bloom"></div>
+
+            <svg class="orbit-layer orbit-layer--front" viewBox="0 0 1000 670" fill="none">
+              <g transform="rotate(-61 500 335)"><g class="orbit orbit--c" clip-path="url(#near-half)">
+                <use href="#path-c" class="track track--broken"/>
+                <use href="#path-c" class="flow flow--tail"/><use href="#path-c" class="flow flow--light"/><use href="#path-c" class="flow flow--head"/>
+              </g></g>
+              <g transform="rotate(17 500 335)"><g class="orbit orbit--b" clip-path="url(#near-half)">
+                <use href="#path-b" class="track track--broken"/>
+                <use href="#path-b" class="flow flow--haze"/><use href="#path-b" class="flow flow--tail"/><use href="#path-b" class="flow flow--light"/><use href="#path-b" class="flow flow--head"/>
+              </g></g>
+              <g transform="rotate(-24 500 335)"><g class="orbit orbit--a" clip-path="url(#near-half)">
+                <use href="#path-a" class="track"/><use href="#path-a-fine" class="track track--dust"/><use href="#path-a-inner" class="track track--filament"/>
+                <use href="#path-a" class="flow flow--haze"/><use href="#path-a" class="flow flow--tail"/><use href="#path-a" class="flow flow--light"/><use href="#path-a" class="flow flow--head"/>
+              </g></g>
+            </svg>
+          </div>
+          <div class="annotation annotation--left"><span>星云气体<small>NEBULA / VOLUME</small></span></div>
+          <div class="annotation annotation--right"><span>轨道光流<small>ORBIT / LIGHT</small></span></div>
+          <div class="under-caption">FROM THE FIRST SPARK TO WHAT'S NEXT</div>
+        </div>
+      </figure>
+    </main>
+
+    <footer class="footer">
+      <div class="legend" aria-label="视觉构成">
+        <span class="legend-item"><span class="legend-number">01</span> 星云气体</span>
+        <span class="legend-item"><span class="legend-number">02</span> 交错轨道</span>
+        <span class="legend-item"><span class="legend-number">03</span> 数据光流</span>
+      </div>
+      <div class="controls" hidden>
+        <button type="button" class="control" id="motion-toggle" aria-pressed="false">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path id="motion-icon" d="M5 3v10M11 3v10" stroke="currentColor" stroke-width="1.6" fill="none"/></svg>
+          <span id="motion-label">暂停动效</span>
+        </button>
+        <button type="button" class="control control--accent" id="focus-toggle" aria-pressed="false">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 2H2v4m8-4h4v4M2 10v4h4m8-4v4h-4" stroke="currentColor" stroke-width="1.2" fill="none"/></svg>
+          <span id="focus-label">沉浸预览</span>
+        </button>
+      </div>
+    </footer>
+    <p class="motion-note" id="motion-note" role="status"></p>
+  </div>
+  <script>
+    // Local presentation only. No application state, APIs, imports, or credentials.
+    (() => {
+      const body = document.body;
+      const motionButton = document.getElementById('motion-toggle');
+      const focusButton = document.getElementById('focus-toggle');
+      const preference = window.matchMedia('(prefers-reduced-motion: reduce)');
+      let pausedByUser = false;
+
+      function updateMotion() {
+        const paused = pausedByUser || preference.matches;
+        body.dataset.paused = String(paused);
+        motionButton.disabled = preference.matches;
+        motionButton.setAttribute('aria-pressed', String(paused));
+        document.getElementById('motion-label').textContent = preference.matches ? '静态预览' : paused ? '继续动效' : '暂停动效';
+        document.getElementById('motion-icon').setAttribute('d', paused ? 'M5 3 12 8 5 13Z' : 'M5 3v10M11 3v10');
+        document.getElementById('motion-note').textContent = preference.matches ? '已遵循系统的“减少动态效果”设置。' : '';
+      }
+
+      motionButton.addEventListener('click', () => { pausedByUser = !pausedByUser; updateMotion(); });
+      focusButton.addEventListener('click', () => {
+        const immersive = body.dataset.immersive !== 'true';
+        body.dataset.immersive = String(immersive);
+        focusButton.setAttribute('aria-pressed', String(immersive));
+        document.getElementById('focus-label').textContent = immersive ? '退出沉浸' : '沉浸预览';
+      });
+      document.addEventListener('keydown', event => {
+        if (event.key === 'Escape' && body.dataset.immersive === 'true') focusButton.click();
+      });
+      document.addEventListener('visibilitychange', () => { body.dataset.hidden = String(document.hidden); });
+      preference.addEventListener('change', updateMotion);
+      body.dataset.hidden = String(document.hidden);
+      document.querySelector('.controls').hidden = false;
+      updateMotion();
+
+      // Render the authored SVG noise once into bounded textures. This avoids
+      // rerunning fractal filters during every orbital frame in software renderers.
+      // The original inline SVG remains a complete fallback if caching is unavailable.
+      async function cacheTexture(svg) {
+        try {
+          const source = new XMLSerializer().serializeToString(svg);
+          const image = new Image();
+          image.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(source);
+          await image.decode();
+          const canvas = document.createElement('canvas');
+          const pixels = Math.min(768, Math.max(400, Math.ceil(svg.getBoundingClientRect().width * Math.min(devicePixelRatio || 1, 2))));
+          canvas.width = canvas.height = pixels;
+          canvas.className = svg.getAttribute('class');
+          canvas.setAttribute('aria-hidden', 'true');
+          const context = canvas.getContext('2d');
+          if (!context) return;
+          context.drawImage(image, 0, 0, pixels, pixels);
+          svg.replaceWith(canvas);
+        } catch { /* Keep the original SVG if the browser cannot cache it. */ }
+      }
+      document.querySelectorAll('.gas-texture, .gas-grain').forEach(cacheTexture);
+
+      // Cache only the soft ambient gradients, which do not need full-resolution
+      // repainting. CSS radial gradients above remain the no-JavaScript fallback.
+      function cacheNebula(selector, inner, middle) {
+        try {
+          const canvas = document.createElement('canvas');
+          canvas.width = canvas.height = 128;
+          const context = canvas.getContext('2d');
+          if (!context) return;
+          const gradient = context.createRadialGradient(64, 64, 0, 64, 64, 91);
+          gradient.addColorStop(0, inner);
+          gradient.addColorStop(.4, middle);
+          gradient.addColorStop(.7, 'transparent');
+          context.fillStyle = gradient;
+          context.fillRect(0, 0, 128, 128);
+          const element = document.querySelector(selector);
+          element.style.backgroundImage = `url(${canvas.toDataURL()})`;
+          element.style.backgroundSize = '100% 100%';
+        } catch { /* Preserve the CSS gradient fallback. */ }
+      }
+      cacheNebula('.nebula--one', 'rgba(109,31,187,.16)', 'rgba(71,19,127,.07)');
+      cacheNebula('.nebula--two', 'rgba(36,57,128,.16)', 'rgba(57,19,104,.07)');
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,39 @@
+工序智伴三维星环第三方组件说明
+
+1. SaturnWebGL
+Source: https://github.com/adelmassimo/SaturnWebGL
+Commit: c960494e221d6a722b8fb5d9973d6d649d806f72
+Copyright (c) 2018 Adel Massimo Ramadan
+License: MIT. Full original license: saturn-webgl/LICENSE
+
+Reused code: particle orbit equations from index.html#vertexShaderDEBRIS and
+the corresponding base_angle, offsetX, offsetZ BufferGeometry attributes.
+The original vertex shader is preserved in saturn-webgl/original-orbit.vert.glsl.
+
+The adapted module saturn-webgl/particle-ring.js upgrades the BufferGeometry
+API and adds bounded particle counts, violet/cyan point sprites and visible
+moving clusters. Time is measured in seconds, with nonzero initial speed,
+opposite directions, pause/resume and lifecycle cleanup. The source project's
+audio, external textures, jQuery, statistics UI and old renderer are not used.
+
+2. Three.js
+Version: 0.187.0 (r187)
+Source: https://github.com/mrdoob/three.js/tree/r187
+Copyright 2010-2026 three.js authors
+License: MIT. Full original license: three/LICENSE
+
+three/three.module.min.js is bundled from the official npm package's
+build/three.module.js using esbuild 0.25.12. Options: bundle=true,
+minify=true, format=esm, target=es2022, legalComments=inline.
+It is served locally, without a runtime CDN dependency. Versions and SHA-256
+hashes are recorded in manifest.json.
+
+3. Original project work
+The page layout, procedural cloud material, atmosphere, interaction controls,
+integration with the workbench and software engineering business workflow are
+separate work in this repository. The third-party ring rendering is identified
+as an open-source visual component, not claimed as an original AI innovation.
+
+The previous CSS/SVG preview is retained at ../archive/planet-orbit-css-v2.html.
+The WebGL preview requires a local HTTP server and WebGL2. If unavailable, the
+page presents an explicit message and a link to the earlier preview.
