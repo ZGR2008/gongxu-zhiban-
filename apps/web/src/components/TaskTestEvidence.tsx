@@ -39,7 +39,7 @@ export function TaskTestEvidence({projectId,itemId,current,blocked=false,tasks,c
    <div className="trace-review-fields"><label>开发任务<select aria-label="验证链开发任务" value={taskId} disabled={busy} onChange={e=>setTaskId(e.target.value)}><option value="">选择任务</option>{tasks.map(row=><option key={row.id} value={row.id}>{row.title}</option>)}</select></label><label>验证用例<select aria-label="验证链测试用例" value={caseId} disabled={busy} onChange={e=>setCaseId(e.target.value)}><option value="">选择用例</option>{cases.map(row=><option key={row.id} value={row.id}>{row.title} · 修订 {row.revision}</option>)}</select></label></div>
    {taskId&&caseId&&!sourceReady&&<p className="wb-warning">这项任务和用例尚未都通过上方的需求关联审核，或关联修订已失效。请先核对原文和当前用例。</p>}
    <label>任务验证依据<textarea aria-label="任务验证依据" value={note} disabled={busy} onChange={e=>setNote(e.target.value)} rows={3} minLength={3} maxLength={2000} required placeholder="说明这个用例检查任务的哪项交付结果，以及实际验收方法。"/></label>
-   <div className="form-actions"><button type="button" className="button secondary" disabled={busy||!taskId||!caseId||note.trim().length<3} onClick={()=>void save('rejected')}>排除此配对</button><button type="submit" className="button primary" disabled={busy||!sourceReady||note.trim().length<3}>{busy?'保存审核中…':'确认任务与用例配对'}</button></div>
+   <div className="form-actions"><button type="button" className="button secondary" disabled={blocked||busy||!taskId||!caseId||note.trim().length<3} onClick={()=>void save('rejected')}>排除此配对</button><button type="submit" className="button primary" disabled={blocked||busy||!sourceReady||note.trim().length<3}>{busy?'保存审核中…':'确认任务与用例配对'}</button></div>
   </form>}
  </section>;
 }
