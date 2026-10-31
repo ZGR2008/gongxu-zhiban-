@@ -30,7 +30,8 @@
     "eval:prepare": "pnpm --filter @gongxu/api build && node scripts/evaluate-prepare.mjs",
     "eval:report": "node scripts/evaluate-report.mjs",
     "test:eval-report": "node --test scripts/evaluation-report.test.mjs",
-    "verify:review-context": "pnpm --filter @gongxu/api build && cd apps/api && node ../../scripts/review-context-local.mjs"
+    "verify:review-context": "pnpm --filter @gongxu/api build && cd apps/api && node ../../scripts/review-context-local.mjs",
+    "verify:growth-scope": "pnpm --filter @gongxu/api build && cd apps/api && node ../../scripts/growth-scope-local.mjs"
   },
   "devDependencies": {
     "playwright": "1.64.1"

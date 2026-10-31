@@ -1,0 +1,4 @@
+.growth-heading{flex-wrap:wrap;align-items:flex-end}
+.growth-scope-tools{flex:0 1 320px;min-width:min(100%,260px);max-width:100%}
+.growth-scope-tools label:not(.sr-only){margin:0 0 8px}
+.growth-scope-tools select{width:100%;max-width:100%}

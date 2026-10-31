@@ -30,6 +30,14 @@ test('recommendations explain real evidence and do not assume findings are still
   assert.match(advice[1].evidence, /不等于未修复/); assert.match(advice[2].evidence, /4 条用例中有 1 条/);
 });
 
+test('growth validates requested scope and never derives next actions from historical totals',async t=>{
+  let reads=0;const pool={query:async(sql:string)=>{reads++;return {rows:sql.startsWith('WITH')?[{...empty,tasksTotal:1,blocked:1,testCases:1,executedTests:1,failedTests:1}]:[]};}} as unknown as Pool;
+  const app=Fastify();await registerGrowthRoutes(app,store,pool);t.after(()=>app.close());
+  assert.equal((await app.inject({url:'/growth?scope=invalid',headers:auth})).statusCode,400);assert.equal(reads,0);
+  const history=await app.inject({url:'/growth?scope=history',headers:auth});assert.equal(history.statusCode,200);assert.equal(history.json().scope,'history');assert.deepEqual(history.json().recommendations,[]);assert.match(history.json().disclaimer,/不代表当前需求已验证/);
+  const current=await app.inject({url:'/growth',headers:auth});assert.equal(current.json().scope,'current');assert.deepEqual(current.json().recommendations.map((row:{code:string})=>row.code),['blocked_tasks','failed_tests']);
+});
+
 test('task update checks authentication, validates status and owner, then audits atomically', async t => {
   const queries: { sql: string; values?: unknown[] }[] = [];
   let owned = true; let released = 0;

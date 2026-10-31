@@ -63,6 +63,11 @@ async function scenario(name,work){
   if(path==='/health')body={status:'ok',service:'gongxu-api'};
   else if(path==='/ready')body={status:'ready'};
   else if(path==='/ai/status')body={configured:false};
+  else if(path==='/growth'){
+   const scope=url.searchParams.get('scope')??'current';state.growthReads=(state.growthReads??0)+1;
+   body={scope:state.growthResponseScope??scope,counts:{projects:2,confirmedRequirements:scope==='history'?3:2,tasks:{total:scope==='history'?4:2,todo:1,doing:1,review:0,done:scope==='history'?1:0,blocked:scope==='history'?1:0},codeReviews:1,syntaxFindings:0,testCases:scope==='history'?4:2,testExecutions:{total:scope==='history'?2:0,passed:scope==='history'?1:0,failed:scope==='history'?1:0,blocked:0}},events:[],recommendations:scope==='history'?[]:[{code:'unexecuted',text:'合成当前版本建议',evidence:'本次范围内仍未执行'}],disclaimer:scope==='history'?'历史累计不代表当前验收':'当前确认版本，不计旧结果'};
+   await new Promise(r=>setTimeout(r,state.growthDelay?.(scope)??0));if(state.growthFail){status=503;body={error:'database_unavailable'};}
+  }
   else if(path==='/auth/logout'){state.logoutRequests=(state.logoutRequests??0)+1;body={ok:true};}
   else if(path==='/auth/login')body={token:'controlled-browser-next-session',user:{id:B,name:'合成账号B'}};
   else if(path==='/projects'&&method==='POST'){
@@ -127,6 +132,26 @@ function traceFixture(state){
  state.traceData={version:{id:RA,number:1,current:true},items:[{id:RA,key:'REQ-fixture',position:1,start:0,end:4,text:'审批留档',change:'initial',coverage:{suggested:0,confirmedTasks:1,confirmedCases:1,stale:0,manualEvidence:0}}],links:[{id:'task-link',itemId:RA,taskId:RA,caseId:null,status:'confirmed',origin:'human'},{id:'case-link',itemId:RA,taskId:null,caseId:RB,caseRevision:1,status:'confirmed',origin:'human'}],tasks:[{id:RA,title:'合成审批任务'}],cases:[test],previousItems:[],impact:null,taskTests:[],taskTestHistory:[],scope:'受控浏览器替身，不是业务数据'};
 }
 try{
+ await scenario('growth_scope_fast_switch_discards_late_history_and_hides_old_statistics',async(page,state)=>{
+  await page.goto(`${origin.origin}/growth`);await page.getByRole('heading',{name:'当前版本任务进度',exact:true}).waitFor();assert.ok((await page.getByRole('region',{name:'任务进度',exact:true}).innerText()).includes('共 2 项'));
+  state.growthDelay=scope=>scope==='history'?450:0;const reads=state.growthReads;await page.getByLabel('任务与测试统计范围').selectOption('history');await waitFor(()=>state.growthReads>reads);
+  assert.equal(await page.locator('.growth-stats').count(),0);await page.getByLabel('任务与测试统计范围').selectOption('current');await page.getByRole('heading',{name:'当前版本任务进度',exact:true}).waitFor();await page.waitForTimeout(550);
+  assert.equal(await page.getByRole('heading',{name:'历史任务状态',exact:true}).count(),0);assert.ok((await page.getByRole('region',{name:'任务进度',exact:true}).innerText()).includes('共 2 项'));await page.getByText('合成当前版本建议',{exact:true}).waitFor();
+ });
+ await scenario('growth_scope_failure_and_mismatched_response_never_show_successful_statistics',async(page,state)=>{
+  await page.goto(`${origin.origin}/growth`);await page.locator('.growth-stats').waitFor();state.growthFail=true;
+  await page.getByLabel('任务与测试统计范围').selectOption('history');await page.getByRole('alert').waitFor();assert.equal(await page.locator('.growth-stats').count(),0);
+  state.growthFail=false;state.growthResponseScope='current';await page.getByRole('button',{name:'重试',exact:true}).click();await page.getByText('统计范围与本次选择不一致，请刷新后重试。',{exact:false}).waitFor();assert.equal(await page.locator('.growth-stats').count(),0);
+  state.growthResponseScope=null;await page.getByRole('button',{name:'重试',exact:true}).click();await page.getByRole('heading',{name:'历史任务状态',exact:true}).waitFor();assert.ok((await page.getByRole('region',{name:'任务进度',exact:true}).innerText()).includes('共 4 项'));assert.equal(await page.getByText('合成当前版本建议',{exact:true}).count(),0);
+ });
+ await scenario('growth_scope_keyboard_and_desktop_controls_remain_reachable',async(page)=>{
+  await page.goto(`${origin.origin}/growth`);const selection=page.getByLabel('任务与测试统计范围');await page.locator('.growth-stats').waitFor();
+  await selection.focus();await selection.press('ArrowDown');await selection.press('Enter');await page.getByRole('heading',{name:'历史任务状态',exact:true}).waitFor();assert.equal(await selection.evaluate(node=>document.activeElement===node),true);
+  for(const [width,height,zoom]of [[1366,768,1],[1536,864,1.25],[1920,1080,1.5]]){
+   await page.setViewportSize({width,height});await page.evaluate(z=>{document.documentElement.style.zoom=String(z);window.scrollTo(0,0);},zoom);
+   const rect=await selection.boundingBox();assert.ok(rect&&rect.x>=0&&rect.y>=0&&rect.x+rect.width<=width+2&&rect.y+rect.height<=height,'Scope controls remain on-screen');assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+2),false);
+  }
+ });
  await scenario('code_review_sources_distinguish_supplied_context_history_and_unknown',async(page,state)=>{
   state.detailOverride={project:project(A),requirements:[{id:RA,version:2,status:'confirmed',content:'当前合成需求',createdAt:now}]};
   state.reviews=[{id:'source-review',language:'typescript',code:'const x = 1;',aiAdvice:'基于旧需求的合成建议，尚未验证',syntaxFindings:[],modelName:'fixture',createdAt:now,reviewContext:{schemaVersion:1,scope:'project',capturedAt:now,requirement:{id:RB,version:1,content:'历史需求原文必须能核对'},retrieval:{status:'retrieved',segments:[{part:1,start:0,end:12,sourceIds:[RB]}],sources:[{id:RB,documentName:'实际传入的合成资料',page:2,content:'原文片段：只允许审批者操作。',distance:.1}]}}},{id:'legacy-review',language:'javascript',code:'let x;',aiAdvice:'旧审查',syntaxFindings:[],modelName:'fixture',createdAt:now}];

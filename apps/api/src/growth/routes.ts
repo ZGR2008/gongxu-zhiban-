@@ -29,25 +29,41 @@ export async function registerGrowthRoutes(app: FastifyInstance, store?: Project
     try {
       const user = await authorizeRequest(request, store);
       if (!user) return reply.code(401).send({ error: 'unauthorized' });
+      const selection=z.object({scope:z.enum(['current','history']).default('current')}).strict().safeParse(request.query);
+      if(!selection.success)return reply.code(400).send({error:'invalid_input'});
+      const history=selection.data.scope==='history';
       // Every aggregate and event is scoped through the project owner.
       const [summary, events] = await Promise.all([
-        pool.query(`WITH owned AS (SELECT id FROM projects WHERE owner_id=$1)
+        pool.query(`WITH owned AS (SELECT id FROM projects WHERE owner_id=$1),
+          current_versions AS (
+            SELECT DISTINCT ON (project_id) id,project_id FROM requirement_versions
+            WHERE project_id IN (SELECT id FROM owned) AND status='confirmed'
+            ORDER BY project_id,version DESC
+          ),
+          scoped_tasks AS (
+            SELECT t.status FROM tasks t WHERE t.project_id IN (SELECT id FROM owned)
+              AND ($2::boolean OR t.requirement_version_id IN (SELECT id FROM current_versions))
+          ),
+          scoped_cases AS (
+            SELECT c.result FROM practice_test_cases c WHERE c.project_id IN (SELECT id FROM owned)
+              AND ($2::boolean OR c.requirement_version_id IN (SELECT id FROM current_versions))
+          )
           SELECT
             (SELECT count(*)::int FROM owned) AS projects,
-            (SELECT count(*)::int FROM requirement_versions WHERE project_id IN (SELECT id FROM owned) AND status='confirmed') AS "confirmedRequirements",
-            (SELECT count(*)::int FROM tasks WHERE project_id IN (SELECT id FROM owned)) AS "tasksTotal",
-            (SELECT count(*)::int FROM tasks WHERE project_id IN (SELECT id FROM owned) AND status='todo') AS todo,
-            (SELECT count(*)::int FROM tasks WHERE project_id IN (SELECT id FROM owned) AND status='doing') AS doing,
-            (SELECT count(*)::int FROM tasks WHERE project_id IN (SELECT id FROM owned) AND status='review') AS review,
-            (SELECT count(*)::int FROM tasks WHERE project_id IN (SELECT id FROM owned) AND status='done') AS done,
-            (SELECT count(*)::int FROM tasks WHERE project_id IN (SELECT id FROM owned) AND status='blocked') AS blocked,
+            (SELECT count(*)::int FROM requirement_versions WHERE project_id IN (SELECT id FROM owned) AND status='confirmed' AND ($2::boolean OR id IN (SELECT id FROM current_versions))) AS "confirmedRequirements",
+            (SELECT count(*)::int FROM scoped_tasks) AS "tasksTotal",
+            (SELECT count(*)::int FROM scoped_tasks WHERE status='todo') AS todo,
+            (SELECT count(*)::int FROM scoped_tasks WHERE status='doing') AS doing,
+            (SELECT count(*)::int FROM scoped_tasks WHERE status='review') AS review,
+            (SELECT count(*)::int FROM scoped_tasks WHERE status='done') AS done,
+            (SELECT count(*)::int FROM scoped_tasks WHERE status='blocked') AS blocked,
             (SELECT count(*)::int FROM code_reviews WHERE project_id IN (SELECT id FROM owned)) AS "codeReviews",
             (SELECT COALESCE(sum(jsonb_array_length(syntax_findings)),0)::int FROM code_reviews WHERE project_id IN (SELECT id FROM owned)) AS "syntaxFindings",
-            (SELECT count(*)::int FROM practice_test_cases WHERE project_id IN (SELECT id FROM owned)) AS "testCases",
-            (SELECT count(*)::int FROM practice_test_cases WHERE project_id IN (SELECT id FROM owned) AND result<>'not_run') AS "executedTests",
-            (SELECT count(*)::int FROM practice_test_cases WHERE project_id IN (SELECT id FROM owned) AND result='passed') AS "passedTests",
-            (SELECT count(*)::int FROM practice_test_cases WHERE project_id IN (SELECT id FROM owned) AND result='failed') AS "failedTests",
-            (SELECT count(*)::int FROM practice_test_cases WHERE project_id IN (SELECT id FROM owned) AND result='blocked') AS "blockedTests"`, [user.id]),
+            (SELECT count(*)::int FROM scoped_cases) AS "testCases",
+            (SELECT count(*)::int FROM scoped_cases WHERE result<>'not_run') AS "executedTests",
+            (SELECT count(*)::int FROM scoped_cases WHERE result='passed') AS "passedTests",
+            (SELECT count(*)::int FROM scoped_cases WHERE result='failed') AS "failedTests",
+            (SELECT count(*)::int FROM scoped_cases WHERE result='blocked') AS "blockedTests"`, [user.id,history]),
         pool.query(`SELECT * FROM (
           SELECT 'project_created' AS type,p.id AS "projectId",p.name AS "projectName",p.name AS title,p.created_at AS at FROM projects p WHERE p.owner_id=$1
           UNION ALL SELECT 'requirement_confirmed',p.id,p.name,'需求版本 ' || r.version,r.confirmed_at FROM requirement_versions r JOIN projects p ON p.id=r.project_id WHERE p.owner_id=$1 AND r.status='confirmed'
@@ -61,7 +77,8 @@ export async function registerGrowthRoutes(app: FastifyInstance, store?: Project
         tasks: { total: s.tasksTotal, todo: s.todo, doing: s.doing, review: s.review, done: s.done, blocked: s.blocked },
         codeReviews: s.codeReviews, syntaxFindings: s.syntaxFindings, testCases: s.testCases,
         testExecutions: { total: s.executedTests, passed: s.passedTests, failed: s.failedTests, blocked: s.blockedTests } };
-      return { counts, events: events.rows, recommendations: recommendations(counts), disclaimer: '统计来自当前账户的实际操作记录，不代表编程能力测评。代码语法诊断是历史记录，测试结果为人工登记的当前状态。' };
+      return {counts,events:events.rows,scope:selection.data.scope,recommendations:history?[]:recommendations(counts),
+        disclaimer:history?'历史累计视图包含所有需求版本的任务及各用例最近一次人工结果，不代表当前需求已验证，也不代表编程能力测评。审查、语法诊断与最近活动均为账号历史记录。':'任务与测试仅统计每个项目最近已确认需求，历史版本结果不计入当前进度。审查、语法诊断与最近活动为账号历史记录；结果由人工登记，不代表编程能力测评。'};
     } catch (error) { request.log.error(error, 'growth read failed'); return reply.code(503).send({ error: 'database_unavailable' }); }
   });
 
