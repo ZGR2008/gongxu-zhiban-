@@ -155,6 +155,7 @@ function Workspace({token,onAuthenticated}:{token:string;onAuthenticated:(token:
   const isGrowth = path === '/growth';
   const isList = path === '/projects';
   const isWorkbenchPage = path === '/missions' || path.startsWith('/missions/') || path === '/runs' || path === '/delivery';
+  const activeNavRoute = isList || projectId ? '/projects' : path.startsWith('/missions') ? '/missions' : isKnowledge || isGrowth || isWorkbenchPage ? path : '/dashboard';
   const pageTitle = projectId ? (isRequirements ? '需求分析' : isAgent ? 'Agent 任务规划' : isReview ? '代码审查' : isTests ? '测试中心' : isDocuments ? '文档中心' : '项目概览') : path.startsWith('/missions') ? '实训任务库' : path === '/runs' ? '运行记录' : path === '/delivery' ? '交付检查' : isKnowledge ? '知识库' : isGrowth ? '学习成长' : isList ? '我的项目' : '项目工作台';
 
   const checkHealth = useCallback(async () => {
@@ -254,14 +255,15 @@ function Workspace({token,onAuthenticated}:{token:string;onAuthenticated:(token:
 
   if (!token) return <Auth onAuthenticated={onAuthenticated} connection={connection} onCheck={() => void checkHealth()} />;
   return <div className="app-shell">
+    <a className="skip-to-main" href="#workspace-main" onClick={event=>{event.preventDefault();document.getElementById('workspace-main')?.focus();}}>跳到主要内容</a>
     <aside className="sidebar" aria-label="工作空间导航">
       <a className="brand" href="/dashboard" onClick={e => link(e, '/dashboard')}><span className="brand-mark">工</span><span><strong>工序智伴</strong><small>GONGXU AI</small></span></a>
       <div className="side-label">WORKSPACE <span>工作空间</span></div>
-      <nav className="side-nav" aria-label="主导航">{nav.map(item => <a key={item.title} className={(item.route === '/projects' ? isList || !!projectId : item.route === '/missions' ? path === '/missions' || path.startsWith('/missions/') : item.route === '/dashboard' ? !isList && !projectId && !isKnowledge && !isGrowth && !isWorkbenchPage : path === item.route) ? 'nav-item active' : 'nav-item'} aria-label={item.title} title={item.title} href={item.route} onClick={e => link(e, item.route)}><span className="nav-icon"><UiIcon name={item.icon as IconName} size={19} /></span><span className="nav-title">{item.title}</span><span className="nav-arrow">↗</span></a>)}</nav>
+      <nav className="side-nav" aria-label="主导航">{nav.map(item => <a key={item.title} className={item.route === activeNavRoute ? 'nav-item active' : 'nav-item'} aria-current={item.route === activeNavRoute ? 'page' : undefined} aria-label={item.title} title={item.title} href={item.route} onClick={e => link(e, item.route)}><span className="nav-icon"><UiIcon name={item.icon as IconName} size={19} /></span><span className="nav-title">{item.title}</span><span className="nav-arrow">↗</span></a>)}</nav>
       <button type="button" className="logout-button" onClick={() => protect(() => void logout())}>退出登录 <span>↗</span></button><div className="side-note"><span className="side-note-icon">✦</span><p>每一步实践，<br />都让想法更接近现实。</p><small>AI 软件工程实训平台</small></div>
     </aside>
-    <main className="main-area">
-      <header className="topbar"><div><div className="eyebrow">WORKSPACE <span>/</span> {projectId ? 'PROJECT' : 'OVERVIEW'}</div><h1>{pageTitle}</h1></div><div className="header-tools"><QuickNavigation projects={loading ? [] : detail && projectId ? [detail.project, ...projects.filter(project => project.id !== detail.project.id)] : projects} projectId={projectId} navigate={navigate} onCreate={() => setShowCreate(true)} /><DisplaySettings /><ConnectionStatus connection={connection} onCheck={() => void checkHealth()} /></div></header>
+    <main className="main-area" id="workspace-main" tabIndex={-1} aria-labelledby="workspace-page-title">
+      <header className="topbar"><div><div className="eyebrow">WORKSPACE <span>/</span> {projectId ? 'PROJECT' : 'OVERVIEW'}</div><h1 id="workspace-page-title">{pageTitle}</h1></div><div className="header-tools"><QuickNavigation projects={loading ? [] : detail && projectId ? [detail.project, ...projects.filter(project => project.id !== detail.project.id)] : projects} projectId={projectId} navigate={navigate} onCreate={() => setShowCreate(true)} /><DisplaySettings /><ConnectionStatus connection={connection} onCheck={() => void checkHealth()} /></div></header>
       <div className="content">
         {!projectId && !isKnowledge && !isGrowth && !isWorkbenchPage && <>
           <section className="hero hero--cosmic">

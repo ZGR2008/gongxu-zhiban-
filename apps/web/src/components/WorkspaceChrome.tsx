@@ -254,7 +254,8 @@ export function QuickNavigation({
       <button
         type="button"
         className="quick-nav-trigger"
-        aria-label="快速导航，快捷键 Control K"
+        aria-label="快速导航 Ctrl K"
+        aria-keyshortcuts="Control+K"
         onClick={(event) => open(event.currentTarget)}
       >
         <UiIcon name="search" size={16} />
@@ -312,7 +313,7 @@ export function QuickNavigation({
               }
             }}
           />
-          <button type="button" onClick={() => dialog.current?.close()} aria-label="关闭快速导航">
+          <button type="button" onClick={() => dialog.current?.close()} aria-label="Esc 关闭快速导航" aria-keyshortcuts="Escape">
             Esc
           </button>
         </div>

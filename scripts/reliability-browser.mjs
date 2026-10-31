@@ -42,6 +42,7 @@ if(baselineModule){
 const directory = new URL(`../.runtime/reliability-ui-${randomUUID()}/`,import.meta.url);
 await mkdir(directory,{recursive:true});
 const engine=process.argv.find(arg=>arg.startsWith('--engine='))?.slice(9)??'chromium';
+const accessibilityOnly=process.argv.includes('--accessibility');
 if(!['chromium','firefox','webkit'].includes(engine))throw Error('Unsupported browser engine');
 const report={scope:'controlled_browser_responses',browserEngine:engine,historicalKnowledgeModule:knowledgeBaseline??null,historicalWorkspaceModule:workspaceBaseline??null,historicalProjectCreationModule:creationBaseline??null,realDatabase:false,realModel:false,checks:[],startedAt:new Date().toISOString()};
 let browser;
@@ -56,12 +57,13 @@ const now='2026-10-31T12:00:00Z';
 const project=id=>({id,name:id===A?'受控项目 A':'受控项目 B',description:'合成测试，不是真实业务数据',status:'active',createdAt:now,updatedAt:now});
 const detail=(id,content)=>({project:project(id),requirements:[{id:id===A?RA:RB,projectId:id,version:1,status:'draft',content:content||`项目 ${id===A?'A':'B'} 的需求正文`,createdAt:now}]});
 async function scenario(name,work){
+ if(name.startsWith('accessibility_')!==accessibilityOnly)return;
  const filter=process.argv.find(arg=>arg.startsWith('--case='))?.slice(7);if(filter&&!name.includes(filter))return;
  if(engine!=='chromium'&&name==='code_draft_save_and_leave_checks_committed_state_under_cpu_throttle'){
   report.checks.push({name,status:'not_run',reason:'This case requires Chromium CDP CPU emulation; not supported by this engine.'});console.log(`NOT RUN ${name} (Chromium-only CPU emulation)`);return;
  }
  const context=await browser.newContext({viewport:{width:1440,height:950},reducedMotion:'reduce'});
- await context.addInitScript(()=>localStorage.setItem('gongxu_token','controlled-browser-fixture'));
+ if(name!=='accessibility_auth')await context.addInitScript(()=>localStorage.setItem('gongxu_token','controlled-browser-fixture'));
  const page=await context.newPage();page.setDefaultTimeout(6000);
  const state={detailCounts:{},delay:()=>0,makeDetail:id=>detail(id),saveDelay:0,docSaveDelay:0,docReadDelay:()=>0,docReads:0,docResponse:null,docConflict:false,docHistory:[],evidence:null,writes:[],failSave:false,errors:[],tasks:[],cases:[],documents:[],detailOverride:null,detailStatus:200,runs:[],runCounts:{},runDelay:()=>0,searchDelay:0,searches:0};
  page.on('pageerror',error=>{state.errors.push('page_error');if(baselineCommit)console.log(`Historical browser module error: ${error.message}`);});
@@ -157,7 +159,72 @@ function traceFixture(state){
  state.detailOverride={project:project(A),requirements:[{id:RA,version:1,status:'confirmed',content:'审批留档',createdAt:now}]};state.cases=[test];
  state.traceData={version:{id:RA,number:1,current:true},items:[{id:RA,key:'REQ-fixture',position:1,start:0,end:4,text:'审批留档',change:'initial',coverage:{suggested:0,confirmedTasks:1,confirmedCases:1,stale:0,manualEvidence:0}}],links:[{id:'task-link',itemId:RA,taskId:RA,caseId:null,status:'confirmed',origin:'human'},{id:'case-link',itemId:RA,taskId:null,caseId:RB,caseRevision:1,status:'confirmed',origin:'human'}],tasks:[{id:RA,title:'合成审批任务'}],cases:[test],previousItems:[],impact:null,taskTests:[],taskTestHistory:[],scope:'受控浏览器替身，不是业务数据'};
 }
+async function auditAccessibility(page,name){
+ await page.addScriptTag({path:createRequire(import.meta.url).resolve('axe-core/axe.min.js')});
+ const result=await page.evaluate(async()=>{
+  await document.fonts.ready;
+  return window.axe.run(document,{runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21a','wcag21aa']}});
+ });
+ report.accessibility??={tool:result.testEngine,scope:'WCAG 2.0/2.1 A/AA rules supported by axe; synthetic content only; not a conformance claim',screens:[]};
+ const compact=rows=>rows.map(row=>({id:row.id,impact:row.impact,description:row.description,helpUrl:row.helpUrl,nodes:row.nodes.map(node=>({target:node.target,html:node.html,failureSummary:node.failureSummary,checks:[...node.any,...node.all,...node.none].map(check=>({id:check.id,message:check.message,data:check.data}))}))}));
+ report.accessibility.screens.push({name,url:new URL(page.url()).pathname,violations:compact(result.violations),incomplete:compact(result.incomplete),passedRuleCount:result.passes.length,inapplicableRuleCount:result.inapplicable.length});
+ await page.screenshot({path:new URL(`${name}.png`,directory).pathname.replace(/^\/([A-Za-z]:)/,'$1'),fullPage:true});
+ console.log(`${name}: ${result.violations.length} violation rules; ${result.incomplete.length} rules require manual review`);
+ assert.equal(result.violations.length,0,`${name}: ${result.violations.map(row=>row.id).join(', ')}`);
+}
 try{
+ const accessibilityScreens=[
+  ['dashboard','/dashboard','.project-info strong'],['projects','/projects','.project-info strong'],
+  ['missions','/missions','.mission-library'],['runs','/runs','#runs-project'],['delivery','/delivery','#delivery-project'],
+  ['knowledge','/knowledge','#knowledge-name'],['growth','/growth','.growth-stats'],
+  ['overview',`/projects/${A}`,'#pulse-title'],['requirements',`/projects/${A}/requirements`,'#requirement'],
+  ['agent',`/projects/${A}/agent`,'.confirmed-task-panel'],['reviews',`/projects/${A}/reviews`,'#code-input'],
+  ['tests',`/projects/${A}/tests`,'.case-item'],['documents',`/projects/${A}/documents`,'#doc-content'],
+ ];
+ for(const [name,path,selector] of accessibilityScreens)await scenario(`accessibility_${name}`,async(page,state)=>{
+  traceFixture(state);
+  state.tasks=[{id:RA,title:'合成审批任务',stage:'开发',description:'核对审批留档',deliverable:'合成记录',status:'todo',dependsOn:[],requirementVersionId:RA}];
+  state.documents=[{id:RA,type:'readme',content:'# 合成项目\n\n审批留档说明',revision:1,modelName:'fixture',createdAt:now,requirementVersionId:RA}];
+  await page.goto(`${origin.origin}${path}`);await page.locator(selector).first().waitFor();
+  await auditAccessibility(page,`accessibility_${name}`);
+ });
+ await scenario('accessibility_edit_guard_dialog',async(page)=>{
+  await page.goto(`${origin.origin}/projects/${A}/requirements`);await page.locator('#requirement').fill('合成未保存草稿');
+  await page.getByRole('link',{name:'我的项目',exact:true}).first().click();await page.getByRole('dialog',{name:'保留未保存的编辑'}).waitFor();
+  await auditAccessibility(page,'accessibility_edit_guard_dialog');
+ });
+ await scenario('accessibility_auth',async(page)=>{
+  await page.goto(`${origin.origin}/dashboard`);await page.locator('.auth-page').waitFor();
+  await auditAccessibility(page,'accessibility_auth');
+ });
+ await scenario('accessibility_quick_navigation_dialog',async(page)=>{
+  await page.goto(`${origin.origin}/dashboard`);await page.locator('.quick-nav-trigger').click();await page.locator('#quick-nav-query').waitFor();
+  await auditAccessibility(page,'accessibility_quick_navigation_dialog');
+ });
+ await scenario('accessibility_display_settings',async(page)=>{
+  await page.goto(`${origin.origin}/dashboard`);await page.locator('.display-settings summary').click();await page.locator('.display-settings-panel').waitFor();
+  await auditAccessibility(page,'accessibility_display_settings');
+ });
+ await scenario('accessibility_create_project',async(page)=>{
+  await page.goto(`${origin.origin}/dashboard`);await page.getByRole('button',{name:/创建实训项目/}).click();await page.locator('#create-title').waitFor();
+  await auditAccessibility(page,'accessibility_create_project');
+ });
+ await scenario('accessibility_requirement_history',async(page)=>{
+  await page.goto(`${origin.origin}/projects/${A}/requirements`);await page.getByRole('button',{name:'查看需求版本 1',exact:true}).click();
+  await page.getByRole('button',{name:'使用此版本编辑',exact:true}).waitFor();
+  await auditAccessibility(page,'accessibility_requirement_history');
+ });
+ await scenario('keyboard_skip_navigation_preserves_route_and_marks_current_page',async(page)=>{
+  await page.goto(`${origin.origin}/projects/${A}/requirements`);await page.locator('#requirement').waitFor();
+  const previousUrl=page.url(),previousLength=await page.evaluate(()=>history.length);
+  await page.keyboard.press('Tab');const skip=page.getByRole('link',{name:'跳到主要内容',exact:true});
+  assert.ok(await skip.evaluate(el=>el===document.activeElement));assert.ok(await skip.isVisible());
+  await page.keyboard.press('Enter');assert.equal(await page.evaluate(()=>document.activeElement?.id),'workspace-main');
+  assert.equal(page.url(),previousUrl);assert.equal(await page.evaluate(()=>history.length),previousLength);
+  assert.equal(await page.locator('.side-nav [aria-current="page"]').count(),1);
+  assert.equal(await page.locator('.side-nav [aria-current="page"]').getAttribute('aria-label'),'我的项目');
+  await page.keyboard.press('Tab');assert.ok(await page.locator('main').evaluate(main=>main.contains(document.activeElement)));
+ });
  await scenario('markdown_deferred_load_keeps_complete_draft_and_builds_outline',async(page,state)=>{
   let release;state.markdownGate=new Promise(resolve=>{release=resolve;});
   const source='# 延迟排版标题\n\n<script>window.fixtureExecuted=true</script>\n![不可外发](https://example.invalid/fixture.png)\n\n## 末尾验收要求\n审批后必须保存记录';

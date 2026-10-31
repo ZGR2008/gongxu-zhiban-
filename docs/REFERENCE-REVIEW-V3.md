@@ -29,6 +29,7 @@
 | ReportLab、pypdf、pdfplumber、Pillow | 本机生成技术评审稿、检查页数/边界、渲染总览；依赖自身随包许可 | 属于材料制作工具，不增加应用运行时依赖；不打包Python环境或系统字体文件 |
 | [imageio-ffmpeg 0.6.0官方PyPI发行](https://pypi.org/project/imageio-ffmpeg/0.6.0/) | 下载Windows wheel，取其中FFmpeg 7.1用于本地录制/转码；wheel SHA-256为`02fa47c83703c37df6bfe4896aab339013f62bf02c5ebf2dce6da56af04ffc0a` | Python包装项目为BSD-2-Clause；**所用FFmpeg二进制自身`-L`输出为GPL v3或更高**，二者不可混同。工具放在工作区外层`.review-tools`，不作为本项目源码/运行时资源分发 |
 | Windows已安装中文语音 | 仅本机把原创讲稿转成演示草稿配音，无云端TTS或费用 | 声音明确为合成语音；未复制语音引擎或系统字体，正式成片仍需真人听审/重新录音 |
+| [Deque axe-core 4.14.0](https://github.com/dequelabs/axe-core)，MPL-2.0 | 桌面合成浏览器可访问性扫描；官方npm公开安装接口核对版本、许可与完整性，锁文件固定版本 | 仅开发测试依赖，无源码或页面上传，不进入应用生产包；自动检查不等于完整无障碍符合性，详情见ACCESSIBILITY-V3.md |
 
 没有从公开案例复制代码、文案、素材或特色界面。新录制画面来自本项目实际浏览器和合成账号；字幕、讲稿、图表、需求样例及评测数据由本项目编写。系统中已有开源依赖与视觉资源不因此变成自研成果。
 

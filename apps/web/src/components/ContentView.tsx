@@ -235,7 +235,8 @@ export function CodeEditor({
         <div className="code-view-controls">
           <button
             type="button"
-            aria-label="缩小代码字号"
+            aria-label="A− 缩小代码字号"
+            title="缩小代码字号"
             disabled={fontSize <= 11}
             onClick={() => setFontSize((size) => size - 1)}
           >
@@ -243,7 +244,8 @@ export function CodeEditor({
           </button>
           <button
             type="button"
-            aria-label="放大代码字号"
+            aria-label="A＋ 放大代码字号"
+            title="放大代码字号"
             disabled={fontSize >= 18}
             onClick={() => setFontSize((size) => size + 1)}
           >

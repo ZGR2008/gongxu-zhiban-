@@ -131,11 +131,11 @@ try {
     );
     await page.keyboard.press('Enter');
     await page.waitForURL('**/knowledge');
-    await page.getByRole('button', { name: /快速导航，/ }).click();
+    await page.getByRole('button', { name: '快速导航 Ctrl K', exact: true }).click();
     await page.keyboard.press('Escape');
     assert(
       await page
-        .getByRole('button', { name: /快速导航，/ })
+        .getByRole('button', { name: '快速导航 Ctrl K', exact: true })
         .evaluate((element) => element === document.activeElement),
       'dialog_focus_not_restored',
     );
@@ -206,8 +206,8 @@ try {
     assert(await input.evaluate((element) => element !== document.activeElement), 'code_keyboard_trap');
     await page.getByRole('button', { name: '展开编辑器', exact: true }).click();
     await page.locator('.code-editor--expanded').waitFor();
-    await page.getByRole('button', { name: '缩小代码字号', exact: true }).click();
-    await page.getByRole('button', { name: '放大代码字号', exact: true }).click();
+    await page.getByRole('button', { name: 'A− 缩小代码字号', exact: true }).click();
+    await page.getByRole('button', { name: 'A＋ 放大代码字号', exact: true }).click();
     await page.getByRole('button', { name: '复制代码', exact: true }).click();
     await page.getByText('已复制', { exact: true }).waitFor();
     if (withAi) {
