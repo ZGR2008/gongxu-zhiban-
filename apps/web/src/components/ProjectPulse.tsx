@@ -4,6 +4,7 @@ import { CopyButton } from './ContentView';
 import { documentNames, summarizeProject, type ProjectSnapshot, type RequirementSummary, type Resource, type RunSummary, type TaskSummary, type CaseSummary, type DocSummary, type ReviewSummary } from './project-pulse-model';
 import './project-pulse.css';
 import {documentEvidence,type EvidenceSnapshot} from './evidence-state';
+import {type TestCasePage} from './test-case-page';
 
 type Api = <T>(path: string, options?: RequestInit) => Promise<T>;
 function result<T>(item: PromiseSettledResult<T>): Resource<T> {
@@ -20,6 +21,7 @@ export function ProjectPulse({ request, projectId, projectName, requirements, na
   const [revision, setRevision] = useState(0);
   const [snapshot, setSnapshot] = useState<ProjectSnapshot | null>(null);
   const [updatedAt, setUpdatedAt] = useState('');
+  const confirmedId=[...requirements].sort((a,b)=>b.version-a.version).find(row=>row.status==='confirmed')?.id;
   useEffect(() => {
     const controller = new AbortController();
     const options = { signal: AbortSignal.any([controller.signal, AbortSignal.timeout(12000)]) };
@@ -28,7 +30,7 @@ export function ProjectPulse({ request, projectId, projectName, requirements, na
     void Promise.allSettled([
       request<{ runs: RunSummary[] }>(`${base}/agent/runs`, options).then(data => data.runs),
       request<{ tasks: TaskSummary[] }>(`${base}/tasks`, options).then(data => data.tasks),
-      request<{ cases: CaseSummary[] }>(`${base}/test-cases`, options).then(data => data.cases),
+      request<TestCasePage<CaseSummary>>(`${base}/test-cases?summaryOnly=true${confirmedId?`&requirementVersionId=${encodeURIComponent(confirmedId)}`:''}`, options),
       request<{ documents: (DocSummary&{sourceSnapshot?:EvidenceSnapshot|null})[];evidence?:EvidenceSnapshot|null }>(`${base}/documents`, options).then(data => data.documents.map(doc=>({...doc,sourceStatus:documentEvidence(doc,data.evidence).status}))),
       request<{ reviews: ReviewSummary[] }>(`${base}/code-reviews`, options).then(data => data.reviews),
     ]).then(([runs, tasks, cases, docs, reviews]) => {
@@ -37,23 +39,23 @@ export function ProjectPulse({ request, projectId, projectName, requirements, na
       setUpdatedAt(new Date().toISOString());
     });
     return () => controller.abort();
-  }, [request, projectId, revision]);
+  }, [request, projectId, revision,confirmedId]);
   const go = (route: string) => navigate(`/projects/${encodeURIComponent(projectId)}/${route}`);
   if (!snapshot) return <section className="project-pulse pulse-loading" aria-label="项目推进概览" role="status"><span className="spinner" />正在汇总项目的真实实践记录…</section>;
   const summary = summarizeProject(requirements, snapshot);
-  const { confirmed, tasks, done, cases, recorded, passed, docKinds, next } = summary;
+  const { confirmed, tasks, done, testCounts, recorded, passed, docKinds, next } = summary;
   const version = confirmed ? `需求版本 ${confirmed.version}` : '尚未确认需求';
   const pending = tasks.filter(task => ['blocked', 'review', 'doing', 'todo', 'pending'].includes(task.status))
     .sort((a, b) => ['blocked', 'review', 'doing', 'todo', 'pending'].indexOf(a.status) - ['blocked', 'review', 'doing', 'todo', 'pending'].indexOf(b.status));
   const taskStatus: Record<string, string> = { blocked: '阻塞', review: '待审核', doing: '进行中', todo: '待开始', pending: '待开始' };
   const errors = [
-    ['规划记录', snapshot.runs.error], ['任务', snapshot.tasks.error], ['测试用例', snapshot.cases.error], ['项目文档', snapshot.docs.error], ['代码审查', snapshot.reviews.error],
+    ['规划记录', snapshot.runs.error], ['任务', snapshot.tasks.error], ['测试用例', snapshot.cases.error||(confirmed&&!testCounts?'完整版本统计暂不可用，请刷新核对。':null)], ['项目文档', snapshot.docs.error], ['代码审查', snapshot.reviews.error],
   ].filter(([, error]) => error);
-  const limited = (snapshot.cases.data?.length ?? 0) >= 200 || (snapshot.docs.data?.length ?? 0) >= 100 || (snapshot.reviews.data?.length ?? 0) >= 100 || (snapshot.runs.data?.length ?? 0) >= 100;
+  const limited = (snapshot.docs.data?.length ?? 0) >= 100 || (snapshot.reviews.data?.length ?? 0) >= 100 || (snapshot.runs.data?.length ?? 0) >= 100;
   const report = [
     `# ${projectName} · 实践快照`, `读取时间：${new Date(updatedAt).toLocaleString('zh-CN')}`, `当前依据：${version}`,
     `任务（${version}）：${snapshot.tasks.error ? '暂不可用' : `${done}/${tasks.length} 标记完成，${summary.blockedTasks.length} 项阻塞`}`,
-    `测试（${version}）：${snapshot.cases.error ? '暂不可用' : confirmed ? `${cases.length} 条用例，人工登记 ${recorded} 条，其中通过 ${passed} 条` : '无已确认需求，不统计'}`,
+    `测试（${version}）：${snapshot.cases.error ? '暂不可用' : confirmed ? testCounts?`${testCounts.total} 条完整版本用例，人工登记 ${recorded} 条，其中通过 ${passed} 条、失败或阻塞 ${summary.issues} 条`:'完整版本统计暂不可用' : '无已确认需求，不统计'}`,
     `文档（${version}）：${snapshot.docs.error ? '暂不可用' : confirmed ? `${docKinds.length}/6 类已保存` : '无已确认需求，不统计'}`,
     `下一步建议：${next.title}。${next.detail}`, '',
     '此快照仅汇总当前读取的记录，任务和测试状态由用户维护，不代表自动执行或正式验收。',
@@ -67,7 +69,7 @@ export function ProjectPulse({ request, projectId, projectName, requirements, na
     <div className="pulse-stats" role="group" aria-label="真实实践指标">
       <div><span><UiIcon name="document" size={16} />已确认需求</span><strong>{confirmed ? `V${confirmed.version}` : '待确认'}</strong><small>{summary.latest && summary.latest.id !== confirmed?.id ? `最新版本 V${summary.latest.version} 为草稿` : '作为规划与测试的依据'}</small></div>
       <div><span><UiIcon name="agent" size={16} />任务标记完成</span><strong>{snapshot.tasks.error ? '—' : <>{done}<em> / {tasks.length}</em></>}</strong><small>{version} · 人工状态</small></div>
-      <div><span><UiIcon name="test" size={16} />测试已登记结果</span><strong>{snapshot.cases.error || !confirmed ? '—' : <>{recorded}<em> / {cases.length}</em></>}</strong><small>{confirmed ? `V${confirmed.version} · 人工登记，非自动执行` : '确认需求后统计'}</small></div>
+      <div><span><UiIcon name="test" size={16} />测试已登记结果</span><strong>{snapshot.cases.error || !testCounts ? '—' : <>{recorded}<em> / {testCounts.total}</em></>}</strong><small>{confirmed ? `V${confirmed.version} · 完整版本统计 · 人工登记` : '确认需求后统计'}{testCounts&&` · 失败或阻塞 ${summary.issues} 条`}</small></div>
       <div><span><UiIcon name="projects" size={16} />已保存文档类型</span><strong>{snapshot.docs.error || !confirmed ? '—' : <>{docKinds.length}<em> / 6</em></>}</strong><small>{confirmed ? `V${confirmed.version} · 内容仍需核实` : '确认需求后统计'}</small></div>
     </div>
     <div className="pulse-grid">

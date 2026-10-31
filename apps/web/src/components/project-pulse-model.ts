@@ -1,3 +1,4 @@
+import {totalsForVersion,type TestCaseTotals} from './test-case-page.ts';
 export type RequirementSummary = { id: string; version: number; status: string };
 export type RunSummary = { id: string; requirementVersionId: string; status: string; createdAt: string };
 export type TaskSummary = { id: string; title: string; status: string; requirementVersionId?: string };
@@ -8,7 +9,7 @@ export type Resource<T> = { data: T | null; error: string | null };
 export type ProjectSnapshot = {
   runs: Resource<RunSummary[]>;
   tasks: Resource<TaskSummary[]>;
-  cases: Resource<CaseSummary[]>;
+  cases: Resource<{cases:CaseSummary[];summary:TestCaseTotals|null}>;
   docs: Resource<DocSummary[]>;
   reviews: Resource<ReviewSummary[]>;
 };
@@ -25,18 +26,19 @@ export function summarizeProject(requirements: RequirementSummary[], snapshot: P
   const latest = ordered[0];
   const currentRuns = snapshot.runs.data?.filter(run => run.requirementVersionId === confirmed?.id) ?? [];
   const latestRun = [...currentRuns].sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt))[0];
-  const cases = snapshot.cases.data?.filter(item => item.requirementVersionId === confirmed?.id) ?? [];
+  const cases = snapshot.cases.data?.cases.filter(item => item.requirementVersionId === confirmed?.id) ?? [];
+  const testCounts=totalsForVersion(snapshot.cases.data?.summary,confirmed?.id);
   const docs = snapshot.docs.data?.filter(item => item.requirementVersionId === confirmed?.id) ?? [];
   const tasks = confirmed ? snapshot.tasks.data?.filter(task => task.requirementVersionId === confirmed.id) ?? [] : [];
   const done = tasks.filter(task => task.status === 'done').length;
   const blockedTasks = tasks.filter(task => task.status === 'blocked');
-  const issues = cases.filter(item => item.result === 'failed' || item.result === 'blocked');
-  const notRun = cases.filter(item => item.result === 'not_run').length;
-  const passed = cases.filter(item => item.result === 'passed').length;
-  const recorded = cases.filter(item => ['passed', 'failed', 'blocked'].includes(item.result)).length;
+  const issues = (testCounts?.failed??0)+(testCounts?.blocked??0);
+  const notRun = testCounts?.notRun??0;
+  const passed = testCounts?.passed??0;
+  const recorded = testCounts?testCounts.total-testCounts.notRun:0;
   const docKinds = Object.keys(documentNames).filter(kind => docs.some(doc => doc.type === kind));
   const reviewDocKinds=docKinds.filter(kind=>!docs.some(doc=>doc.type===kind&&doc.sourceStatus==='current'));
-  const errors = Object.values(snapshot).filter(resource => resource.error).length;
+  const errors = Object.values(snapshot).filter(resource => resource.error).length+(confirmed&&!testCounts&&!snapshot.cases.error?1:0);
   let next: NextAction;
   if (!confirmed) next = { title: '先把需求变成共同的依据', detail: '完善目标用户、功能边界与验收条件，保存并确认需求后再开始规划。', route: 'requirements', label: '完善并确认需求', tone: 'normal' };
   else if (latest?.status === 'draft' && latest.version > confirmed.version) next = { title: `版本 ${latest.version} 还在等待确认`, detail: `目前下游以已确认的版本 ${confirmed.version} 为依据。请先检查新草稿与历史版本的差异。`, route: 'requirements', label: '审阅最新需求', tone: 'attention' };
@@ -47,13 +49,13 @@ export function summarizeProject(requirements: RequirementSummary[], snapshot: P
   else if (latestRun.status === 'running') next = { title: 'Agent 正在规划任务', detail: '前往运行记录查看当前步骤与工具结果。概览中的状态为读取时快照。', route: 'agent', label: '查看运行过程', tone: 'normal' };
   else if (latestRun.status === 'failed') next = { title: '最近一次规划需要检查', detail: '查看失败步骤及实际工具结果，再决定是否重新规划。', route: 'agent', label: '检查规划记录', tone: 'attention' };
   else if (blockedTasks.length) next = { title: `${blockedTasks.length} 项任务被标记为阻塞`, detail: '核对前置任务、交付物与阻塞原因，处理后再更新任务状态。', route: 'agent', label: '处理阻塞任务', tone: 'attention' };
-  else if (issues.length) next = { title: `${issues.length} 条测试记录需要跟进`, detail: `需求版本 ${confirmed.version} 的人工记录中存在失败或阻塞，请核对执行说明。`, route: 'tests', label: '查看测试记录', tone: 'attention' };
+  else if (issues) next = { title: `${issues} 条测试记录需要跟进`, detail: `需求版本 ${confirmed.version} 的完整人工记录中存在失败或阻塞，请核对执行说明。`, route: 'tests', label: '查看测试记录', tone: 'attention' };
   else if (errors) next = { title: '部分实践记录暂不可用', detail: '请刷新缺失的记录，再判断下一步；当前已显示的数据仍可查看。', route: 'agent', label: '打开任务中心', tone: 'attention' };
   else if (tasks.some(task => task.status !== 'done')) next = { title: '继续推进已确认的任务', detail: '先处理进行中或待审核的事项，并记录真实完成情况。只统计当前已确认需求的任务。', route: 'agent', label: '打开任务看板', tone: 'normal' };
-  else if (!cases.length) next = { title: '为当前需求补齐测试设计', detail: '设计正常、边界和异常用例，审阅后开展人工测试。生成用例本身不代表测试通过。', route: 'tests', label: '设计测试用例', tone: 'normal' };
+  else if (!testCounts?.total) next = { title: '为当前需求补齐测试设计', detail: '设计正常、边界和异常用例，审阅后开展人工测试。生成用例本身不代表测试通过。', route: 'tests', label: '设计测试用例', tone: 'normal' };
   else if (notRun) next = { title: `${notRun} 条用例尚未登记执行`, detail: '在你自己的测试环境中执行，并填写结果及证据。平台不会自动执行提交的代码。', route: 'tests', label: '完善执行记录', tone: 'normal' };
   else if (docKinds.length < Object.keys(documentNames).length) next = { title: '把实践过程整理成文档', detail: `当前需求已有 ${docKinds.length} 类文档，核对内容后补充缺失类型并导出。`, route: 'documents', label: '整理项目文档', tone: 'normal' };
   else if(reviewDocKinds.length) next={title:'文档来源需要再次核对',detail:`${reviewDocKinds.length} 类文档的生成依据已变化或不可追溯；请核对原文及当前任务、测试记录。资料齐备不等于项目已验收。`,route:'documents',label:'复核文档依据',tone:'attention'};
   else next = { title: '进行一次交付前人工复核', detail: '逐项检查代码、测试证据、文档和部署情况。已有记录齐备不等于项目已验收。', route: 'documents', label: '检查交付文档', tone: 'normal' };
-  return { confirmed, latest, latestRun, cases, docs, tasks, done, blockedTasks, issues, notRun, passed, recorded, docKinds, reviewDocKinds, errors, next };
+  return { confirmed, latest, latestRun, cases, testCounts, docs, tasks, done, blockedTasks, issues, notRun, passed, recorded, docKinds, reviewDocKinds, errors, next };
 }

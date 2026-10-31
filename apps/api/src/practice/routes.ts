@@ -13,6 +13,7 @@ import {buildReviewContext,ReviewContextError} from './review-context.js';
 import { checkSyntax, parseGeneratedCases } from './validation.js';
 import { requirementGenerationIssue } from '../requirement-content.js';
 import { requirementItems } from '../trace/domain.js';
+import {caseFields,caseListQuery,CaseListError,listTestCases} from './listing.js';
 
 const projectParams = z.object({ projectId: z.string().uuid() });
 const caseParams = projectParams.extend({ caseId: z.string().uuid() });
@@ -28,7 +29,6 @@ const editBody = z.object({
   expectedRevision:z.number().int().positive().optional(),
 }).strict();
 const reviewFields = `id,project_id AS "projectId",language,code,syntax_findings AS "syntaxFindings",ai_advice AS "aiAdvice",model_name AS "modelName",created_at AS "createdAt",requirement_version_id AS "requirementVersionId",review_context AS "reviewContext"`;
-const caseFields = `id,project_id AS "projectId",requirement_version_id AS "requirementVersionId",revision,category,title,preconditions,steps,expected,model_name AS "modelName",result,execution_note AS "executionNote",executor_id AS "executorId",executed_at AS "executedAt",created_at AS "createdAt"`;
 type Dependencies = {complete?: (config: AiConfig | undefined, messages: AiMessage[],options?:CompletionOptions) => Promise<string>;
  embedding?:EmbeddingConfig;retrieve?:(pool:Pool,ownerId:string,query:string,config:EmbeddingConfig,options?:EmbeddingOptions)=>Promise<KnowledgeHit[]>};
 
@@ -121,10 +121,10 @@ export async function registerPracticeRoutes(app: FastifyInstance, store?: Proje
 
   app.get('/projects/:projectId/test-cases', async (request, reply) => {
     const a = await access(request, reply); if (!a) return;
-    const filter=z.object({requirementVersionId:z.string().uuid().optional()}).strict().safeParse(request.query);
+    const filter=caseListQuery.safeParse(request.query);
     if(!filter.success)return reply.code(400).send({error:'invalid_input'});
-    const rows = await pool!.query(`SELECT ${caseFields} FROM practice_test_cases WHERE project_id=$1 AND requirement_version_id=COALESCE($2::uuid,(SELECT id FROM requirement_versions WHERE project_id=$1 AND status='confirmed' ORDER BY version DESC LIMIT 1)) ORDER BY created_at DESC,id LIMIT 200`, [a.projectId,filter.data.requirementVersionId??null]);
-    return { cases: rows.rows };
+    try{return await listTestCases(pool!,a.user.id,a.projectId,filter.data);}
+    catch(error){if(error instanceof CaseListError)return reply.code(error.status).send({error:error.code});throw error;}
   });
   app.post('/projects/:projectId/test-cases', async (request, reply) => {
     const a = await access(request, reply); if (!a) return;

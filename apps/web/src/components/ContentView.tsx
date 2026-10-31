@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useId, useRef, useState, type ReactNode, type CSSProperties, type ComponentType } from 'react';
 import { UiIcon } from './UiIcon';
 import './content-fallback.css';
+import type {TestCaseTotals} from './test-case-page';
 
 let cachedRenderer: ComponentType<{ value: string }> | null = null;
 let rendererLoad: Promise<typeof import('./MarkdownRenderer')> | undefined;
@@ -382,7 +383,7 @@ export function ModuleGuide({ kind }: { kind: 'review' | 'agent' | 'knowledge' |
 
 export function TestCaseCollection<
   T extends { id: string; title: string; category: string; result: string },
->({ items, renderItem }: { items: T[]; renderItem: (item: T) => ReactNode }) {
+>({ items, summary, renderItem }: { items: T[]; summary:TestCaseTotals|null; renderItem: (item: T) => ReactNode }) {
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState('all');
   const [result, setResult] = useState('all');
@@ -391,28 +392,25 @@ export function TestCaseCollection<
     (category === 'all' || item.category === category) &&
     (result === 'all' || item.result === result) &&
     item.title.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase());
-  const passed = items.filter((item) => item.result === 'passed').length,
-    failed = items.filter((item) => item.result === 'failed').length,
-    notRun = items.filter((item) => item.result === 'not_run').length;
   const visible = items.filter(matching).length;
   return (
     <div className="test-collection">
       <div className="test-summary">
         <div>
-          <span>用例总数</span>
-          <strong>{items.length}</strong>
+          <span>版本用例总数</span>
+          <strong>{summary?.total??'待刷新'}</strong>
         </div>
         <div data-outcome="passed">
           <span>人工记录通过</span>
-          <strong>{passed}</strong>
+          <strong>{summary?.passed??'—'}</strong>
         </div>
         <div data-outcome="failed">
-          <span>人工记录失败</span>
-          <strong>{failed}</strong>
+          <span>失败或阻塞</span>
+          <strong>{summary?summary.failed+summary.blocked:'—'}</strong>
         </div>
         <div>
           <span>尚未执行</span>
-          <strong>{notRun}</strong>
+          <strong>{summary?.notRun??'—'}</strong>
         </div>
       </div>
       <div className="collection-filter">
@@ -423,7 +421,7 @@ export function TestCaseCollection<
           id={`${filterId}-query`}
           value={query}
           onChange={(event) => setQuery(event.target.value)}
-          placeholder="搜索测试用例…"
+          placeholder="搜索本页测试用例…"
         />
         <label className="sr-only" htmlFor={`${filterId}-category`}>
           测试类别筛选
@@ -450,7 +448,7 @@ export function TestCaseCollection<
         </select>
       </div>
       <p className="muted-text">
-        显示 {visible} / {items.length} 条用例 · 执行状态来自人工记录
+        本页显示 {visible} / {items.length} 条用例 · 搜索与筛选仅作用于本页，顶部统计覆盖完整需求版本
       </p>
       {!visible && (
         <div className="empty-state">

@@ -112,9 +112,18 @@ async function scenario(name,work){
    if(state.failSave){status=503;body={error:'database_unavailable'};}else if(state.docConflict){status=409;body={error:'document_conflict',currentRevision:2};}else{const doc=state.documents.find(row=>path.endsWith('/'+row.id));body={document:{...doc,revision:(doc.revision||1)+1,content:route.request().postDataJSON().content}};state.documents=state.documents.map(row=>row.id===doc.id?body.document:row);}
   } else if(/\/documents\/[^/]+\/history$/.test(path))body={history:state.docHistory,nextCursor:null};
   else if(/\/documents\/[^/]+$/.test(path)&&method==='GET')body={document:state.documents.find(row=>path.endsWith('/'+row.id))};
+  else if(path.endsWith('/test-cases')&&method==='GET'){
+   const source=url.searchParams.get('requirementVersionId')??[...(state.detailOverride??state.makeDetail(path.split('/')[2])).requirements].filter(row=>row.status==='confirmed').sort((a,b)=>b.version-a.version)[0]?.id??null;
+   const rows=state.cases.filter(row=>row.requirementVersionId===source),cursor=url.searchParams.get('cursor'),offset=cursor?Number(cursor.split('-')[1]):0,limit=Number(url.searchParams.get('limit')??50),revision=state.caseListRevision??1;
+   const only=url.searchParams.get('summaryOnly')==='true',summary={requirementVersionId:source,requirementVersion:1,caseRevision:revision,capturedAt:now,total:rows.length,passed:rows.filter(row=>row.result==='passed').length,failed:rows.filter(row=>row.result==='failed').length,blocked:rows.filter(row=>row.result==='blocked').length,notRun:rows.filter(row=>row.result==='not_run').length};
+   body={cases:only?[]:rows.slice(offset,offset+limit),summary:state.omitCaseSummary?undefined:summary,page:{limit,hasMore:!only&&offset+limit<rows.length,nextCursor:!only&&offset+limit<rows.length?`offset-${offset+limit}-${revision}`:null}};
+   if(cursor&&Number(cursor.split('-')[2])!==revision){status=409;body={error:'test_list_changed'};}
+   state.caseListReads=(state.caseListReads??0)+1;await new Promise(resolve=>setTimeout(resolve,state.caseListDelay?.(offset)??0));
+   if(state.caseListFail){status=503;body={error:'database_unavailable'};}
+  }
   else if(path.endsWith('/test-cases'))body={cases:state.cases};
   else if(/\/test-cases\/[^/]+\/execution$/.test(path)&&method==='PATCH'){
-   const input=route.request().postDataJSON(),id=path.split('/').at(-2);state.writes.push({path,body:input});state.cases=state.cases.map(row=>row.id===id?{...row,result:input.result,executionNote:input.note,executedAt:now}:row);body={case:state.cases.find(row=>row.id===id)};
+   const input=route.request().postDataJSON(),id=path.split('/').at(-2);state.writes.push({path,body:input});if(state.failCaseSave){status=503;body={error:'database_unavailable'};}else{state.caseListRevision=(state.caseListRevision??1)+1;state.cases=state.cases.map(row=>row.id===id?{...row,result:input.result,executionNote:input.note,executedAt:now,revision:(row.revision??1)+1}:row);body={case:state.cases.find(row=>row.id===id)};}
   }
   else if(/\/test-cases\/[^/]+$/.test(path)&&method==='PATCH'){
    const input=route.request().postDataJSON(),id=path.split('/').at(-1);state.writes.push({path,body:input});await new Promise(resolve=>setTimeout(resolve,state.caseSaveDelay??0));state.cases=state.cases.map(row=>row.id===id?{...row,...input,revision:(row.revision??1)+1,result:'not_run',executionNote:''}:row);body={case:state.cases.find(row=>row.id===id)};
@@ -155,6 +164,10 @@ async function scenario(name,work){
 }
 async function routeTo(page,id){await page.evaluate(path=>{history.pushState({},'',path);dispatchEvent(new PopStateEvent('popstate'));},`/projects/${id}/requirements`);}
 async function waitFor(check){for(let i=0;i<100;i++){if(check())return;await new Promise(resolve=>setTimeout(resolve,20));}throw Error('Fixture request not observed');}
+function casePageFixture(state,count=201){
+ state.detailOverride={project:project(A),requirements:[{id:RA,version:2,status:'confirmed',content:'完整测试统计 · 合成',createdAt:now}]};
+ state.cases=Array.from({length:count},(_,i)=>({id:`fixture-case-${i}`,title:i===count-1?'末页失败不能被隐藏':`分页合成用例 ${i+1}`,requirementVersionId:RA,category:'normal',revision:1,preconditions:'独立合成资料',steps:'人工检查',expected:'保留真实记录',result:i===count-1?'failed':'passed',executionNote:'合成记录，不是真实产品测试证据',executedAt:now}));
+}
 function traceFixture(state){
  const test={id:RB,title:'合成配对用例',requirementVersionId:RA,category:'normal',revision:1,preconditions:'',steps:'核对登记',expected:'审批留存',result:'not_run',executionNote:'',executedAt:null};
  state.detailOverride={project:project(A),requirements:[{id:RA,version:1,status:'confirmed',content:'审批留档',createdAt:now}]};state.cases=[test];
@@ -598,6 +611,34 @@ try{
   await dialog.getByRole('button',{name:'留在此页'}).click();assert.equal(await page.locator('#delivery-tests-note').inputValue(),'存储失败仍须保留的本机核对备注');
   await page.getByRole('link',{name:'我的项目',exact:true}).first().click();await dialog.waitFor();await page.evaluate(()=>window.restoreDeliveryStorage());await dialog.getByRole('button',{name:'保存并继续'}).click();await page.waitForURL('**/projects');
   await page.goto(`${origin.origin}/delivery`);assert.equal(await page.locator('#delivery-tests-note').inputValue(),'存储失败仍须保留的本机核对备注');
+ });
+ await scenario('test_pages_show_complete_totals_and_reach_the_hidden_failure',async(page,state)=>{
+  casePageFixture(state);await page.goto(`${origin.origin}/projects/${A}/tests`);
+  await page.getByText('完整版本共 201 条 · 第 1 页 · 本页 50 条',{exact:true}).waitFor();assert.equal(await page.locator('.case-item').count(),50);assert.match(await page.locator('.test-summary').innerText(),/201/);assert.match(await page.locator('.test-summary [data-outcome=failed]').innerText(),/1/);
+  await waitFor(()=>state.traceReads>=2);const traceReads=state.traceReads;
+  for(let n=2;n<=5;n++){await page.getByRole('button',{name:'下一页用例',exact:true}).click();await page.getByText(`完整版本共 201 条 · 第 ${n} 页 · 本页 ${n===5?1:50} 条`,{exact:true}).waitFor();}
+  await page.getByText('末页失败不能被隐藏',{exact:true}).waitFor();assert.equal(await page.getByRole('button',{name:'下一页用例',exact:true}).isDisabled(),true);
+  assert.equal(state.traceReads,traceReads,'Paging unchanged cases must not reload the complete trace graph');
+  await page.getByLabel('执行状态筛选').selectOption('passed');await page.getByText('没有匹配的用例，请调整筛选条件。',{exact:true}).waitFor();assert.match(await page.locator('.test-summary').innerText(),/201/);assert.ok((await page.locator('.test-collection').innerText()).includes('搜索与筛选仅作用于本页'));
+  await page.getByRole('button',{name:'上一页用例',exact:true}).click();await page.getByText('完整版本共 201 条 · 第 4 页 · 本页 50 条',{exact:true}).waitFor();assert.equal(await page.getByLabel('执行状态筛选').inputValue(),'all');
+  await page.goto(`${origin.origin}/projects/${A}`);await page.getByText(/完整版本统计 · 人工登记/).waitFor();assert.match(await page.locator('.pulse-stats').innerText(),/失败或阻塞 1 条/);
+  await page.goto(`${origin.origin}/delivery`);await page.getByText('201 条当前需求用例（完整版本统计），201 条人工登记结果，1 条失败或阻塞',{exact:true}).waitFor();
+  state.omitCaseSummary=true;await page.getByRole('button',{name:'刷新成果记录',exact:true}).click();await page.getByText('完整版本统计暂不可用，请刷新核对',{exact:true}).waitFor();
+ });
+ await scenario('test_page_navigation_guards_cancel_repeated_clicks_and_failed_save',async(page,state)=>{
+  casePageFixture(state,51);await page.goto(`${origin.origin}/projects/${A}/tests`);const note=page.locator('.case-item').first().getByLabel('执行说明 / 证据');await note.fill('分页前必须保留的人工草稿');const before=state.caseListReads;
+  await page.getByRole('button',{name:'下一页用例',exact:true}).evaluate(button=>{button.click();button.click();});const dialog=page.getByRole('dialog',{name:'保留未保存的编辑'});await dialog.waitFor();assert.equal(state.caseListReads,before);
+  await dialog.getByRole('button',{name:'留在此页'}).click();assert.equal(await note.inputValue(),'分页前必须保留的人工草稿');assert.ok((await page.getByRole('group',{name:'测试用例分页'}).innerText()).includes('第 1 页'));
+  state.failCaseSave=true;await page.getByRole('button',{name:'下一页用例',exact:true}).click();await dialog.getByRole('button',{name:'保存并继续'}).click();await dialog.getByText(/保存未成功/).waitFor();assert.equal(state.caseListReads,before);assert.equal(await note.inputValue(),'分页前必须保留的人工草稿');
+  await dialog.getByRole('button',{name:'留在此页'}).click();state.failCaseSave=false;await page.getByRole('button',{name:'下一页用例',exact:true}).click();await dialog.getByRole('button',{name:'放弃并继续'}).click();await page.getByText('完整版本共 51 条 · 第 2 页 · 本页 1 条',{exact:true}).waitFor();assert.equal(state.writes.length,1);
+ });
+ await scenario('test_page_stale_cursor_and_refresh_failure_keep_edits_until_recovery',async(page,state)=>{
+  casePageFixture(state,51);await page.goto(`${origin.origin}/projects/${A}/tests`);await page.getByText('完整版本共 51 条 · 第 1 页 · 本页 50 条',{exact:true}).waitFor();state.caseListRevision=2;
+  await page.getByRole('button',{name:'下一页用例',exact:true}).click();await page.getByRole('alert').filter({hasText:'用例记录或需求来源已变化'}).waitFor();assert.equal(await page.locator('.case-item').count(),50);assert.equal(await page.getByRole('button',{name:'下一页用例',exact:true}).isDisabled(),true);assert.match(await page.locator('.test-summary').innerText(),/待刷新/);
+  const note=page.locator('.case-item').first().getByLabel('执行说明 / 证据');await note.fill('刷新失败也要保留');state.caseListFail=true;
+  await page.getByRole('button',{name:'刷新用例与统计',exact:true}).click();const dialog=page.getByRole('dialog',{name:'保留未保存的编辑'});await dialog.getByRole('button',{name:'放弃并继续'}).click();await page.getByRole('alert').filter({hasText:'数据服务暂不可用'}).waitFor();assert.equal(await note.inputValue(),'刷新失败也要保留');
+  state.caseListFail=false;state.caseListDelay=()=>450;await page.getByRole('button',{name:'刷新用例与统计',exact:true}).click();await dialog.getByRole('button',{name:'放弃并继续'}).click();await page.getByText('正在读取选定版本与完整统计，当前页暂不可编辑…',{exact:true}).waitFor();assert.equal(await note.isDisabled(),true);
+  await page.getByText('完整版本共 51 条 · 第 1 页 · 本页 50 条',{exact:true}).waitFor();assert.equal(await note.inputValue(),'合成记录，不是真实产品测试证据');assert.equal(await note.isDisabled(),false);assert.equal(await page.getByRole('button',{name:'下一页用例',exact:true}).isEnabled(),true);
  });
  await scenario('test_center_defaults_to_latest_confirmed_version_not_old_passes',async(page,state)=>{
   state.detailOverride={project:project(A),requirements:[{id:RA,version:2,status:'confirmed',content:'新版本',createdAt:now},{id:RB,version:1,status:'confirmed',content:'旧版本',createdAt:now}]};

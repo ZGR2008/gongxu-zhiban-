@@ -4,6 +4,7 @@ import { UiIcon, type IconName } from "../components/UiIcon";
 import { CopyButton } from "../components/ContentView";
 import { documentNames } from "../components/project-pulse-model";
 import {documentEvidence,evidenceStamp,manualCheckFresh,type EvidenceSnapshot} from '../components/evidence-state';
+import {totalsForVersion,type TestCasePage} from '../components/test-case-page';
 import {
   blankDelivery,
   deliveryChecks,
@@ -168,9 +169,9 @@ function DeliveryBoard({
     `${base}/agent/runs`,
     revision,
   );
-  const cases = useApiResource<{ cases: TestCase[] }>(
+  const cases = useApiResource<TestCasePage<TestCase>>(
     request,
-    `${base}/test-cases`,
+    `${base}/test-cases?summaryOnly=true${requirement?`&requirementVersionId=${encodeURIComponent(requirement.id)}`:''}`,
     revision,
   );
   const docs = useApiResource<{ documents: Doc[];evidence?:EvidenceSnapshot|null }>(
@@ -183,10 +184,7 @@ function DeliveryBoard({
     `${base}/code-reviews`,
     revision,
   );
-  const versionCases =
-    cases.data?.cases.filter(
-      (item) => item.requirementVersionId === requirement?.id,
-    ) ?? [];
+  const testCounts=totalsForVersion(cases.data?.summary,requirement?.id);
   const versionDocs =
     docs.data?.documents.filter(
       (item) => item.requirementVersionId === requirement?.id,
@@ -220,7 +218,7 @@ function DeliveryBoard({
       ? "用例记录暂不可用"
       : cases.loading
         ? "正在读取测试记录…"
-        : `${versionCases.length} 条当前需求用例，${versionCases.filter((item) => item.result !== "not_run").length} 条人工登记结果，${versionCases.filter((item) => ["failed", "blocked"].includes(item.result)).length} 条失败或阻塞`,
+        : !requirement?'尚无已确认需求，不统计测试结果':!testCounts?'完整版本统计暂不可用，请刷新核对':`${testCounts.total} 条当前需求用例（完整版本统计），${testCounts.total-testCounts.notRun} 条人工登记结果，${testCounts.failed+testCounts.blocked} 条失败或阻塞`,
     documents: docs.error
       ? "文档暂不可用"
       : docs.loading

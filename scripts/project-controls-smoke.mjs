@@ -110,7 +110,7 @@ try {
     assert((await page.locator('.pulse-stats > div').first().locator('strong').textContent()) === 'V2', 'draft_counted_as_confirmed');
   });
   await check('partial_failure_refresh_and_snapshot_copy', async () => {
-    const pattern = `**/api${projectPath}/test-cases`;
+    const pattern = `**/api${projectPath}/test-cases?**`;
     await page.route(pattern, route => route.fulfill({ status: 503, contentType: 'application/json', body: JSON.stringify({ error: 'database_unavailable' }) }));
     await page.getByRole('button', { name: '刷新概览', exact: true }).click();
     await page.locator('.pulse-error').waitFor();
@@ -130,8 +130,8 @@ try {
   await check('controlled_cross_version_evidence_and_status_counts', async () => {
     const cases = [{ id: 'old', requirementVersionId: sourceVersion.id, result: 'passed' }, { id: 'new1', requirementVersionId: currentVersion.id, result: 'blocked' }, { id: 'new2', requirementVersionId: currentVersion.id, result: 'not_run' }];
     const documents = [{ id: 'old', requirementVersionId: sourceVersion.id, type: 'readme' }, { id: 'new1', requirementVersionId: currentVersion.id, type: 'design' }, { id: 'new2', requirementVersionId: currentVersion.id, type: 'design' }];
-    const patterns = [`**/api${projectPath}/test-cases`, `**/api${projectPath}/documents`];
-    await page.route(patterns[0], route => route.fulfill({ json: { cases } }));
+    const patterns = [`**/api${projectPath}/test-cases?**`, `**/api${projectPath}/documents`];
+    await page.route(patterns[0], route => route.fulfill({ json: { cases,summary:{requirementVersionId:currentVersion.id,requirementVersion:2,caseRevision:1,capturedAt:new Date().toISOString(),total:2,passed:0,failed:0,blocked:1,notRun:1},page:{limit:50,hasMore:false,nextCursor:null} } }));
     await page.route(patterns[1], route => route.fulfill({ json: { documents } }));
     await page.getByRole('button', { name: '刷新概览', exact: true }).click(); await page.locator('.pulse-stats').waitFor();
     await page.waitForFunction(() => document.querySelector('.pulse-stats > div:nth-child(3) strong')?.textContent.replace(/\s/g, '') === '1/2');

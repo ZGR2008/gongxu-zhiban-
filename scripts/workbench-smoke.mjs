@@ -331,7 +331,7 @@ try {
   await check(
     "partial_read_failure_and_storage_denial_remain_explicit",
     async () => {
-      const pattern = `**/api${projectPath}/test-cases`;
+      const pattern = `**/api${projectPath}/test-cases?**`;
       await page.route(pattern, (route) =>
         route.fulfill({ status: 503, json: { error: "database_unavailable" } }),
       );

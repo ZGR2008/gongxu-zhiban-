@@ -4,7 +4,8 @@ import { compareLines, requirementText } from '../apps/web/src/components/line-d
 import { summarizeProject } from '../apps/web/src/components/project-pulse-model.ts';
 
 const resource = (data) => ({ data, error: null });
-const empty = () => ({ runs: resource([]), tasks: resource([]), cases: resource([]), docs: resource([]), reviews: resource([]) });
+const caseResource=(cases)=>{const scoped=cases.filter(c=>c.requirementVersionId==='current');return resource({cases,summary:{requirementVersionId:'current',requirementVersion:2,caseRevision:1,capturedAt:'2026-11-01T00:00:00Z',total:scoped.length,passed:scoped.filter(c=>c.result==='passed').length,failed:scoped.filter(c=>c.result==='failed').length,blocked:scoped.filter(c=>c.result==='blocked').length,notRun:scoped.filter(c=>c.result==='not_run').length}});};
+const empty = () => ({ runs: resource([]), tasks: resource([]), cases: caseResource([]), docs: resource([]), reviews: resource([]) });
 const requirements = [{ id: 'current', version: 2, status: 'confirmed' }, { id: 'old', version: 1, status: 'confirmed' }];
 const currentRun = { id: 'run', requirementVersionId: 'current', createdAt: '2026-10-31T10:00:00Z', status: 'confirmed' };
 
@@ -58,7 +59,7 @@ test('new draft is surfaced without attributing older evidence to it', () => {
 });
 test('old requirement tests and documents do not count toward current progress', () => {
   const data = empty(); data.runs = resource([currentRun]);
-  data.cases = resource([{ id: 'old-test', requirementVersionId: 'old', result: 'passed' }, { id: 'new-test', requirementVersionId: 'current', result: 'not_run' }]);
+  data.cases = caseResource([{ id: 'old-test', requirementVersionId: 'old', result: 'passed' }, { id: 'new-test', requirementVersionId: 'current', result: 'not_run' }]);
   data.docs = resource([{ id: 'old-doc', requirementVersionId: 'old', type: 'readme' }]);
   const result = summarizeProject(requirements, data);
   assert.equal(result.cases.length, 1); assert.equal(result.recorded, 0); assert.equal(result.passed, 0); assert.equal(result.docKinds.length, 0);
@@ -90,7 +91,7 @@ test('limited history is not treated as proof that a plan never existed', () => 
 test('blocked tasks and failed tests take precedence over document preparation', () => {
   const data = empty(); data.runs = resource([currentRun]);
   data.tasks = resource([{ id: 'blocked', title: '待处理', status: 'blocked', requirementVersionId:'current' }]);
-  data.cases = resource([{ id: 'failed', requirementVersionId: 'current', result: 'failed' }]);
+  data.cases = caseResource([{ id: 'failed', requirementVersionId: 'current', result: 'failed' }]);
   assert.equal(summarizeProject(requirements, data).next.route, 'agent');
   data.tasks = resource([]);
   const result = summarizeProject(requirements, data);
@@ -103,7 +104,17 @@ test('duplicate document types are not counted twice', () => {
 test('a fully recorded project still requires review rather than automatic acceptance', () => {
   const data = empty(); data.runs = resource([currentRun]);
   data.tasks = resource([{ id: 'done', title: '任务', status: 'done', requirementVersionId:'current' }]);
-  data.cases = resource([{ id: 'pass', requirementVersionId: 'current', result: 'passed' }]);
+  data.cases = caseResource([{ id: 'pass', requirementVersionId: 'current', result: 'passed' }]);
   data.docs = resource(['readme', 'requirements', 'design', 'api', 'test_report', 'summary'].map(type => ({ id: type, type, requirementVersionId: 'current' })));
   assert.match(summarizeProject(requirements, data).next.detail, /不等于项目已验收/);
+});
+
+test('full test totals surface a failure hidden behind a page of passing cases',()=>{
+ const data=empty();data.runs=resource([currentRun]);data.cases=caseResource(Array.from({length:200},(_,i)=>({id:String(i),result:'passed',requirementVersionId:'current'})));
+ data.cases.data.summary={...data.cases.data.summary,total:201,failed:1};
+ const value=summarizeProject(requirements,data);assert.equal(value.recorded,201);assert.equal(value.passed,200);assert.equal(value.issues,1);assert.match(value.next.title,/1 条测试记录需要跟进/);
+});
+test('missing, inconsistent and wrong-version totals cannot imply complete success',()=>{
+ const data=empty();data.runs=resource([currentRun]);data.cases=caseResource([{id:'pass',result:'passed',requirementVersionId:'current'}]);const good=data.cases.data.summary;
+ for(const bad of [null,{...good,requirementVersionId:'old'},{...good,total:201}]){data.cases.data.summary=bad;const value=summarizeProject(requirements,data);assert.equal(value.testCounts,null);assert.equal(value.errors,1);assert.match(value.next.title,/暂不可用/);}
 });
