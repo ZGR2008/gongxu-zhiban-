@@ -77,7 +77,7 @@ async function scenario(name,work){
   else if(path==='/projects'){body={projects:state.projectList??[project(A),project(B)]};await new Promise(r=>setTimeout(r,state.projectListDelay??0));}
   else if(/^\/projects\/[^/]+$/.test(path)){
    const id=path.split('/')[2];state.detailCounts[id]=(state.detailCounts[id]||0)+1;
-   const count=state.detailCounts[id];body=state.detailOverride||(state.createdProjects?.[id]?{project:state.createdProjects[id],requirements:[]}:state.makeDetail(id,count));await new Promise(resolve=>setTimeout(resolve,state.delay(id,count)));if(state.detailStatus!==200){status=state.detailStatus;body={error:state.detailStatus===401?'unauthorized':'database_unavailable'};}
+   const count=state.detailCounts[id];body=state.detailOverride||(state.createdProjects?.[id]?{project:state.createdProjects[id],requirements:[]}:state.makeDetail(id,count));if(state.detailGate)await state.detailGate(id,count);await new Promise(resolve=>setTimeout(resolve,state.delay(id,count)));if(state.detailStatus!==200){status=state.detailStatus;body={error:state.detailStatus===401?'unauthorized':'database_unavailable'};}
   } else if(path.endsWith('/requirements')&&method==='POST'){
    state.writes.push({path,body:route.request().postDataJSON()});
    await new Promise(resolve=>setTimeout(resolve,state.saveDelay));
@@ -119,6 +119,7 @@ async function scenario(name,work){
   else if(path.endsWith('/code-reviews'))body={reviews:state.reviews??[]};
   else {status=404;body={error:'not_found'};}
   await route.fulfill({status,json:body}).catch(()=>{});
+  if(method==='GET'&&/^\/projects\/[^/]+$/.test(path)){state.detailResponses??={};const id=path.split('/')[2];state.detailResponses[id]=(state.detailResponses[id]??0)+1;}
  });
  try{await work(page,state);assert.equal(state.errors.length,0);report.checks.push({name,status:'passed'});console.log(`PASS ${name}`);}
  catch(error){report.checks.push({name,status:'failed',errorType:error.constructor.name});console.log(`FAIL ${name}`);if(name.startsWith('workspace_motion'))console.log(await page.evaluate(()=>({hidden:document.hidden,reduced:matchMedia('(prefers-reduced-motion: reduce)').matches,label:document.querySelector('.workspace-motion-toggle')?.textContent,motion:document.querySelector('.workspace-visual')?.getAttribute('data-motion')})));console.log((error.stack??'').split('\n').filter(line=>line.includes('reliability-browser.mjs')).slice(0,2).join('\n'));await page.screenshot({path:new URL(`${name}.png`,directory).pathname.replace(/^\/([A-Za-z]:)/,'$1')}).catch(()=>{});process.exitCode=1;}
@@ -460,11 +461,18 @@ try{
   await page.getByLabel('测试来源需求版本').selectOption(RB);await page.getByText('旧版本通过不得计入',{exact:true}).waitFor();assert.equal(await page.getByText('当前版本未执行',{exact:true}).count(),0);
  });
  await scenario('A_B_A_uses_request_generation_not_only_matching_project_id',async(page,state)=>{
-  state.delay=(id,count)=>id===A&&count===1?500:0;
   state.makeDetail=(id,count)=>detail(id,`${id===A?'A':'B'} 第 ${count} 次新鲜响应`);
-  await page.goto(`${origin.origin}/projects/${A}/requirements`,{waitUntil:'domcontentloaded'});await waitFor(()=>state.detailCounts[A]);
-  await routeTo(page,B);await page.locator('#requirement').waitFor();await routeTo(page,A);await waitFor(()=>state.detailCounts[A]===2);await page.waitForTimeout(650);
-  assert.equal(await page.locator('#requirement').inputValue(),'A 第 2 次新鲜响应');
+  // Mount on B first so React StrictMode's initial effect replay cannot be
+  // mistaken for the second A visit. Then release the old A response last.
+  await page.goto(`${origin.origin}/projects/${B}/requirements`);await page.locator('#requirement').waitFor();
+  let releaseOld;const oldReply=new Promise(resolve=>{releaseOld=resolve;});state.detailGate=(id,count)=>id===A&&count===1?oldReply:Promise.resolve();
+  try{
+   await routeTo(page,A);await waitFor(()=>state.detailCounts[A]===1);await routeTo(page,B);await page.locator('#requirement').waitFor();
+   await routeTo(page,A);await waitFor(()=>state.detailCounts[A]===2);await page.waitForFunction(()=>document.querySelector('#requirement')?.value==='A 第 2 次新鲜响应');
+   releaseOld();await waitFor(()=>state.detailResponses[A]===2);await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
+   assert.equal(await page.locator('#requirement').inputValue(),'A 第 2 次新鲜响应');
+   await page.getByRole('button',{name:/保存需求草稿/}).click();await waitFor(()=>state.writes.length===1);assert.ok(state.writes[0].path.includes(A));assert.equal(state.writes[0].body.content,'A 第 2 次新鲜响应');
+  }finally{releaseOld();}
  });
  await scenario('back_cancel_and_forward_preserve_history_cursor_and_unsaved_content',async(page)=>{
   await page.goto(`${origin.origin}/projects/${A}/requirements`);await page.locator('#requirement').waitFor();await routeTo(page,B);await page.locator('#requirement').fill('返回操作也必须保护这段文字');
