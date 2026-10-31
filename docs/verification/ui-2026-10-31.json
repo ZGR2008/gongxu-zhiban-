@@ -1,0 +1,365 @@
+{
+  "date": "2026-10-31",
+  "timezone": "Asia/Shanghai",
+  "scope": "Local UI verification; different suites overlap and must not be summed as independent test totals.",
+  "baseline": "096ca68",
+  "originalTests": {
+    "api": 48,
+    "embedding": 4,
+    "failed": 0,
+    "skipped": 0,
+    "source": "pnpm test console result, 2026-10-31 17:47 Asia/Shanghai",
+    "usesTestDoubles": true
+  },
+  "suites": [
+    {
+      "name": "real_api",
+      "status": "passed",
+      "source": ".runtime/smoke-ec4ff7e2-04ce-4be4-9029-fab57eb00bbe.json",
+      "sourceSha256": "51d768162aa8d1b5dfcf309836b12efce0a8ec67b2b02c9843c18c2f0b449662",
+      "startedAt": "2026-10-31T09:14:50.833Z",
+      "finishedAt": "2026-10-31T09:15:32.287Z",
+      "realServices": true,
+      "syntheticInput": true,
+      "remoteAiRequested": true,
+      "checks": [
+        {
+          "name": "service_and_database_readiness",
+          "status": "passed",
+          "durationMs": 57
+        },
+        {
+          "name": "register_two_isolated_accounts",
+          "status": "passed",
+          "durationMs": 69
+        },
+        {
+          "name": "project_and_requirement_persistence",
+          "status": "passed",
+          "durationMs": 17
+        },
+        {
+          "name": "ownership_and_anonymous_access",
+          "status": "passed",
+          "durationMs": 4
+        },
+        {
+          "name": "text_and_pdf_parsing_persistence",
+          "status": "passed",
+          "durationMs": 16
+        },
+        {
+          "name": "real_vectors_and_source_retrieval",
+          "status": "passed",
+          "durationMs": 37
+        },
+        {
+          "name": "real_ai_requirement_analysis",
+          "status": "passed",
+          "durationMs": 11923
+        },
+        {
+          "name": "real_rag_answer_and_citations",
+          "status": "passed",
+          "durationMs": 1111
+        },
+        {
+          "name": "real_agent_tools_review_gate_and_tasks",
+          "status": "passed",
+          "durationMs": 6337
+        },
+        {
+          "name": "real_code_review_evidence_separation",
+          "status": "passed",
+          "durationMs": 5040
+        },
+        {
+          "name": "real_test_design_and_result_invalidation",
+          "status": "passed",
+          "durationMs": 4658
+        },
+        {
+          "name": "real_document_generation_edit_and_export",
+          "status": "passed",
+          "durationMs": 12100
+        },
+        {
+          "name": "growth_counts_come_from_recorded_work",
+          "status": "passed",
+          "durationMs": 47
+        },
+        {
+          "name": "logout_login_and_persistent_project",
+          "status": "passed",
+          "durationMs": 36
+        }
+      ]
+    },
+    {
+      "name": "original_browser",
+      "status": "passed",
+      "source": ".runtime/browser-a158fcd1-0912-47ce-ae23-7eed230b1846/report.json",
+      "sourceSha256": "faf0cf8ef076201bf52e097eb539a21e2cb9d093e778ca1c7a6bfc64c7b42e72",
+      "startedAt": "2026-10-31T09:18:31.337Z",
+      "finishedAt": "2026-10-31T09:18:41.127Z",
+      "realServices": true,
+      "syntheticInput": true,
+      "remoteAiRequested": true,
+      "checks": [
+        {
+          "name": "desktop_registration",
+          "status": "passed",
+          "durationMs": 536
+        },
+        {
+          "name": "project_create_reload_and_requirements",
+          "status": "passed",
+          "durationMs": 1072
+        },
+        {
+          "name": "knowledge_upload_and_real_index",
+          "status": "passed",
+          "durationMs": 241
+        },
+        {
+          "name": "agent_live_progress_and_review_gate",
+          "status": "passed",
+          "durationMs": 5431
+        },
+        {
+          "name": "all_project_routes_and_mobile_layout",
+          "status": "passed",
+          "durationMs": 1681
+        },
+        {
+          "name": "logout_clears_browser_session",
+          "status": "passed",
+          "durationMs": 63
+        }
+      ]
+    },
+    {
+      "name": "complete_ui",
+      "status": "passed",
+      "source": ".runtime/ui-be0c6fda-a375-43bb-92e9-27db3bccc3f5/report.json",
+      "sourceSha256": "85cae7d765e6c4d62ba444a244f61898754115bf5e9d8ab25edd055bdd37c503",
+      "startedAt": "2026-10-31T09:47:25.736Z",
+      "finishedAt": "2026-10-31T09:48:04.068Z",
+      "realServices": true,
+      "syntheticInput": true,
+      "remoteAiRequested": true,
+      "controlledLongContent": true,
+      "checks": [
+        {
+          "name": "registration_and_honest_empty_workspace",
+          "status": "passed",
+          "durationMs": 864
+        },
+        {
+          "name": "display_preferences_and_quick_navigation",
+          "status": "passed",
+          "durationMs": 1263
+        },
+        {
+          "name": "project_creation_filters_and_view_switch",
+          "status": "passed",
+          "durationMs": 1100
+        },
+        {
+          "name": "markdown_preview_outline_safety_and_save",
+          "status": "passed",
+          "durationMs": 474
+        },
+        {
+          "name": "code_draft_keyboard_copy_and_size_controls",
+          "status": "passed",
+          "durationMs": 6712
+        },
+        {
+          "name": "knowledge_sources_real_index_and_copy",
+          "status": "passed",
+          "durationMs": 2218
+        },
+        {
+          "name": "agent_trace_dependency_graph_and_task_board",
+          "status": "passed",
+          "durationMs": 5248
+        },
+        {
+          "name": "test_filter_and_explicit_manual_result",
+          "status": "passed",
+          "durationMs": 3757
+        },
+        {
+          "name": "document_preview_edit_save_and_export",
+          "status": "passed",
+          "durationMs": 7329
+        },
+        {
+          "name": "responsive_layout_and_dark_surfaces",
+          "status": "passed",
+          "durationMs": 8479
+        },
+        {
+          "name": "session_logout",
+          "status": "passed",
+          "durationMs": 53
+        }
+      ]
+    },
+    {
+      "name": "edge_visual",
+      "status": "passed",
+      "source": ".runtime/visual-34bbfce5-06cb-42c3-88a4-86432a59a106/report.json",
+      "sourceSha256": "b6acd7113e49bf6841ae5b8a7f19cc15e9b3297164d7c10265b34914120de258",
+      "startedAt": "2026-10-31T09:30:39.741Z",
+      "finishedAt": "2026-10-31T09:30:46.851Z",
+      "checks": [
+        {
+          "name": "actual_rendered_frames_move",
+          "status": "passed"
+        },
+        {
+          "name": "pause_stops_pixels_and_draw_calls",
+          "status": "passed"
+        },
+        {
+          "name": "drag_keyboard_and_reset",
+          "status": "passed"
+        },
+        {
+          "name": "opposite_orbits_and_real_speed_change",
+          "status": "passed"
+        },
+        {
+          "name": "immersive_mode_and_escape",
+          "status": "passed"
+        },
+        {
+          "name": "responsive_controls",
+          "status": "passed"
+        },
+        {
+          "name": "system_reduced_motion",
+          "status": "passed"
+        },
+        {
+          "name": "webgl_context_restoration",
+          "status": "passed"
+        },
+        {
+          "name": "local_assets_and_no_script_errors",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "name": "webkit_visual",
+      "status": "passed",
+      "source": ".runtime/visual-3e128861-1d3d-4400-a2ce-3e321e79f4b6/report.json",
+      "sourceSha256": "d3fa6357ac8dd05ca67ff9de879b24eb3613d21b1f9cf5a4374d688cd2b10968",
+      "startedAt": "2026-10-31T09:30:40.275Z",
+      "finishedAt": "2026-10-31T09:30:49.177Z",
+      "checks": [
+        {
+          "name": "actual_rendered_frames_move",
+          "status": "passed"
+        },
+        {
+          "name": "pause_stops_pixels_and_draw_calls",
+          "status": "passed"
+        },
+        {
+          "name": "drag_keyboard_and_reset",
+          "status": "passed"
+        },
+        {
+          "name": "opposite_orbits_and_real_speed_change",
+          "status": "passed"
+        },
+        {
+          "name": "immersive_mode_and_escape",
+          "status": "passed"
+        },
+        {
+          "name": "responsive_controls",
+          "status": "passed"
+        },
+        {
+          "name": "system_reduced_motion",
+          "status": "passed"
+        },
+        {
+          "name": "webgl_context_restoration",
+          "status": "passed"
+        },
+        {
+          "name": "local_assets_and_no_script_errors",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "name": "startup_lifecycle",
+      "status": "passed",
+      "source": ".runtime/cosmic-ui-review/startup-lifecycle-report.json",
+      "sourceSha256": "1d7e1bad921b0dff7a4b507d0be484ee8cf8756de3715a26c704039506569613",
+      "checks": [
+        {
+          "name": "navigation_during_texture_generation",
+          "status": "passed"
+        },
+        {
+          "name": "unsupported_webgl_honest_fallback",
+          "status": "passed"
+        },
+        {
+          "name": "controlled_async_initialization_failure",
+          "status": "passed"
+        }
+      ]
+    }
+  ],
+  "soaks": [
+    {
+      "source": ".runtime/cosmic-ui-review/soak-report.json",
+      "sourceSha256": "bb4bb4123171b2d94c281486226e7d3f024997d78ee95e69d5acdccf1bb8f463",
+      "startedAt": "2026-10-31T07:33:32.099Z",
+      "finishedAt": "2026-10-31T08:18:33.449Z",
+      "minutes": 45.0225,
+      "cycles": 90,
+      "errors": 0,
+      "warnings": 0,
+      "offscreenDraws": 0
+    },
+    {
+      "source": ".runtime/cosmic-ui-review/soak-async-report.json",
+      "sourceSha256": "9dcc455d9a828ba28490391f1eac5184aa074bae897066df775e27e66c2218dd",
+      "startedAt": "2026-10-31T09:25:09.242Z",
+      "finishedAt": "2026-10-31T09:55:10.247Z",
+      "minutes": 30.01675,
+      "cycles": 60,
+      "errors": 0,
+      "warnings": 0,
+      "offscreenDraws": 0
+    }
+  ],
+  "preservedLogic": {
+    "status": "passed",
+    "baseline": "096ca68",
+    "originalChecks": 47,
+    "protectedChanges": []
+  },
+  "longContent": {
+    "status": "passed",
+    "controlledResponse": true,
+    "mutatedServerData": false,
+    "combinations": 40
+  },
+  "limitations": [
+    "No production deployment or real-user performance claim.",
+    "Windows WebKit is not Safari hardware verification.",
+    "Generated test cases do not mean submitted code was executed.",
+    "These records and hashes are developer-generated local evidence, not an independent certification."
+  ]
+}

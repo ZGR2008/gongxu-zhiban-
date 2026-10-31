@@ -31,9 +31,18 @@ try {
   loading.append(link);
   document.body.dataset.renderer = 'unavailable';
 }
-if (renderer) initialize();
+if (renderer) initialize().catch(() => {
+  renderer.dispose();
+  loading.hidden = false;
+  loading.replaceChildren(document.createTextNode('三维场景未能完成初始化，请刷新后重试，或'));
+  const link = document.createElement('a');
+  link.href = './archive/planet-orbit-css-v2.html';
+  link.textContent = '查看上一版预览';
+  loading.append(link);
+  document.body.dataset.renderer = 'unavailable';
+});
 
-function initialize() {
+async function initialize() {
   const canvas = renderer.domElement;
   canvas.tabIndex = 0;
   canvas.setAttribute('aria-label', '旋转星环。拖动或使用方向键调整视角，使用下方按钮暂停、调整速度。');
@@ -57,7 +66,7 @@ function initialize() {
   rings.forEach(ring => system.add(ring.points));
 
   // Generate the original cloud map once. Animation only changes GPU transforms.
-  const cloudTexture = createCloudTexture();
+  const cloudTexture = await createCloudTexture();
   const planetMaterial = new THREE.ShaderMaterial({
     uniforms: { cloudMap: { value: cloudTexture } },
     vertexShader: /* glsl */`
@@ -255,7 +264,7 @@ function initialize() {
   resize(); loading.hidden = true; document.body.dataset.renderer = 'webgl'; syncMotion();
 }
 
-function createCloudTexture() {
+async function createCloudTexture() {
   const width = 768, height = 384;
   const canvas = document.createElement('canvas'); canvas.width = width; canvas.height = height;
   const ctx = canvas.getContext('2d'); const image = ctx.createImageData(width, height);
@@ -276,6 +285,7 @@ function createCloudTexture() {
     for (let i = 0; i < 5; i++) { value += noise(x, y, z) * amplitude; x = x * 2.01 + 7; y = y * 2.03 + 9; z = z * 2.01 + 3; amplitude *= 0.49; }
     return value;
   }
+  let sliceStart = performance.now();
   for (let y = 0; y < height; y++) {
     const latitude = y / (height - 1) * Math.PI;
     for (let x = 0; x < width; x++) {
@@ -288,6 +298,12 @@ function createCloudTexture() {
       const dust = (hash(x, y, 3) - 0.5) * 4; const index = (y * width + x) * 4;
       image.data[index] = 35 + light * 117 + dust; image.data[index + 1] = 13 + light * 59 + dust;
       image.data[index + 2] = 67 + light * 166 + dust; image.data[index + 3] = 255;
+    }
+    // Keep the same pixels, but let inputs/painting run between short CPU slices.
+    // A timer yield works in both Chromium and WebKit without extra worker assets.
+    if (performance.now() - sliceStart >= 8) {
+      await new Promise(resolve => setTimeout(resolve, 0));
+      sliceStart = performance.now();
     }
   }
   ctx.putImageData(image, 0, 0);

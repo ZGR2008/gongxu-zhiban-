@@ -11,3 +11,4 @@ coverage/
 uploads/
 .models/
 .runtime/
+tmp/pdfs/

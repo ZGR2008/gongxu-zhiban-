@@ -333,6 +333,7 @@ details:not([open]) > :not(summary) {
 }
 .task-work-copy {
   min-width: 0;
+  overflow-wrap: anywhere;
 }
 .task-work-copy > strong {
   color: #ddc5ee;

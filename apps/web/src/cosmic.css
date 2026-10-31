@@ -125,11 +125,21 @@ button:disabled:hover {
   bottom: 11px;
   width: 2px;
   background: linear-gradient(#ad61ed, #e3b6ff, #9869f2);
+  background-size: 100% 220%;
+  animation: nav-indicator-flow 3.6s ease-in-out infinite alternate;
   box-shadow: 0 0 10px #b86cff;
   border-radius: 3px;
 }
 .nav-item.active .nav-icon {
   color: #c994ff;
+}
+@keyframes nav-indicator-flow {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: 0 100%;
+  }
 }
 .nav-item:not(.unavailable):hover {
   background: rgb(103 46 151 / 0.16);
@@ -773,6 +783,12 @@ option {
   color: #ac92c3;
   margin: 8px 0 24px;
   font-size: 11px;
+  flex-wrap: wrap;
+}
+.breadcrumb a {
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
 }
 .breadcrumb span {
   color: #59416c;
@@ -784,9 +800,17 @@ option {
   color: #f0e4fc;
   font-weight: 500;
   font-size: 27px;
+  overflow-wrap: anywhere;
 }
 .detail-heading {
   align-items: center;
+}
+.detail-heading > div {
+  min-width: 0;
+  flex: 1;
+}
+.detail-heading > .status-pill {
+  flex-shrink: 0;
 }
 .project-navigation {
   display: flex;
@@ -849,6 +873,10 @@ option {
 .module-list strong {
   color: #dfceef;
   font-weight: 500;
+}
+.module-list li > span:first-child {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 .module-list small,
 .steps-list small,
@@ -923,6 +951,8 @@ option {
 }
 .case-head strong {
   color: #e4d2f5;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 .case-item p {
   color: #baa4ce;
@@ -1034,6 +1064,16 @@ footer {
 }
 .activity-list li {
   border-color: #513468;
+}
+.activity-list li > div {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.activity-list .text-link {
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  text-align: left;
 }
 .activity-dot {
   background: #bb80e0;
@@ -2039,6 +2079,7 @@ footer {
   *::before,
   *::after {
     transition: none !important;
+    animation: none !important;
     scroll-behavior: auto !important;
   }
   .button:hover,

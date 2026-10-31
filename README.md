@@ -15,6 +15,10 @@
 
 右上角“快速导航”支持 `Ctrl/Cmd + K` 打开，搜索页面、项目和当前项目的工具；方向键选择，Enter 打开，Esc 关闭。“显示设置”可调整信息密度、内容字号和侧栏宽度，偏好只保存在当前浏览器。代码输入区用 Tab 缩进，先按 Esc 再按 Tab 可移出编辑器；星环可手动暂停，并遵循系统减少动态效果设置。
 
+以下为独立演示账号的实际浏览器截图，数据来自操作验证，不代表真实学生成绩：
+
+![深空主题工作台：真实项目概况、实训工具入口和项目列表](docs/screenshots/workspace.png)
+
 工作台的三维星环是独立的装饰场景，支持暂停、拖动和减少动态效果，不参与模型调用。独立预览位于 `/previews/planet-orbit.html`，旧版 CSS/SVG 留在 `/previews/archive/planet-orbit-css-v2.html`。当前三维版通过本地 HTTP 服务加载模块，需要 WebGL2；所有运行资源本地提供，不依赖 CDN。轨道代码适配自 MIT 许可的 [SaturnWebGL](https://github.com/adelmassimo/SaturnWebGL)，使用 Three.js 0.187.0，来源和版权声明见 `apps/web/public/previews/vendor/NOTICE.txt`，前端依赖许可见 `apps/web/public/THIRD-PARTY-LICENSES.txt`。
 
 ## 环境准备
@@ -100,10 +104,18 @@ pnpm smoke:browser             # 浏览器操作、页面路由及移动布局�
 pnpm smoke:browser --with-ai    # 额外验证 Agent 运行过程与审核按钮，会产生 API 用量
 pnpm smoke:ui                  # 新界面回归：导航、显示偏好、编辑、检索、响应式；需要向量服务
 pnpm smoke:ui --with-ai        # 增加真实 Agent、审查、RAG、测试用例及文档交互，会产生 API 用量
+pnpm smoke:visual              # 星环真实画面、方向、倍速、暂停、拖动、减少动画和图形恢复；不调用模型
+pnpm smoke:visual --webkit     # 同样的 9 组检查，使用 Playwright WebKit
 ```
 
 浏览器检查在 Windows 默认使用已安装的 Edge；其他系统可先运行 `pnpm exec playwright install chromium`，或通过 `SMOKE_BROWSER_CHANNEL` 选择已安装的兼容浏览器。接口测试地址使用 `SMOKE_API_URL`，浏览器地址使用 `SMOKE_WEB_URL`；这些脚本只允许无凭证的本机回环地址，避免误写线上业务数据。`smoke:ui` 默认包含 8 组检查，`--with-ai` 包含 11 组；它保留原有两套联调脚本及断言，单独记录新交互。其人工测试状态样例明确记录为“阻塞”，不声称执行了示例项目代码。常规自动化测试中的数据库和模型替身不等同于这些真实联调结果。
 
+`smoke:visual` 只需前端服务和可用的 WebGL2 环境，不要求登录或调用 API。它比较实际截图像素并观察 GPU 时间与绘制次数，避免“存在动画样式但画面没有旋转”的假阳性。WebKit 可先通过 `pnpm exec playwright install webkit` 安装；Windows 上的自动化 WebKit 结果不是 Safari 真机结论。各脚本保留本轮报告与截图，不覆盖旧报告。
+
+本工作区的 WebKit 已下载在 `.runtime/browsers/`；复用这一缓存时，在仓库根目录的 PowerShell 中先运行 `$env:PLAYWRIGHT_BROWSERS_PATH="$PWD/.runtime/browsers"`，再执行 `pnpm smoke:visual --webkit`。新环境可使用 Playwright 的默认安装目录，无需设置该变量。
+
 ## 竞赛与团队信息
 
 赛项要求和待确认项目见 [竞赛核对清单](docs/competition-checklist.md)，连续演示的操作与讲解准备稿见 [6 分 40 秒演示路线](docs/DEMO-WALKTHROUGH.md)。准备稿不代表已交付正式视频。参赛团队、学校及指导教师信息由实际参赛人员确认后填写，不预填或虚构。
+
+本轮桌面截图、交互验证与交付缺口另有 [6 页离线 UI 验收报告](output/pdf/工序智伴-桌面UI验收报告.pdf)。它用于界面验收，不代替正式参赛技术文档。

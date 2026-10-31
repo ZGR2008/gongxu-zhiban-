@@ -104,6 +104,14 @@ try {
     await page.locator('.display-settings summary').click();
     await page.getByRole('button', { name: '恢复默认显示', exact: true }).click();
     await page.keyboard.press('Escape');
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    assert(
+      (await page
+        .locator('.nav-item.active')
+        .evaluate((element) => getComputedStyle(element, '::before').animationName)) === 'none',
+      'navigation_ignores_reduced_motion',
+    );
+    await page.emulateMedia({ reducedMotion: 'no-preference' });
     await page.keyboard.press('Control+k');
     await page.locator('#quick-nav-query').fill('知识库');
     const beforeComposition = page.url();
@@ -340,6 +348,40 @@ try {
         );
       }
     }
+    // Controlled response-only edge case; no long strings are written to the server.
+    report.controlledLongContent = true;
+    function longNames(value) {
+      if (Array.isArray(value)) return value.map(longNames);
+      if (!value || typeof value !== 'object') return value;
+      return Object.fromEntries(
+        Object.entries(value).map(([key, item]) => [
+          key,
+          typeof item === 'string' && ['name', 'title', 'projectName'].includes(key)
+            ? `界面长文本演示-${'W'.repeat(100)}`
+            : longNames(item),
+        ]),
+      );
+    }
+    const routePattern = '**/api/**';
+    await page.route(routePattern, async (route) => {
+      if (route.request().method() !== 'GET') return route.continue();
+      const response = await route.fetch();
+      if (!response.headers()['content-type']?.includes('application/json'))
+        return route.fulfill({ response });
+      return route.fulfill({ response, json: longNames(await response.json()) });
+    });
+    for (const width of [320, 1280]) {
+      await page.setViewportSize({ width, height: 1000 });
+      for (const path of ['/knowledge', '/growth', `${projectPath}/agent`]) {
+        await go(path);
+        await page.waitForTimeout(250);
+        assert(
+          await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 2),
+          `long_text_overflow_${width}`,
+        );
+      }
+    }
+    await page.unroute(routePattern);
     await page.setViewportSize({ width: 1440, height: 1000 });
     await go('/dashboard');
     await page.locator('.project-row').first().waitFor();
