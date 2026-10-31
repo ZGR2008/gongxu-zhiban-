@@ -4,7 +4,8 @@ import { z } from 'zod';
 import type { ProjectStore } from '../project-store.js';
 import { authorizeRequest } from '../project-routes.js';
 import type { EmbeddingConfig } from './embeddings.js';
-import { EmbeddingError, indexDocument, retrieveKnowledge, savePages, saveText } from './service.js';
+import { EmbeddingError, indexDocument, retrieveKnowledge, savePages, saveText, modelId, KnowledgeChunkLimitError } from './service.js';
+import {indexCompatibility} from './index-compatibility.js';
 import { AiError, aiErrorStatus, completeChat, type AiConfig } from '../ai/model.js';
 import { extractPdf, pdfParserAvailable, PdfError } from './pdf.js';
 import { listEmbeddingActivities, openEmbeddingActivity } from './activity.js';
@@ -36,8 +37,20 @@ export async function registerKnowledgeRoutes(app: FastifyInstance, store?: Proj
   app.get('/knowledge', async (request, reply) => {
     if (!store || !pool) return reply.code(503).send({ error: 'database_not_configured' });
     const user = await authorizeRequest(request, store); if (!user) return reply.code(401).send({ error: 'unauthorized' });
-    const result = await pool.query(`SELECT id,name,media_type AS "mediaType",status,created_at AS "createdAt" FROM knowledge_documents WHERE owner_id=$1 ORDER BY created_at DESC LIMIT 200`, [user.id]);
-    return { documents: result.rows, embeddingConfigured: Boolean(embedding), pdfAvailable: await pdfParserAvailable() };
+    // Storage readiness is not compatibility with today's configured model.
+    // Aggregate only the bounded visible documents; the window count covers all
+    // owned documents. Never send the internal provider identity to the browser.
+    const result = await pool.query(`WITH visible AS (
+      SELECT id,name,media_type,status,created_at,COUNT(*) OVER()::int AS total_documents
+      FROM knowledge_documents WHERE owner_id=$1 ORDER BY created_at DESC,id LIMIT 200)
+      SELECT d.id,d.name,d.media_type AS "mediaType",d.status,d.created_at AS "createdAt",d.total_documents AS "totalDocuments",
+        COUNT(c.id)::int AS "chunkCount",COUNT(c.embedding)::int AS "indexedChunks",
+        COUNT(c.id) FILTER (WHERE c.embedding IS NOT NULL AND c.embedding_model=$2)::int AS "currentChunks"
+      FROM visible d LEFT JOIN knowledge_chunks c ON c.document_id=d.id
+      GROUP BY d.id,d.name,d.media_type,d.status,d.created_at,d.total_documents ORDER BY d.created_at DESC,d.id`, [user.id,embedding?modelId(embedding):null]);
+    const documents=result.rows.map(({totalDocuments:_,...row})=>({...row,indexCompatibility:indexCompatibility(row.status,Boolean(embedding),row.chunkCount,row.indexedChunks,row.currentChunks)}));
+    const totalDocuments=result.rows[0]?.totalDocuments??0;
+    return { documents,totalDocuments,listLimited:totalDocuments>documents.length,embeddingConfigured: Boolean(embedding), pdfAvailable: await pdfParserAvailable(),capturedAt:new Date().toISOString() };
   });
   app.post('/knowledge/text', async (request, reply) => {
     if (!store || !pool) return reply.code(503).send({ error: 'database_not_configured' });
@@ -45,7 +58,7 @@ export async function registerKnowledgeRoutes(app: FastifyInstance, store?: Proj
     const input = docInput.safeParse(request.body); if (!input.success) return reply.code(400).send({ error: 'invalid_input' });
     const release = acquire(user.id, 'save'); if (!release) return reply.code(429).send({ error: 'knowledge_rate_limited' });
     try { return reply.code(201).send(await saveText(pool, user.id, input.data.name, input.data.text)); }
-    catch (error) { if (error instanceof EmbeddingError) return reply.code(502).send({ error: 'embedding_provider_error' }); if (error instanceof Error && error.message === 'invalid_document') return reply.code(400).send({ error: 'invalid_document' }); throw error; }
+    catch (error) { if(error instanceof KnowledgeChunkLimitError)return reply.code(413).send({error:error.message,maxChunks:error.maxChunks,actualChunks:error.actualChunks});if (error instanceof EmbeddingError) return reply.code(502).send({ error: 'embedding_provider_error' }); if (error instanceof Error && error.message === 'invalid_document') return reply.code(400).send({ error: 'invalid_document' }); throw error; }
     finally { release(); }
   });
   app.post('/knowledge/:id/index', async (request, reply) => {
@@ -57,7 +70,7 @@ export async function registerKnowledgeRoutes(app: FastifyInstance, store?: Proj
     const release = acquire(user.id, 'index'); if (!release) return reply.code(429).send({ error: 'knowledge_rate_limited' });
     const activity=openEmbeddingActivity(user.id,'index',request,reply);
     try { const result = await indexDocument(pool, user.id, params.data.id, embedding,activity.options); activity.finish(result?undefined:new Error('not_found')); return result ?? reply.code(404).send({ error: 'not_found' }); }
-    catch (error) { activity.finish(error); if (error instanceof EmbeddingError) return reply.code(503).send({ error: error.code }); if (error instanceof Error && error.message === 'invalid_document') return reply.code(400).send({ error: 'invalid_document' }); throw error; }
+    catch (error) { activity.finish(error);if(error instanceof KnowledgeChunkLimitError)return reply.code(413).send({error:error.message,maxChunks:error.maxChunks,actualChunks:error.actualChunks}); if (error instanceof EmbeddingError) return reply.code(503).send({ error: error.code }); if (error instanceof Error && error.message === 'invalid_document') return reply.code(400).send({ error: 'invalid_document' }); throw error; }
     finally { release(); }
   });
   app.post('/knowledge/pdf', { bodyLimit: 4_200_000 }, async (request, reply) => {
@@ -70,7 +83,8 @@ export async function registerKnowledgeRoutes(app: FastifyInstance, store?: Proj
       const pages = await extractPdf(Buffer.from(input.data.data, 'base64'));
       return reply.code(201).send(await savePages(pool, user.id, input.data.name, 'application/pdf', pages));
     } catch (error) {
-      if (error instanceof PdfError) return reply.code(error.code === 'pdf_parser_unavailable' ? 503 : 400).send({ error: error.code });
+      if(error instanceof KnowledgeChunkLimitError)return reply.code(413).send({error:error.message,maxChunks:error.maxChunks,actualChunks:error.actualChunks});
+      if (error instanceof PdfError) return reply.code(error.code === 'pdf_parser_unavailable' ? 503 : ['pdf_too_large','pdf_text_too_large','pdf_too_many_pages'].includes(error.code)?413:400).send({ error: error.code });
       if (error instanceof Error && error.message === 'invalid_document') return reply.code(400).send({ error: 'invalid_document' });
       throw error;
     } finally { release(); }

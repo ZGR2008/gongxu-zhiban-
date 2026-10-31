@@ -135,9 +135,13 @@ async function scenario(name,work){
   else if(/\/agent\/runs\/[^/]+$/.test(path)){const id=path.split('/').at(-1);state.runCounts[id]=(state.runCounts[id]||0)+1;await new Promise(r=>setTimeout(r,state.runDelay(id)));body={run:state.runs.find(r=>r.id===id),steps:[{id:'s',stage:'plan_1',status:'succeeded',outputSummary:id===RA?'运行A输出':'运行B输出',tools:[]}]};}
   else if(path.endsWith('/trace')){state.traceReads=(state.traceReads??0)+1;status=state.traceStatus??200;body=structuredClone(status===200?(state.traceData??{version:null,items:[],links:[],tasks:[],cases:[],previousItems:[],impact:null}):{error:'trace_refresh_required'});await new Promise(r=>setTimeout(r,state.traceDelay??0));}
   else if(/\/trace\/(links|task-tests)$/.test(path)&&method==='POST'){const input=route.request().postDataJSON();state.writes.push({path,body:input});if(path.endsWith('/links')&&state.traceData){state.traceData.links=state.traceData.links.map(link=>(input.targetKind==='case'?link.caseId:link.taskId)===input.targetId?{...link,status:input.decision,reviewNote:input.note}:link);}body={status:'confirmed'};}
-  else if(path==='/knowledge'){state.knowledgeReads=(state.knowledgeReads??0)+1;status=state.knowledgeStatus??200;body=status===200?{documents:state.knowledgeDocuments??[],embeddingConfigured:true,pdfAvailable:true}:{error:'database_unavailable'};}
-  else if(path==='/knowledge/text'||path==='/knowledge/pdf'){state.writes.push({path,body:route.request().postDataJSON()});await new Promise(r=>setTimeout(r,state.uploadDelay??0));status=state.failUpload?503:201;body=state.failUpload?{error:'database_unavailable'}:{id:RA,status:'awaiting_embedding',chunks:1};if(state.failKnowledgeAfterUpload)state.knowledgeStatus=503;}
+  else if(path==='/knowledge'){state.knowledgeReads=(state.knowledgeReads??0)+1;status=state.knowledgeStatus??200;body=status===200?{documents:state.knowledgeDocuments??[],totalDocuments:state.knowledgeTotal??(state.knowledgeDocuments?.length??0),listLimited:state.knowledgeLimited??false,embeddingConfigured:true,pdfAvailable:true}:{error:'database_unavailable'};}
+  else if(path==='/knowledge/text'||path==='/knowledge/pdf'){state.writes.push({path,body:route.request().postDataJSON()});await new Promise(r=>setTimeout(r,state.uploadDelay??0));status=state.uploadBoundary?413:state.failUpload?503:201;body=state.uploadBoundary?{error:state.uploadBoundary}:state.failUpload?{error:'database_unavailable'}:{id:RA,status:'awaiting_embedding',chunks:1};if(state.failKnowledgeAfterUpload)state.knowledgeStatus=503;}
   else if(path==='/knowledge/activity')body={activities:[]};
+  else if(/^\/knowledge\/[^/]+\/index$/.test(path)&&method==='POST'){
+   state.indexRequests=(state.indexRequests??0)+1;
+   if(state.failIndex){status=503;body={error:'embedding_unavailable'};}else{const id=path.split('/')[2];state.knowledgeDocuments=state.knowledgeDocuments.map(doc=>doc.id===id?{...doc,indexCompatibility:'current',currentChunks:doc.chunkCount}:doc);body={id,status:'ready'};}
+  }
   else if(path==='/knowledge/search'){state.searches++;await new Promise(r=>setTimeout(r,state.searchDelay));body={hits:[{id:RA,document_name:'取消后重试资料',content:'成功检索的合成片段',page:1,distance:0.1}]};}
   else if(path==='/knowledge/answer'){state.answers=(state.answers??0)+1;state.answerQueries??=[];state.answerQueries.push(route.request().postDataJSON().query);await new Promise(r=>setTimeout(r,state.answerDelay??0));body={answer:'合成回答内容，不是真实模型结果',sources:[{id:RA,document_name:'合成回答来源',content:'回答实际提供的原文',page:1,distance:0.1}]};}
   else if(/\/tasks\/[^/]+$/.test(path)&&method==='PATCH'){
@@ -722,6 +726,18 @@ try{
   assert.equal(await page.getByLabel('检索问题').inputValue(),'尚未发出的新问题');
   await page.getByText('本次回答问题：实际发出的第二个问题',{exact:true}).waitFor();
   assert.deepEqual(state.answerQueries,['第一次回答的问题','实际发出的第二个问题']);
+ });
+ await scenario('knowledge_index_origin_is_explicit_and_rebuild_is_manual_and_recoverable',async(page,state)=>{
+  state.knowledgeDocuments=[{id:RA,name:'另一模型的合成资料',status:'ready',createdAt:now,chunkCount:2,indexedChunks:2,currentChunks:0,indexCompatibility:'model_changed'}];state.knowledgeTotal=201;state.knowledgeLimited=true;
+  await page.goto(`${origin.origin}/knowledge`);const list=page.getByRole('region',{name:'知识资料与索引来源'});await list.getByText('模型已变化 · 待重建',{exact:true}).waitFor();assert.equal(state.indexRequests??0,0);assert.match(await list.innerText(),/1 \/ 201 份资料/);
+  await page.getByLabel('文档内容',{exact:true}).fill('索引失败仍保留上传内容');state.failIndex=true;await list.getByRole('button',{name:'重建索引',exact:true}).click();await page.getByRole('alert').filter({hasText:'向量服务暂不可用'}).waitFor();assert.equal(await list.getByText('当前模型索引',{exact:true}).count(),0);assert.equal(await page.getByLabel('文档内容',{exact:true}).inputValue(),'索引失败仍保留上传内容');
+  state.failIndex=false;await list.getByRole('button',{name:'重建索引',exact:true}).click();await list.getByText('当前模型索引',{exact:true}).waitFor();assert.equal(state.indexRequests,2);assert.match(await list.innerText(),/2\/2 片段匹配当前模型/);assert.equal(await page.getByLabel('文档内容',{exact:true}).inputValue(),'索引失败仍保留上传内容');
+  state.knowledgeDocuments[0].indexCompatibility=undefined;await list.getByRole('button',{name:'刷新资料状态',exact:true}).click();await list.getByText('索引来源待核对',{exact:true}).waitFor();assert.equal(state.indexRequests,2);
+ });
+ await scenario('knowledge_upload_limits_show_specific_causes_and_keep_the_entire_draft',async(page,state)=>{
+  await page.goto(`${origin.origin}/knowledge`);await page.getByLabel('文档名称',{exact:true}).fill('边界合成资料');const content='开头原文。\n末尾条件必须保留';await page.getByLabel('文档内容',{exact:true}).fill(content);
+  for(const [code,message] of [['document_too_many_chunks','资料分块超过 250 块'],['pdf_text_too_large','PDF 提取的文本超过 200000 字符']]){state.uploadBoundary=code;await page.getByRole('button',{name:/保存并分块/}).click();await page.getByRole('alert').filter({hasText:message}).waitFor();assert.equal(await page.getByLabel('文档内容',{exact:true}).inputValue(),content);assert.equal(await page.getByLabel('文档名称',{exact:true}).inputValue(),'边界合成资料');}
+  state.uploadBoundary=null;await page.getByRole('button',{name:/保存并分块/}).click();await page.waitForFunction(()=>document.querySelector('#knowledge-content')?.value==='');assert.equal(state.writes.length,3);assert.ok(state.writes.every(w=>w.body.text===content));
  });
  await scenario('knowledge_search_result_keeps_original_question_when_input_changes',async(page,state)=>{
   state.searchDelay=300;await page.goto(`${origin.origin}/knowledge`);await page.getByLabel('检索问题').fill('已发出的检索问题');

@@ -51,6 +51,9 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
     const queueCodes:Record<string,string>={trace_version_outdated:'需求版本已变化，请刷新追踪视图后重新审核。',case_revision_required:'请选择当前修订的用例再进行审核。',test_case_unknown_requirement:'模型关联了不存在的需求条目，未保存本次用例，请重试或检查需求。',embedding_queue_full:'向量服务等待队列已满，请稍后重试。',embedding_queue_timeout:'向量请求排队超时，已退出队列，请稍后重试。',embedding_timeout:'向量请求超过等待时间，已停止本次请求。',embedding_cancelled:'本次向量请求已取消。',embedding_busy:'向量服务仍忙，有限重试已结束，请稍后再试。',embedding_unavailable:'向量服务暂不可用，有限重试已结束。请检查服务后重试。',test_case_changed:'用例已被修改，请刷新后核对最新定义，再登记执行结果。'};
     const documentCodes:Record<string,string>={
       test_list_changed:'用例记录或需求来源已变化，已保留当前页面。请先保存或处理编辑，再刷新用例与完整统计后继续分页。',
+      pdf_text_too_large:'PDF 提取的文本超过 200000 字符，已停止导入，未保存不完整资料。请按章节拆分文件后分别上传；这与文件是否超过 3 MB 不同。',
+      document_too_many_chunks:'资料分块超过 250 块，未保存或删减任何片段。请按章节拆成多份资料，并保留末尾内容后分别上传。当前上传内容仍保留在编辑区。',
+      invalid_document:'资料没有可用的文本片段，请检查原文后重试；本次没有生成可检索内容。',
       document_context_incomplete:'当前需求的任务或测试明细超过各 50 条的完整生成边界，或明细与计数不一致。本次未调用模型、未生成文档；已有记录保留，请人工核对整理，当前不支持自动分批合成完整报告。',
       document_context_too_large:'完整任务与测试资料超过 30000 字符的结构化输入边界。本次未调用模型、未截断说明；已有文档保留，请人工核对整理，不能通过删除执行证据来规避限制。',
       code_draft_conflict:'代码草稿已在另一处更新。当前输入已保留，请比较最新草稿后继续。',code_draft_revision_required:'缺少代码草稿修订号，已阻止覆盖。请先重新读取草稿。',document_conflict:'文档已在另一处更新。当前输入已保留，请核对服务器版本后合并。',document_revision_required:'缺少文档修订号，已阻止覆盖。请保留输入并刷新文档。'};

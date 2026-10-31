@@ -3,7 +3,7 @@ import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
 
 export class PdfError extends Error {
-  constructor(public readonly code: 'pdf_parser_unavailable' | 'invalid_pdf' | 'pdf_too_large' | 'pdf_too_many_pages' | 'pdf_no_text') { super(code); }
+  constructor(public readonly code: 'pdf_parser_unavailable' | 'invalid_pdf' | 'pdf_too_large' | 'pdf_text_too_large' | 'pdf_too_many_pages' | 'pdf_no_text') { super(code); }
 }
 type PdfDocument = { numPages: number; getPage: (n: number) => Promise<{ getTextContent: () => Promise<{ items: unknown[] }> }> };
 type PdfTask = { promise: Promise<PdfDocument>; destroy: () => Promise<void> };
@@ -40,7 +40,7 @@ export async function extractPdf(bytes: Uint8Array, engine?: PdfEngine): Promise
       const content = await (await document.getPage(page)).getTextContent();
       const text = content.items.map((item) => typeof item === 'object' && item !== null && 'str' in item && typeof item.str === 'string' ? item.str : '').join(' ').trim();
       total += text.length;
-      if (total > 200_000) throw new PdfError('pdf_too_large');
+      if (total > 200_000) throw new PdfError('pdf_text_too_large');
       if (text) pages.push({ page, text });
     }
     if (!pages.length) throw new PdfError('pdf_no_text');

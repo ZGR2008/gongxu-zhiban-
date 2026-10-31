@@ -23,7 +23,12 @@ export function resolveEmbeddingConfig(env: NodeJS.ProcessEnv = process.env) {
 }
 
 // The provider address is included in the identity to avoid mixing vectors from unrelated services.
-function modelId(config: EmbeddingConfig) { return `${config.baseUrl}|${config.model}`; }
+export function modelId(config: EmbeddingConfig) { return `${config.baseUrl}|${config.model}`; }
+
+export class KnowledgeChunkLimitError extends Error {
+  readonly maxChunks=250;
+  constructor(readonly actualChunks:number){super('document_too_many_chunks');}
+}
 
 /** Save actual text chunks without requiring an embedding provider. */
 export async function saveText(pool: Pool, ownerId: string, name: string, text: string) {
@@ -32,7 +37,8 @@ export async function saveText(pool: Pool, ownerId: string, name: string, text: 
 
 export async function savePages(pool: Pool, ownerId: string, name: string, mediaType: string, pages: TextPage[]) {
   const chunks = chunkPages(pages);
-  if (!chunks.length || chunks.length > 250) throw new Error('invalid_document');
+  if (!chunks.length) throw new Error('invalid_document');
+  if (chunks.length > 250) throw new KnowledgeChunkLimitError(chunks.length);
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
@@ -51,7 +57,8 @@ export async function indexDocument(pool: Pool, ownerId: string, id: string, con
   const doc = await pool.query(`SELECT id FROM knowledge_documents WHERE id=$1 AND owner_id=$2`, [id, ownerId]);
   if (!doc.rowCount) return null;
   const result = await pool.query(`SELECT id,content FROM knowledge_chunks WHERE document_id=$1 ORDER BY position`, [id]);
-  if (!result.rows.length || result.rows.length > 250) throw new Error('invalid_document');
+  if (!result.rows.length) throw new Error('invalid_document');
+  if (result.rows.length > 250) throw new KnowledgeChunkLimitError(result.rows.length);
   const vectors: number[][] = [];
   for (let offset = 0; offset < result.rows.length; offset += 32) {
     vectors.push(...await createEmbeddings(result.rows.slice(offset, offset + 32).map((row) => row.content as string), config,fetch,options));

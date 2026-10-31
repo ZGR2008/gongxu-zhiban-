@@ -39,6 +39,7 @@
     "verify:document-context": "pnpm --filter @gongxu/api build && node scripts/document-context-local.mjs",
     "verify:knowledge-answer": "pnpm --filter @gongxu/api build && node scripts/knowledge-answer-local.mjs",
     "verify:test-list": "pnpm --filter @gongxu/api build && node scripts/test-list-local.mjs",
+    "verify:index-compatibility": "pnpm --filter @gongxu/api build && node scripts/index-compatibility-local.mjs",
     "verify:growth-scope": "pnpm --filter @gongxu/api build && cd apps/api && node ../../scripts/growth-scope-local.mjs"
   },
   "devDependencies": {
