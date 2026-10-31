@@ -38,6 +38,22 @@ test('timeout is surfaced without pretending a result', async () => {
   await assert.rejects(completeChat({ ...config, timeoutMs: 5 }, [], fake), (e: unknown) => e instanceof AiError && e.code === 'ai_timeout');
 });
 
+test('bounded output and optional reasoning controls are explicit, and truncation never becomes a completed draft', async () => {
+  const configured = loadAiConfig({ AI_BASE_URL: 'https://example.test', AI_API_KEY: 'test-only', AI_MODEL: 'test-model', AI_REASONING_EFFORT: 'none', AI_MAX_OUTPUT_TOKENS: '2048' });
+  await completeChat(configured, [], async (_url, init) => {
+    const body = JSON.parse(String(init?.body));
+    assert.equal(body.reasoning_effort, 'none'); assert.equal(body.max_tokens, 2048);
+    return new Response(JSON.stringify({ choices: [{ finish_reason: 'stop', message: { content: '完整草稿' } }] }));
+  });
+  await assert.rejects(completeChat(config, [], async (_url, init) => {
+    assert.equal('reasoning_effort' in JSON.parse(String(init?.body)), false);
+    return new Response(JSON.stringify({ choices: [{ finish_reason: 'length', message: { content: '截断的草稿' } }] }));
+  }), (error: unknown) => error instanceof AiError && error.code === 'ai_output_truncated');
+  for (const override of [{ AI_REASONING_EFFORT: 'invalid' }, { AI_MAX_OUTPUT_TOKENS: '0' }, { AI_MAX_OUTPUT_TOKENS: '99999' }]) {
+    assert.throws(() => loadAiConfig({ AI_BASE_URL: 'https://example.test', AI_API_KEY: 'test-only', AI_MODEL: 'test-model', ...override }));
+  }
+});
+
 test('provider failures are classified without exposing response bodies, secrets, or URLs', async () => {
   for (const [status, code, httpStatus] of [
     [401, 'ai_auth_error', 502], [403, 'ai_auth_error', 502],

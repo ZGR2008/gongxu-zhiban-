@@ -1,14 +1,14 @@
 import 'dotenv/config';
-import { readFile, readdir } from 'node:fs/promises';
+import { readFile } from 'node:fs/promises';
 import pg from 'pg';
 import { loadConfig } from './config.js';
+import { migrationDirectory, migrationFiles } from './database-readiness.js';
 
 const config = loadConfig();
 if (!config.DATABASE_URL) throw new Error('DATABASE_URL is required to run database migrations');
 const pool = new pg.Pool({ connectionString: config.DATABASE_URL, connectionTimeoutMillis: 3000 });
 try {
-  const directory = new URL('../migrations/', import.meta.url);
-  const files = (await readdir(directory)).filter((name) => /^\d+_[a-z0-9_]+\.sql$/.test(name)).sort();
+  const files = await migrationFiles();
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
@@ -18,7 +18,7 @@ try {
       const version = file.slice(0, -4);
       const existing = await client.query('SELECT 1 FROM schema_migrations WHERE version = $1', [version]);
       if (!existing.rowCount) {
-        await client.query(await readFile(new URL(file, directory), 'utf8'));
+        await client.query(await readFile(new URL(file, migrationDirectory), 'utf8'));
         await client.query('INSERT INTO schema_migrations(version) VALUES ($1)', [version]);
         console.log(`Applied migration ${version}`);
       } else console.log(`Migration ${version} already applied`);

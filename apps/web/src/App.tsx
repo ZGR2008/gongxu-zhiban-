@@ -5,12 +5,17 @@ import { CodeReview, Tests, Documents } from './Practice';
 type Project = { id: string; name: string; description: string; status: string; createdAt: string; updatedAt: string };
 type Requirement = { id: string; version: number; content: unknown; status: string; createdAt: string };
 type Detail = { project: Project; requirements: Requirement[] };
-type Connection = 'checking' | 'online' | 'offline';
+type Connection = 'checking' | 'online' | 'preparing' | 'offline';
+
+function ConnectionStatus({ connection, onCheck }: { connection: Connection; onCheck: () => void }) {
+  const labels: Record<Connection, string> = { checking: '检查服务中', online: '服务可使用', preparing: '数据服务准备中', offline: '服务未连接' };
+  return <div className="connection" role="status" aria-live="polite"><span className={`connection-dot ${connection}`} />{labels[connection]}<button onClick={onCheck} disabled={connection === 'checking'} type="button" title="重新检查服务">↻</button></div>;
+}
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   let response: Response;
   try {
-    response = await fetch(`/api${path}`, { ...options, headers: { 'Content-Type': 'application/json', ...(localStorage.getItem('gongxu_token') ? { Authorization: `Bearer ${localStorage.getItem('gongxu_token')}` } : {}), ...options?.headers } });
+    response = await fetch(`/api${path}`, { ...options, headers: { ...(options?.body != null ? { 'Content-Type': 'application/json' } : {}), ...(localStorage.getItem('gongxu_token') ? { Authorization: `Bearer ${localStorage.getItem('gongxu_token')}` } : {}), ...options?.headers } });
   } catch {
     throw new Error('无法连接服务，请检查后端是否启动。');
   }
@@ -18,7 +23,7 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
   if (!response.ok) {
     if (response.status === 401 && localStorage.getItem('gongxu_token')) { localStorage.removeItem('gongxu_token'); window.dispatchEvent(new Event('gongxu:expired')); }
     const result = data as { message?: string; error?: string };
-    const codes: Record<string, string> = { database_not_configured: '数据库尚未配置，请先完成服务端数据库设置。', invalid_input: '输入不符合要求，请检查内容长度和格式。', invalid_credentials: '邮箱或密码不正确。', unauthorized: '登录已失效，请重新登录。', email_unavailable: '该邮箱已被使用。', too_many_attempts: '尝试次数过多，请稍后再试。', not_found: '项目不存在或无法访问。', not_found_or_confirmed: '该版本不存在或已经确认，请刷新后重试。', ai_not_configured: '服务端尚未配置 AI 模型。', ai_timeout: '模型请求超时，请稍后重试。', ai_provider_error: '模型服务暂不可用，请检查服务端配置。', ai_auth_error: '模型服务鉴权失败，请检查本地服务端配置中的 API 密钥及访问权限。', ai_insufficient_balance: '模型服务余额不足，请检查服务账号余额。', ai_rate_limited: '模型请求过于频繁或超过服务额度，请稍后重试并检查服务额度。', pdf_no_text: 'PDF 中没有可提取的文本；扫描件暂不支持 OCR。', pdf_parser_unavailable: 'PDF 解析器不可用，请检查服务端配置。', invalid_pdf: 'PDF 文件无效或无法解析。', pdf_too_large: 'PDF 文件不能超过 3 MB。', pdf_too_many_pages: 'PDF 页数超过限制。', embedding_not_configured: '服务端尚未配置向量模型。', embedding_provider_error: '向量模型服务不可用，请检查服务端配置。', confirmed_requirement_required: '请先确认需求版本。', plan_validation_failed: '规划未通过校验，请查看运行记录。', requirement_version_outdated: '需求版本已更新，请重新规划。', run_not_awaiting_review: '该计划已处理，请刷新记录。', agent_rate_limited: '运行次数过多，请稍后再试。' };
+    const codes: Record<string, string> = { database_not_configured: '数据库尚未配置，请先完成服务端数据库设置。', database_unavailable: '数据服务暂不可用，请稍后重试。', invalid_request: '请求内容不符合要求，请刷新页面后重试。', invalid_input: '输入不符合要求，请检查内容长度和格式。', invalid_credentials: '邮箱或密码不正确。', unauthorized: '登录已失效，请重新登录。', email_unavailable: '该邮箱已被使用。', too_many_attempts: '尝试次数过多，请稍后再试。', not_found: '项目不存在或无法访问。', not_found_or_confirmed: '该版本不存在或已经确认，请刷新后重试。', ai_not_configured: '服务端尚未配置 AI 模型。', ai_timeout: '模型请求超时，请稍后重试。', ai_output_truncated: '模型输出达到长度限制，尚未保存为完整结果。请缩小需求范围后重试。', ai_provider_error: '模型服务暂不可用，请检查服务端配置。', ai_auth_error: '模型服务鉴权失败，请检查本地服务端配置中的 API 密钥及访问权限。', ai_insufficient_balance: '模型服务余额不足，请检查服务账号余额。', ai_rate_limited: '模型请求过于频繁或超过服务额度，请稍后重试并检查服务额度。', pdf_no_text: 'PDF 中没有可提取的文本；扫描件暂不支持 OCR。', pdf_parser_unavailable: 'PDF 解析器不可用，请检查服务端配置。', invalid_pdf: 'PDF 文件无效或无法解析。', pdf_too_large: 'PDF 文件不能超过 3 MB。', pdf_too_many_pages: 'PDF 页数超过限制。', embedding_not_configured: '服务端尚未配置向量模型。', embedding_provider_error: '向量模型服务不可用，请检查服务端配置。', confirmed_requirement_required: '请先确认需求版本。', plan_validation_failed: '规划未通过校验，请查看运行记录。', requirement_version_outdated: '需求版本已更新，请重新规划。', run_not_awaiting_review: '该计划已处理，请刷新记录。', agent_rate_limited: '运行次数过多，请稍后再试。' };
     throw new Error((result.error && codes[result.error]) || result.message || result.error || `请求失败（${response.status}）`);
   }
   return data as T;
@@ -43,7 +48,7 @@ function textContent(content: unknown) {
 }
 function message(error: unknown) { return error instanceof Error ? error.message : '发生未知错误，请稍后重试。'; }
 
-function Auth({ onAuthenticated }: { onAuthenticated: (token: string) => void }) {
+function Auth({ onAuthenticated, connection, onCheck }: { onAuthenticated: (token: string) => void; connection: Connection; onCheck: () => void }) {
   const [mode, setMode] = useState<'login' | 'register'>('login');
   const [email, setEmail] = useState(''); const [password, setPassword] = useState(''); const [name, setName] = useState('');
   const [busy, setBusy] = useState(false); const [error, setError] = useState('');
@@ -52,7 +57,7 @@ function Auth({ onAuthenticated }: { onAuthenticated: (token: string) => void })
     try { const result = await request<{ token: string }>(`/auth/${mode}`, { method: 'POST', body: JSON.stringify({ email: email.trim(), password, ...(mode === 'register' ? { name: name.trim() } : {}) }) }); localStorage.setItem('gongxu_token', result.token); onAuthenticated(result.token); }
     catch (err) { setError(message(err)); } finally { setBusy(false); }
   }
-  return <div className="auth-page"><div className="auth-intro"><a className="brand" href="/"><span className="brand-mark">工</span><span><strong>工序智伴</strong><small>GONGXU AI</small></span></a><div><div className="auth-kicker">SOFTWARE ENGINEERING · AI</div><h1>让每个想法，<br/>走完真正的开发流程。</h1><p>从需求到交付，在真实项目中练习软件工程。</p></div><small>AI 软件工程实训平台 · 工序智伴</small></div><div className="auth-main"><div className="auth-form"><div className="eyebrow">WELCOME TO GONGXU</div><h2>{mode === 'login' ? '欢迎回来' : '创建你的账号'}</h2><p>登录工作空间，继续你的项目实践。</p><div className="auth-tabs"><button type="button" className={mode === 'login' ? 'selected' : ''} onClick={() => { setMode('login'); setError(''); }}>登录</button><button type="button" className={mode === 'register' ? 'selected' : ''} onClick={() => { setMode('register'); setError(''); }}>注册</button></div>{error && <div className="alert error" role="alert">{error}</div>}<form onSubmit={submit}>{mode === 'register' && <><label htmlFor="auth-name">姓名</label><input id="auth-name" value={name} onChange={e => setName(e.target.value)} required maxLength={80} autoComplete="name" placeholder="你的名字"/></>}<label htmlFor="email">邮箱</label><input id="email" type="email" value={email} onChange={e => setEmail(e.target.value)} required autoComplete="email" placeholder="you@example.com"/><label htmlFor="password">密码</label><input id="password" type="password" value={password} onChange={e => setPassword(e.target.value)} required minLength={10} maxLength={128} autoComplete={mode === 'login' ? 'current-password' : 'new-password'} placeholder="至少 10 位"/><button type="submit" className="button primary auth-submit" disabled={busy}>{busy ? '处理中…' : mode === 'login' ? '登录工作空间' : '注册并进入'} <span>↗</span></button></form><p className="auth-help">项目数据与当前账号关联保存。请勿使用重要密码进行公开演示。</p></div></div></div>;
+  return <div className="auth-page"><div className="auth-intro"><a className="brand" href="/"><span className="brand-mark">工</span><span><strong>工序智伴</strong><small>GONGXU AI</small></span></a><div><div className="auth-kicker">SOFTWARE ENGINEERING · AI</div><h1>让每个想法，<br/>走完真正的开发流程。</h1><p>从需求到交付，在真实项目中练习软件工程。</p></div><small>AI 软件工程实训平台 · 工序智伴</small></div><div className="auth-main"><div className="auth-form"><div className="eyebrow">WELCOME TO GONGXU</div><h2>{mode === 'login' ? '欢迎回来' : '创建你的账号'}</h2><p>登录工作空间，继续你的项目实践。</p><ConnectionStatus connection={connection} onCheck={onCheck} />{connection === 'preparing' && <p role="status">数据服务暂未就绪，请稍后重新检查，再登录或注册。</p>}<div className="auth-tabs"><button type="button" className={mode === 'login' ? 'selected' : ''} onClick={() => { setMode('login'); setError(''); }}>登录</button><button type="button" className={mode === 'register' ? 'selected' : ''} onClick={() => { setMode('register'); setError(''); }}>注册</button></div>{error && <div className="alert error" role="alert">{error}</div>}<form onSubmit={submit}>{mode === 'register' && <><label htmlFor="auth-name">姓名</label><input id="auth-name" value={name} onChange={e => setName(e.target.value)} required maxLength={80} autoComplete="name" placeholder="你的名字"/></>}<label htmlFor="email">邮箱</label><input id="email" type="email" value={email} onChange={e => setEmail(e.target.value)} required autoComplete="email" placeholder="you@example.com"/><label htmlFor="password">密码</label><input id="password" type="password" value={password} onChange={e => setPassword(e.target.value)} required minLength={10} maxLength={128} autoComplete={mode === 'login' ? 'current-password' : 'new-password'} placeholder="至少 10 位"/><button type="submit" className="button primary auth-submit" disabled={busy || connection !== 'online'}>{busy ? '处理中…' : mode === 'login' ? '登录工作空间' : '注册并进入'} <span>↗</span></button></form><p className="auth-help">项目数据与当前账号关联保存。请勿使用重要密码进行公开演示。</p></div></div></div>;
 }
 
 export default function App() {
@@ -97,8 +102,14 @@ export default function App() {
   }, []);
   const checkHealth = useCallback(async () => {
     setConnection('checking');
-    try { await request('/health', { signal: AbortSignal.timeout(5000) }); setConnection('online'); }
-    catch { setConnection('offline'); }
+    try {
+      const health = await request<{ status: string; service: string }>('/health', { signal: AbortSignal.timeout(5000) });
+      if (health.status !== 'ok' || health.service !== 'gongxu-api') throw new Error('Invalid health response');
+    } catch { setConnection('offline'); return; }
+    try {
+      const ready = await request<{ status: string }>('/ready', { signal: AbortSignal.timeout(5000) });
+      setConnection(ready.status === 'ready' ? 'online' : 'preparing');
+    } catch { setConnection('preparing'); }
   }, []);
   useEffect(() => { void checkHealth(); }, [checkHealth]);
   const loadProjects = useCallback(async () => {
@@ -158,7 +169,7 @@ export default function App() {
   async function logout() { try { await request('/auth/logout', { method: 'POST' }); } catch { /* Local logout remains available if the service is offline. */ } finally { localStorage.removeItem('gongxu_token'); setToken(''); } }
   const link = (event: React.MouseEvent<HTMLAnchorElement>, to: string) => { if (!event.metaKey && !event.ctrlKey && !event.shiftKey && event.button === 0) { event.preventDefault(); navigate(to); } };
 
-  if (!token) return <Auth onAuthenticated={setToken} />;
+  if (!token) return <Auth onAuthenticated={setToken} connection={connection} onCheck={() => void checkHealth()} />;
   return <div className="app-shell">
     <aside className="sidebar">
       <a className="brand" href="/dashboard" onClick={e => link(e, '/dashboard')}><span className="brand-mark">工</span><span><strong>工序智伴</strong><small>GONGXU AI</small></span></a>
@@ -167,7 +178,7 @@ export default function App() {
       <button type="button" className="logout-button" onClick={() => void logout()}>退出登录 <span>↗</span></button><div className="side-note"><span className="side-note-icon">✦</span><p>每一步实践，<br />都让想法更接近现实。</p><small>AI 软件工程实训平台</small></div>
     </aside>
     <main className="main-area">
-      <header className="topbar"><div><div className="eyebrow">WORKSPACE <span>/</span> {projectId ? 'PROJECT' : 'OVERVIEW'}</div><h1>{pageTitle}</h1></div><div className="connection" role="status" aria-live="polite"><span className={`connection-dot ${connection}`} />{connection === 'online' ? '服务已连接' : connection === 'checking' ? '检查服务中' : '服务未连接'}<button onClick={() => void checkHealth()} type="button" title="重新检查服务">↻</button></div></header>
+      <header className="topbar"><div><div className="eyebrow">WORKSPACE <span>/</span> {projectId ? 'PROJECT' : 'OVERVIEW'}</div><h1>{pageTitle}</h1></div><ConnectionStatus connection={connection} onCheck={() => void checkHealth()} /></header>
       <div className="content">
         {!projectId && !isKnowledge && !isGrowth && <>
           <section className="hero"><div className="hero-copy"><div className="hero-kicker"><span /> SOFTWARE ENGINEERING · AI</div><h2>让每个想法，<br /><em>走完真正的开发流程。</em></h2><p>从需求到交付，在真实项目中练习软件工程。<br className="desktop-break" />你的每一次思考，都将成为下一步的起点。</p><button type="button" className="button primary" onClick={() => setShowCreate(true)}>创建实训项目 <span>↗</span></button></div><div className="hero-visual" aria-hidden="true"><div className="orbit orbit-one" /><div className="orbit orbit-two" /><div className="orbit-center"><span>✳</span><small>IDEA TO<br />IMPACT</small></div><span className="orbit-label label-one">01 / 需求</span><span className="orbit-label label-two">02 / 规划</span><span className="orbit-label label-three">03 / 实践</span><span className="visual-index">GX—01<br />AI WORKFLOW</span></div></section>

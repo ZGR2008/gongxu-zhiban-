@@ -11,6 +11,12 @@
     "build": "pnpm -r --if-present build",
     "typecheck": "pnpm -r --if-present typecheck",
     "test": "pnpm check:env && pnpm -r --if-present test",
-    "check:env": "node scripts/check-env-templates.mjs"
+    "check:env": "node scripts/check-env-templates.mjs",
+    "smoke": "node scripts/live-smoke.mjs",
+    "smoke:browser": "node scripts/browser-smoke.mjs",
+    "start:local": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/start-local.ps1"
+  },
+  "devDependencies": {
+    "playwright": "1.64.1"
   }
 }

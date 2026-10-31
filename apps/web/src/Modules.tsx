@@ -45,12 +45,30 @@ const statuses: Record<string,string> = {running:'运行中',succeeded:'成功',
 const stages: Record<string,string> = {knowledge_search:'知识检索',plan_1:'计划生成（第 1 次）',plan_2:'计划生成（第 2 次）',validate_1:'计划校验（第 1 次）',validate_2:'计划校验（第 2 次）',validate_plan:'计划校验'};
 export function Agent({ request, projectId, requirements }: {request:Api;projectId:string;requirements:Requirement[]}) {
   const [runs,setRuns] = useState<Run[]>([]); const [selected,setSelected] = useState<RunDetail | null>(null); const [tasks,setTasks] = useState<Task[]>([]);
+  const [planning,setPlanning] = useState(false);
   const [loading,setLoading] = useState(true); const [busy,setBusy] = useState(false); const [error,setError] = useState(''); const [notice,setNotice] = useState('');
   const base = `/projects/${encodeURIComponent(projectId)}`; const latestConfirmed = requirements.find(r => r.status === 'confirmed');
   const refresh = useCallback(async () => { setLoading(true); try { const [history,taskData] = await Promise.all([request<{runs:Run[]}>(`${base}/agent/runs`),request<{tasks:Task[]}>(`${base}/tasks`)]); setRuns(history.runs); setTasks(taskData.tasks); if (history.runs[0]) setSelected(await request<RunDetail>(`${base}/agent/runs/${encodeURIComponent(history.runs[0].id)}`)); else setSelected(null); } catch (e) { setError(errorMessage(e)); } finally { setLoading(false); } }, [base,request]);
   useEffect(() => { void refresh(); }, [refresh]);
+  useEffect(() => {
+    if (!planning && selected?.run.status !== 'running') return;
+    let active = true;
+    let timer: ReturnType<typeof setTimeout>;
+    const controller = new AbortController();
+    async function poll() {
+      try {
+        const history = await request<{runs:Run[]}>(`${base}/agent/runs`, { signal: controller.signal });
+        const id = planning ? history.runs[0]?.id : selected?.run.id;
+        const detail = id ? await request<RunDetail>(`${base}/agent/runs/${encodeURIComponent(id)}`, { signal: controller.signal }) : null;
+        if (active) { setRuns(history.runs); if (detail) setSelected(detail); }
+      } catch (error) { if (active) setError(errorMessage(error)); }
+      finally { if (active) timer = setTimeout(() => void poll(), 1500); }
+    }
+    void poll();
+    return () => { active = false; clearTimeout(timer); controller.abort(); };
+  }, [planning, selected?.run.id, selected?.run.status, base, request]);
   async function selectRun(id:string) { setError(''); try { setSelected(await request<RunDetail>(`${base}/agent/runs/${encodeURIComponent(id)}`)); } catch (e) { setError(errorMessage(e)); } }
-  async function start() { if (!latestConfirmed) return; setBusy(true); setError(''); setNotice(''); try { const result = await request<RunDetail>(`${base}/agent/runs`, {method:'POST',body:JSON.stringify({requirementId:latestConfirmed.id})}); await refresh(); setSelected(result); setNotice('规划已生成，请审阅任务及实际工具记录。'); } catch (e) { await refresh(); setError(errorMessage(e)); } finally { setBusy(false); } }
+  async function start() { if (!latestConfirmed) return; setBusy(true); setPlanning(true); setError(''); setNotice(''); try { const result = await request<RunDetail>(`${base}/agent/runs`, {method:'POST',body:JSON.stringify({requirementId:latestConfirmed.id})}); await refresh(); setSelected(result); setNotice('规划已生成，请审阅任务及实际工具记录。'); } catch (e) { await refresh(); setError(errorMessage(e)); } finally { setBusy(false); setPlanning(false); } }
   async function updateTask(id:string,status:string) { setBusy(true); setError(''); try { await request(`${base}/tasks/${encodeURIComponent(id)}`, {method:'PATCH',body:JSON.stringify({status})}); setTasks(prev=>prev.map(task=>task.id===id?{...task,status}:task)); } catch(e) { setError(errorMessage(e)); } finally { setBusy(false); } }
   async function confirm() { if (!selected) return; setBusy(true); setError(''); setNotice(''); try { await request(`${base}/agent/runs/${encodeURIComponent(selected.run.id)}/confirm`,{method:'POST'}); await refresh(); setNotice('计划已确认，任务已保存。'); } catch(e) { setError(errorMessage(e)); } finally { setBusy(false); } }
   return <section className="module-page"><div className="section-heading compact"><div><div className="eyebrow">AGENT / PLANNING</div><h2>让计划有依据，也能被检查</h2><p>使用已确认的需求，检索知识并生成任务计划。所有步骤和工具调用来自实际运行。</p></div><button type="button" className="button primary" onClick={() => void start()} disabled={busy || !latestConfirmed}>{busy ? '执行中…' : '开始规划'} <span>↗</span></button></div>

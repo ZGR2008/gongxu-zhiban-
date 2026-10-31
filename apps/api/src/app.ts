@@ -13,6 +13,7 @@ import { registerPracticeRoutes } from './practice/routes.js';
 import { registerDocumentRoutes } from './documents/routes.js';
 import { PgDocumentStore } from './documents/store.js';
 import { registerGrowthRoutes } from './growth/routes.js';
+import { databaseReadiness, migrationFiles } from './database-readiness.js';
 
 export interface DatabaseCheck {
   query: (sql: string) => Promise<unknown>;
@@ -20,6 +21,7 @@ export interface DatabaseCheck {
 }
 
 export async function createApp(options: { database?: DatabaseCheck; pool?: Pool; projectStore?: ProjectStore; aiConfig?: AiConfig; aiGenerationStore?: AiGenerationStore; embeddingConfig?: EmbeddingConfig; corsOrigin: string; logger?: boolean }) {
+  const versions = (await migrationFiles()).map(file => file.slice(0, -4));
   const app = Fastify({ logger: options.logger ?? false });
   app.setErrorHandler((error, _request, reply) => {
     const candidate = typeof error === 'object' && error !== null && 'statusCode' in error ? error.statusCode : undefined;
@@ -41,8 +43,8 @@ export async function createApp(options: { database?: DatabaseCheck; pool?: Pool
       return reply.code(503).send({ status: 'not_ready', database: 'not_configured' });
     }
     try {
-      await options.database.query('SELECT 1');
-      return { status: 'ready', database: 'connected' };
+      const result = await databaseReadiness(options.database, versions);
+      return reply.code(result.status === 'ready' ? 200 : 503).send(result);
     } catch {
       app.log.error('Database readiness check failed');
       return reply.code(503).send({ status: 'not_ready', database: 'unavailable' });
