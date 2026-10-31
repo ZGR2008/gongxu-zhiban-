@@ -2,7 +2,35 @@
 
 验证日期：2026 年 10 月 31 日，北京时间。范围：本地核心版本的服务连接、真实业务接口和浏览器交互。没有将模拟模型或数据库替身用于本记录中的真实联调。
 
-## Workspace 视觉升级验收补充
+## 独立星球与轨道预览验收（最新）
+
+用户要求先验证星球质感，再进行全局 UI 重构。本轮只新增 `apps/web/public/previews/planet-orbit.html` 并更新交接记录，既有应用源代码、服务接口、配置与测试全部保留。独立预览地址为 `http://127.0.0.1:5173/previews/planet-orbit.html`，文件可离线双击打开；生产构建中的副本已验证与源文件 SHA-256 相同。
+
+| 检查 | 实际结果 |
+| --- | --- |
+| 原有自动化测试 | 52/52，通过；API 48、Embedding 4，0 失败、0 跳过 |
+| 类型检查与生产构建 | 三个包全部通过 |
+| 真实业务接口 | 14/14，通过；实际 DeepSeek、PostgreSQL 和本地 BGE |
+| 真实浏览器业务 | 6/6，通过；注册、项目及需求、知识索引、Agent 审核、各路由及移动布局、注销 |
+| Edge 独立预览 | 7/7，通过 |
+| Windows WebKit 独立预览 | 7/7，通过；不等于 Safari 真机验收 |
+
+独立预览检查覆盖：HTTP 正常打开；暂停后动画时间冻结、继续后恢复；沉浸模式与 Escape 退出；320/390/768 像素无横向溢出且按钮可用；减少动画设置首次加载及动态变化；离线文件运行且无外部资源请求；无浏览器运行时异常。桌面截图尺寸为 1440×1000。
+
+视觉为原创 CSS/SVG 实现。通过 GitHub 插件核对了 [Triple-Y 的深色视觉预览](https://github.com/sssweetis/chuanzhi-cup-ai-web_Triple-Y/blob/main/visual-style-preview.html) 中的 theme-b，以及 [Little World Explorer 的内嵌三维场景](https://github.com/NingQi-GUN/Little_World_Explorer/blob/main/index.html) 对页面隐藏、减少动态效果的处理。后者文件通过 blob `75331d1bfa43710cab8b84078803fc44982e8683` 读取；参考其场景融合与动效生命周期，没有引入其代码、三维依赖或业务功能。
+
+WebKit 初版采样中位间隔约 61 ms。缩小持续重绘区域、减少重复阴影、缓存静态噪声及光晕之后，最终四秒采样 124 个帧回调，中位 32 ms、95 分位 35 ms、最大 48 ms，9 次超过 34 ms。Edge 同期采样中位 3.3 ms、95 分位 3.4 ms、最大 6.6 ms，未记录到超过 50 ms 的长任务。**这些是无头浏览器的回调采样，不是显示器实际帧率；目前没有证明所有主流浏览器零掉帧或 Safari 真机稳定 60 FPS。** 预览保留暂停按钮、减少动态效果支持和后台暂停。
+
+本轮证据（`.runtime/` 被 Git 忽略，保留在本机）：
+
+- 自动化测试、类型检查、构建：`planet-preview/tests.log`、`typecheck.log`、`build.log`。
+- 真实接口：`smoke-04703afd-eb3a-4ef0-bbd0-504979006150.json`。
+- 真实浏览器业务：`browser-e338adda-b6c9-4785-bdde-aea453b966f9/report.json`。
+- 独立预览报告及截图：`planet-preview/edge/`、`planet-preview/webkit/`。
+
+以下保留前一版横幅和更早阶段的验证记录，不应将其视觉验收结论视为最新独立预览的结论。
+
+## Workspace 第一版视觉升级验收补充（历史）
 
 本轮按用户要求只改造工作台横幅：深紫背景、原创紫色球体、三圈倾斜轨道与反向流光、前后遮挡、星云及星光、按钮悬浮反馈、键盘焦点、暂停/继续动效。移动宽度减少为两圈，系统减少动画模式保留静态画面。
 
