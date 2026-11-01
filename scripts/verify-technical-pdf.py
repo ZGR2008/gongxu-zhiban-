@@ -20,8 +20,10 @@ with pdfplumber.open(PDF) as pdf:
   text=page.extract_text() or ''
   assert '工序智伴' in text and '\ufffd' not in text
   outside=sum(1 for char in page.chars if char['x0']<42 or char['x1']>553 or char['top']<20 or char['bottom']>820)
-  reports.append({'page':i+1,'textCharacters':len(text),'outsideSafeBounds':outside})
+  image_outside=sum(1 for item in page.images if item['x0']<42 or item['x1']>553 or item['top']<20 or item['bottom']>820)
+  reports.append({'page':i+1,'textCharacters':len(text),'outsideSafeBounds':outside,'imagesOutsideSafeBounds':image_outside})
  assert all(not row['outsideSafeBounds'] for row in reports)
+ assert all(not row['imagesOutsideSafeBounds'] for row in reports),'Image exceeds page safe area'
 pages=sorted(TMP.glob('page-*.png'));assert len(pages)==len(reports)
 for start in range(0,len(pages),4):
  sheet=Image.new('RGB',(1200,1700),'#ded9e5')

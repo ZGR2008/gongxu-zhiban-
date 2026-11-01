@@ -8,7 +8,7 @@ import ast,hashlib,json,runpy,sys,tempfile,unittest,zipfile
 SCRIPT=Path(__file__).with_name('export-review.py')
 
 class ExportTests(unittest.TestCase):
-    def export(self,root,forbidden=()):
+    def export(self,root,forbidden=(),version=None):
         read_text,read_bytes=Path.read_text,Path.read_bytes
         def guarded_text(path,*args,**kwargs):
             self.assertNotIn(path.resolve(),forbidden,'Excluded sensitive files must never be opened')
@@ -17,7 +17,8 @@ class ExportTests(unittest.TestCase):
             self.assertNotIn(path.resolve(),forbidden,'Excluded sensitive files must never be opened')
             return read_bytes(path,*args,**kwargs)
         output=StringIO()
-        with patch.object(sys,'argv',[str(SCRIPT),'--source',str(root)]),patch.object(Path,'read_text',guarded_text),patch.object(Path,'read_bytes',guarded_bytes),redirect_stdout(output):
+        argv=[str(SCRIPT),'--source',str(root)]+(['--version',version] if version else [])
+        with patch.object(sys,'argv',argv),patch.object(Path,'read_text',guarded_text),patch.object(Path,'read_bytes',guarded_bytes),redirect_stdout(output):
             runpy.run_path(str(SCRIPT),run_name='__main__')
         return json.loads(output.getvalue())
 
@@ -84,6 +85,19 @@ class ExportTests(unittest.TestCase):
             self.assertEqual(Path(result['archive']).name,'gongxu-zhiban-review-v4.zip')
             with zipfile.ZipFile(result['archive']) as bundle:
                 self.assertTrue(all('gongxu-zhiban/'+relative in bundle.namelist() for relative in required))
+
+    def test_v5_explicit_version_preserves_current_materials_and_excludes_raw_runtime(self):
+        with tempfile.TemporaryDirectory(prefix='gongxu-export-fixture-') as base:
+            root=self.fixture(base)
+            required=['docs/CONTINUATION-V5.md','docs/LONG-REQUIREMENTS-V5.md','docs/AI-REVIEW-PACK-V5.md','docs/DEMO-SCRIPT-V5.md','docs/DEMO-OPERATIONS-V5.md','docs/FINAL-REVIEW-V5.md','docs/verification/review-v5.json','apps/api/migrations/022_long_requirement_planning.sql']
+            for relative in required:
+                target=root/relative;target.parent.mkdir(parents=True,exist_ok=True);target.write_text('{}' if relative.endswith('.json') else 'Synthetic reviewed material',encoding='utf-8')
+            private=root/'output/human-review/organizer.json';private.parent.mkdir(parents=True);private.write_text('synthetic-runtime-marker',encoding='utf-8')
+            result=self.export(root,(private.resolve(),),version='v5')
+            self.assertEqual(Path(result['archive']).name,'gongxu-zhiban-review-v5.zip')
+            with zipfile.ZipFile(result['archive']) as bundle:
+                self.assertTrue(all('gongxu-zhiban/'+relative in bundle.namelist() for relative in required))
+                self.assertFalse(any('/output/' in name for name in bundle.namelist()))
 
     def test_directory_resolving_outside_source_is_pruned_without_reading(self):
         with tempfile.TemporaryDirectory(prefix='gongxu-export-fixture-') as base:

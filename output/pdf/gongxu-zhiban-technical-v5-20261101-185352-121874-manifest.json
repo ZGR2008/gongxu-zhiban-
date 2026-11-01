@@ -1,0 +1,165 @@
+{
+  "edition": "v5",
+  "pdf": "output/pdf/gongxu-zhiban-technical-v5-20261101-185352-121874.pdf",
+  "pages": 21,
+  "chapters": [
+    "工序智伴",
+    "问题、用户与应用价值",
+    "需求分析与范围",
+    "系统架构与技术选择",
+    "数据模型与一致性",
+    "AI Agent与人工协作",
+    "长需求：可审计拆分",
+    "长需求：持久化执行",
+    "长需求：合并与采纳",
+    "需求到验证证据的闭环",
+    "RAG知识与来源",
+    "审查、测试、文档与成长",
+    "桌面交互与动效",
+    "实际界面：人工采纳后",
+    "真实模型证据与人工审核",
+    "原创长需求案例与评测准备",
+    "测试证据与复核入口",
+    "启动、迁移与交付恢复",
+    "比赛截图逐项验收",
+    "参考、许可与原创说明",
+    "总结与待完成事项"
+  ],
+  "bytes": 575049,
+  "sha256": "3a241506a5f6a4931252319a01fee51c43895052d5ce97b6df03e37b4ef27e58",
+  "visualReview": "all_rendered_pages_inspected",
+  "evidenceIndex": "docs/verification/review-v5.json",
+  "realModelCallsThisRound": 0,
+  "historicalRealModelCalls": 12,
+  "teamInfo": "pending_user",
+  "submitted": false,
+  "layoutBounds": [
+    {
+      "page": 1,
+      "textCharacters": 418,
+      "outsideSafeBounds": 0,
+      "imagesOutsideSafeBounds": 0
+    },
+    {
+      "page": 2,
+      "textCharacters": 453,
+      "outsideSafeBounds": 0,
+      "imagesOutsideSafeBounds": 0
+    },
+    {
+      "page": 3,
+      "textCharacters": 424,
+      "outsideSafeBounds": 0,
+      "imagesOutsideSafeBounds": 0
+    },
+    {
+      "page": 4,
+      "textCharacters": 511,
+      "outsideSafeBounds": 0,
+      "imagesOutsideSafeBounds": 0
+    },
+    {
+      "page": 5,
+      "textCharacters": 427,
+      "outsideSafeBounds": 0,
+      "imagesOutsideSafeBounds": 0
+    },
+    {
+      "page": 6,
+      "textCharacters": 389,
+      "outsideSafeBounds": 0,
+      "imagesOutsideSafeBounds": 0
+    },
+    {
+      "page": 7,
+      "textCharacters": 405,
+      "outsideSafeBounds": 0,
+      "imagesOutsideSafeBounds": 0
+    },
+    {
+      "page": 8,
+      "textCharacters": 388,
+      "outsideSafeBounds": 0,
+      "imagesOutsideSafeBounds": 0
+    },
+    {
+      "page": 9,
+      "textCharacters": 386,
+      "outsideSafeBounds": 0,
+      "imagesOutsideSafeBounds": 0
+    },
+    {
+      "page": 10,
+      "textCharacters": 356,
+      "outsideSafeBounds": 0,
+      "imagesOutsideSafeBounds": 0
+    },
+    {
+      "page": 11,
+      "textCharacters": 377,
+      "outsideSafeBounds": 0,
+      "imagesOutsideSafeBounds": 0
+    },
+    {
+      "page": 12,
+      "textCharacters": 368,
+      "outsideSafeBounds": 0,
+      "imagesOutsideSafeBounds": 0
+    },
+    {
+      "page": 13,
+      "textCharacters": 429,
+      "outsideSafeBounds": 0,
+      "imagesOutsideSafeBounds": 0
+    },
+    {
+      "page": 14,
+      "textCharacters": 251,
+      "outsideSafeBounds": 0,
+      "imagesOutsideSafeBounds": 0
+    },
+    {
+      "page": 15,
+      "textCharacters": 434,
+      "outsideSafeBounds": 0,
+      "imagesOutsideSafeBounds": 0
+    },
+    {
+      "page": 16,
+      "textCharacters": 449,
+      "outsideSafeBounds": 0,
+      "imagesOutsideSafeBounds": 0
+    },
+    {
+      "page": 17,
+      "textCharacters": 558,
+      "outsideSafeBounds": 0,
+      "imagesOutsideSafeBounds": 0
+    },
+    {
+      "page": 18,
+      "textCharacters": 494,
+      "outsideSafeBounds": 0,
+      "imagesOutsideSafeBounds": 0
+    },
+    {
+      "page": 19,
+      "textCharacters": 524,
+      "outsideSafeBounds": 0,
+      "imagesOutsideSafeBounds": 0
+    },
+    {
+      "page": 20,
+      "textCharacters": 551,
+      "outsideSafeBounds": 0,
+      "imagesOutsideSafeBounds": 0
+    },
+    {
+      "page": 21,
+      "textCharacters": 464,
+      "outsideSafeBounds": 0,
+      "imagesOutsideSafeBounds": 0
+    }
+  ],
+  "renderResolutionDpi": 90
+}

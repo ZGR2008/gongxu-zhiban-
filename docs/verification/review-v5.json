@@ -1,0 +1,931 @@
+{
+  "edition": "v5",
+  "generatedAt": "2026-11-01T10:52:23.612047+00:00",
+  "baselineCommit": "8eff928daaf85ec6f7090c9a69062d4773868ced",
+  "scope": "local_engineering_review_not_award_or_submission",
+  "realModels": {
+    "newCalls": 0,
+    "reason": "user_declined_new_paid_calls",
+    "v4HistoricalCalls": 12,
+    "independentHumanReviews": 0,
+    "longRequirementQuality": "not_run",
+    "v4Evidence": "docs/verification/ai-evaluation-v4.json"
+  },
+  "verification": [
+    {
+      "command": "pnpm verify",
+      "scope": "offline_types_builds_units_and_protocols",
+      "report": ".runtime/verification-v4-14407671-d240-48e4-8809-91c1a94cee80/report.json",
+      "sha256": "2ec43cea8e2d1db8f682bc9f74c55dfef5c1b4b4dcd9cc91e135f98d562c5bd7",
+      "status": "passed",
+      "startedAt": "2026-11-01T10:47:47.485Z",
+      "finishedAt": "2026-11-01T10:48:05.849Z",
+      "checks": [
+        {
+          "id": "environment-templates",
+          "command": [
+            "node",
+            "scripts/check-env-templates.mjs"
+          ],
+          "cwd": ".",
+          "status": "passed",
+          "exitCode": 0
+        },
+        {
+          "id": "api-types",
+          "command": [
+            "node",
+            "node_modules/typescript/bin/tsc",
+            "--noEmit",
+            "-p",
+            "tsconfig.json"
+          ],
+          "cwd": "apps/api",
+          "status": "passed",
+          "exitCode": 0
+        },
+        {
+          "id": "embedding-types",
+          "command": [
+            "node",
+            "node_modules/typescript/bin/tsc",
+            "--noEmit",
+            "-p",
+            "tsconfig.json"
+          ],
+          "cwd": "apps/embedding",
+          "status": "passed",
+          "exitCode": 0
+        },
+        {
+          "id": "web-types",
+          "command": [
+            "node",
+            "node_modules/typescript/bin/tsc",
+            "--noEmit",
+            "-p",
+            "tsconfig.json"
+          ],
+          "cwd": "apps/web",
+          "status": "passed",
+          "exitCode": 0
+        },
+        {
+          "id": "api-build",
+          "command": [
+            "node",
+            "node_modules/typescript/bin/tsc",
+            "-p",
+            "tsconfig.json"
+          ],
+          "cwd": "apps/api",
+          "status": "passed",
+          "exitCode": 0
+        },
+        {
+          "id": "embedding-build",
+          "command": [
+            "node",
+            "node_modules/typescript/bin/tsc",
+            "-p",
+            "tsconfig.json"
+          ],
+          "cwd": "apps/embedding",
+          "status": "passed",
+          "exitCode": 0
+        },
+        {
+          "id": "web-build",
+          "command": [
+            "node",
+            "node_modules/vite/bin/vite.js",
+            "build"
+          ],
+          "cwd": "apps/web",
+          "status": "passed",
+          "exitCode": 0
+        },
+        {
+          "id": "api-test-build",
+          "command": [
+            "node",
+            "node_modules/typescript/bin/tsc",
+            "-p",
+            "tsconfig.test.json"
+          ],
+          "cwd": "apps/api",
+          "status": "passed",
+          "exitCode": 0
+        },
+        {
+          "id": "embedding-test-build",
+          "command": [
+            "node",
+            "node_modules/typescript/bin/tsc",
+            "-p",
+            "tsconfig.test.json"
+          ],
+          "cwd": "apps/embedding",
+          "status": "passed",
+          "exitCode": 0
+        },
+        {
+          "id": "api-unit",
+          "command": [
+            "node",
+            "--test",
+            "dist/**/*.test.js"
+          ],
+          "cwd": "apps/api",
+          "status": "passed",
+          "exitCode": 0
+        },
+        {
+          "id": "embedding-unit",
+          "command": [
+            "node",
+            "--test",
+            "dist/**/*.test.js"
+          ],
+          "cwd": "apps/embedding",
+          "status": "passed",
+          "exitCode": 0
+        },
+        {
+          "id": "root-script-unit",
+          "command": [
+            "node",
+            "--test",
+            "scripts/evaluation-report.test.mjs",
+            "scripts/evidence-state.test.mjs",
+            "scripts/historical-source.test.mjs",
+            "scripts/human-review-pack.test.mjs",
+            "scripts/live-evaluation.test.mjs",
+            "scripts/live-evidence.test.mjs",
+            "scripts/long-business-cases.test.mjs",
+            "scripts/request-transport.test.mjs",
+            "scripts/retrieval-evaluation.test.mjs",
+            "scripts/review-package.test.mjs",
+            "scripts/source-provenance.test.mjs",
+            "scripts/trace-next-action.test.mjs",
+            "scripts/ui-models.test.mjs",
+            "scripts/verify.test.mjs",
+            "scripts/workbench-models.test.mjs"
+          ],
+          "cwd": ".",
+          "status": "passed",
+          "exitCode": 0
+        },
+        {
+          "id": "python-package-regression",
+          "command": [
+            "python",
+            "scripts/export-review.test.py"
+          ],
+          "cwd": ".",
+          "status": "passed",
+          "exitCode": 0
+        },
+        {
+          "id": "offline-evaluation",
+          "command": [
+            "node",
+            "scripts/evaluate-offline.mjs"
+          ],
+          "cwd": ".",
+          "status": "passed",
+          "exitCode": 0
+        },
+        {
+          "id": "evaluation-preparation",
+          "command": [
+            "node",
+            "scripts/evaluate-prepare.mjs"
+          ],
+          "cwd": ".",
+          "status": "passed",
+          "exitCode": 0
+        }
+      ]
+    },
+    {
+      "command": "pnpm verify --suite=browser",
+      "scope": "controlled_API_actual_Edge_and_production_assets",
+      "report": ".runtime/verification-v4-b1533cec-5a42-433a-a9af-90c45518e9f2/report.json",
+      "sha256": "9517d34a63cc2ef0832ab6bc248bb5d965e8b58e1a00f3a46a48a084b89cab1b",
+      "status": "passed",
+      "startedAt": "2026-11-01T10:38:04.041Z",
+      "finishedAt": "2026-11-01T10:41:14.978Z",
+      "checks": [
+        {
+          "id": "controlled-browser",
+          "command": [
+            "node",
+            "scripts/reliability-browser.mjs"
+          ],
+          "cwd": ".",
+          "status": "passed",
+          "exitCode": 0
+        },
+        {
+          "id": "production-build",
+          "command": [
+            "node",
+            "node_modules/vite/bin/vite.js",
+            "build"
+          ],
+          "cwd": "apps/web",
+          "status": "passed",
+          "exitCode": 0
+        },
+        {
+          "id": "production-recovery",
+          "command": [
+            "node",
+            "scripts/verify-production-recovery.mjs"
+          ],
+          "cwd": ".",
+          "status": "passed",
+          "exitCode": 0
+        },
+        {
+          "id": "entry-performance",
+          "command": [
+            "node",
+            "scripts/measure-web-entry.mjs",
+            "--assert-deferred"
+          ],
+          "cwd": ".",
+          "status": "passed",
+          "exitCode": 0
+        }
+      ]
+    },
+    {
+      "command": "pnpm verify --suite=accessibility",
+      "scope": "controlled_Edge_axe_automatic_only",
+      "report": ".runtime/verification-v4-006c3eca-a585-4681-bf57-1b41eb4ad434/report.json",
+      "sha256": "5308569edd6717c68caa663654ce62763472e73abc6bcb917482cce2439cac0c",
+      "status": "passed",
+      "startedAt": "2026-11-01T10:42:24.571Z",
+      "finishedAt": "2026-11-01T10:42:55.057Z",
+      "checks": [
+        {
+          "id": "desktop-accessibility",
+          "command": [
+            "node",
+            "scripts/reliability-browser.mjs",
+            "--accessibility"
+          ],
+          "cwd": ".",
+          "status": "passed",
+          "exitCode": 0
+        }
+      ]
+    },
+    {
+      "command": "pnpm verify --suite=database",
+      "scope": "real_local_database_embedding_and_model_fixtures",
+      "report": ".runtime/verification-v4-fbe7ccb6-1d26-4d94-be46-f6fecc696f48/report.json",
+      "sha256": "98619d3fbe22159b7a96ac762d1533d05276198dc48d4a7bde23ed584e973bdc",
+      "status": "passed",
+      "startedAt": "2026-11-01T10:38:04.043Z",
+      "finishedAt": "2026-11-01T10:38:46.737Z",
+      "checks": [
+        {
+          "id": "api-build",
+          "command": [
+            "node",
+            "node_modules/typescript/bin/tsc",
+            "-p",
+            "tsconfig.json"
+          ],
+          "cwd": "apps/api",
+          "status": "passed",
+          "exitCode": 0
+        },
+        {
+          "id": "execution-concurrency",
+          "command": [
+            "node",
+            "../../scripts/execution-concurrency-local.mjs"
+          ],
+          "cwd": "apps/api",
+          "status": "passed",
+          "exitCode": 0
+        },
+        {
+          "id": "segment-review",
+          "command": [
+            "node",
+            "../../scripts/segment-review-local.mjs"
+          ],
+          "cwd": "apps/api",
+          "status": "passed",
+          "exitCode": 0
+        },
+        {
+          "id": "long-plan",
+          "command": [
+            "node",
+            "../../scripts/long-plan-local.mjs"
+          ],
+          "cwd": "apps/api",
+          "status": "passed",
+          "exitCode": 0
+        },
+        {
+          "id": "reliability",
+          "command": [
+            "node",
+            "../../scripts/reliability-local.mjs"
+          ],
+          "cwd": "apps/api",
+          "status": "passed",
+          "exitCode": 0
+        },
+        {
+          "id": "requirement-preconditions",
+          "command": [
+            "node",
+            "../../scripts/requirement-preconditions-local.mjs"
+          ],
+          "cwd": "apps/api",
+          "status": "passed",
+          "exitCode": 0
+        },
+        {
+          "id": "trace-concurrency",
+          "command": [
+            "node",
+            "../../scripts/trace-concurrency-local.mjs"
+          ],
+          "cwd": "apps/api",
+          "status": "passed",
+          "exitCode": 0
+        },
+        {
+          "id": "test-list",
+          "command": [
+            "node",
+            "../../scripts/test-list-local.mjs"
+          ],
+          "cwd": "apps/api",
+          "status": "passed",
+          "exitCode": 0
+        },
+        {
+          "id": "fresh-database",
+          "command": [
+            "node",
+            "../../scripts/fresh-database-local.mjs"
+          ],
+          "cwd": "apps/api",
+          "status": "passed",
+          "exitCode": 0
+        },
+        {
+          "id": "review-context",
+          "command": [
+            "node",
+            "../../scripts/review-context-local.mjs"
+          ],
+          "cwd": "apps/api",
+          "status": "passed",
+          "exitCode": 0
+        },
+        {
+          "id": "document-context",
+          "command": [
+            "node",
+            "../../scripts/document-context-local.mjs"
+          ],
+          "cwd": "apps/api",
+          "status": "passed",
+          "exitCode": 0
+        },
+        {
+          "id": "knowledge-answer",
+          "command": [
+            "node",
+            "../../scripts/knowledge-answer-local.mjs"
+          ],
+          "cwd": "apps/api",
+          "status": "passed",
+          "exitCode": 0
+        },
+        {
+          "id": "document-list",
+          "command": [
+            "node",
+            "../../scripts/document-list-local.mjs"
+          ],
+          "cwd": "apps/api",
+          "status": "passed",
+          "exitCode": 0
+        },
+        {
+          "id": "knowledge-list",
+          "command": [
+            "node",
+            "../../scripts/knowledge-list-local.mjs"
+          ],
+          "cwd": "apps/api",
+          "status": "passed",
+          "exitCode": 0
+        },
+        {
+          "id": "index-compatibility",
+          "command": [
+            "node",
+            "../../scripts/index-compatibility-local.mjs"
+          ],
+          "cwd": "apps/api",
+          "status": "passed",
+          "exitCode": 0
+        },
+        {
+          "id": "embedding-mixed",
+          "command": [
+            "node",
+            "../../scripts/embedding-mixed-local.mjs"
+          ],
+          "cwd": "apps/api",
+          "status": "passed",
+          "exitCode": 0
+        },
+        {
+          "id": "growth-scope",
+          "command": [
+            "node",
+            "../../scripts/growth-scope-local.mjs"
+          ],
+          "cwd": "apps/api",
+          "status": "passed",
+          "exitCode": 0
+        },
+        {
+          "id": "agent-recovery",
+          "command": [
+            "node",
+            "../../scripts/agent-recovery-local.mjs"
+          ],
+          "cwd": "apps/api",
+          "status": "passed",
+          "exitCode": 0
+        }
+      ]
+    },
+    {
+      "command": "node scripts/long-plan-local.mjs --browser",
+      "scope": "isolated_postgresql_actual_HTTP_Edge_model_fixture",
+      "report": ".runtime/long-plan-local-7e930144-91d0-4f19-9c15-ecc05cf8685f/report.json",
+      "sha256": "ed68b8842574a2d22978804ce3e83fe8826615836415ac5ebd9f35a9f549685c",
+      "status": "passed",
+      "startedAt": "2026-11-01T10:46:24.507Z",
+      "finishedAt": "2026-11-01T10:46:28.418Z",
+      "checks": [
+        {
+          "name": "scheme_full_source_hash_review_conflict_and_history",
+          "status": "passed"
+        },
+        {
+          "name": "double_click_creates_one_job_and_actual_fragment_outputs_not_only_ids",
+          "status": "passed"
+        },
+        {
+          "name": "cross_account_and_unreviewed_adoption_are_rejected",
+          "status": "passed"
+        },
+        {
+          "name": "merge_omission_blocks_review_and_revision_keeps_prior_draft",
+          "status": "passed"
+        },
+        {
+          "name": "human_review_and_concurrent_adoption_create_tasks_once_without_verification",
+          "status": "passed"
+        },
+        {
+          "name": "scheme_edit_invalidates_review_and_old_job_cannot_be_adopted",
+          "status": "passed"
+        },
+        {
+          "name": "requirement_replacement_blocks_old_job_adoption",
+          "status": "passed"
+        },
+        {
+          "name": "timeout_retains_uncertain_attempt_and_never_auto_retries",
+          "status": "passed"
+        },
+        {
+          "name": "retry_requires_charge_ack_and_bounded_backoff_then_preserves_completed_parts",
+          "status": "passed"
+        },
+        {
+          "name": "invalid_output_raw_preserved_and_human_correction_has_distinct_provenance",
+          "status": "passed"
+        },
+        {
+          "name": "cancel_inflight_keeps_unknown_charge_and_is_not_resubmitted",
+          "status": "passed"
+        },
+        {
+          "name": "service_restart_recovers_durable_dispatch_without_automatic_charge",
+          "status": "passed"
+        },
+        {
+          "name": "known_429_is_rejected_not_success_and_attempt_limit_blocks_fourth_charge",
+          "status": "passed"
+        },
+        {
+          "name": "multi_chapter_long_business_source_preserves_all_ranges_and_tail_through_durable_outputs",
+          "status": "passed"
+        },
+        {
+          "name": "bounded_queue_and_separate_workers_do_not_dispatch_duplicate_requests",
+          "status": "passed"
+        },
+        {
+          "name": "actual_desktop_browser_to_isolated_database_generates_reviews_adopts_and_shows_unverified_trace",
+          "status": "passed"
+        }
+      ]
+    }
+  ],
+  "separateCounts": {
+    "offlineSteps": 15,
+    "apiUnit": 134,
+    "embeddingUnit": 4,
+    "rootScriptUnit": 81,
+    "pythonPackageRegression": 8,
+    "browserSteps": 4,
+    "controlledEdgeScenarios": 100,
+    "databaseSteps": 18,
+    "longPlanRealDatabaseBrowserChecks": 16,
+    "axeScenes": 25,
+    "axeViolationRules": 0,
+    "axeIncompleteRuleOccurrences": 28
+  },
+  "freshInstall": {
+    "sourceCopy": "E:/ai/.review-export/v5-20261101-184325-743394/gongxu-zhiban",
+    "command": "pnpm install --frozen-lockfile --store-dir ../fresh-store --ignore-scripts",
+    "downloadedPackages": 355,
+    "reusedPackages": 0,
+    "exitCode": 0,
+    "seconds": 16.3,
+    "offlineReport": "E:/ai/.review-export/v5-20261101-184325-743394/gongxu-zhiban/.runtime/verification-v4-f050537b-7d7d-4771-b964-e314a53a0ad6/report.json",
+    "freshDatabaseReport": "E:/ai/.review-export/v5-20261101-184325-743394/gongxu-zhiban/.runtime/fresh-database-local-21e9bc3d-c5db-414c-b95a-6f3f36e39f5a/report.json",
+    "offlineStepsPassed": 15,
+    "databaseChecksPassed": 4,
+    "migrationCount": 22,
+    "limitations": [
+      "same_host_runtimes",
+      "dependency_install_scripts_skipped",
+      "weights_not_installed_in_copy",
+      "not_complete_new_machine_setup"
+    ]
+  },
+  "humanReviewPack": {
+    "path": "output/human-review-v5-7bfe323d-482f-4b14-9ec7-7b4e0409de8f",
+    "calledRecords": 12,
+    "policyBlocked": 3,
+    "independentJudgments": 0,
+    "packetSha256": "f7f18885db6dac2f78b629623c77d43205731c4f24ec466274cf0cc4e029b894",
+    "archive": {
+      "archive": "E:\\ai\\gongxu-zhiban\\output\\gongxu-zhiban-ai-review-v5-20261101-190101.zip",
+      "bytes": 29966,
+      "sha256": "6b18c86d4f072d07e1c8199413212f2277b40de7aafaa5b450e935a1ac6db072",
+      "entries": 7,
+      "originalFilesUnchanged": true,
+      "sensitivePatternMatches": 0,
+      "scope": "approved_saved_synthetic_model_evidence_only",
+      "newModelCalls": 0
+    },
+    "browser": {
+      "scope": "offline_saved_synthetic_responses_browser",
+      "samples": 15,
+      "expected": 15,
+      "pageErrors": 0,
+      "externalRequests": 0
+    }
+  },
+  "longCase": {
+    "version": "campus-practice-v5.1",
+    "charactersUTF16": 49781,
+    "segments": 13,
+    "paragraphs": 96,
+    "source": "evaluation/long-business-cases.mjs",
+    "wholeSourceThroughWorker": "verified_protocol_fixture_not_real_model"
+  },
+  "performance": {
+    "report": ".runtime/web-entry-current-1ff8d798-37f7-4d2b-89f8-823d20e2f1bc/report.json",
+    "scope": "loopback_assets_controlled_API_4x_CPU_not_real_user_speed",
+    "scriptDecodedBytes": 300182,
+    "readyMilliseconds": [
+      685,
+      696,
+      713
+    ]
+  },
+  "failedRunsRetained": [
+    {
+      "report": ".runtime/reliability-ui-263a5727-b24b-42fb-b45d-559f7ff79bc0/report.json",
+      "cause": "invalid_merge_draft_field_crashed_Render",
+      "fix": "type_guard_readable_candidate_render",
+      "greenReport": ".runtime/reliability-ui-8cd4b2d1-754f-4acf-8f62-270e379b9691/report.json"
+    },
+    {
+      "report": ".runtime/long-plan-local-476c3eb0-a9ce-4ae4-8eb5-de6b1f65df82/report.json",
+      "cause": "health_status_test_exact_text_included_refresh_button",
+      "fix": "assert_online_indicator_and_connection_text",
+      "greenReport": ".runtime/long-plan-local-7e930144-91d0-4f19-9c15-ecc05cf8685f/report.json"
+    }
+  ],
+  "changedFiles": [
+    "README.md",
+    "apps/api/migrations/022_long_requirement_planning.sql",
+    "apps/api/src/ai/model.ts",
+    "apps/api/src/app.ts",
+    "apps/api/src/long-plan/domain.test.ts",
+    "apps/api/src/long-plan/domain.ts",
+    "apps/api/src/long-plan/routes.ts",
+    "apps/api/src/long-plan/store.ts",
+    "apps/api/src/long-plan/worker.test.ts",
+    "apps/api/src/long-plan/worker.ts",
+    "apps/api/src/requirement-content.ts",
+    "apps/web/src/App.tsx",
+    "apps/web/src/Modules.tsx",
+    "apps/web/src/components/LongRequirementPlanning.tsx",
+    "apps/web/src/components/RequirementSegments.tsx",
+    "apps/web/src/components/long-planning.css",
+    "docs/AI-REVIEW-PACK-V5.md",
+    "docs/CONTEST-ACCEPTANCE-2026-11.md",
+    "docs/CONTINUATION-V5.md",
+    "docs/DEMO-OPERATIONS-V5.md",
+    "docs/DEMO-SCRIPT-V5.md",
+    "docs/FINAL-REVIEW-V5.md",
+    "docs/LONG-REQUIREMENTS-V5.md",
+    "docs/SOURCE-PACKAGE.md",
+    "docs/STARTUP-AND-VERIFICATION.md",
+    "docs/TECHNICAL-MATERIAL.md",
+    "docs/screenshots/review-v5/adopted-desktop.png",
+    "docs/verification/review-v5.json",
+    "evaluation/human-review-pack.mjs",
+    "evaluation/long-business-cases.mjs",
+    "scripts/build-human-review-pack.mjs",
+    "scripts/export-review.py",
+    "scripts/export-review.test.py",
+    "scripts/fresh-database-local.mjs",
+    "scripts/human-review-pack.test.mjs",
+    "scripts/long-business-cases.test.mjs",
+    "scripts/long-plan-browser-fixture.mjs",
+    "scripts/long-plan-local.mjs",
+    "scripts/reliability-browser.mjs",
+    "scripts/render-technical-v5.py",
+    "scripts/requirements-materials.txt",
+    "scripts/verification-plan.mjs",
+    "scripts/verify-technical-pdf.py"
+  ],
+  "pending": [
+    "independent_human_review",
+    "paid_long_requirement_quality_declined",
+    "test_document_review_long_context_adapters",
+    "real_student_teacher_trial",
+    "native_browser_menu_zoom_and_full_assistive_tech",
+    "team_school_qualification",
+    "complete_official_rules",
+    "repository_reviewer_access",
+    "public_deployment",
+    "formal_user_recorded_video",
+    "contest_submission"
+  ],
+  "coreCommit": "b5bb777",
+  "runningServices": {
+    "checkedAt": "2026-11-01T10:56:05.001Z",
+    "scope": "running_main_local_services_readonly_no_model",
+    "paidModelCalls": 0,
+    "checks": [
+      {
+        "url": "http://127.0.0.1:3001/health",
+        "expected": 200,
+        "status": 200,
+        "passed": true
+      },
+      {
+        "url": "http://127.0.0.1:3001/ready",
+        "expected": 200,
+        "status": 200,
+        "passed": true
+      },
+      {
+        "url": "http://127.0.0.1:3001/projects/00000000-0000-4000-8000-000000000000/long-plans",
+        "expected": 401,
+        "status": 401,
+        "passed": true
+      },
+      {
+        "url": "http://127.0.0.1:5173/dashboard",
+        "expected": 200,
+        "status": 200,
+        "passed": true
+      }
+    ]
+  },
+  "materials": {
+    "pdf": {
+      "edition": "v5",
+      "pdf": "output/pdf/gongxu-zhiban-technical-v5-20261101-185352-121874.pdf",
+      "pages": 21,
+      "chapters": [
+        "工序智伴",
+        "问题、用户与应用价值",
+        "需求分析与范围",
+        "系统架构与技术选择",
+        "数据模型与一致性",
+        "AI Agent与人工协作",
+        "长需求：可审计拆分",
+        "长需求：持久化执行",
+        "长需求：合并与采纳",
+        "需求到验证证据的闭环",
+        "RAG知识与来源",
+        "审查、测试、文档与成长",
+        "桌面交互与动效",
+        "实际界面：人工采纳后",
+        "真实模型证据与人工审核",
+        "原创长需求案例与评测准备",
+        "测试证据与复核入口",
+        "启动、迁移与交付恢复",
+        "比赛截图逐项验收",
+        "参考、许可与原创说明",
+        "总结与待完成事项"
+      ],
+      "bytes": 575049,
+      "sha256": "3a241506a5f6a4931252319a01fee51c43895052d5ce97b6df03e37b4ef27e58",
+      "visualReview": "all_rendered_pages_inspected",
+      "evidenceIndex": "docs/verification/review-v5.json",
+      "realModelCallsThisRound": 0,
+      "historicalRealModelCalls": 12,
+      "teamInfo": "pending_user",
+      "submitted": false,
+      "layoutBounds": [
+        {
+          "page": 1,
+          "textCharacters": 418,
+          "outsideSafeBounds": 0,
+          "imagesOutsideSafeBounds": 0
+        },
+        {
+          "page": 2,
+          "textCharacters": 453,
+          "outsideSafeBounds": 0,
+          "imagesOutsideSafeBounds": 0
+        },
+        {
+          "page": 3,
+          "textCharacters": 424,
+          "outsideSafeBounds": 0,
+          "imagesOutsideSafeBounds": 0
+        },
+        {
+          "page": 4,
+          "textCharacters": 511,
+          "outsideSafeBounds": 0,
+          "imagesOutsideSafeBounds": 0
+        },
+        {
+          "page": 5,
+          "textCharacters": 427,
+          "outsideSafeBounds": 0,
+          "imagesOutsideSafeBounds": 0
+        },
+        {
+          "page": 6,
+          "textCharacters": 389,
+          "outsideSafeBounds": 0,
+          "imagesOutsideSafeBounds": 0
+        },
+        {
+          "page": 7,
+          "textCharacters": 405,
+          "outsideSafeBounds": 0,
+          "imagesOutsideSafeBounds": 0
+        },
+        {
+          "page": 8,
+          "textCharacters": 388,
+          "outsideSafeBounds": 0,
+          "imagesOutsideSafeBounds": 0
+        },
+        {
+          "page": 9,
+          "textCharacters": 386,
+          "outsideSafeBounds": 0,
+          "imagesOutsideSafeBounds": 0
+        },
+        {
+          "page": 10,
+          "textCharacters": 356,
+          "outsideSafeBounds": 0,
+          "imagesOutsideSafeBounds": 0
+        },
+        {
+          "page": 11,
+          "textCharacters": 377,
+          "outsideSafeBounds": 0,
+          "imagesOutsideSafeBounds": 0
+        },
+        {
+          "page": 12,
+          "textCharacters": 368,
+          "outsideSafeBounds": 0,
+          "imagesOutsideSafeBounds": 0
+        },
+        {
+          "page": 13,
+          "textCharacters": 429,
+          "outsideSafeBounds": 0,
+          "imagesOutsideSafeBounds": 0
+        },
+        {
+          "page": 14,
+          "textCharacters": 251,
+          "outsideSafeBounds": 0,
+          "imagesOutsideSafeBounds": 0
+        },
+        {
+          "page": 15,
+          "textCharacters": 434,
+          "outsideSafeBounds": 0,
+          "imagesOutsideSafeBounds": 0
+        },
+        {
+          "page": 16,
+          "textCharacters": 449,
+          "outsideSafeBounds": 0,
+          "imagesOutsideSafeBounds": 0
+        },
+        {
+          "page": 17,
+          "textCharacters": 558,
+          "outsideSafeBounds": 0,
+          "imagesOutsideSafeBounds": 0
+        },
+        {
+          "page": 18,
+          "textCharacters": 494,
+          "outsideSafeBounds": 0,
+          "imagesOutsideSafeBounds": 0
+        },
+        {
+          "page": 19,
+          "textCharacters": 524,
+          "outsideSafeBounds": 0,
+          "imagesOutsideSafeBounds": 0
+        },
+        {
+          "page": 20,
+          "textCharacters": 551,
+          "outsideSafeBounds": 0,
+          "imagesOutsideSafeBounds": 0
+        },
+        {
+          "page": 21,
+          "textCharacters": 464,
+          "outsideSafeBounds": 0,
+          "imagesOutsideSafeBounds": 0
+        }
+      ],
+      "renderResolutionDpi": 90
+    },
+    "script": "docs/DEMO-SCRIPT-V5.md",
+    "outline": "docs/DEMO-OPERATIONS-V5.md",
+    "newVideoProduced": false,
+    "scriptTargetSeconds": 420,
+    "actualNarrationDuration": "not_recorded"
+  },
+  "pdfRenderCorrection": {
+    "firstFile": "output/pdf/gongxu-zhiban-technical-v5-20261101-185223-924584.pdf",
+    "issue": "screenshot_lazy_dimensions_exceeded_page_bounds_and_architecture_flow_needed_clear_branching",
+    "finalFile": "output/pdf/gongxu-zhiban-technical-v5-20261101-185352-121874.pdf",
+    "changedPages": [
+      4,
+      14
+    ],
+    "unchangedPagesPixelCompared": 19,
+    "allPagesVisuallyReviewed": true,
+    "imageAndTextBoundsVerified": true
+  },
+  "candidatePackageVerification": {
+    "archiveValidation": "E:/ai/.review-export/v5-20261101-190155-982323/verified-delivery.json",
+    "offlineInstallAttempt": "failed_missing_pnpm_offline_policy_metadata",
+    "normalInstall": "passed_unchanged_supply_chain_policy",
+    "packagesReusedFromNewStore": 355,
+    "newPackagesDownloaded": 0,
+    "unpackedVerification": "E:\\ai\\.review-export\\v5-20261101-190155-982323\\unpacked\\gongxu-zhiban\\.runtime\\verification-v4-6d6d0899-34f4-4ae2-8af9-34f38dbd8a8c\\report.json",
+    "unpackedVerificationSha256": "28849bfc1b831a3255871280150daf9f2dbc5aa98ab9238bc54e41ccf9b5e79a",
+    "passedSteps": 15,
+    "nativeRebuildCommand": "pnpm rebuild esbuild onnxruntime-node sharp",
+    "nativeRebuildExitCode": 0,
+    "nativeRebuildScriptExecution": "not_inferred_from_exit_code"
+  }
+}

@@ -2,6 +2,14 @@
 
 项目目录：`E:\ai\gongxu-zhiban`。已有真实环境配置保持原位；本轮没有更改凭据、数据库部署方式、系统权限或登录启动项。
 
+## v5升级与恢复
+
+API先构建，再在`apps/api`执行`node dist/migrate.js`应用022增量迁移，最后按下方方式重启API。前端复用原Agent页面。当前本机已经应用022，重复迁移无新增变更；不要删表回退。022保存长需求方案/作业/尝试/审核历史及任务条件建议，原数据不清空。服务重启不会自动恢复收费调用，不确定尝试必须由人核对，详见[长需求恢复说明](LONG-REQUIREMENTS-V5.md)。
+
+沿用`pnpm verify`离线、`--suite=browser`、`--suite=accessibility`和`--suite=database`分层入口；数据库层新增long-plan协议联调。`node scripts/long-plan-local.mjs --browser`创建隔离合成库，真实HTTP/SQL/Edge，聊天为本地替身，费用0。本轮新的真实模型评测按用户决定不执行；v4的12次响应继续保留供独立审核。当前结果在[验证索引](verification/review-v5.json)，不要用下方历史数量代替。
+
+脱敏副本的新依赖安装使用独立空存储、`pnpm install --frozen-lockfile --store-dir ../fresh-store --ignore-scripts`，355包下载、复用0，副本统一离线检查和空库001—022迁移/启动流程实际通过。它使用本机既有Node/Python/浏览器/PostgreSQL，且跳过安装脚本；模型权重没有复制，不能称为完整新机器开箱即用。评审者须按既有Embedding说明安装许可明确的依赖与权重，再检查其`/ready`。
+
 ## 本机再次打开
 
 在项目根目录运行 `pnpm start:local -Database external`，浏览器访问 `http://127.0.0.1:5173/dashboard`。若通过既有桌面“打开工序智伴”快捷方式启动，也应先等待就绪状态。电脑重启会停止本地进程，本机地址不等于公网部署。

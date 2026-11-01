@@ -1,5 +1,17 @@
 # 工序智伴技术文档素材（本轮可复核版）
 
+## v5当前增补
+
+主场景聚焦“需求变化后，任务、测试和交付证据如何保持一致”。原创工作是可审计的分段方案、持久生成作业、结果不确定时的费用保护、全局人工合并与事务采纳；不是新模型算法。前端复用Agent/追踪页面，按下一步展开高级内容，180ms反馈尊重减少动态效果。
+
+架构新增`long-plan`模块及022迁移，使用既有Fastify、PostgreSQL、模型与RAG适配器，无新增应用运行时依赖。队列容量1、每账号活动2/全局8；每段状态/原始输出/用量持久化，重启/取消不自动重发。详见`LONG-REQUIREMENTS-V5.md`。
+
+本轮原创新业务合成案例49,781字符、13段已通过真实数据库和受控模型协议完整传递；实际DeepSeek生成该长案例尚未执行。v4已有12次真实回答保持原样进入脱敏审核包，尚无独立质量审核。PDF与演讲稿明确这一区别，不以HTTP200或ID齐全宣称质量提高。本轮不制作视频，旧稿保留为历史。
+
+当前材料入口为`FINAL-REVIEW-V5.md`、`AI-REVIEW-PACK-V5.md`及`DEMO-SCRIPT-V5.md`。下面v4描述保留其历史时间范围，“当时未接生产”不代表当前实现状态。
+
+生成v5 PDF的可选Python依赖见`scripts/requirements-materials.txt`；使用`python scripts/render-technical-v5.py --font=<已安装且许可合适的中文TTF/TTC>`，默认Windows微软雅黑。Poppler用于实际逐页渲染，随后运行`verify-technical-pdf.py`检查文本及图片边界，实际查看全部页面后才能使用`--confirm-visual-review`。字体文件不随源码打包，本轮已验证PDF无需评审者重新生成即可阅读。
+
 比赛名称：传智杯 AI WEB 网页开发挑战赛。定位是面向高职软件技术学生的AI原生软件工程实训工作台。v4技术评审稿为`output/pdf/gongxu-zhiban-technical-v4.pdf`，覆盖技术、实现、测试与限制，实际页数与逐页检查见同目录`technical-pdf-v4-manifest.json`。v3文件保留。材料尚未提交，团队与参赛资格由参赛者真实补齐，不能将工程替身测试写成模型效果。
 
 ## v4实现增补
