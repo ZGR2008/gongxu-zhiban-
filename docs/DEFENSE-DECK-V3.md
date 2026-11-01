@@ -1,6 +1,6 @@
 # 本地答辩草稿与验证范围
 
-当前文件：`output/presentations/gongxu-zhiban-defense-v3-2026-11-01T01-18-43-763Z.pptx`，12页、16:9。文本、表格和逐页备注可编辑，讲稿另存`DEFENSE-SPEAKER-NOTES-V3.md`。没有虚构团队姓名、学校、试用评价或评分，所列测试以本轮实际执行为依据。
+当前文件：`output/presentations/gongxu-zhiban-defense-v3-2026-11-01T02-06-24-722Z.pptx`，12页、16:9。文本、表格和逐页备注可编辑，讲稿另存`DEFENSE-SPEAKER-NOTES-V3.md`。没有虚构团队姓名、学校、试用评价或评分，所列测试以本轮实际执行为依据。
 
 内容依次为定位、问题、架构、Agent、审查知识来源、需求证据关系、编辑保护、完整统计、检索对照、桌面体验、验证边界与交付。截图来自独立合成账号，服务端和向量来自本机，聊天为替身；不能把草稿当作真实模型质量验证。第10页只展示首屏节选以便投屏阅读，完整截图保留在`docs/screenshots/review-v3/workspace-desktop.png`。
 

@@ -1,8 +1,8 @@
 {
-  "schemaVersion": "gongxu-review-v3.1",
-  "generatedAt": "2026-11-01T01:23:41.686Z",
+  "schemaVersion": "gongxu-review-v3.2",
+  "generatedAt": "2026-11-01T03:34:06.845Z",
   "baseline": "4e3b4b9",
-  "implementationHead": "806146b2ebed9cef994c23d85b834963b9b44bfd",
+  "implementationHead": "3fff22d353d717a31b279011e1b672f343207798",
   "trackedWorktreeModified": true,
   "contestBasis": "Seven readable screenshot portions only; missing weights/national rules/cropped content remain unknown.",
   "sourceManifest": [
@@ -312,11 +312,11 @@
     },
     {
       "file": "apps/api/src/rag/routes.test.ts",
-      "sha256": "65416dcec7ee7abb6eedfc13300bc783675f16d7e01cf8aea5bfb66cbf7dcec4"
+      "sha256": "1937660d7f1aacc7552b44e1ab1d7de871f6af41ff8c112926973ee2937926f9"
     },
     {
       "file": "apps/api/src/rag/routes.ts",
-      "sha256": "30d0744e318d128dec99589bcbec908fce0fa926080f8bc850414af49e1a5e41"
+      "sha256": "31bac59cf503de01fc24f2aca8bc5ebd67ce1c4f5b2adae3237cbc50e5e3da57"
     },
     {
       "file": "apps/api/src/rag/search.ts",
@@ -456,11 +456,11 @@
     },
     {
       "file": "apps/web/src/App.tsx",
-      "sha256": "b2091e21d9cad529aa44b91fd112b62c783d8eef81a2217db6836143c6cc0452"
+      "sha256": "144dc660e1de231d5489b187f7f7fa88612db02162c9084978fff1574280ebfd"
     },
     {
       "file": "apps/web/src/Modules.tsx",
-      "sha256": "c210fe11992701c340ddfc7f4124b83ffcd44b8b76233b2cea51614d55a45e25"
+      "sha256": "1998f1302377330b886bd2133fe5a883497bbd773ff5cab3b963e2932c8e939e"
     },
     {
       "file": "apps/web/src/Practice.tsx",
@@ -615,8 +615,16 @@
       "sha256": "122602cfa0974454f6afe9885e24ce0feacea6024e5815b5b9f932a9481bb338"
     },
     {
+      "file": "apps/web/src/components/recoverable-lazy.tsx",
+      "sha256": "1cef12c2eef0bb15f1f3d97a90805cd0b43118ebd21a4ad26538b81a6cd8ed8c"
+    },
+    {
       "file": "apps/web/src/components/request-scope.ts",
       "sha256": "a9429394cc7a9c16639be51978e2384e2b2539c4be05edb467ba68d1788871ea"
+    },
+    {
+      "file": "apps/web/src/components/request-transport.ts",
+      "sha256": "529995f8b30d218a8c5e593d90654f97bd6502f3049e614c8df13d6d4433d0aa"
     },
     {
       "file": "apps/web/src/components/requirement-history.css",
@@ -648,7 +656,7 @@
     },
     {
       "file": "apps/web/src/cosmic.css",
-      "sha256": "415011c0e221ebaf3a769b1d1123d57ad7afcd1651084be80a6c731961e9cc44"
+      "sha256": "31c19972f5714df6d074638c493a1e44a3b018f04e9c4b8c5945abf96d63c20d"
     },
     {
       "file": "apps/web/src/main.tsx",
@@ -664,11 +672,11 @@
     },
     {
       "file": "apps/web/src/pages/RunHistory.tsx",
-      "sha256": "3b81a1446809a9241a421598638c17572ad4e3f7f8436e0c44e86866433e250c"
+      "sha256": "4e213b46f5f464fea7689326c1e15955d9ed2e804bbe308cee1d5feadb1bf96f"
     },
     {
       "file": "apps/web/src/pages/WorkbenchPages.tsx",
-      "sha256": "3e8ef13c6bb22246282a2ec005d78378655314a060e101326642b536991ac69f"
+      "sha256": "84d57b0823777ab67c8b6fe01e20792f38b69b39bd029404d25520536e5d8b74"
     },
     {
       "file": "apps/web/src/pages/WorkbenchShared.tsx",
@@ -816,7 +824,7 @@
     },
     {
       "file": "scripts/knowledge-answer-local.mjs",
-      "sha256": "3d9be12bff2003055ce98fa0cea39490ed5acd5cb45e1e4063c43c7bd927a353"
+      "sha256": "aa4e999971118f9b295327a518b5058952e6932144b93772e10bcce799248652"
     },
     {
       "file": "scripts/knowledge-list-local.mjs",
@@ -860,7 +868,7 @@
     },
     {
       "file": "scripts/reliability-browser.mjs",
-      "sha256": "c18d564dfcd2066dbf2ca4dad57e7b10ca4eefad2f15e4f59419fb05d827d6cb"
+      "sha256": "01eeacde574237b4226055c00a71e28f96a47963cc608aa787cf116958064211"
     },
     {
       "file": "scripts/reliability-local.mjs",
@@ -868,11 +876,15 @@
     },
     {
       "file": "scripts/render-defense-deck.mjs",
-      "sha256": "00d39eb55b688f96ff39e4471abdec9d83a75ce76b8d1aeae356d1bb3898506d"
+      "sha256": "041926d972e0fbc30a79a629e10ed8c92861f41f99d64add94d108c83e393b61"
     },
     {
       "file": "scripts/render-technical-report.py",
-      "sha256": "a2a9e5c3a829eae98e260eaf204aae5e57ef3554a81610b6e61ac6a404cfd4f1"
+      "sha256": "8a65be87f078f2f3b95ada9971112b14d1876e714fe4741b600678cd877508b7"
+    },
+    {
+      "file": "scripts/request-transport.test.mjs",
+      "sha256": "1fd03b6d5edc409bc5ffee0ed18eb4331dea97ede224b46fb7cfc850ba1cf224"
     },
     {
       "file": "scripts/requirement-preconditions-local.mjs",
@@ -917,6 +929,10 @@
     {
       "file": "scripts/verify-demo-draft.py",
       "sha256": "3a4f7843fa02062b36989a9795b378073bd08b2e0ed1d7d1b583d4183207f73e"
+    },
+    {
+      "file": "scripts/verify-production-recovery.mjs",
+      "sha256": "f88cc95de14d82a7eb4ef4b41fb72b911e2d7f61a85ec540a8eaf71397821201"
     },
     {
       "file": "scripts/verify-technical-pdf.py",
@@ -1021,12 +1037,16 @@
     "apps/web/src/components/evidence-views.css",
     "apps/web/src/components/growth-workspace.css",
     "apps/web/src/components/project-pulse-model.ts",
+    "apps/web/src/components/recoverable-lazy.tsx",
+    "apps/web/src/components/request-transport.ts",
     "apps/web/src/components/requirement-trace.css",
     "apps/web/src/components/test-case-page.ts",
     "apps/web/src/components/test-pagination.css",
     "apps/web/src/components/workspace-chrome.css",
     "apps/web/src/cosmic.css",
     "apps/web/src/pages/Delivery.tsx",
+    "apps/web/src/pages/RunHistory.tsx",
+    "apps/web/src/pages/WorkbenchPages.tsx",
     "apps/web/src/pages/workbench-data.ts",
     "apps/web/src/pages/workbench.css",
     "apps/web/src/styles.css",
@@ -1069,6 +1089,7 @@
     "output/presentations/gongxu-zhiban-defense-v3-2026-11-01T00-01-19-078Z.pptx",
     "output/presentations/gongxu-zhiban-defense-v3-2026-11-01T00-03-26-916Z.pptx",
     "output/presentations/gongxu-zhiban-defense-v3-2026-11-01T01-18-43-763Z.pptx",
+    "output/presentations/gongxu-zhiban-defense-v3-2026-11-01T02-06-24-722Z.pptx",
     "output/video/gongxu-zhiban-demo-v3-draft-20261101-031806.json",
     "output/video/gongxu-zhiban-demo-v3-draft-20261101-031806.srt",
     "output/video/gongxu-zhiban-demo-v3-draft-20261101-052933.json",
@@ -1108,6 +1129,7 @@
     "scripts/reliability-local.mjs",
     "scripts/render-defense-deck.mjs",
     "scripts/render-technical-report.py",
+    "scripts/request-transport.test.mjs",
     "scripts/requirement-preconditions-local.mjs",
     "scripts/retrieval-evaluation.test.mjs",
     "scripts/review-context-local.mjs",
@@ -1117,6 +1139,7 @@
     "scripts/ui-models.test.mjs",
     "scripts/ui-smoke.mjs",
     "scripts/verify-demo-draft.py",
+    "scripts/verify-production-recovery.mjs",
     "scripts/verify-technical-pdf.py",
     "scripts/workbench-smoke.mjs"
   ],
@@ -1166,20 +1189,36 @@
     "0a3833daf99e8ac007a91e9ba122690aef7a6e29",
     "4696b5ce2c6576698db1758180b2d244f106d035",
     "87470bdc709db15e0883226683c0aa528808998c",
-    "806146b2ebed9cef994c23d85b834963b9b44bfd"
+    "806146b2ebed9cef994c23d85b834963b9b44bfd",
+    "c9543f51837b8f1a5e47e0f1d8b7f7fbeaddb436",
+    "7c46263a0d7f72ce855f35386a739a93a58b11f7",
+    "8984a1febd9b3f4696b4d2d1bb4f45f3569ea766",
+    "cc044d888f58a2471beeb1374bc0cb27ccf68efe",
+    "42958a288781b70091766ec41c61d426ff3637e6",
+    "3fff22d353d717a31b279011e1b672f343207798"
   ],
   "paidChatCalls": 0,
   "externalUploads": 0,
   "realBusinessDataPackaged": false,
   "logs": [
     {
+      "id": "http_transport",
+      "file": ".runtime/final-request-transport.log",
+      "sha256": "6d2ca1843d2bea1811588e4e4cb6f311208fcefebbd9d69e7baba11b59fdfba7",
+      "command": "pnpm test:request-transport",
+      "status": "passed",
+      "results": {
+        "passed": 8
+      }
+    },
+    {
       "id": "unit",
-      "file": ".runtime/final-unit.log",
-      "sha256": "1a66f429fde09644ec4a8b014b725f7346b901d10fbaa93d3d607566c8b29384",
+      "file": ".runtime/final-unit-a7.log",
+      "sha256": "da3343e8e95871635f1760d72b17d79ff782560aab7323d4d58db85be891a37c",
       "command": "pnpm test",
       "status": "passed",
       "results": {
-        "api": 119,
+        "api": 121,
         "embedding": 4,
         "envTemplates": 2
       }
@@ -1206,8 +1245,8 @@
     },
     {
       "id": "types",
-      "file": ".runtime/final-typecheck.log",
-      "sha256": "8e0ba02f845bdd4b3e2022ccb6f6e6812e86bdbc1d9be0b9de228ce7b9e1ee91",
+      "file": ".runtime/final-typecheck-a7.log",
+      "sha256": "da14a44176be406e1f41a94f8955f14354345f29c56df64e91bbd2ee4fb3152c",
       "command": "pnpm typecheck",
       "status": "passed",
       "results": {
@@ -1216,30 +1255,59 @@
     },
     {
       "id": "build",
-      "file": ".runtime/final-build.log",
-      "sha256": "d0ad05fb9e6609706e666f2e136bdd86023d4873ae222e88520ed070098cf4ea",
+      "file": ".runtime/final-build-a7.log",
+      "sha256": "5b614b70ba92270bcd43f47a20332dcf68d550ea3e643a0bc27c921dc63f9d1c",
       "command": "pnpm build",
       "status": "passed",
       "results": {
-        "webEntryKilobytes": 295.78,
-        "webEntryGzipKilobytes": 93.11
+        "webEntryKilobytes": 297.76,
+        "webEntryGzipKilobytes": 93.89
       }
     }
   ],
   "runs": [
     {
+      "id": "production_recovery",
+      "command": "pnpm verify:production-recovery",
+      "scope": "actual_hashed_production_assets_all_api_fixture_no_db_no_model",
+      "file": ".runtime/production-recovery-a9ba5bac-e369-41ca-9a61-c41e154d94fc/report.json",
+      "sha256": "ffcf0c21f88d4ad2f3ab9b1da5881824b5ba7eb4ad970511839be92e5d7a1e67",
+      "reportedScope": "frozen_production_assets_controlled_api_no_database_no_model",
+      "startedAt": "2026-11-01T01:56:55.881Z",
+      "finishedAt": "2026-11-01T01:56:59.349Z",
+      "browserEngine": null,
+      "browserVersion": "156.0.4314.50",
+      "counts": {
+        "passed": 3
+      },
+      "checks": [
+        {
+          "name": "workspace_load_knowledge_failure_keeps_navigation",
+          "status": "passed"
+        },
+        {
+          "name": "workspace_load_runs_failure_keeps_navigation",
+          "status": "passed"
+        },
+        {
+          "name": "workspace_load_failure_reload_respects_unsaved_edit_and_save_failure",
+          "status": "passed"
+        }
+      ]
+    },
+    {
       "id": "edge_full",
       "command": "pnpm verify:reliability-ui",
       "scope": "controlled_browser_all_apis_fixture",
-      "file": ".runtime/reliability-ui-aea69613-aee0-4a02-b831-afc2b740ed2a/report.json",
-      "sha256": "ebfb40183997ee50d26766138ad028c5615a17c59dc00b496f13be7bf660366d",
+      "file": ".runtime/reliability-ui-b46d545e-0d56-47c0-a1e3-7f6fad9cadf4/report.json",
+      "sha256": "8b62460b0dfbc6470b15fca05833f3f176ced19eb0e91baad2bef3ccd864c53c",
       "reportedScope": "controlled_browser_responses",
-      "startedAt": "2026-11-01T01:09:12.129Z",
-      "finishedAt": "2026-11-01T01:10:53.918Z",
+      "startedAt": "2026-11-01T01:57:42.066Z",
+      "finishedAt": "2026-11-01T02:00:32.281Z",
       "browserEngine": "chromium",
       "browserVersion": "156.0.4314.50",
       "counts": {
-        "passed": 77
+        "passed": 86
       },
       "checks": [
         {
@@ -1519,11 +1587,47 @@
           "status": "passed"
         },
         {
+          "name": "run_history_auto_refresh_waits_for_slow_list_and_recovers",
+          "status": "passed"
+        },
+        {
+          "name": "run_history_auto_refresh_waits_for_slow_detail_and_recovers",
+          "status": "passed"
+        },
+        {
+          "name": "workspace_load_knowledge_failure_keeps_navigation",
+          "status": "passed"
+        },
+        {
+          "name": "workspace_load_runs_failure_keeps_navigation",
+          "status": "passed"
+        },
+        {
+          "name": "workspace_load_failure_reload_respects_unsaved_edit_and_save_failure",
+          "status": "passed"
+        },
+        {
+          "name": "project_read_invalid_json_has_a_recoverable_error",
+          "status": "passed"
+        },
+        {
+          "name": "project_read_invalid_shapes_never_crash_the_workspace",
+          "status": "passed"
+        },
+        {
+          "name": "project_read_deadline_stops_loading_and_allows_safe_retry",
+          "status": "passed"
+        },
+        {
           "name": "late_agent_run_detail_does_not_replace_the_new_selection",
           "status": "passed"
         },
         {
           "name": "knowledge_cancel_ignores_late_result_and_allows_retry",
+          "status": "passed"
+        },
+        {
+          "name": "knowledge_answer_insufficient_candidates_are_not_presented_as_supporting_citations",
           "status": "passed"
         },
         {
@@ -1553,18 +1657,18 @@
       ]
     },
     {
-      "id": "firefox_full_before_U7",
+      "id": "firefox_full",
       "command": "node scripts/reliability-browser.mjs --engine=firefox",
-      "scope": "controlled_browser_all_apis_fixture_before_final_history_label_change",
-      "file": ".runtime/reliability-ui-172096f8-1e8e-4797-beed-2c3f854a1496/report.json",
-      "sha256": "3f4abf4d38c3d97fca2c7e4edd621c1c1e36a00385f18245009e4de31b0892d3",
+      "scope": "controlled_browser_all_apis_fixture",
+      "file": ".runtime/reliability-ui-e1969ed7-9719-4d11-b72f-6f67b3562926/report.json",
+      "sha256": "3294f2c6bfeb4fa868506b38b2be0d491661f3b24572472035599ebcd0cd078f",
       "reportedScope": "controlled_browser_responses",
-      "startedAt": "2026-11-01T00:58:59.498Z",
-      "finishedAt": "2026-11-01T01:01:04.126Z",
+      "startedAt": "2026-11-01T01:57:48.838Z",
+      "finishedAt": "2026-11-01T02:00:59.978Z",
       "browserEngine": "firefox",
       "browserVersion": "157.0",
       "counts": {
-        "passed": 76,
+        "passed": 85,
         "not_run": 1
       },
       "checks": [
@@ -1846,11 +1950,47 @@
           "status": "passed"
         },
         {
+          "name": "run_history_auto_refresh_waits_for_slow_list_and_recovers",
+          "status": "passed"
+        },
+        {
+          "name": "run_history_auto_refresh_waits_for_slow_detail_and_recovers",
+          "status": "passed"
+        },
+        {
+          "name": "workspace_load_knowledge_failure_keeps_navigation",
+          "status": "passed"
+        },
+        {
+          "name": "workspace_load_runs_failure_keeps_navigation",
+          "status": "passed"
+        },
+        {
+          "name": "workspace_load_failure_reload_respects_unsaved_edit_and_save_failure",
+          "status": "passed"
+        },
+        {
+          "name": "project_read_invalid_json_has_a_recoverable_error",
+          "status": "passed"
+        },
+        {
+          "name": "project_read_invalid_shapes_never_crash_the_workspace",
+          "status": "passed"
+        },
+        {
+          "name": "project_read_deadline_stops_loading_and_allows_safe_retry",
+          "status": "passed"
+        },
+        {
           "name": "late_agent_run_detail_does_not_replace_the_new_selection",
           "status": "passed"
         },
         {
           "name": "knowledge_cancel_ignores_late_result_and_allows_retry",
+          "status": "passed"
+        },
+        {
+          "name": "knowledge_answer_insufficient_candidates_are_not_presented_as_supporting_citations",
           "status": "passed"
         },
         {
@@ -1880,18 +2020,18 @@
       ]
     },
     {
-      "id": "webkit_full_before_U7",
+      "id": "webkit_full",
       "command": "node scripts/reliability-browser.mjs --engine=webkit",
-      "scope": "controlled_browser_all_apis_fixture_before_final_history_label_change",
-      "file": ".runtime/reliability-ui-62f85adb-06d7-4c6b-9232-7e8331e1e5d2/report.json",
-      "sha256": "ab12bfb05a32f0fc67566a9ca9d1dd52e31af4b6dec0778bd69e628d869485b1",
+      "scope": "controlled_browser_all_apis_fixture",
+      "file": ".runtime/reliability-ui-e5e8e798-5c1d-4318-84e6-c69ac6de4817/report.json",
+      "sha256": "2ff2c3422528953e3b2ad172a26af9eb136451326fee34b170e3273637235b07",
       "reportedScope": "controlled_browser_responses",
-      "startedAt": "2026-11-01T00:58:42.213Z",
-      "finishedAt": "2026-11-01T01:01:08.590Z",
+      "startedAt": "2026-11-01T02:01:00.294Z",
+      "finishedAt": "2026-11-01T02:04:22.348Z",
       "browserEngine": "webkit",
       "browserVersion": "27.2",
       "counts": {
-        "passed": 75,
+        "passed": 84,
         "not_run": 2
       },
       "checks": [
@@ -2174,11 +2314,47 @@
           "status": "passed"
         },
         {
+          "name": "run_history_auto_refresh_waits_for_slow_list_and_recovers",
+          "status": "passed"
+        },
+        {
+          "name": "run_history_auto_refresh_waits_for_slow_detail_and_recovers",
+          "status": "passed"
+        },
+        {
+          "name": "workspace_load_knowledge_failure_keeps_navigation",
+          "status": "passed"
+        },
+        {
+          "name": "workspace_load_runs_failure_keeps_navigation",
+          "status": "passed"
+        },
+        {
+          "name": "workspace_load_failure_reload_respects_unsaved_edit_and_save_failure",
+          "status": "passed"
+        },
+        {
+          "name": "project_read_invalid_json_has_a_recoverable_error",
+          "status": "passed"
+        },
+        {
+          "name": "project_read_invalid_shapes_never_crash_the_workspace",
+          "status": "passed"
+        },
+        {
+          "name": "project_read_deadline_stops_loading_and_allows_safe_retry",
+          "status": "passed"
+        },
+        {
           "name": "late_agent_run_detail_does_not_replace_the_new_selection",
           "status": "passed"
         },
         {
           "name": "knowledge_cancel_ignores_late_result_and_allows_retry",
+          "status": "passed"
+        },
+        {
+          "name": "knowledge_answer_insufficient_candidates_are_not_presented_as_supporting_citations",
           "status": "passed"
         },
         {
@@ -2208,108 +2384,18 @@
       ]
     },
     {
-      "id": "firefox_final_history",
-      "command": "node scripts/reliability-browser.mjs --engine=firefox --case=history",
-      "scope": "controlled_browser_final_history_label_change",
-      "file": ".runtime/reliability-ui-3a4cf418-a688-4bde-9754-88d6287fb344/report.json",
-      "sha256": "b4c154ec426d6477420df91460c2c2b51bf71ffe13f0eac1440fe66c6c42e31a",
-      "reportedScope": "controlled_browser_responses",
-      "startedAt": "2026-11-01T01:09:16.253Z",
-      "finishedAt": "2026-11-01T01:09:27.055Z",
-      "browserEngine": "firefox",
-      "browserVersion": "157.0",
-      "counts": {
-        "passed": 7
-      },
-      "checks": [
-        {
-          "name": "growth_scope_fast_switch_discards_late_history_and_hides_old_statistics",
-          "status": "passed"
-        },
-        {
-          "name": "code_review_sources_distinguish_supplied_context_history_and_unknown",
-          "status": "passed"
-        },
-        {
-          "name": "code_review_late_reply_preserves_selected_history_and_newer_draft",
-          "status": "passed"
-        },
-        {
-          "name": "document_history_restore_is_guarded_and_successful_save_allows_navigation",
-          "status": "passed"
-        },
-        {
-          "name": "agent_task_board_defaults_to_current_version_and_history_is_read_only",
-          "status": "passed"
-        },
-        {
-          "name": "back_cancel_and_forward_preserve_history_cursor_and_unsaved_content",
-          "status": "passed"
-        },
-        {
-          "name": "restoring_history_requires_a_choice_and_cancel_does_not_claim_success",
-          "status": "passed"
-        }
-      ]
-    },
-    {
-      "id": "webkit_final_history",
-      "command": "node scripts/reliability-browser.mjs --engine=webkit --case=history",
-      "scope": "controlled_browser_final_history_label_change",
-      "file": ".runtime/reliability-ui-dff2f1ec-9d3d-4473-b388-7693b94d90e1/report.json",
-      "sha256": "f37e009eabad8eec48186ccbab298dc1a70a550648d032c26d8fcdedc990fa10",
-      "reportedScope": "controlled_browser_responses",
-      "startedAt": "2026-11-01T01:09:50.750Z",
-      "finishedAt": "2026-11-01T01:10:02.675Z",
-      "browserEngine": "webkit",
-      "browserVersion": "27.2",
-      "counts": {
-        "passed": 7
-      },
-      "checks": [
-        {
-          "name": "growth_scope_fast_switch_discards_late_history_and_hides_old_statistics",
-          "status": "passed"
-        },
-        {
-          "name": "code_review_sources_distinguish_supplied_context_history_and_unknown",
-          "status": "passed"
-        },
-        {
-          "name": "code_review_late_reply_preserves_selected_history_and_newer_draft",
-          "status": "passed"
-        },
-        {
-          "name": "document_history_restore_is_guarded_and_successful_save_allows_navigation",
-          "status": "passed"
-        },
-        {
-          "name": "agent_task_board_defaults_to_current_version_and_history_is_read_only",
-          "status": "passed"
-        },
-        {
-          "name": "back_cancel_and_forward_preserve_history_cursor_and_unsaved_content",
-          "status": "passed"
-        },
-        {
-          "name": "restoring_history_requires_a_choice_and_cancel_does_not_claim_success",
-          "status": "passed"
-        }
-      ]
-    },
-    {
-      "id": "axe_20_scenes",
+      "id": "axe_22_scenes",
       "command": "pnpm verify:accessibility",
       "scope": "automated_axe_rules_fixture_states_manual_incomplete_items_retained",
-      "file": ".runtime/reliability-ui-ddacb5a4-b55c-4c58-ab14-1e35b939d4db/report.json",
-      "sha256": "088c087297680631e382f213c9e7ceb8f8df4ff7cd10e2d7d53feaf137da7bdc",
+      "file": ".runtime/reliability-ui-607bc7ff-708e-4b27-9055-05dd6abdfb78/report.json",
+      "sha256": "daa266f649110b05cefbafd852b05da1fcfe6f021369d0ed6d5bc3fa9f7fbc96",
       "reportedScope": "controlled_browser_responses",
-      "startedAt": "2026-11-01T01:08:02.161Z",
-      "finishedAt": "2026-11-01T01:08:27.021Z",
+      "startedAt": "2026-11-01T02:00:32.604Z",
+      "finishedAt": "2026-11-01T02:01:00.081Z",
       "browserEngine": "chromium",
       "browserVersion": "156.0.4314.50",
       "counts": {
-        "passed": 20
+        "passed": 22
       },
       "checks": [
         {
@@ -2369,6 +2455,14 @@
           "status": "passed"
         },
         {
+          "name": "accessibility_rag_insufficient_candidates",
+          "status": "passed"
+        },
+        {
+          "name": "accessibility_workspace_load_failure",
+          "status": "passed"
+        },
+        {
           "name": "accessibility_edit_guard_dialog",
           "status": "passed"
         },
@@ -2398,11 +2492,11 @@
       "id": "local_integrated",
       "command": "node scripts/reliability-local.mjs --browser",
       "scope": "real_local_postgres_embedding_http_browser_chat_fixture",
-      "file": ".runtime/reliability-local-c83e1587-c700-4997-9dce-4852bea51f03/report.json",
-      "sha256": "359036041535881f177fac9f3ed0e2c8349749ef3285406f1ad8d5132e7ead03",
+      "file": ".runtime/reliability-local-82a4350f-3d47-4962-a19e-ea1559bba934/report.json",
+      "sha256": "41bdc75bc92fcafaccdcd873afab3309c5b16190763ad3c9172dddf0e8f6108b",
       "reportedScope": "real_local_database_and_optional_local_embedding",
-      "startedAt": "2026-11-01T00:41:16.006Z",
-      "finishedAt": "2026-11-01T00:41:23.043Z",
+      "startedAt": "2026-11-01T02:03:09.726Z",
+      "finishedAt": "2026-11-01T02:03:16.747Z",
       "browserEngine": null,
       "browserVersion": null,
       "counts": {
@@ -2849,18 +2943,18 @@
       ]
     },
     {
-      "id": "answer_cancel",
+      "id": "answer_cancel_and_insufficient_evidence",
       "command": "pnpm verify:knowledge-answer",
       "scope": "real_local_embedding_http_model_stage_fixture",
-      "file": ".runtime/knowledge-answer-local-b7800880-3a64-4c1a-a43b-e2bf647f321a/report.json",
-      "sha256": "90b788383af30559301c5b185376b53ce88bb8564fd3bcabf362be066f2938ca",
+      "file": ".runtime/knowledge-answer-local-be29770c-6ec2-4449-8eb6-8adbc2719f1b/report.json",
+      "sha256": "b96aee8872aa04976c09ae7c2e96c0f9bd391a51ead599d05afdcde29606b98d",
       "reportedScope": "real_local_http_disconnect_database_embedding_chat_fixture",
-      "startedAt": "2026-10-31T22:05:19.478Z",
-      "finishedAt": "2026-10-31T22:05:19.785Z",
+      "startedAt": "2026-11-01T01:55:14.993Z",
+      "finishedAt": "2026-11-01T01:55:15.327Z",
       "browserEngine": null,
       "browserVersion": null,
       "counts": {
-        "passed": 3
+        "passed": 4
       },
       "checks": [
         {
@@ -2873,6 +2967,10 @@
         },
         {
           "name": "actual_sources_and_foreign_account_no_evidence_remain_correct",
+          "status": "passed"
+        },
+        {
+          "name": "real_retrieval_can_return_uncited_insufficiency_without_losing_candidate_provenance",
           "status": "passed"
         }
       ]
@@ -2992,11 +3090,11 @@
       "id": "real_ui",
       "command": "pnpm smoke:ui",
       "scope": "real_local_services_browser_synthetic_account_no_paid_model",
-      "file": ".runtime/ui-7a4401c3-a810-4aa8-9756-f0b521424ff3/report.json",
-      "sha256": "056672df189680d6511f519815cbae31b72d5db7acee13918c6c7fbe40624b7b",
+      "file": ".runtime/ui-6867ca26-bd43-4882-a4b9-a9ac02b4e5ad/report.json",
+      "sha256": "cb78f268187b6b96233555b2a0982c1d171cce6bcac9c878cd573164f4f1ab76",
       "reportedScope": null,
-      "startedAt": "2026-11-01T01:05:38.566Z",
-      "finishedAt": "2026-11-01T01:05:51.999Z",
+      "startedAt": "2026-11-01T01:57:42.645Z",
+      "finishedAt": "2026-11-01T01:57:58.931Z",
       "browserEngine": null,
       "browserVersion": null,
       "counts": {
@@ -3090,11 +3188,11 @@
       "id": "workbench",
       "command": "pnpm smoke:workbench",
       "scope": "real_local_services_browser_synthetic_account_no_paid_model",
-      "file": ".runtime/workbench-4e929237-d59e-44f1-b345-c391a461f7d9/report.json",
-      "sha256": "fa8c8efea8d01b5177665349f2b4f5f6df8abea6dd18c7f4c8d7a7b5ba0c8e7a",
+      "file": ".runtime/workbench-e9811f69-3052-4d34-ac58-7951e3c24f05/report.json",
+      "sha256": "e17e53ece09e05949dc4d67359d19150120336e7f38d0e5a2f723d7ffff2dece",
       "reportedScope": null,
-      "startedAt": "2026-11-01T00:46:48.890Z",
-      "finishedAt": "2026-11-01T00:47:11.554Z",
+      "startedAt": "2026-11-01T01:57:59.328Z",
+      "finishedAt": "2026-11-01T01:58:24.335Z",
       "browserEngine": null,
       "browserVersion": null,
       "counts": {
@@ -3151,11 +3249,11 @@
       "id": "offline_cases",
       "command": "node scripts/evaluate-offline.mjs",
       "scope": "offline_implementation_protocol_not_semantic_quality",
-      "file": ".runtime/evaluation-1793495391901.json",
-      "sha256": "0cb2cade689518eabf622f22c852ef77dbe045adeff91f16f4fa4a9b8f371d4c",
+      "file": ".runtime/evaluation-1793498420049.json",
+      "sha256": "4ca68b799dc0066dd85403a165dee814669bf09ff79205bb9c01da44a41e631a",
       "reportedScope": "offline_contract_and_fixture_checks",
-      "startedAt": "2026-11-01T01:09:51.247Z",
-      "finishedAt": "2026-11-01T01:09:51.901Z",
+      "startedAt": "2026-11-01T02:00:19.410Z",
+      "finishedAt": "2026-11-01T02:00:20.048Z",
       "browserEngine": null,
       "browserVersion": null,
       "counts": {
@@ -3198,6 +3296,36 @@
     }
   ],
   "retainedFailureEvidence": [
+    {
+      "issue": "polling_starvation_before_fix",
+      "file": ".runtime/reliability-ui-6983521f-2387-4d3d-92a9-ee1968439c90/report.json",
+      "sha256": "3c9eb70df5df9a4785d340984b681bffaef43a9f0aed06c61609132e409a6dc4",
+      "retained": true
+    },
+    {
+      "issue": "http_read_before_fix",
+      "file": ".runtime/reliability-ui-fa02201b-7878-4a7b-a2b0-869751b29098/report.json",
+      "sha256": "a5ef29f7490c02fb33be7da99f8db8e42e19e3b793072c4e684c47671719d914",
+      "retained": true
+    },
+    {
+      "issue": "module_import_before_fix",
+      "file": ".runtime/reliability-ui-9c322e67-cd4c-45b1-8311-ed5eba9127a1/report.json",
+      "sha256": "d0bc2c6766752bd9915ecc418967d4ca2d70b665ec8728ecbe5ff8be880f6e37",
+      "retained": true
+    },
+    {
+      "issue": "rag_insufficient_before_fix",
+      "file": ".runtime/reliability-ui-32e236db-6570-41e4-a9e2-2f8aa04a55fd/report.json",
+      "sha256": "6b4b5bd3902d675f7b879cdfdd6fe19e888c93eeb8c0fe8b18b59d044cce5139",
+      "retained": true
+    },
+    {
+      "issue": "intermittent_firefox_extra_poll_root_cause_unconfirmed",
+      "file": ".runtime/reliability-ui-c5e8e242-c2d8-49ff-bbbd-ae78d5471668/report.json",
+      "sha256": "6721ac9b91f9445a098c5a4b28c30be31157d746ceffaf633948d4daa3cabdb0",
+      "retained": true
+    },
     {
       "issue": "trace_initial_primary_key_conflict",
       "file": ".runtime/trace-concurrency-local-fed15618-3fba-4e56-a7be-b96c2ec6fd40/report.json",
@@ -3251,8 +3379,8 @@
       "addedAnswerableTop3Both": "12/12"
     },
     "comparison": {
-      "file": ".runtime/evaluation-report-7f68e3ac-e223-4533-b8b2-fd8603aaaac2/report.json",
-      "sha256": "4560a0ea6e87bcbc91e37f2feade3c45472fac0bd4637099139306db50443657",
+      "file": ".runtime/evaluation-report-fc861397-a312-4b06-a16d-858927f52379/report.json",
+      "sha256": "91c51ed4f053cc8c31d2400911a0777e25b04edf9c65d485dead22277da3a1c0",
       "candidateRecords": 15,
       "comparableGroups": 0,
       "realModelQuality": "not_run",
@@ -3264,20 +3392,20 @@
     {
       "kind": "pdf",
       "file": "output/pdf/gongxu-zhiban-technical-v3.pdf",
-      "bytes": 1030746,
-      "sha256": "55ed377dbfbf56850053b51099ab73d869e0265af5484c48945d0e60af16f91e",
+      "bytes": 1031516,
+      "sha256": "13bd926dba5e26d6728a01d86e05bea9a8304935dfe26b84a3ddd2ee45321fdb",
       "manifest": "output/pdf/technical-pdf-manifest.json",
-      "manifestSha256": "1b9829cd3303cf18440131c1b4001eb9b9612191d099aa5ad1a821f44659841c",
+      "manifestSha256": "18804ef3e19d433fb23480aea3ff8d956cb32acb1751e0c6bd968db472ee1a4a",
       "pages": 29,
       "scope": "review_draft_all_rendered_pages_inspected_not_contest_submission"
     },
     {
       "kind": "pptx",
-      "file": "output/presentations/gongxu-zhiban-defense-v3-2026-11-01T01-18-43-763Z.pptx",
-      "bytes": 818504,
-      "sha256": "bb4b3bd73bc942220f9f12d4d88dfda73cacdfaabb4d275c6673ceb040b0a1e6",
+      "file": "output/presentations/gongxu-zhiban-defense-v3-2026-11-01T02-06-24-722Z.pptx",
+      "bytes": 818642,
+      "sha256": "f5b9466d7c71b957ecbebf1089ca9ccfebc270a90d10bed696d7d1e7ff391d43",
       "manifest": "output/presentations/defense-manifest.json",
-      "manifestSha256": "7af7c6cb9a4b3ef372439afdec6c4601d8cda7850203e4da8589b2d7b8512eb5",
+      "manifestSha256": "bf343e582adbe6e9c19dab9bfcd1c7f4cdcb2c26cc92516ad532cfd4f5235b92",
       "pages": 12,
       "scope": "review_draft_all_rendered_pages_inspected_not_contest_submission"
     },

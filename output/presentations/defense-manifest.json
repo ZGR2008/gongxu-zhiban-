@@ -1,9 +1,9 @@
 {
-  "file": "gongxu-zhiban-defense-v3-2026-11-01T01-18-43-763Z.pptx",
-  "bytes": 818504,
-  "sha256": "bb4b3bd73bc942220f9f12d4d88dfda73cacdfaabb4d275c6673ceb040b0a1e6",
+  "file": "gongxu-zhiban-defense-v3-2026-11-01T02-06-24-722Z.pptx",
+  "bytes": 818642,
+  "sha256": "f5b9466d7c71b957ecbebf1089ca9ccfebc270a90d10bed696d7d1e7ff391d43",
   "slides": 12,
-  "sourceCommit": "806146b2ebed9cef994c23d85b834963b9b44bfd",
+  "sourceCommit": "3fff22d353d717a31b279011e1b672f343207798",
   "scope": "local_defence_draft_not_contest_submission",
   "visualReview": "all_12_final_slides_individually_inspected",
   "packageIntegrity": "passed",
@@ -17,6 +17,6 @@
   "powerpointOrWpsPlayback": "not_run",
   "speakerTiming": "not_run_estimate_only",
   "sourceScreenshotScope": "synthetic_accounts_real_local_database_and_embeddings_chat_fixture",
-  "reviewedAt": "2026-11-01T01:20:57.672Z",
-  "validationReceiptSha256": "2c9f720dd2dd81fea35627d8bf32c0770706e4a976df6a1f9437b3d6208b00aa"
+  "reviewedAt": "2026-11-01T03:33:46.542Z",
+  "validationReceiptSha256": "3a5438084c032eabdf1e973e984af2878ab1c6e397df69036586ac1e70de3758"
 }
