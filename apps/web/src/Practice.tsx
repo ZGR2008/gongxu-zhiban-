@@ -1,7 +1,7 @@
 import { RequirementTrace } from './components/RequirementTrace';
-import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { TestCaseCollection } from './components/ContentView';
-import { useEditGuard, useUnsavedEdit } from './components/EditGuard';
+import { useEditGuard } from './components/EditGuard';
 import {totalsForVersion,type TestCasePage} from './components/test-case-page';
 import './components/test-pagination.css';
 
@@ -11,28 +11,7 @@ const errorText = (e:unknown) => e instanceof Error ? e.message : '操作失败�
 const fmt = (s:string) => new Date(s).toLocaleString('zh-CN');
 export {CodeReviewWorkspace as CodeReview} from './components/CodeReviewWorkspace';
 
-type Case={id:string;revision?:number;category:'normal'|'boundary'|'exception';title:string;preconditions:string;steps:string;expected:string;result:'not_run'|'passed'|'failed'|'blocked';executionNote:string;executedAt:string|null;requirementVersionId:string};
-const category:Record<string,string>={normal:'正常',boundary:'边界',exception:'异常'}; const outcomes:Record<string,string>={not_run:'未执行',passed:'通过',failed:'失败',blocked:'阻塞'};
-function CaseEditor({item,base,request,onSaved}:{item:Case;base:string;request:Api;onSaved:(item:Case)=>void}){
- const [edit,setEdit]=useState(false);const [form,setForm]=useState(item);const [busy,setBusy]=useState(false);const [error,setError]=useState('');
- const previous=useRef(item),pending=useRef<Promise<boolean>|null>(null);
- const [history,setHistory]=useState<{id:string;kind:string;recordedAt:string;snapshot:{revision:number;title:string;result:string;execution_note:string}}[]|null>(null);
- const editable=(value:Case)=>JSON.stringify([value.category,value.title,value.preconditions,value.steps,value.expected,value.result,value.executionNote||'']);
- useEffect(()=>{const before=previous.current;previous.current=item;setForm(value=>editable(value)===editable(before)?item:value);},[item]);
- function persist(definition:boolean):Promise<boolean>{
-  if(pending.current)return pending.current;
-  if(!definition&&form.result!=='not_run'&&!form.executionNote?.trim()){setError('请填写执行说明或证据后再登记结果。记录应说明实际做了什么；未执行请选择“未执行”。');return Promise.resolve(false);}
-  setBusy(true);setError('');const snapshot=form;
-  const {category,title,preconditions,steps,expected}=snapshot;
-  const body=definition?{category,title,preconditions,steps,expected,expectedRevision:snapshot.revision??1}:{result:snapshot.result,note:snapshot.executionNote,expectedRevision:snapshot.revision??1};
-  const promise=(async()=>{try{const response=await request<{case:Case}>(`${base}/${item.id}${definition?'':'/execution'}`,{method:'PATCH',body:JSON.stringify(body)});onSaved(response.case);setForm(value=>editable(value)===editable(snapshot)?response.case:value);if(definition)setEdit(false);setHistory(null);return true;}catch(error){setError(errorText(error));return false;}finally{setBusy(false);pending.current=null;}})();pending.current=promise;return promise;
- }
- async function save(event:FormEvent){event.preventDefault();await persist(true);}
- async function execution(){return persist(false);}
- useUnsavedEdit(`case:${item.id}`,{label:`测试用例：${item.title}`,dirty:editable(form)!==editable(item),save:()=>persist(edit)});
- async function loadHistory(){try{const response=await request<{history:NonNullable<typeof history>}>(`${base}/${item.id}/history`);setHistory(response.history);}catch(error){setError(errorText(error));}}
- return <article className="case-item"><fieldset className="case-editor-fields" disabled={busy} aria-busy={busy}><div className="case-head"><strong>{item.title}</strong><span className="small-tag">{category[item.category]} · {outcomes[item.result]} · v{item.revision??1}</span></div>{error&&<div className="alert error">{error}</div>}{edit?<form onSubmit={save}><label htmlFor={`${item.id}-title`}>标题</label><input id={`${item.id}-title`} value={form.title} maxLength={200} required onChange={e=>setForm({...form,title:e.target.value})}/><label htmlFor={`${item.id}-category`}>类别</label><select id={`${item.id}-category`} value={form.category} onChange={e=>setForm({...form,category:e.target.value as Case['category']})}><option value="normal">正常</option><option value="boundary">边界</option><option value="exception">异常</option></select><label htmlFor={`${item.id}-preconditions`}>前置条件</label><textarea id={`${item.id}-preconditions`} value={form.preconditions} maxLength={2000} onChange={e=>setForm({...form,preconditions:e.target.value})}/><label htmlFor={`${item.id}-steps`}>步骤和输入</label><textarea id={`${item.id}-steps`} value={form.steps} maxLength={4000} required onChange={e=>setForm({...form,steps:e.target.value})}/><label htmlFor={`${item.id}-expected`}>预期结果</label><textarea id={`${item.id}-expected`} value={form.expected} maxLength={3000} required onChange={e=>setForm({...form,expected:e.target.value})}/><p className="muted-text">修改用例会将已有执行结果重置为未执行。</p><div className="form-actions"><button className="button secondary" type="button" onClick={()=>{setForm(item);setEdit(false)}}>取消</button><button className="button primary" disabled={busy}>保存用例</button></div></form>:<><p>前置条件：{item.preconditions||'无'}</p><p>步骤：{item.steps}</p><p>预期：{item.expected}</p><button className="text-link" type="button" onClick={()=>setEdit(true)}>编辑用例 →</button><div className="execution-box"><label htmlFor={`${item.id}-result`}>人工执行结果</label><select id={`${item.id}-result`} value={form.result} onChange={e=>setForm({...form,result:e.target.value as Case['result']})}>{Object.entries(outcomes).map(([value,label])=><option key={value} value={value}>{label}</option>)}</select><label htmlFor={`${item.id}-note`}>执行说明 / 证据</label><textarea id={`${item.id}-note`} rows={2} maxLength={4000} value={form.executionNote||''} onChange={e=>setForm({...form,executionNote:e.target.value})} placeholder="填写人工执行记录"/><div className="form-actions"><span className="muted-text">{item.executedAt?`记录时间：${fmt(item.executedAt)}`:'尚无执行记录'}</span><button type="button" className="button secondary" onClick={()=>void execution()} disabled={busy}>保存执行结果</button></div></div></>}<details className="case-history"><summary onClick={()=>void loadHistory()}>查看用例变更与人工记录历史</summary>{history===null?<p role="status">展开后读取历史…</p>:history.length?<ul>{history.map(row=><li key={row.id}><strong>{row.kind==='definition_changed'?'定义修改前':'登记结果前'} · 修订 v{row.snapshot.revision}</strong><p>{fmt(row.recordedAt)} · {outcomes[row.snapshot.result]||row.snapshot.result}</p><p>{row.snapshot.execution_note||'当时没有执行说明'}</p></li>)}</ul>:<p>暂无历史快照。当前人工记录仍显示在上方。</p>}</details></fieldset></article>;
-}
+import {PracticeCaseEditor as CaseEditor,type PracticeCase as Case} from './components/PracticeCaseEditor';
 export function Tests({request,projectId,requirements}:Props){
  const base=`/projects/${encodeURIComponent(projectId)}/test-cases`;
  const [data,setData]=useState<TestCasePage<Case>|null>(null),[error,setError]=useState('');

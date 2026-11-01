@@ -1,55 +1,11 @@
-import {useEffect,useRef,useState,type FormEvent} from 'react';
-import {useEditGuard,useUnsavedEdit} from './EditGuard';
-
-type Project={id:string;name:string;description:string;status:string;createdAt:string;updatedAt:string};
+import {useEditGuard} from './EditGuard';
+import {useProjectCreation,type CreatedProject} from './useProjectCreation';
 type Api=<T>(path:string,options?:RequestInit)=>Promise<T>;
 
-/** Creating a project saves user input locally; it never invokes a model. */
-export function ProjectCreateForm({request,onCreated,onOpen,onClose}:{request:Api;onCreated:(project:Project)=>void;onOpen:(project:Project)=>void;onClose:()=>void}){
-  const [name,setName]=useState(''),[description,setDescription]=useState('');
-  const [busy,setBusy]=useState(false),[error,setError]=useState(''),[notice,setNotice]=useState('');
-  const [openAfterCommit,setOpenAfterCommit]=useState<Project|null>(null);
-  const fields=useRef({name,description});fields.current={name,description};
-  const pending=useRef<Promise<Project|null>|null>(null),mounted=useRef(true),submitting=useRef(false);
+/** Creating a project persists user input; it never invokes a model. */
+export function ProjectCreateForm({request,onCreated,onOpen,onClose}:{request:Api;onCreated:(project:CreatedProject)=>void;onOpen:(project:CreatedProject)=>void;onClose:()=>void}){
   const {protect}=useEditGuard();
-  useEffect(()=>{mounted.current=true;return()=>{mounted.current=false;};},[]);
-  // Navigation consults the shared edit guard. Let the successful clear render
-  // first so that guard sees the committed form state, not the previous draft.
-  useEffect(()=>{
-    if(!openAfterCommit)return;
-    setOpenAfterCommit(null);
-    if(mounted.current&&!fields.current.name&&!fields.current.description)onOpen(openAfterCommit);
-  },[openAfterCommit,onOpen]);
-
-  function persist():Promise<Project|null>{
-    if(pending.current)return pending.current;
-    const snapshot={...fields.current};
-    if(!snapshot.name.trim()){setError('请先填写项目名称，再保存或创建。');return Promise.resolve(null);}
-    setBusy(true);setError('');setNotice('');
-    const operation=(async()=>{
-      try{
-        const {project}=await request<{project:Project}>('/projects',{method:'POST',body:JSON.stringify({name:snapshot.name.trim(),description:snapshot.description.trim()})});
-        // The parent is still the same session; it may have navigated away while
-        // this write finished. Update its list, but never redirect after unmount.
-        onCreated(project);
-        if(mounted.current){
-          const unchanged=fields.current.name===snapshot.name&&fields.current.description===snapshot.description;
-          if(unchanged){fields.current={name:'',description:''};setName('');setDescription('');}
-          setNotice(unchanged?'项目已创建。':'提交时的项目已创建；随后输入的内容仍未保存，已保留在表单中。');
-        }
-        return project;
-      }catch(error){if(mounted.current)setError(error instanceof Error?error.message:'创建未成功，已保留输入。');return null;}
-      finally{pending.current=null;if(mounted.current)setBusy(false);}
-    })();pending.current=operation;return operation;
-  }
-  useUnsavedEdit('new-project',{label:'新项目名称与想法',dirty:Boolean(name||description),save:async()=>Boolean(await persist())});
-  async function submit(event:FormEvent){
-    event.preventDefault();if(submitting.current)return;
-    submitting.current=true;
-    try{const project=await persist();
-      if(project&&mounted.current&&!fields.current.name&&!fields.current.description)setOpenAfterCommit(project);
-    }finally{submitting.current=false;}
-  }
+  const {name,setName,description,setDescription,busy,error,notice,submit}=useProjectCreation({request,key:'new-project',label:'新项目名称与想法',onCreated,onOpen});
   return <section className="editor-panel" aria-labelledby="create-title">
     <div className="panel-heading"><div><div className="eyebrow">NEW PROJECT</div><h2 id="create-title">开始一个新项目</h2><p>先写下初步想法，后续可以继续完善需求。</p></div><button className="icon-button" type="button" onClick={()=>protect(onClose)} aria-label="关闭">×</button></div>
     {error&&<p className="alert error" role="alert">{error}</p>}{notice&&<p className="alert success" role="status">{notice}</p>}

@@ -83,19 +83,19 @@ try{
  });
  await check('editing_invalidates_current_result_but_retains_previous_evidence',async()=>{
   const url=`${root}/test-cases/${testCase.id}`;
-  let response=await call('PATCH',url+'/execution',{result:'passed',note:'合成人工记录：仅用于验证历史留存，不代表执行了示例代码',expectedRevision:1});assert.equal(response.statusCode,200);
+  let response=await call('PATCH',url+'/execution',{result:'passed',note:'合成人工记录：仅用于验证历史留存，不代表执行了示例代码',expectedRevision:1,expectedExecutionRevision:0});assert.equal(response.statusCode,200);
   assert.equal((await call('GET',`${root}/trace`)).json().items[0].coverage.manualEvidence,1);
   assert.equal((await call('GET',`${root}/trace`)).json().taskTests[0].evidence.manualEvidence,true);
   const {category,title,preconditions,steps}=testCase;
   const beforeHistory=(await call('GET',url+'/history')).json().history.length;
   response=await call('PATCH',url,{category,title,preconditions,steps,expected:testCase.expected,expectedRevision:1});assert.equal(response.statusCode,200);assert.equal(response.json().case.result,'passed');assert.equal(response.json().case.revision,1);assert.equal((await call('GET',url+'/history')).json().history.length,beforeHistory);
   assert.equal((await call('PATCH',url+'/execution',{result:'failed',note:'缺少修订不能覆盖'})).statusCode,428);
-  assert.equal((await call('PATCH',url+'/execution',{result:'passed',note:'  ',expectedRevision:1})).statusCode,422);
+  assert.equal((await call('PATCH',url+'/execution',{result:'passed',note:'  ',expectedRevision:1,expectedExecutionRevision:1})).statusCode,422);
   response=await call('PATCH',url,{category,title,preconditions,steps,expected:'新版必须双人审批',expectedRevision:1});assert.equal(response.statusCode,200);assert.equal(response.json().case.revision,2);assert.equal(response.json().case.result,'not_run');
   const trace=(await call('GET',`${root}/trace`)).json();assert.equal(trace.items[0].coverage.manualEvidence,0);assert.equal(trace.items[0].coverage.stale,1);
   assert.equal(trace.taskTests[0].evidence.state,'stale_case');assert.equal(trace.taskTests[0].evidence.manualEvidence,false);
   const history=(await call('GET',url+'/history')).json().history;assert.ok(history.some(row=>row.kind==='definition_changed'&&row.snapshot.result==='passed'&&row.snapshot.execution_note.includes('合成人工记录')));
-  response=await call('PATCH',url+'/execution',{result:'passed',note:'旧定义的迟到记录',expectedRevision:1});assert.equal(response.statusCode,409);
+  response=await call('PATCH',url+'/execution',{result:'passed',note:'旧定义的迟到记录',expectedRevision:1,expectedExecutionRevision:1});assert.equal(response.statusCode,409);
  });
  await check('pair_recheck_preserves_previous_review_and_never_inherits_old_pass',async()=>{
   let trace=(await call('GET',`${root}/trace`)).json();const pair=trace.taskTests[0];const body={itemId:pair.itemId,taskId:pair.taskId,caseId:pair.caseId,expectedCaseRevision:2,decision:'confirmed',note:'变更后人工重新核对双人审批验收方法'};
@@ -163,7 +163,7 @@ try{
   const initial=(await call('GET',`${root}/evidence`)).json().evidence;assert.equal(initial.documentRevision,context.snapshot.documentRevision+1);
   await call('GET',`${root}/trace`);const afterRead=(await call('GET',`${root}/evidence`)).json().evidence;assert.equal(afterRead.traceRevision,initial.traceRevision);
   const currentCase=(await call('GET',`${root}/test-cases`)).json().cases[0];
-  assert.equal((await call('PATCH',`${root}/test-cases/${currentCase.id}/execution`,{result:'blocked',note:'合成故障：环境不可用，未执行',expectedRevision:currentCase.revision})).statusCode,200);
+  assert.equal((await call('PATCH',`${root}/test-cases/${currentCase.id}/execution`,{result:'blocked',note:'合成故障：环境不可用，未执行',expectedRevision:currentCase.revision,expectedExecutionRevision:currentCase.executionRevision})).statusCode,200);
   const changed=(await call('GET',`${root}/documents/${original.id}`)).json();assert.equal(changed.evidence.caseRevision,initial.caseRevision+1);assert.equal(changed.document.sourceSnapshot.caseRevision,initial.caseRevision);assert.equal(changed.document.content,original.content);
   const trace=(await call('GET',`${root}/trace`)).json();
   assert.equal((await call('POST',`${root}/trace/links`,{itemId:trace.items[0].id,targetId:currentCase.id,targetKind:'case',expectedCaseRevision:currentCase.revision,decision:'confirmed',note:'合成核对，仍没有通过执行证据'})).statusCode,200);

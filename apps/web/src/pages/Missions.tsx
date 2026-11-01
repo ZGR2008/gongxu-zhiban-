@@ -1,4 +1,6 @@
-import { useState, type FormEvent } from "react";
+import { useState } from "react";
+import {useProjectCreation} from "../components/useProjectCreation";
+import {useEditGuard} from "../components/EditGuard";
 import { UiIcon, type IconName } from "../components/UiIcon";
 import { CopyButton } from "../components/ContentView";
 import { missions, missionBrief, type Mission } from "./workbench-data";
@@ -284,29 +286,12 @@ function MissionDetail({
   onFavorite: () => void;
   storageError: string;
 }) {
-  const [name, setName] = useState(mission.title);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
-  async function create(event: FormEvent) {
-    event.preventDefault();
-    if (busy || !name.trim()) return;
-    setBusy(true);
-    setError("");
-    try {
-      const result = await request<{ project: { id: string } }>("/projects", {
-        method: "POST",
-        body: JSON.stringify({
-          name: name.trim(),
-          description: missionBrief(mission),
-        }),
-      });
-      navigate(`/projects/${result.project.id}/requirements`);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "创建失败，请重试。");
-    } finally {
-      setBusy(false);
-    }
-  }
+  const {protect}=useEditGuard();
+  const {name,setName,busy,error,notice,dirty,created,submit:create}=useProjectCreation({
+    request,key:`mission-create:${mission.id}`,label:`任务书项目：${mission.title}`,
+    initialName:mission.title,initialDescription:missionBrief(mission),
+    onOpen:project=>navigate(`/projects/${project.id}/requirements`),
+  });
   return (
     <section className="wb-page mission-detail">
       <button
@@ -418,6 +403,9 @@ function MissionDetail({
               <UiIcon name="arrow" size={16} />
             </button>
           </form>
+          {notice && <p className="alert success" role="status">{notice}</p>}
+          <p className="muted-text" role="status">{busy?"创建请求处理中；离开不会撤销已发出的创建请求。":dirty?"名称尚未保存，离开前可以保存、放弃或取消。":"创建只保存项目和任务书，不调用模型。"}</p>
+          {created && <button type="button" className="text-link" onClick={()=>protect(()=>navigate(`/projects/${created.id}/requirements`))}>打开已创建项目 →</button>}
           <dl>
             <div>
               <dt>练习层次</dt>

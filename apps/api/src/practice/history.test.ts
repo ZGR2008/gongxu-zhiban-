@@ -15,14 +15,16 @@ test('case edit and execution cannot bypass revision checks, or record an outcom
  for(const [url,payload] of [[base,{category:'normal',title:'合成定义',preconditions:'',steps:'检查',expected:'正确'}],[`${base}/execution`,{result:'passed',note:'合成登记'}]] as const){
   const r=await app.inject({method:'PATCH',url,headers,payload});assert.equal(r.statusCode,428);assert.equal(r.json().error,'case_revision_required');
  }
- const r=await app.inject({method:'PATCH',url:`${base}/execution`,headers,payload:{result:'passed',note:'  ',expectedRevision:1}});
+ const missing=await app.inject({method:'PATCH',url:`${base}/execution`,headers,payload:{result:'not_run',note:'',expectedRevision:1}});
+ assert.equal(missing.statusCode,428);assert.equal(missing.json().error,'execution_revision_required');
+ const r=await app.inject({method:'PATCH',url:`${base}/execution`,headers,payload:{result:'passed',note:'  ',expectedRevision:1,expectedExecutionRevision:0}});
  assert.equal(r.statusCode,422);assert.equal(r.json().error,'execution_evidence_required');assert.equal(writes,0);
 });
 test('stale test-definition revision cannot receive an execution outcome',async t=>{
  let updates=0;
  const pool={query:async(sql:string)=>{if(sql.startsWith('UPDATE')){updates++;return{rows:[]};}return{rows:[{id:caseId}]};}} as unknown as Pool;
  const app=Fastify();t.after(()=>app.close());await registerPracticeRoutes(app,store,pool);
- const response=await app.inject({method:'PATCH',url:`/projects/${project}/test-cases/${caseId}/execution`,headers,payload:{result:'passed',note:'针对旧定义的人工记录',expectedRevision:1}});
+ const response=await app.inject({method:'PATCH',url:`/projects/${project}/test-cases/${caseId}/execution`,headers,payload:{result:'passed',note:'针对旧定义的人工记录',expectedRevision:1,expectedExecutionRevision:0}});
  assert.equal(response.statusCode,409);assert.equal(response.json().error,'test_case_changed');assert.equal(updates,1);
 });
 test('case history is scoped by the authenticated project before database access',async t=>{

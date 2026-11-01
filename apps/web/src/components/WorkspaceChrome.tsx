@@ -158,11 +158,13 @@ export function QuickNavigation({
   projectId,
   navigate,
   onCreate,
+  request,
 }: {
   projects: Project[];
   projectId?: string;
   navigate: (path: string) => void;
   onCreate: () => void;
+  request: <T>(path:string,options?:RequestInit)=>Promise<T>;
 }) {
   const dialog = useRef<HTMLDialogElement>(null);
   const input = useRef<HTMLInputElement>(null);
@@ -170,6 +172,22 @@ export function QuickNavigation({
   const restoreFocus = useRef(true);
   const [query, setQuery] = useState('');
   const [selected, setSelected] = useState(0);
+  const [catalogue,setCatalogue]=useState<Project[]>([]);
+  const [catalogueStatus,setCatalogueStatus]=useState<'idle'|'loading'|'ready'|'error'>('idle');
+  const catalogueState=useRef(catalogueStatus),catalogueRead=useRef<AbortController|null>(null);
+  useEffect(()=>()=>{catalogueRead.current?.abort();},[]);
+  async function readCatalogue(force=false){
+    if(!force&&['loading','ready'].includes(catalogueState.current))return;
+    catalogueRead.current?.abort();const controller=new AbortController();catalogueRead.current=controller;
+    catalogueState.current='loading';setCatalogueStatus('loading');setCatalogue([]);
+    try{
+      const result=await request<{projects:Project[]}>('/projects',{signal:controller.signal});
+      if(controller.signal.aborted||catalogueRead.current!==controller)return;
+      if(!Array.isArray(result.projects)||result.projects.some(p=>!p||typeof p.id!=='string'||typeof p.name!=='string'))throw new Error('invalid_catalogue');
+      setCatalogue(result.projects);catalogueState.current='ready';setCatalogueStatus('ready');
+    }catch{if(!controller.signal.aborted&&catalogueRead.current===controller){catalogueState.current='error';setCatalogueStatus('error');}}
+  }
+  const availableProjects=[...new Map([...projects,...catalogue].map(project=>[project.id,project])).values()];
   const entries: Entry[] = [
     { key: 'dashboard', title: '项目工作台', detail: '返回工作空间', icon: 'dashboard', path: '/dashboard' },
     { key: 'projects', title: '我的项目', detail: '搜索与管理实训项目', icon: 'projects', path: '/projects' },
@@ -185,7 +203,7 @@ export function QuickNavigation({
     },
     { key: 'growth', title: '学习成长', detail: '查看真实实践记录', icon: 'growth', path: '/growth' },
     { key: 'create', title: '创建项目', detail: '写下新的实训想法', icon: 'plus', create: true },
-    ...projects.map((project) => ({
+    ...availableProjects.map((project) => ({
       key: project.id,
       title: project.name,
       detail: '打开项目',
@@ -229,6 +247,7 @@ export function QuickNavigation({
       setQuery('');
       setSelected(0);
       dialog.current?.showModal();
+      void readCatalogue();
       requestAnimationFrame(() => input.current?.focus());
     }
   };
@@ -317,6 +336,12 @@ export function QuickNavigation({
             Esc
           </button>
         </div>
+        <div className="quick-nav-catalogue">
+          {catalogueStatus==='loading'&&<p role="status">正在读取可访问项目目录…</p>}
+          {catalogueStatus==='error'&&<p role="alert">项目目录读取失败；页面操作仍可使用，请重新读取目录后搜索项目。</p>}
+          {catalogueStatus==='ready'&&catalogue.length===0&&<p role="status">当前账号还没有项目。</p>}
+          <button type="button" className="text-link" disabled={catalogueStatus==='loading'} onClick={()=>void readCatalogue(true)}>重新读取项目目录</button>
+        </div>
         <div className="quick-nav-results" role="group" aria-label="可用操作">
           {matching.length ? (
             matching.map((entry, index) => (
@@ -338,7 +363,7 @@ export function QuickNavigation({
               </button>
             ))
           ) : (
-            <p className="quick-nav-empty">没有匹配项，试试项目名称或模块名称。</p>
+            catalogueStatus==='ready'?<p className="quick-nav-empty">没有匹配项，试试项目名称或模块名称。</p>:null
           )}
         </div>
         <div className="quick-nav-footer">

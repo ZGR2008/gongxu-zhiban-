@@ -21,7 +21,7 @@ const reviewBody = z.object({ language: z.enum(['javascript', 'typescript']), co
 const draftBody=z.object({language:z.enum(['javascript','typescript']),code:z.string().max(50000),expectedRevision:z.number().int().min(0).optional()}).strict();
 const draftFields='project_id AS "projectId",language,code,revision,updated_at AS "updatedAt"';
 const generateBody = z.object({ requirementId: z.string().uuid() }).strict();
-const executionBody = z.object({ result: z.enum(['not_run', 'passed', 'failed', 'blocked']), note: z.string().max(4000).default(''), expectedRevision:z.number().int().positive().optional() }).strict();
+const executionBody = z.object({ result: z.enum(['not_run', 'passed', 'failed', 'blocked']), note: z.string().max(4000).default(''), expectedRevision:z.number().int().positive().optional(),expectedExecutionRevision:z.number().int().nonnegative().optional() }).strict();
 const editBody = z.object({
   category: z.enum(['normal', 'boundary', 'exception']), title: z.string().trim().min(1).max(200),
   preconditions: z.string().trim().max(2000), steps: z.string().trim().min(1).max(4000),
@@ -159,6 +159,12 @@ export async function registerPracticeRoutes(app: FastifyInstance, store?: Proje
       await client.query('COMMIT'); return reply.code(201).send({ cases: saved });
     } catch (error) { await client.query('ROLLBACK'); throw error; } finally { client.release(); }
   });
+  app.get('/projects/:projectId/test-cases/:caseId',async(request,reply)=>{
+    const a=await access(request,reply);if(!a)return;
+    const params=caseParams.safeParse(request.params);if(!params.success)return reply.code(400).send({error:'invalid_input'});
+    const rows=await pool!.query(`SELECT ${caseFields} FROM practice_test_cases WHERE project_id=$1 AND id=$2`,[a.projectId,params.data.caseId]);
+    return rows.rows[0]?{case:rows.rows[0]}:reply.code(404).send({error:'not_found'});
+  });
   app.get('/projects/:projectId/test-cases/:caseId/history',async(request,reply)=>{
     const a=await access(request,reply);if(!a)return;
     const params=caseParams.safeParse(request.params);if(!params.success)return reply.code(400).send({error:'invalid_input'});
@@ -181,8 +187,14 @@ export async function registerPracticeRoutes(app: FastifyInstance, store?: Proje
     const params = caseParams.safeParse(request.params); const body = executionBody.safeParse(request.body);
     if (!params.success || !body.success) return reply.code(400).send({ error: 'invalid_input' });
     if(!body.data.expectedRevision)return reply.code(428).send({error:'case_revision_required'});
+    if(body.data.expectedExecutionRevision===undefined)return reply.code(428).send({error:'execution_revision_required'});
     if(body.data.result!=='not_run'&&!body.data.note.trim())return reply.code(422).send({error:'execution_evidence_required'});
-    const r = await pool!.query(`UPDATE practice_test_cases SET result=$3,execution_note=$4,executor_id=CASE WHEN $3='not_run' THEN NULL ELSE $5::uuid END,executed_at=CASE WHEN $3='not_run' THEN NULL ELSE now() END WHERE project_id=$1 AND id=$2 AND revision=$6 RETURNING ${caseFields}`, [a.projectId, params.data.caseId, body.data.result, body.data.note, a.user.id,body.data.expectedRevision]);
-    return r.rows[0] ? { case: r.rows[0] } : missingOrChanged(a.projectId,params.data.caseId,reply);
+    // Both tokens participate in the same atomic update. Even a first not_run
+    // registration consumes its execution token; no timestamp comparison race.
+    const r = await pool!.query(`UPDATE practice_test_cases SET result=$3,execution_note=$4,executor_id=CASE WHEN $3='not_run' THEN NULL ELSE $5::uuid END,executed_at=CASE WHEN $3='not_run' THEN NULL ELSE now() END,execution_revision=execution_revision+1 WHERE project_id=$1 AND id=$2 AND revision=$6 AND execution_revision=$7 RETURNING ${caseFields}`, [a.projectId, params.data.caseId, body.data.result, body.data.note, a.user.id,body.data.expectedRevision,body.data.expectedExecutionRevision]);
+    if(r.rows[0])return {case:r.rows[0]};
+    const current=await pool!.query('SELECT revision FROM practice_test_cases WHERE project_id=$1 AND id=$2',[a.projectId,params.data.caseId]);
+    if(!current.rows.length)return reply.code(404).send({error:'not_found'});
+    return reply.code(409).send({error:current.rows[0].revision===body.data.expectedRevision?'test_execution_changed':'test_case_changed'});
   });
 }

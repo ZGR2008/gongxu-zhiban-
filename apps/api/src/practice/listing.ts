@@ -2,7 +2,7 @@ import type {Pool} from 'pg';
 import {z} from 'zod';
 import {readEvidenceSnapshot} from '../documents/evidence.js';
 
-export const caseFields=`id,project_id AS "projectId",requirement_version_id AS "requirementVersionId",revision,category,title,preconditions,steps,expected,model_name AS "modelName",result,execution_note AS "executionNote",executor_id AS "executorId",executed_at AS "executedAt",created_at AS "createdAt"`;
+export const caseFields=`id,project_id AS "projectId",requirement_version_id AS "requirementVersionId",revision,execution_revision AS "executionRevision",category,title,preconditions,steps,expected,model_name AS "modelName",result,execution_note AS "executionNote",executor_id AS "executorId",executed_at AS "executedAt",created_at AS "createdAt"`;
 export const caseListQuery=z.object({
  requirementVersionId:z.string().uuid().optional(),
  limit:z.coerce.number().int().min(1).max(200).default(50),

@@ -55,7 +55,7 @@ try{
   const changed=JSON.parse(Buffer.from(first.page.nextCursor,'base64url'));changed.projectId=randomUUID();assert.equal((await call('GET',endpoint()+'?cursor='+Buffer.from(JSON.stringify(changed)).toString('base64url'))).statusCode,400);
  });
  await check('editing_increments_revision_invalidates_old_cursor_and_preserves_history',async()=>{
-  const c=first.cases[0],r=await call('PATCH',endpoint()+`/${c.id}/execution`,{result:'blocked',note:'新的合成阻塞记录',expectedRevision:c.revision});assert.equal(r.statusCode,200);
+  const c=first.cases[0],r=await call('PATCH',endpoint()+`/${c.id}/execution`,{result:'blocked',note:'新的合成阻塞记录',expectedRevision:c.revision,expectedExecutionRevision:c.executionRevision});assert.equal(r.statusCode,200);
   const stale=await call('GET',endpoint()+'?cursor='+encodeURIComponent(first.page.nextCursor));assert.equal(stale.statusCode,409);assert.equal(stale.json().error,'test_list_changed');
   const fresh=(await call('GET',endpoint())).json();assert.equal(fresh.summary.blocked,1);assert.equal(fresh.summary.failed,1);assert.equal(fresh.summary.passed,199);assert.ok(fresh.summary.caseRevision>first.summary.caseRevision);
   assert.ok((await call('GET',endpoint()+`/${c.id}/history`)).json().history.length>=1);

@@ -100,10 +100,10 @@ async function scenario(name,work){
   else if(path==='/auth/logout'){state.logoutRequests=(state.logoutRequests??0)+1;body={ok:true};}
   else if(path==='/auth/login')body={token:'controlled-browser-next-session',user:{id:B,name:'合成账号B'}};
   else if(path==='/projects'&&method==='POST'){
-   const input=route.request().postDataJSON();state.writes.push({path,body:input});await new Promise(r=>setTimeout(r,state.createDelay??0));
+   const input=route.request().postDataJSON();state.writes.push({path,body:input});if(state.createGate)await state.createGate;await new Promise(r=>setTimeout(r,state.createDelay??0));
    if(state.failCreate){status=503;body={error:'database_unavailable'};}else{const id=randomUUID();body={project:{...project(id),...input}};state.createdProjects??={};state.createdProjects[id]=body.project;state.projectList=[body.project,...(state.projectList??[project(A),project(B)])];status=201;}
   }
-  else if(path==='/projects'){body={projects:state.projectList??[project(A),project(B)]};await new Promise(r=>setTimeout(r,state.projectListDelay??0));}
+  else if(path==='/projects'){state.projectListReads=(state.projectListReads??0)+1;body={projects:state.projectList??[project(A),project(B)]};if(state.projectListGate)await state.projectListGate;await new Promise(r=>setTimeout(r,state.projectListDelay??0));if(state.projectListFail){status=503;body={error:'database_unavailable'};}}
   else if(/^\/projects\/[^/]+$/.test(path)){
    const id=path.split('/')[2];state.detailCounts[id]=(state.detailCounts[id]||0)+1;
    const count=state.detailCounts[id];body=state.detailOverride||(state.createdProjects?.[id]?{project:state.createdProjects[id],requirements:[]}:state.makeDetail(id,count));if(state.detailGate)await state.detailGate(id,count);await new Promise(resolve=>setTimeout(resolve,state.delay(id,count)));if(state.detailStatus!==200){status=state.detailStatus;body={error:state.detailStatus===401?'unauthorized':'database_unavailable'};}
@@ -139,17 +139,18 @@ async function scenario(name,work){
    const source=url.searchParams.get('requirementVersionId')??[...(state.detailOverride??state.makeDetail(path.split('/')[2])).requirements].filter(row=>row.status==='confirmed').sort((a,b)=>b.version-a.version)[0]?.id??null;
    const rows=state.cases.filter(row=>row.requirementVersionId===source),cursor=url.searchParams.get('cursor'),offset=cursor?Number(cursor.split('-')[1]):0,limit=Number(url.searchParams.get('limit')??50),revision=state.caseListRevision??1;
    const only=url.searchParams.get('summaryOnly')==='true',summary={requirementVersionId:source,requirementVersion:1,caseRevision:revision,capturedAt:now,total:rows.length,passed:rows.filter(row=>row.result==='passed').length,failed:rows.filter(row=>row.result==='failed').length,blocked:rows.filter(row=>row.result==='blocked').length,notRun:rows.filter(row=>row.result==='not_run').length};
-   body={cases:only?[]:rows.slice(offset,offset+limit),summary:state.omitCaseSummary?undefined:summary,page:{limit,hasMore:!only&&offset+limit<rows.length,nextCursor:!only&&offset+limit<rows.length?`offset-${offset+limit}-${revision}`:null}};
+   body={cases:only?[]:rows.slice(offset,offset+limit).map(row=>({...row,executionRevision:row.executionRevision??0})),summary:state.omitCaseSummary?undefined:summary,page:{limit,hasMore:!only&&offset+limit<rows.length,nextCursor:!only&&offset+limit<rows.length?`offset-${offset+limit}-${revision}`:null}};
    if(cursor&&Number(cursor.split('-')[2])!==revision){status=409;body={error:'test_list_changed'};}
    state.caseListReads=(state.caseListReads??0)+1;await new Promise(resolve=>setTimeout(resolve,state.caseListDelay?.(offset)??0));
    if(state.caseListFail){status=503;body={error:'database_unavailable'};}
   }
   else if(path.endsWith('/test-cases'))body={cases:state.cases};
   else if(/\/test-cases\/[^/]+\/execution$/.test(path)&&method==='PATCH'){
-   const input=route.request().postDataJSON(),id=path.split('/').at(-2);state.writes.push({path,body:input});if(state.failCaseSave){status=503;body={error:'database_unavailable'};}else{state.caseListRevision=(state.caseListRevision??1)+1;state.cases=state.cases.map(row=>row.id===id?{...row,result:input.result,executionNote:input.note,executedAt:now,revision:(row.revision??1)+1}:row);body={case:state.cases.find(row=>row.id===id)};}
+   const input=route.request().postDataJSON(),id=path.split('/').at(-2);state.writes.push({path,body:input});const current=state.cases.find(row=>row.id===id);if(state.failCaseSave){status=503;body={error:'database_unavailable'};}else if(state.enforceExecutionRevision&&input.expectedExecutionRevision!==(current.executionRevision??0)){status=409;body={error:'test_execution_changed'};}else{state.caseListRevision=(state.caseListRevision??1)+1;state.cases=state.cases.map(row=>row.id===id?{...row,result:input.result,executionNote:input.note,executedAt:input.result==='not_run'?null:now,executionRevision:(row.executionRevision??0)+1}:row);body={case:state.cases.find(row=>row.id===id)};}
   }
+  else if(/\/test-cases\/[^/]+$/.test(path)&&method==='GET'){if(state.caseReadFails){status=503;body={error:'database_unavailable'};}else body={case:state.cases.find(row=>row.id===path.split('/').at(-1))};}
   else if(/\/test-cases\/[^/]+$/.test(path)&&method==='PATCH'){
-   const input=route.request().postDataJSON(),id=path.split('/').at(-1);state.writes.push({path,body:input});await new Promise(resolve=>setTimeout(resolve,state.caseSaveDelay??0));state.cases=state.cases.map(row=>row.id===id?{...row,...input,revision:(row.revision??1)+1,result:'not_run',executionNote:''}:row);body={case:state.cases.find(row=>row.id===id)};
+   const input=route.request().postDataJSON(),id=path.split('/').at(-1);state.writes.push({path,body:input});await new Promise(resolve=>setTimeout(resolve,state.caseSaveDelay??0));state.cases=state.cases.map(row=>row.id===id?{...row,...input,revision:(row.revision??1)+1,executionRevision:(row.executionRevision??0)+1,result:'not_run',executionNote:''}:row);body={case:state.cases.find(row=>row.id===id)};
   }
   else if(/\/agent\/runs\/[^/]+\/cancel$/.test(path)&&method==='POST'){
    state.writes.push({path});state.runs=state.runs.map(run=>path.endsWith('/'+run.id+'/cancel')?{...run,status:'failed',errorCode:'agent_cancelled'}:run);body={status:'cancelled'};
@@ -228,6 +229,67 @@ try{
   ['agent',`/projects/${A}/agent`,'.confirmed-task-panel'],['reviews',`/projects/${A}/reviews`,'#code-input'],
   ['tests',`/projects/${A}/tests`,'.case-item'],['documents',`/projects/${A}/documents`,'#doc-content'],
  ];
+ await scenario('v4_execution_conflict_keeps_input_and_requires_explicit_snapshot_review',async(page,state)=>{
+  state.makeDetail=id=>({...detail(id),requirements:[{...detail(id).requirements[0],status:'confirmed'}]});
+  state.cases=[{id:RB,requirementVersionId:RA,category:'normal',title:'并发登记合成用例',revision:1,executionRevision:0,preconditions:'',steps:'独立核对',expected:'记录准确',result:'not_run',executionNote:'',executedAt:null}];state.enforceExecutionRevision=true;
+  await page.goto(`${origin.origin}/projects/${A}/tests`);const card=page.locator('.case-item').filter({hasText:'并发登记合成用例'});
+  await card.getByLabel('人工执行结果',{exact:true}).selectOption('passed');await card.getByLabel('执行说明 / 证据',{exact:true}).fill('窗口B保留的人工记录');
+  state.cases[0]={...state.cases[0],executionRevision:1,result:'failed',executionNote:'窗口A已登记失败',executedAt:now};
+  await card.getByRole('button',{name:'保存执行结果',exact:true}).click();await card.getByRole('button',{name:'读取最新记录以比较',exact:true}).waitFor();assert.equal(await card.getByLabel('执行说明 / 证据',{exact:true}).inputValue(),'窗口B保留的人工记录');
+  state.caseReadFails=true;await card.getByRole('button',{name:'读取最新记录以比较',exact:true}).click();await card.getByRole('alert').filter({hasText:'数据服务暂不可用'}).waitFor();assert.equal(state.cases[0].result,'failed');
+  state.caseReadFails=false;await card.getByRole('button',{name:'读取最新记录以比较',exact:true}).click();await card.getByText('窗口A已登记失败',{exact:true}).waitFor();assert.equal(state.writes.length,1);
+  await card.getByRole('button',{name:'保留输入，更新登记依据',exact:true}).click();assert.equal(state.writes.length,1);await card.getByRole('button',{name:'保存执行结果',exact:true}).click();await waitFor(()=>state.cases[0].executionRevision===2);assert.equal(state.writes.length,2);assert.equal(state.writes[1].body.expectedExecutionRevision,1);assert.equal(state.cases[0].revision,1);assert.equal(state.cases[0].executionNote,'窗口B保留的人工记录');
+ });
+ await scenario('v4_mission_name_navigation_guard_cancel_and_failed_save',async(page,state)=>{
+  await page.goto(`${origin.origin}/missions/campus-books`);await page.getByLabel('实训项目名称',{exact:true}).fill('尚未创建的任务项目');
+  await page.getByRole('button',{name:'← 返回实训任务库',exact:true}).click();const guard=page.getByRole('dialog',{name:'保留未保存的编辑'});await guard.waitFor();
+  await guard.getByRole('button',{name:'留在此页',exact:true}).click();assert.equal(await page.getByLabel('实训项目名称',{exact:true}).inputValue(),'尚未创建的任务项目');
+  state.failCreate=true;await page.getByRole('button',{name:'← 返回实训任务库',exact:true}).click();await guard.getByRole('button',{name:'保存并继续',exact:true}).click();await guard.getByRole('alert').waitFor();
+  assert.match(page.url(),/\/missions\/campus-books$/);assert.equal(await page.getByLabel('实训项目名称',{exact:true}).inputValue(),'尚未创建的任务项目');
+  await guard.getByRole('button',{name:'留在此页',exact:true}).click();state.failCreate=false;
+  await page.getByRole('button',{name:'← 返回实训任务库',exact:true}).click();await guard.getByRole('button',{name:'保存并继续',exact:true}).click();await page.waitForURL('**/missions');assert.equal(state.writes.length,2);
+ });
+ await scenario('v4_mission_late_create_does_not_steal_navigation_after_leave_and_return',async(page,state)=>{
+  let release;state.createGate=new Promise(resolve=>{release=resolve;});
+  try{await page.goto(`${origin.origin}/missions/campus-books`);await page.getByRole('button',{name:/以此任务创建项目/}).click();await waitFor(()=>state.writes.length===1);
+   await page.getByRole('button',{name:'← 返回实训任务库',exact:true}).click();const guard=page.getByRole('dialog',{name:'保留未保存的编辑'});if(await guard.isVisible())await guard.getByRole('button',{name:'放弃并继续',exact:true}).click();
+   await page.waitForURL('**/missions');await page.locator('a[href="/missions/campus-books"]').click();await page.getByLabel('实训项目名称',{exact:true}).fill('返回后新的本地名称');
+   release();await waitFor(()=>Object.keys(state.createdProjects??{}).length===1);await page.waitForTimeout(180);
+   assert.match(page.url(),/\/missions\/campus-books$/);assert.equal(await page.getByLabel('实训项目名称',{exact:true}).inputValue(),'返回后新的本地名称');assert.equal(state.writes.length,1);
+  }finally{release();}
+ });
+ await scenario('v4_mission_creation_preserves_new_typing_and_deduplicates_submission',async(page,state)=>{
+  let release;state.createGate=new Promise(resolve=>{release=resolve;});
+  try{await page.goto(`${origin.origin}/missions/campus-books`);await page.getByLabel('实训项目名称',{exact:true}).fill('发出的项目名称');await page.getByRole('button',{name:/以此任务创建项目/}).click();await waitFor(()=>state.writes.length===1);
+   await page.getByLabel('实训项目名称',{exact:true}).fill('提交后的新输入');await page.locator('.mission-start form').evaluate(form=>{form.dispatchEvent(new Event('submit',{bubbles:true,cancelable:true}));form.dispatchEvent(new Event('submit',{bubbles:true,cancelable:true}));});
+   release();await waitFor(()=>Object.keys(state.createdProjects??{}).length===1);await page.getByText('提交时的项目已创建；随后输入的内容仍未保存，已保留在表单中。',{exact:true}).waitFor();
+   assert.match(page.url(),/\/missions\/campus-books$/);assert.equal(await page.getByLabel('实训项目名称',{exact:true}).inputValue(),'提交后的新输入');assert.equal(state.writes.length,1);assert.equal(state.writes[0].body.name,'发出的项目名称');
+  }finally{release();}
+ });
+ await scenario('v4_quick_navigation_deep_link_loads_other_projects',async(page,state)=>{
+  await page.goto(`${origin.origin}/projects/${A}/requirements`);await page.getByLabel('需求内容',{exact:true}).waitFor();assert.equal(state.projectListReads??0,0);
+  await page.keyboard.press('Control+k');const dialog=page.getByRole('dialog',{name:'搜索页面、项目与操作'});await dialog.getByLabel('搜索页面、项目与操作',{exact:true}).fill('受控项目 B');
+  await dialog.getByRole('button',{name:/受控项目 B/}).waitFor();assert.equal(state.projectListReads,1);await dialog.getByRole('button',{name:/受控项目 B/}).click();await page.waitForURL(`**/projects/${B}`);
+ });
+ await scenario('v4_quick_navigation_distinguishes_loading_failure_empty_and_retry',async(page,state)=>{
+  let release;state.projectListGate=new Promise(resolve=>{release=resolve;});state.projectListFail=true;
+  try{await page.goto(`${origin.origin}/projects/${A}/requirements`);await page.getByLabel('需求内容',{exact:true}).waitFor();await page.keyboard.press('Control+k');const dialog=page.getByRole('dialog',{name:'搜索页面、项目与操作'});
+   await dialog.getByLabel('搜索页面、项目与操作',{exact:true}).fill('受控项目 B');await dialog.getByText('正在读取可访问项目目录…',{exact:true}).waitFor();assert.equal(await dialog.getByText('没有匹配项，试试项目名称或模块名称。',{exact:true}).count(),0);
+   release();await dialog.getByRole('alert').waitFor();assert.equal(await dialog.getByText('没有匹配项，试试项目名称或模块名称。',{exact:true}).count(),0);
+   state.projectListGate=null;state.projectListFail=false;await dialog.getByRole('button',{name:'重新读取项目目录',exact:true}).click();await dialog.getByRole('button',{name:/受控项目 B/}).waitFor();assert.equal(state.projectListReads,2);
+   await dialog.getByLabel('搜索页面、项目与操作',{exact:true}).fill('没有这个名称的合成查询');await dialog.getByText('没有匹配项，试试项目名称或模块名称。',{exact:true}).waitFor();
+   await page.keyboard.press('Escape');assert.equal(await dialog.isVisible(),false);
+  }finally{release();}
+ });
+ await scenario('v4_quick_navigation_old_account_catalogue_cannot_fill_new_session',async(page,state)=>{
+  let release;state.projectListGate=new Promise(resolve=>{release=resolve;});
+  try{await page.goto(`${origin.origin}/projects/${A}/requirements`);await page.getByLabel('需求内容',{exact:true}).waitFor();await page.keyboard.press('Control+k');await waitFor(()=>state.projectListReads===1);
+   state.projectList=[];state.projectListGate=null;
+   await page.evaluate(()=>{const previous=localStorage.getItem('gongxu_token');localStorage.setItem('gongxu_token','controlled-browser-next-session');window.dispatchEvent(new StorageEvent('storage',{key:'gongxu_token',oldValue:previous,newValue:'controlled-browser-next-session',storageArea:localStorage}));});
+   await page.getByLabel('需求内容',{exact:true}).waitFor();await page.keyboard.press('Control+k');const dialog=page.getByRole('dialog',{name:'搜索页面、项目与操作'});await dialog.getByText('当前账号还没有项目。',{exact:true}).waitFor();
+   release();await page.waitForTimeout(180);await dialog.getByLabel('搜索页面、项目与操作',{exact:true}).fill('受控项目 B');assert.equal(await dialog.getByRole('button',{name:/受控项目 B/}).count(),0);assert.equal(state.projectListReads,2);
+  }finally{release();}
+ });
  for(const [name,path,selector] of accessibilityScreens)await scenario(`accessibility_${name}`,async(page,state)=>{
   traceFixture(state);
   state.tasks=[{id:RA,title:'合成审批任务',stage:'开发',description:'核对审批留档',deliverable:'合成记录',status:'todo',dependsOn:[],requirementVersionId:RA}];
