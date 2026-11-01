@@ -309,6 +309,7 @@ try {
       await api(
         `${projectPath}/requirements/${next.requirement.id}/confirm`,
         "POST",
+        { expectedContent: next.requirement.content },
       );
       await page
         .locator(".wb-project-picker select")

@@ -110,6 +110,10 @@ async function scenario(name,work){
    state.writes.push({path,body:route.request().postDataJSON()});
    await new Promise(resolve=>setTimeout(resolve,state.saveDelay));
    if(state.failSave){status=503;body={error:'database_unavailable'};} else body={requirement:{...detail(path.split('/')[2]).requirements[0],id:'cccccccc-cccc-4ccc-8ccc-cccccccccccc',version:2,content:route.request().postDataJSON().content}};
+  } else if(/\/requirements\/[^/]+\/confirm$/.test(path)&&method==='POST'){
+   const input=route.request().postDataJSON()??{};state.writes.push({path,body:input});await new Promise(resolve=>setTimeout(resolve,state.confirmDelay??0));
+   if(state.confirmError){status=409;body={error:state.confirmError};}
+   else{const current=state.detailOverride??state.makeDetail(path.split('/')[2]);const row=current.requirements.find(value=>value.id===path.split('/').at(-2));body={requirement:{...row,status:'confirmed'}};state.detailOverride={...current,requirements:current.requirements.map(value=>value.id===row.id?body.requirement:value)};}
   } else if(path.endsWith('/documents/generate')&&method==='POST'){
    state.docGenerateCalls=(state.docGenerateCalls??0)+1;
    if(state.docGenerateError){status=413;body={error:state.docGenerateError};}
@@ -267,6 +271,28 @@ try{
   assert.equal(await page.locator('.side-nav [aria-current="page"]').count(),1);
   assert.equal(await page.locator('.side-nav [aria-current="page"]').getAttribute('aria-label'),'我的项目');
   await page.keyboard.press('Tab');assert.ok(await page.locator('main').evaluate(main=>main.contains(document.activeElement)));
+ });
+ await scenario('requirement_confirmation_posts_seen_snapshot_once_and_preserves_new_typing',async(page,state)=>{
+  state.confirmDelay=500;await page.goto(`${origin.origin}/projects/${A}/requirements`);await page.locator('#requirement').waitFor();
+  const seen=await page.locator('#requirement').inputValue();const button=page.getByRole('button',{name:/确认最新版本/});
+  await button.evaluate(el=>{el.click();el.click();});await waitFor(()=>state.writes.length>0);
+  assert.deepEqual(state.writes[0].body,{expectedContent:seen});assert.equal(state.writes.length,1);
+  const edited=seen+'\n确认等待期间继续编辑';await page.locator('#requirement').fill(edited);
+  await page.locator('.alert.success').filter({hasText:'需求版本已确认'}).waitFor();assert.equal(state.writes.length,1);assert.equal(await page.locator('#requirement').inputValue(),edited);
+  await page.getByRole('link',{name:'知识库',exact:true}).first().click();const guard=page.getByRole('dialog',{name:'保留未保存的编辑'});await guard.getByRole('button',{name:'留在此页'}).click();assert.ok(page.url().endsWith('/requirements'));assert.equal(await page.locator('#requirement').inputValue(),edited);
+ });
+ await scenario('requirement_confirmation_conflict_refresh_protects_edits_and_failed_save',async(page,state)=>{
+  state.confirmError='requirement_content_changed';await page.goto(`${origin.origin}/projects/${A}/requirements`);await page.locator('#requirement').waitFor();
+  const seen=await page.locator('#requirement').inputValue(),confirm=page.getByRole('button',{name:/确认最新版本/});
+  await confirm.click();await page.locator('.alert.error').filter({hasText:'原文已在另一处更新'}).waitFor();assert.equal(await page.locator('#requirement').inputValue(),seen);assert.ok(await confirm.isDisabled());
+  const edited=seen+'\n保留的本地合并意见';await page.locator('#requirement').fill(edited);const refresh=page.getByRole('button',{name:'重新读取需求',exact:true});
+  await refresh.click();const guard=page.getByRole('dialog',{name:'保留未保存的编辑'});await guard.getByRole('button',{name:'留在此页'}).click();assert.equal(await page.locator('#requirement').inputValue(),edited);
+  state.failSave=true;const reads=state.detailCounts[A];await refresh.click();await guard.getByRole('button',{name:'保存并继续'}).click();await guard.getByText(/保存未成功/).waitFor();assert.equal(state.detailCounts[A],reads);assert.equal(await page.locator('#requirement').inputValue(),edited);
+  await guard.getByRole('button',{name:'留在此页'}).click();state.failSave=false;state.detailOverride=detail(A,'重新读取后需要人工审核的新正文');
+  await refresh.click();await guard.getByRole('button',{name:'放弃并继续'}).click();await page.waitForFunction(()=>document.querySelector('#requirement')?.value==='重新读取后需要人工审核的新正文');
+  state.confirmError='requirement_newer_draft_exists';await confirm.click();await page.locator('.alert.error').filter({hasText:'已有更新的需求版本'}).waitFor();assert.ok(await confirm.isDisabled());
+  state.confirmError=null;await refresh.click();await page.waitForFunction(()=>!Array.from(document.querySelectorAll('button')).find(el=>el.textContent.includes('确认最新版本'))?.disabled);await confirm.click();await page.locator('.alert.success').filter({hasText:'需求版本已确认'}).waitFor();
+  assert.equal(state.writes.at(-1).body.expectedContent,'重新读取后需要人工审核的新正文');
  });
  await scenario('markdown_deferred_load_keeps_complete_draft_and_builds_outline',async(page,state)=>{
   let release;state.markdownGate=new Promise(resolve=>{release=resolve;});

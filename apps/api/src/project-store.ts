@@ -3,6 +3,9 @@ import type { Pool } from 'pg';
 export type User = { id: string; name: string; email: string };
 export type Project = { id: string; name: string; description: string; status: string; createdAt: Date; updatedAt: Date };
 export type Requirement = { id: string; projectId: string; version: number; content: string; status: 'draft' | 'confirmed'; createdAt: Date; confirmedAt: Date | null };
+export class RequirementWriteConflict extends Error {
+  constructor(public readonly code: 'requirement_content_changed' | 'requirement_newer_draft_exists') { super(code); }
+}
 export interface ProjectStore {
   createUser(name: string, email: string, passwordHash: string): Promise<User | null>;
   findUserByEmail(email: string): Promise<(User & { passwordHash: string }) | null>;
@@ -14,8 +17,8 @@ export interface ProjectStore {
   getProject(userId: string, projectId: string): Promise<Project | null>;
   listRequirements(userId: string, projectId: string): Promise<Requirement[] | null>;
   createRequirement(userId: string, projectId: string, content: string): Promise<Requirement | null>;
-  updateRequirement(userId: string, projectId: string, id: string, content: string): Promise<Requirement | null>;
-  confirmRequirement(userId: string, projectId: string, id: string): Promise<Requirement | null>;
+  updateRequirement(userId: string, projectId: string, id: string, content: string, expectedContent: string): Promise<Requirement | null>;
+  confirmRequirement(userId: string, projectId: string, id: string, expectedContent: string): Promise<Requirement | null>;
 }
 const projectFields = `id, name, description, status, created_at AS "createdAt", updated_at AS "updatedAt"`;
 const requirementFields = `id, project_id AS "projectId", version, content #>> '{}' AS content, status, created_at AS "createdAt", confirmed_at AS "confirmedAt"`;
@@ -45,18 +48,33 @@ export class PgProjectStore implements ProjectStore {
       await client.query('COMMIT'); return r.rows[0];
     } catch (e) { await client.query('ROLLBACK'); throw e; } finally { client.release(); }
   }
-  async updateRequirement(userId: string, projectId: string, id: string, content: string) {
-    const r = await this.pool.query(`UPDATE requirement_versions r SET content=to_jsonb($4::text) FROM projects p WHERE r.id=$3 AND r.project_id=$2 AND p.id=r.project_id AND p.owner_id=$1 AND r.status='draft' RETURNING r.id,r.project_id AS "projectId",r.version,r.content #>> '{}' AS content,r.status,r.created_at AS "createdAt",r.confirmed_at AS "confirmedAt"`, [userId,projectId,id,content]); return r.rows[0] ?? null;
+  async updateRequirement(userId: string, projectId: string, id: string, content: string, expectedContent: string) {
+    return this.writeDraft(userId, projectId, id, expectedContent, {kind:'edit', content});
   }
-  async confirmRequirement(userId: string, projectId: string, id: string) {
+  async confirmRequirement(userId: string, projectId: string, id: string, expectedContent: string) {
+    return this.writeDraft(userId, projectId, id, expectedContent, {kind:'confirm'});
+  }
+  private async writeDraft(userId: string, projectId: string, id: string, expectedContent: string, action: {kind:'edit';content:string}|{kind:'confirm'}): Promise<Requirement | null> {
     const client = await this.pool.connect();
     try {
       await client.query('BEGIN');
-      // Share this project lock with agent-plan confirmation so a newer requirement
-      // cannot be confirmed between the plan's version check and task creation.
+      // All draft writes share creation/plan confirmation's project lock, so
+      // review of a particular text cannot race an edit or a newer version.
       const project = await client.query('SELECT id FROM projects WHERE id=$1 AND owner_id=$2 FOR UPDATE', [projectId,userId]);
       if (!project.rowCount) { await client.query('ROLLBACK'); return null; }
-      const r = await client.query(`UPDATE requirement_versions r SET status='confirmed',confirmed_at=now() WHERE r.id=$1 AND r.project_id=$2 AND r.status='draft' RETURNING r.id,r.project_id AS "projectId",r.version,r.content #>> '{}' AS content,r.status,r.created_at AS "createdAt",r.confirmed_at AS "confirmedAt"`, [id,projectId]);
+      const selected = await client.query<Requirement>(`SELECT ${requirementFields} FROM requirement_versions WHERE id=$1 AND project_id=$2 FOR UPDATE`, [id,projectId]);
+      const current = selected.rows[0];
+      if (!current || current.status !== 'draft') { await client.query('ROLLBACK'); return null; }
+      if (current.content !== expectedContent) throw new RequirementWriteConflict('requirement_content_changed');
+      if (action.kind === 'confirm') {
+        const latest = await client.query('SELECT id FROM requirement_versions WHERE project_id=$1 ORDER BY version DESC LIMIT 1', [projectId]);
+        if (latest.rows[0]?.id !== id) throw new RequirementWriteConflict('requirement_newer_draft_exists');
+      } else if (action.content === current.content) {
+        await client.query('COMMIT'); return current;
+      }
+      const r = action.kind === 'confirm'
+        ? await client.query<Requirement>(`UPDATE requirement_versions SET status='confirmed',confirmed_at=now() WHERE id=$1 AND project_id=$2 AND status='draft' RETURNING ${requirementFields}`, [id,projectId])
+        : await client.query<Requirement>(`UPDATE requirement_versions SET content=to_jsonb($3::text) WHERE id=$1 AND project_id=$2 AND status='draft' RETURNING ${requirementFields}`, [id,projectId,action.content]);
       await client.query('COMMIT'); return r.rows[0] ?? null;
     } catch (e) { await client.query('ROLLBACK'); throw e; } finally { client.release(); }
   }

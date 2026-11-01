@@ -33,7 +33,7 @@ try{
  await check('isolated_synthetic_accounts_project_and_confirmed_requirement',async()=>{
   for(const isForeign of [false,true]){const r=await call('POST','/auth/register',{name:'中断恢复 · 合成账号',email:`recovery-${randomUUID()}@example.test`,password:randomBytes(24).toString('base64url')},{});assert.equal(r.statusCode,201);if(isForeign)foreign={authorization:`Bearer ${r.json().token}`};else auth={authorization:`Bearer ${r.json().token}`};}
   let r=await call('POST','/projects',{name:'运行恢复 · 合成项目',description:'仅验证实际数据库状态恢复，不是真实学生数据'});assert.equal(r.statusCode,201);project=r.json().project.id;
-  r=await call('POST',`/projects/${project}/requirements`,{content:'保存任务并验证中断不会伪装成功。'});assert.equal(r.statusCode,201);requirement=r.json().requirement.id;assert.equal((await call('POST',`/projects/${project}/requirements/${requirement}/confirm`)).statusCode,200);
+  r=await call('POST',`/projects/${project}/requirements`,{content:'保存任务并验证中断不会伪装成功。'});assert.equal(r.statusCode,201);requirement=r.json().requirement.id;assert.equal((await call('POST',`/projects/${project}/requirements/${requirement}/confirm`,{expectedContent:r.json().requirement.content})).statusCode,200);
  });
  const base=`/projects/${project}/agent/runs`;
  await check('expired_heartbeat_recovers_running_children_but_keeps_completed_tool_evidence',async()=>{

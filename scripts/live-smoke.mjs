@@ -85,11 +85,11 @@ try {
     report.artifacts.projectId = project.id;
     ({ requirement } = await request(`/projects/${project.id}/requirements`, { method: 'POST', token: ownerToken, expected: 201, body: { content: requirementText } }));
     ensure(requirement.status === 'draft', 'requirement_not_draft');
-    await request(`/projects/${project.id}/requirements/${requirement.id}`, { method: 'PATCH', token: ownerToken, body: { content: `${requirementText}\n本版本为自动联调输入。` } });
+    ({ requirement } = await request(`/projects/${project.id}/requirements/${requirement.id}`, { method: 'PATCH', token: ownerToken, body: { content: `${requirementText}\n本版本为自动联调输入。`, expectedContent: requirement.content } }));
     await request(`/projects/${project.id}/agent/runs`, { method: 'POST', token: ownerToken, expected: 409, body: { requirementId: requirement.id } });
-    ({ requirement } = await request(`/projects/${project.id}/requirements/${requirement.id}/confirm`, { method: 'POST', token: ownerToken }));
+    ({ requirement } = await request(`/projects/${project.id}/requirements/${requirement.id}/confirm`, { method: 'POST', token: ownerToken, body: { expectedContent: requirement.content } }));
     ensure(requirement.status === 'confirmed', 'confirmation_not_saved');
-    await request(`/projects/${project.id}/requirements/${requirement.id}`, { method: 'PATCH', token: ownerToken, expected: 404, body: { content: 'Confirmed versions must remain immutable.' } });
+    await request(`/projects/${project.id}/requirements/${requirement.id}`, { method: 'PATCH', token: ownerToken, expected: 404, body: { content: 'Confirmed versions must remain immutable.', expectedContent: requirement.content } });
     const detail = await request(`/projects/${project.id}`, { token: ownerToken });
     ensure(detail.requirements.some(item => item.id === requirement.id && item.status === 'confirmed'), 'requirement_not_persisted');
   });
@@ -142,7 +142,7 @@ try {
     await step('real_ai_requirement_analysis', async () => {
       const result = await request(`/projects/${project.id}/requirements/analyze`, { method: 'POST', token: ownerToken, expected: 201, body: { idea: requirementText } });
       ensure(result.requirement.status === 'draft' && result.requirement.content.length > 100, 'analysis_not_draft');
-      ({ requirement } = await request(`/projects/${project.id}/requirements/${result.requirement.id}/confirm`, { method: 'POST', token: ownerToken }));
+      ({ requirement } = await request(`/projects/${project.id}/requirements/${result.requirement.id}/confirm`, { method: 'POST', token: ownerToken, body: { expectedContent: result.requirement.content } }));
       report.artifacts.requirementId = requirement.id;
       const records = await request(`/projects/${project.id}/ai-generations`, { token: ownerToken });
       ensure(records.generations.length > 0, 'generation_not_audited');

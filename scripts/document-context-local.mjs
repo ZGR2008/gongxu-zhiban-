@@ -28,7 +28,7 @@ async function check(name,run){stage=name;await run();report.checks.push({name,s
 async function project(){
  const p=await call('POST','/projects',{name:'文档完整性 · 合成验证',description:'仅本地合成数据，不作为真实学生成绩'});assert.equal(p.statusCode,201);const id=p.json().project.id;
  const r=await call('POST',`/projects/${id}/requirements`,{content:'保留完整执行说明与原始版本，不能将合成通过写成真实环境已验证。'});assert.equal(r.statusCode,201);const version=r.json().requirement.id;
- assert.equal((await call('POST',`/projects/${id}/requirements/${version}/confirm`)).statusCode,200);return{id,version,url:`/projects/${id}`};
+ assert.equal((await call('POST',`/projects/${id}/requirements/${version}/confirm`,{expectedContent:r.json().requirement.content})).statusCode,200);return{id,version,url:`/projects/${id}`};
 }
 async function cases(p,count,note=''){
  return pool.query(`INSERT INTO practice_test_cases(project_id,requirement_version_id,title,category,preconditions,steps,expected,model_name,result,execution_note,executed_at)

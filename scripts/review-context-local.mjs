@@ -36,7 +36,7 @@ try{
   const response=await app.inject({method:'POST',url:'/auth/register',payload:{name:'审查来源验证 · 合成',email:`review-context-${randomUUID()}@example.test`,password:randomBytes(24).toString('base64url')}});assert.equal(response.statusCode,201);const data=response.json();const account={id:data.user.id,token:data.token};if(isForeign)foreign=account;else owner=account;
  }
  const created=await call('POST','/projects',{name:'审查上下文 · 合成回归',description:'本地真实DB和向量，聊天明确替身，不代表学生数据'});assert.equal(created.statusCode,201);const project=created.json().project.id;root=`/projects/${project}`;
- const first=await call('POST',`${root}/requirements`,{content:requirement});version=first.json().requirement.id;assert.equal((await call('POST',`${root}/requirements/${version}/confirm`)).statusCode,200);
+ const first=await call('POST',`${root}/requirements`,{content:requirement});version=first.json().requirement.id;assert.equal((await call('POST',`${root}/requirements/${version}/confirm`,{expectedContent:first.json().requirement.content})).statusCode,200);
  let firstReview;
  await check('real_review_context_uses_owned_vectors_full_requirement_and_persists_source',async()=>{
   const ownDoc=await saveText(pool,owner.id,'审批规则 · 合成来源',requirement),foreignDoc=await saveText(pool,foreign.id,'不得跨账号使用 · 合成来源',requirement);
@@ -51,17 +51,17 @@ try{
  await check('review_in_flight_keeps_its_source_version_after_new_confirmation',async()=>{
   let entered,release;const started=new Promise(resolve=>{entered=resolve;}),waiting=new Promise(resolve=>{release=resolve;});releaseModel=release;modelHook=async()=>{entered();await waiting;};
   const request=call('POST',`${root}/code-reviews`,{language:'javascript',code:'const versionBound = true;',context:'project',requirementId:version});await enteredWithin(started);
-  const next=await call('POST',`${root}/requirements`,{content:'新版本要求两个管理员共同批准；不能沿用旧审查。'});const nextVersion=next.json().requirement.id;assert.equal((await call('POST',`${root}/requirements/${nextVersion}/confirm`)).statusCode,200);
+  const next=await call('POST',`${root}/requirements`,{content:'新版本要求两个管理员共同批准；不能沿用旧审查。'});const nextVersion=next.json().requirement.id;assert.equal((await call('POST',`${root}/requirements/${nextVersion}/confirm`,{expectedContent:next.json().requirement.content})).statusCode,200);
   release();const response=await request;modelHook=null;assert.equal(response.statusCode,201);assert.equal(response.json().review.requirementVersionId,version);assert.equal(response.json().review.reviewContext.requirement.content,requirement);
   const before=modelCalls;assert.equal((await call('POST',`${root}/code-reviews`,{language:'javascript',code:'let stale;',context:'project',requirementId:version})).statusCode,409);assert.equal(modelCalls,before);
  });
  await check('foreign_review_access_and_cross_project_context_are_rejected',async()=>{
   const before=modelCalls;assert.equal((await call('GET',`${root}/code-reviews`,undefined,foreign)).statusCode,404);assert.equal((await call('POST',`${root}/code-reviews`,{language:'javascript',code:'let forbidden;'},foreign)).statusCode,404);assert.equal(modelCalls,before);
-  const other=await call('POST','/projects',{name:'关系隔离 · 合成',description:''});const otherRoot=`/projects/${other.json().project.id}`;const r=await call('POST',`${otherRoot}/requirements`,{content:'另一个项目的需求'});const otherVersion=r.json().requirement.id;await call('POST',`${otherRoot}/requirements/${otherVersion}/confirm`);
+  const other=await call('POST','/projects',{name:'关系隔离 · 合成',description:''});const otherRoot=`/projects/${other.json().project.id}`;const r=await call('POST',`${otherRoot}/requirements`,{content:'另一个项目的需求'});const otherVersion=r.json().requirement.id;await call('POST',`${otherRoot}/requirements/${otherVersion}/confirm`,{expectedContent:r.json().requirement.content});
   const client=await pool.connect();try{await client.query('BEGIN');await assert.rejects(()=>client.query('INSERT INTO code_reviews(project_id,language,code,syntax_findings,ai_advice,model_name,requirement_version_id) VALUES($1,$2,$3,$4,$5,$6,$7)',[project,'javascript','let cross;','[]','合成建议','fixture',otherVersion]),error=>error.code==='23503');}finally{await client.query('ROLLBACK');client.release();}
  });
  await check('long_requirement_blocks_project_review_but_explicit_code_only_is_truthful',async()=>{
-  const long=await call('POST',`${root}/requirements`,{content:'需求'.repeat(10500)+'末尾必须检查'});const longId=long.json().requirement.id;await call('POST',`${root}/requirements/${longId}/confirm`);
+  const long=await call('POST',`${root}/requirements`,{content:'需求'.repeat(10500)+'末尾必须检查'});const longId=long.json().requirement.id;await call('POST',`${root}/requirements/${longId}/confirm`,{expectedContent:long.json().requirement.content});
   const before=modelCalls;assert.equal((await call('POST',`${root}/code-reviews`,{language:'javascript',code:'let bounded;',context:'project',requirementId:longId})).statusCode,413);assert.equal(modelCalls,before);
   const response=await call('POST',`${root}/code-reviews`,{language:'javascript',code:'let explicit;',context:'code_only'});assert.equal(response.statusCode,201);assert.equal(response.json().review.reviewContext.scope,'code_only');assert.equal(response.json().review.requirementVersionId,null);assert.equal(response.json().review.reviewContext.retrieval.sources.length,0);
  });

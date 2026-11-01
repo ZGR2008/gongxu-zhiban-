@@ -28,7 +28,7 @@ let owner,foreign,browser,browserPage,stage='setup',projectId,version,oldVersion
 const call=(method,url,payload,identity=owner)=>app.inject({method,url,headers:{authorization:`Bearer ${identity.token}`},...(payload===undefined?{}:{payload})});
 async function check(name,run){stage=name;await run();report.checks.push({name,status:'passed'});console.log(`PASS ${name}`);}
 const endpoint=()=>`/projects/${projectId}/test-cases`;
-async function makeVersion(content){const r=await call('POST',`/projects/${projectId}/requirements`,{content});assert.equal(r.statusCode,201);const id=r.json().requirement.id;assert.equal((await call('POST',`/projects/${projectId}/requirements/${id}/confirm`)).statusCode,200);return id;}
+async function makeVersion(content){const r=await call('POST',`/projects/${projectId}/requirements`,{content});assert.equal(r.statusCode,201);const id=r.json().requirement.id;assert.equal((await call('POST',`/projects/${projectId}/requirements/${id}/confirm`,{expectedContent:r.json().requirement.content})).statusCode,200);return id;}
 try{
  for(const other of [false,true]){
   const r=await app.inject({method:'POST',url:'/auth/register',payload:{name:'分页验证 · 合成',email:`test-list-${randomUUID()}@example.test`,password:randomBytes(24).toString('base64url')}});assert.equal(r.statusCode,201);const d=r.json();const identity={id:d.user.id,token:d.token};if(other)foreign=identity;else owner=identity;

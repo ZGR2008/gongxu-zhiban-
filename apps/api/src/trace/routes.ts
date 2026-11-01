@@ -24,7 +24,10 @@ export async function registerTraceRoutes(app:FastifyInstance,store?:ProjectStor
     await pool!.query(`INSERT INTO requirement_items(id,project_id,requirement_version_id,stable_key,position,start_offset,end_offset,content,acceptance_candidate)
       SELECT x.id,$1,$2,x.key,x.position,x.start,x.end,x.text,x."acceptanceCandidate"
       FROM jsonb_to_recordset($3::jsonb) AS x(id uuid,key text,position integer,start integer,"end" integer,text text,"acceptanceCandidate" boolean)
-      ON CONFLICT(requirement_version_id,stable_key) DO NOTHING`,[projectId,versionId,JSON.stringify(items)]);
+      ON CONFLICT DO NOTHING`,[projectId,versionId,JSON.stringify(items)]);
+    // The deterministic id and the version/key pair are both unique. Concurrent
+    // first reads can race on either index; neither should rewrite existing rows
+    // (which may already carry a human review). Foreign-key/check failures remain errors.
     return items;
   }
   app.get('/projects/:projectId/trace',async(req,reply)=>{

@@ -56,7 +56,7 @@ try{
  });
  await check('confirmed_requirement_and_generated_fixture_cases',async()=>{
   let response=await call('POST',`${root}/requirements`,{content:'需求版本一：审批必须留存记录。'});assert.equal(response.statusCode,201);firstVersion=response.json().requirement.id;
-  assert.equal((await call('POST',`${root}/requirements/${firstVersion}/confirm`)).statusCode,200);
+  assert.equal((await call('POST',`${root}/requirements/${firstVersion}/confirm`,{expectedContent:response.json().requirement.content})).statusCode,200);
   response=await call('POST',`${root}/test-cases`,{requirementId:firstVersion});assert.equal(response.statusCode,201);testCase=response.json().cases[0];assert.equal(testCase.revision,1);assert.equal(testCase.result,'not_run');
  });
  await check('trace_suggestions_require_human_review_and_never_fake_execution',async()=>{
@@ -110,7 +110,7 @@ try{
  });
  await check('current_version_statistics_do_not_inherit_historical_passes',async()=>{
   const response=await call('POST',`${root}/requirements`,{content:'需求版本二：审批必须由两人确认，并保留原记录。\n失败必须回滚，不能产生重复审批记录。\n普通学生不得查看其他人的审批材料。\n验收时必须提供操作步骤、结果及对应版本。'});assert.equal(response.statusCode,201);secondVersion=response.json().requirement.id;
-  assert.equal((await call('POST',`${root}/requirements/${secondVersion}/confirm`)).statusCode,200);
+  assert.equal((await call('POST',`${root}/requirements/${secondVersion}/confirm`,{expectedContent:response.json().requirement.content})).statusCode,200);
   assert.equal((await call('GET',`${root}/test-cases`)).json().cases.length,0);
   assert.equal((await call('GET',`${root}/test-cases?requirementVersionId=${firstVersion}`)).json().cases.length,3);
   assert.equal((await call('POST',`${root}/test-cases`,{requirementId:secondVersion})).statusCode,201);
@@ -129,7 +129,7 @@ try{
  await check('cross_project_trace_target_rejected_even_for_same_owner',async()=>{
   let response=await call('POST','/projects',{name:'追踪隔离 · 第二个合成项目',description:'仅验证同一账号的项目边界'});assert.equal(response.statusCode,201);const otherRoot=`/projects/${response.json().project.id}`;
   response=await call('POST',`${otherRoot}/requirements`,{content:'其他项目必须单独验收'});assert.equal(response.statusCode,201);const otherRequirement=response.json().requirement.id;
-  assert.equal((await call('POST',`${otherRoot}/requirements/${otherRequirement}/confirm`)).statusCode,200);
+  assert.equal((await call('POST',`${otherRoot}/requirements/${otherRequirement}/confirm`,{expectedContent:response.json().requirement.content})).statusCode,200);
   response=await call('POST',`${otherRoot}/test-cases`,{requirementId:otherRequirement});assert.equal(response.statusCode,201);const otherCase=response.json().cases[0];
   const trace=(await call('GET',`${root}/trace`)).json();
   assert.equal((await call('POST',`${root}/trace/links`,{itemId:trace.items[0].id,targetId:otherCase.id,targetKind:'case',expectedCaseRevision:otherCase.revision,decision:'confirmed',note:'禁止跨项目关联'})).statusCode,404);
@@ -228,7 +228,7 @@ try{
  });
  await check('trace_version_change_during_preparation_requires_refresh',async()=>{
   const draft=await store.createRequirement(user,project,'合成第三版：审批更新，需要重新验证。');let changed=false;
-  const wrapped={query:async(sql,values)=>{const result=await pool.query(sql,values);if(!changed&&sql.startsWith('INSERT INTO trace_links')&&sql.includes('FROM practice_test_cases')){changed=true;await store.confirmRequirement(user,project,draft.id);}return result;},connect:()=>pool.connect()};
+  const wrapped={query:async(sql,values)=>{const result=await pool.query(sql,values);if(!changed&&sql.startsWith('INSERT INTO trace_links')&&sql.includes('FROM practice_test_cases')){changed=true;await store.confirmRequirement(user,project,draft.id,draft.content);}return result;},connect:()=>pool.connect()};
   const probe=Fastify({logger:false});await registerTraceRoutes(probe,store,wrapped);
   try{
    const response=await probe.inject({method:'GET',url:`${root}/trace`,headers:auth});assert.equal(changed,true);assert.equal(response.statusCode,409);assert.equal(response.json().error,'trace_refresh_required');
@@ -252,7 +252,7 @@ try{
   const confirmation=Fastify({logger:false}),review=Fastify({logger:false});await registerProjectRoutes(confirmation,new PgProjectStore(confirmationPool));await registerTraceRoutes(review,store,wrapped);
   let pendingConfirmation,pendingReview;
   try{
-   pendingConfirmation=confirmation.inject({method:'POST',url:`${root}/requirements/${next.id}/confirm`,headers:auth}).then(r=>r);
+   pendingConfirmation=confirmation.inject({method:'POST',url:`${root}/requirements/${next.id}/confirm`,headers:auth,payload:{expectedContent:next.content}}).then(r=>r);
    const deadline=Date.now()+3000;let waiting=false;
    while(Date.now()<deadline){if(confirmationPid){const state=await pool.query('SELECT wait_event_type FROM pg_stat_activity WHERE pid=$1',[confirmationPid]);if(state.rows[0]?.wait_event_type==='Lock'){waiting=true;break;}}await new Promise(r=>setTimeout(r,10));}
    assert.equal(waiting,true,'The earlier confirmation must be waiting for the project lock.');

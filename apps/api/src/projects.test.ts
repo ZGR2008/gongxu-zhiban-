@@ -36,9 +36,9 @@ test('authentication, ownership, requirement editing, versioning, confirmation a
   assert.equal((await app.inject({method:'POST',url:`/projects/${projectId}/requirements`,headers:hb,payload:{content:'unauthorized'}})).statusCode,404);
   const url = `/projects/${projectId}/requirements`;
   const draft = await app.inject({method:'POST',url,headers:ha,payload:{content:'需求草稿'}}); assert.equal(draft.statusCode,201); const id=draft.json().requirement.id;
-  assert.equal((await app.inject({method:'PATCH',url:`${url}/${id}`,headers:ha,payload:{content:'更新需求'}})).json().requirement.content,'更新需求');
-  assert.equal((await app.inject({method:'POST',url:`${url}/${id}/confirm`,headers:ha})).json().requirement.status,'confirmed');
-  assert.equal((await app.inject({method:'PATCH',url:`${url}/${id}`,headers:ha,payload:{content:'不能更改'}})).statusCode,404);
+  assert.equal((await app.inject({method:'PATCH',url:`${url}/${id}`,headers:ha,payload:{content:'更新需求',expectedContent:'需求草稿'}})).json().requirement.content,'更新需求');
+  assert.equal((await app.inject({method:'POST',url:`${url}/${id}/confirm`,headers:ha,payload:{expectedContent:'更新需求'}})).json().requirement.status,'confirmed');
+  assert.equal((await app.inject({method:'PATCH',url:`${url}/${id}`,headers:ha,payload:{content:'不能更改',expectedContent:'更新需求'}})).statusCode,404);
   assert.equal((await app.inject({method:'POST',url,headers:ha,payload:{content:'第二版'}})).json().requirement.version,2);
   assert.equal((await app.inject({method:'GET',url:`/projects/${projectId}`,headers:ha})).json().requirements.length,2);
   assert.equal((await app.inject({method:'POST',url:'/auth/logout',headers:ha})).statusCode,200);

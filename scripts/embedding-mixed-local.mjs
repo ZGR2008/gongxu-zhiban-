@@ -68,7 +68,7 @@ try{
  }
  const project=await call(identities[0],'POST','/projects',{name:'并发Agent · 合成验证',description:'仅验证服务排队和来源，不代表学生项目成果'});assert.equal(project.status,201);
  const base=`/projects/${project.body.project.id}`,requirement=await call(identities[0],'POST',base+'/requirements',{content:text});assert.equal(requirement.status,201);
- assert.equal((await call(identities[0],'POST',base+`/requirements/${requirement.body.requirement.id}/confirm`)).status,200);
+ assert.equal((await call(identities[0],'POST',base+`/requirements/${requirement.body.requirement.id}/confirm`,{expectedContent:requirement.body.requirement.content})).status,200);
  const beforeCalls=provider.attempts;
  await check('real_mixed_index_search_and_agent_share_one_provider_slot',async()=>{
   const mixed=[operation('index_1',identities[0],'POST',`/knowledge/${identities[0].document.id}/index`)];

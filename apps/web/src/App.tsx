@@ -50,6 +50,9 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
     const codes: Record<string, string> = { database_not_configured: '数据库尚未配置，请先完成服务端数据库设置。', database_unavailable: '数据服务暂不可用，请稍后重试。', requirement_generation_limit: '需求已完整保存，但超过单次生成的 20000 字符边界；请拆分需求范围后重试。本次没有截断生成。', invalid_request: '请求内容不符合要求，请刷新页面后重试。', invalid_input: '输入不符合要求，请检查内容长度和格式。', invalid_credentials: '邮箱或密码不正确。', unauthorized: '登录已失效，请重新登录。', email_unavailable: '该邮箱已被使用。', too_many_attempts: '尝试次数过多，请稍后再试。', not_found: '项目不存在或无法访问。', not_found_or_confirmed: '该版本不存在或已经确认，请刷新后重试。', ai_not_configured: '服务端尚未配置 AI 模型。', ai_timeout: '模型请求超时，请稍后重试。', ai_output_truncated: '模型输出达到长度限制，尚未保存为完整结果。请缩小需求范围后重试。', ai_provider_error: '模型服务暂不可用，请检查服务端配置。', ai_auth_error: '模型服务鉴权失败，请检查本地服务端配置中的 API 密钥及访问权限。', ai_insufficient_balance: '模型服务余额不足，请检查服务账号余额。', ai_rate_limited: '模型请求过于频繁或超过服务额度，请稍后重试并检查服务额度。', pdf_no_text: 'PDF 中没有可提取的文本；扫描件暂不支持 OCR。', pdf_parser_unavailable: 'PDF 解析器不可用，请检查服务端配置。', invalid_pdf: 'PDF 文件无效或无法解析。', pdf_too_large: 'PDF 文件不能超过 3 MB。', pdf_too_many_pages: 'PDF 页数超过限制。', embedding_not_configured: '服务端尚未配置向量模型。', embedding_provider_error: '向量模型服务不可用，请检查服务端配置。', confirmed_requirement_required: '请先确认需求版本。', plan_validation_failed: '规划未通过校验，请查看运行记录。', requirement_version_outdated: '需求版本已更新，请重新规划。', run_not_awaiting_review: '该计划已处理，请刷新记录。', agent_rate_limited: '运行次数过多，请稍后再试。' };
     const queueCodes:Record<string,string>={trace_version_outdated:'需求版本已变化，请刷新追踪视图后重新审核。',case_revision_required:'请选择当前修订的用例再进行审核。',test_case_unknown_requirement:'模型关联了不存在的需求条目，未保存本次用例，请重试或检查需求。',embedding_queue_full:'向量服务等待队列已满，请稍后重试。',embedding_queue_timeout:'向量请求排队超时，已退出队列，请稍后重试。',embedding_timeout:'向量请求超过等待时间，已停止本次请求。',embedding_cancelled:'本次向量请求已取消。',embedding_busy:'向量服务仍忙，有限重试已结束，请稍后再试。',embedding_unavailable:'向量服务暂不可用，有限重试已结束。请检查服务后重试。',test_case_changed:'用例已被修改，请刷新后核对最新定义，再登记执行结果。'};
     const documentCodes:Record<string,string>={
+      requirement_snapshot_required:'缺少已阅读的需求原文，已阻止确认或覆盖。请重新读取需求后再审核。',
+      requirement_content_changed:'需求原文已在另一处更新，当前内容已保留，本次没有确认。请重新读取并核对后继续。',
+      requirement_newer_draft_exists:'已有更新的需求版本，本次没有确认旧草稿。请重新读取需求并审核最新版本。',
       test_list_changed:'用例记录或需求来源已变化，已保留当前页面。请先保存或处理编辑，再刷新用例与完整统计后继续分页。',
       document_list_changed:'文档目录在其他操作中发生变化，已保留当前编辑。请先保存或处理草稿，再刷新文档，从第一页重新读取目录。',
       knowledge_list_changed:'知识资料目录已变化，原有输入和当前列表已保留。请刷新资料状态，从第一页重新读取。',
@@ -127,6 +130,7 @@ function Workspace({token,onAuthenticated}:{token:string;onAuthenticated:(token:
   const [saving, setSaving] = useState(false);
   const [detail, setDetail] = useState<Detail | null>(null);
   const [draft, setDraft] = useState('');
+  const [requirementNeedsRefresh, setRequirementNeedsRefresh] = useState(false);
   const [notice, setNotice] = useState('');
   const [aiStatus, setAiStatus] = useState<'checking' | 'ready' | 'unconfigured' | 'unavailable'>('checking');
   const [aiModel, setAiModel] = useState('');
@@ -136,6 +140,7 @@ function Workspace({token,onAuthenticated}:{token:string;onAuthenticated:(token:
   const draftOwner = useRef<string | undefined>(undefined);
   const baselineDraft = useRef('');
   const savePending = useRef<Promise<boolean> | null>(null);
+  const confirmationPending = useRef<{owner:string} | null>(null);
   const operationEpoch = useRef(0);
   useEffect(() => () => { detailScope.current.cancel(); projectScope.current.cancel(); operationEpoch.current++; }, []);
   const { protect } = useEditGuard();
@@ -146,6 +151,7 @@ function Workspace({token,onAuthenticated}:{token:string;onAuthenticated:(token:
       detailScope.current.cancel(); projectScope.current.cancel();
       draftOwner.current = undefined; setDetail(null); setDraft(''); setSaving(false);
       savePending.current = null;
+      setRequirementNeedsRefresh(false);
     }
     activeProject.current = owner;
     setError(''); setNotice(''); setShowCreate(false);
@@ -190,6 +196,7 @@ function Workspace({token,onAuthenticated}:{token:string;onAuthenticated:(token:
     const current = () => detailScope.current.accepts(ticket, activeProject.current);
     draftOwner.current = undefined;
     setLoading(true); setError(''); setDetail(null);
+    setRequirementNeedsRefresh(false);
     try {
       const data = await request<Detail>(`/projects/${encodeURIComponent(id)}`, { signal: ticket.signal });
       if (!current()) return;
@@ -224,7 +231,7 @@ function Workspace({token,onAuthenticated}:{token:string;onAuthenticated:(token:
         baselineDraft.current = content;
         setDraft(value => value === original ? content : value);
         setDetail(value => value?.project.id === owner ? { ...value, requirements: [result.requirement, ...value.requirements] } : value);
-        setNotice('需求草稿已保存为新版本。'); return true;
+        setRequirementNeedsRefresh(false); setNotice('需求草稿已保存为新版本。'); return true;
       } catch (err) { if (current()) setError(message(err)); return false; }
       finally { if (current()) { setSaving(false); savePending.current = null; } }
     })();
@@ -241,7 +248,7 @@ function Workspace({token,onAuthenticated}:{token:string;onAuthenticated:(token:
     try {
       const result = await request<{ model: string; requirement: Requirement }>(`/projects/${encodeURIComponent(projectId)}/requirements/analyze`, { method: 'POST', body: JSON.stringify({ idea: snapshot.trim() }) });
       if (!current()) return;
-      const generated = textContent(result.requirement.content); baselineDraft.current = generated;
+      const generated = textContent(result.requirement.content); baselineDraft.current = generated; setRequirementNeedsRefresh(false);
       setDetail(value => value?.project.id === projectId ? { ...value, requirements: [result.requirement, ...value.requirements] } : value);
       setDraft(value => value === snapshot ? generated : value);
       setNotice(`AI 需求分析已保存（模型：${result.model}）。等待期间继续输入的内容会保留；可在版本记录中查看生成稿。`);
@@ -249,12 +256,24 @@ function Workspace({token,onAuthenticated}:{token:string;onAuthenticated:(token:
     finally { if (current()) setSaving(false); }
   }
   async function confirmRequirement() {
-    const latest = detail?.requirements[0]; if (!projectId || !latest || saving || detail?.project.id !== projectId || draftOwner.current !== projectId) return;
+    const latest = detail?.requirements[0];
+    if (!projectId || !latest || saving || requirementNeedsRefresh || confirmationPending.current?.owner === projectId || detail?.project.id !== projectId || draftOwner.current !== projectId || draft !== textContent(latest.content)) return;
+    const pending = {owner:projectId}; confirmationPending.current = pending;
     setSaving(true); setError(''); setNotice('');
     const epoch = ++operationEpoch.current;
     const current = () => epoch === operationEpoch.current && activeProject.current === projectId;
-    try { const result = await request<{ requirement: Requirement }>(`/projects/${encodeURIComponent(projectId)}/requirements/${encodeURIComponent(latest.id)}/confirm`, { method: 'POST' }); if (current()) { setDetail(value => value?.project.id === projectId ? { ...value, requirements: value.requirements.map(row => row.id === latest.id ? result.requirement : row) } : value); setNotice('需求版本已确认。'); } }
-    catch (err) { if (current()) setError(message(err)); } finally { if (current()) setSaving(false); }
+    try {
+      const result = await request<{ requirement: Requirement }>(`/projects/${encodeURIComponent(projectId)}/requirements/${encodeURIComponent(latest.id)}/confirm`, {method:'POST', body:JSON.stringify({expectedContent:textContent(latest.content)})});
+      if (current()) { setDetail(value => value?.project.id === projectId ? {...value, requirements:value.requirements.map(row => row.id === latest.id ? result.requirement : row)} : value); setNotice('需求版本已确认。'); }
+    } catch (err) {
+      if (current()) {
+        setError(message(err));
+        if (['requirement_content_changed','requirement_newer_draft_exists','requirement_snapshot_required','not_found_or_confirmed'].includes((err as {code?:string}).code ?? '')) setRequirementNeedsRefresh(true);
+      }
+    } finally {
+      if (confirmationPending.current === pending) confirmationPending.current = null;
+      if (current()) setSaving(false);
+    }
   }
   async function logout() { try { await request('/auth/logout', { method: 'POST' }); } catch { /* Local logout remains available if the service is offline. */ } finally { if(readSession()===token){detailScope.current.cancel(); projectScope.current.cancel(); localStorage.removeItem('gongxu_token'); onAuthenticated('');} } }
   const link = (event: React.MouseEvent<HTMLAnchorElement>, to: string) => { if (!event.metaKey && !event.ctrlKey && !event.shiftKey && event.button === 0) { event.preventDefault(); navigate(to); } };
@@ -294,7 +313,7 @@ function Workspace({token,onAuthenticated}:{token:string;onAuthenticated:(token:
         {!loading && detail && projectId && detail.project.id === projectId && <><div className="breadcrumb"><a href="/projects" onClick={e => link(e, '/projects')}>我的项目</a><span>/</span><a href={`/projects/${projectId}`} onClick={e => link(e, `/projects/${projectId}`)}>{detail.project.name}</a>{isRequirements && <><span>/</span>需求分析</>}{isAgent && <><span>/</span>Agent 任务规划</>}{isReview && <><span>/</span>代码审查</>}{isTests && <><span>/</span>测试中心</>}{isDocuments && <><span>/</span>文档中心</>}</div>
           <section className="detail-heading project-context-heading"><div><div className="eyebrow">PROJECT / {isRequirements ? 'REQUIREMENTS' : isAgent ? 'AGENT' : isReview ? 'REVIEW' : isTests ? 'TESTS' : isDocuments ? 'DOCUMENTS' : 'OVERVIEW'}</div><h2>{detail.project.name}</h2><p>{isRequirements ? '将想法写下来，保存后会形成可追溯的需求版本。' : isAgent ? '查看真实规划、执行过程与人工审核结果。' : isReview || isTests || isDocuments ? '围绕当前项目开展工程实践。' : detail.project.description || '这个项目还没有填写简介。'}</p></div><span className="status-pill">{detail.project.status === 'archived' ? '已归档' : '进行中'}</span></section>
           <ProjectNavigation projectId={projectId} path={path} navigate={navigate} />
-          {isRequirements ? <div className="requirements-layout"><form className="editor-panel" onSubmit={saveRequirement}><div className="panel-heading"><div><h3>需求草稿</h3><p>描述目标用户、希望解决的问题和主要功能。</p></div><span className="small-tag">人工编辑</span></div><label className="sr-only" htmlFor="requirement">需求内容</label><MarkdownEditor id="requirement" value={draft} onChange={setDraft} maxLength={50000} placeholder="例如：为校园学生提供闲置物品发布、搜索和联系卖家的服务…" required /><div className="form-actions"><span className="muted-text">保存将创建新版本 · 最多 50000 字符；规划、测试与文档生成最多 20000 字符</span><button className="button secondary" type="button" onClick={() => protect(() => void analyze())} disabled={saving || !draft.trim() || aiStatus !== 'ready'}>AI 分析 <span>✦</span></button><button className="button primary" type="submit" disabled={saving || !draft.trim()}>{saving ? '处理中…' : '保存需求草稿'} <span>↗</span></button></div></form><aside className="context-panel" aria-label="AI 导师与需求版本"><div className="context-icon">✦</div><h3>AI 项目导师</h3><p>根据你的项目想法生成需求草稿，结果需要由你检查、修改和确认。</p><span className="small-tag">{aiStatus === 'checking' ? '正在检查模型配置' : aiStatus === 'ready' ? `模型已配置${aiModel ? ` · ${aiModel}` : ''}` : aiStatus === 'unconfigured' ? '未配置模型，暂无法分析' : '模型状态不可用'}</span>{detail.requirements[0]?.status === 'draft' && <div className="confirm-wrap"><p>请先保存修改，再确认最新版本。</p><button type="button" className="button secondary" onClick={() => void confirmRequirement()} disabled={saving || draft !== textContent(detail.requirements[0].content)}>确认最新版本 <span>✓</span></button></div>}<div className="context-divider"/><Suspense fallback={<p className="muted-text" role="status">正在准备视图…</p>}><RequirementHistory key={projectId} versions={detail.requirements} draft={draft} onRestore={(content,onApplied)=>protect(()=>{setDraft(content);onApplied();})} busy={saving} formatDate={formatDate} /></Suspense></aside></div> : isAgent ? <Suspense fallback={<div className="state-block" role="status">正在准备工作区…</div>}><Agent key={projectId} request={request} projectId={projectId} requirements={detail.requirements} onRefreshProject={() => protect(() => void loadDetail(projectId))} /></Suspense> : isReview ? <Suspense fallback={<div className="state-block" role="status">正在准备工作区…</div>}><CodeReview key={projectId} request={request} projectId={projectId} requirements={detail.requirements} /></Suspense> : isTests ? <Suspense fallback={<div className="state-block" role="status">正在准备工作区…</div>}><Tests key={projectId} request={request} projectId={projectId} requirements={detail.requirements} /></Suspense> : isDocuments ? <Suspense fallback={<div className="state-block" role="status">正在准备工作区…</div>}><Documents key={projectId} request={request} projectId={projectId} requirements={detail.requirements} /></Suspense> : <><Suspense fallback={<p className="muted-text" role="status">正在准备视图…</p>}><ProjectPulse key={projectId} request={request} projectId={projectId} projectName={detail.project.name} requirements={detail.requirements} navigate={navigate} /></Suspense><div className="section-heading compact"><div><div className="eyebrow">PROJECT WORKFLOW</div><h2>项目实训路径</h2><p>从清晰的需求开始，逐步完成整个项目。</p></div></div><div className="workflow-list">{workflow.map((item, i) => <div className="workflow-row" key={item}><span className="step-number">0{i + 1}</span><div><strong>{item}</strong><small>{i === 0 ? '编辑并保存项目需求' : i === 1 ? '检索知识、规划任务并审核' : i === 2 ? '在知识库中检索资料' : i === 3 ? '语法诊断与 AI 审查建议' : i === 4 ? '设计用例并记录人工执行结果' : '生成、编辑和导出文档'}</small></div>{i === 0 ? <a href={`/projects/${projectId}/requirements`} onClick={e => link(e, `/projects/${projectId}/requirements`)} className="text-link">进入 <span>→</span></a> : <a href={i === 1 ? `/projects/${projectId}/agent` : i === 2 ? '/knowledge' : `/projects/${projectId}/${['','','','reviews','tests','documents'][i]}`} onClick={e => link(e, i === 1 ? `/projects/${projectId}/agent` : i === 2 ? '/knowledge' : `/projects/${projectId}/${['','','','reviews','tests','documents'][i]}`)} className="text-link">进入 <span>→</span></a>}</div>)}</div></>}
+          {isRequirements ? <div className="requirements-layout"><form className="editor-panel" onSubmit={saveRequirement}><div className="panel-heading"><div><h3>需求草稿</h3><p>描述目标用户、希望解决的问题和主要功能。</p></div><span className="small-tag">人工编辑</span></div><label className="sr-only" htmlFor="requirement">需求内容</label><MarkdownEditor id="requirement" value={draft} onChange={setDraft} maxLength={50000} placeholder="例如：为校园学生提供闲置物品发布、搜索和联系卖家的服务…" required /><div className="form-actions"><span className="muted-text">保存将创建新版本 · 最多 50000 字符；规划、测试与文档生成最多 20000 字符</span><button className="button secondary" type="button" onClick={() => protect(() => void analyze())} disabled={saving || !draft.trim() || aiStatus !== 'ready'}>AI 分析 <span>✦</span></button><button className="button primary" type="submit" disabled={saving || !draft.trim()}>{saving ? '处理中…' : '保存需求草稿'} <span>↗</span></button></div></form><aside className="context-panel" aria-label="AI 导师与需求版本"><div className="context-icon">✦</div><h3>AI 项目导师</h3><p>根据你的项目想法生成需求草稿，结果需要由你检查、修改和确认。</p><span className="small-tag">{aiStatus === 'checking' ? '正在检查模型配置' : aiStatus === 'ready' ? `模型已配置${aiModel ? ` · ${aiModel}` : ''}` : aiStatus === 'unconfigured' ? '未配置模型，暂无法分析' : '模型状态不可用'}</span>{detail.requirements[0]?.status === 'draft' && <div className="confirm-wrap"><p>请先保存修改，再确认最新版本。</p><button type="button" className="button secondary" onClick={() => void confirmRequirement()} disabled={saving || requirementNeedsRefresh || draft !== textContent(detail.requirements[0].content)}>确认最新版本 <span>✓</span></button></div>}<div className="confirm-wrap"><button type="button" className="button secondary" disabled={saving} onClick={() => protect(() => void loadDetail(projectId))}>重新读取需求</button>{requirementNeedsRefresh && <p role="status">服务端需求已变化。当前编辑保留，重新读取前会先询问如何处理未保存内容。</p>}</div><div className="context-divider"/><Suspense fallback={<p className="muted-text" role="status">正在准备视图…</p>}><RequirementHistory key={projectId} versions={detail.requirements} draft={draft} onRestore={(content,onApplied)=>protect(()=>{setDraft(content);onApplied();})} busy={saving} formatDate={formatDate} /></Suspense></aside></div> : isAgent ? <Suspense fallback={<div className="state-block" role="status">正在准备工作区…</div>}><Agent key={projectId} request={request} projectId={projectId} requirements={detail.requirements} onRefreshProject={() => protect(() => void loadDetail(projectId))} /></Suspense> : isReview ? <Suspense fallback={<div className="state-block" role="status">正在准备工作区…</div>}><CodeReview key={projectId} request={request} projectId={projectId} requirements={detail.requirements} /></Suspense> : isTests ? <Suspense fallback={<div className="state-block" role="status">正在准备工作区…</div>}><Tests key={projectId} request={request} projectId={projectId} requirements={detail.requirements} /></Suspense> : isDocuments ? <Suspense fallback={<div className="state-block" role="status">正在准备工作区…</div>}><Documents key={projectId} request={request} projectId={projectId} requirements={detail.requirements} /></Suspense> : <><Suspense fallback={<p className="muted-text" role="status">正在准备视图…</p>}><ProjectPulse key={projectId} request={request} projectId={projectId} projectName={detail.project.name} requirements={detail.requirements} navigate={navigate} /></Suspense><div className="section-heading compact"><div><div className="eyebrow">PROJECT WORKFLOW</div><h2>项目实训路径</h2><p>从清晰的需求开始，逐步完成整个项目。</p></div></div><div className="workflow-list">{workflow.map((item, i) => <div className="workflow-row" key={item}><span className="step-number">0{i + 1}</span><div><strong>{item}</strong><small>{i === 0 ? '编辑并保存项目需求' : i === 1 ? '检索知识、规划任务并审核' : i === 2 ? '在知识库中检索资料' : i === 3 ? '语法诊断与 AI 审查建议' : i === 4 ? '设计用例并记录人工执行结果' : '生成、编辑和导出文档'}</small></div>{i === 0 ? <a href={`/projects/${projectId}/requirements`} onClick={e => link(e, `/projects/${projectId}/requirements`)} className="text-link">进入 <span>→</span></a> : <a href={i === 1 ? `/projects/${projectId}/agent` : i === 2 ? '/knowledge' : `/projects/${projectId}/${['','','','reviews','tests','documents'][i]}`} onClick={e => link(e, i === 1 ? `/projects/${projectId}/agent` : i === 2 ? '/knowledge' : `/projects/${projectId}/${['','','','reviews','tests','documents'][i]}`)} className="text-link">进入 <span>→</span></a>}</div>)}</div></>}
           {isRequirements && <Suspense fallback={<p role="status">正在准备追踪视图…</p>}><RequirementTrace key={projectId} request={request} projectId={projectId} versionId={detail.requirements.find(r=>r.status==='confirmed')?.id}/></Suspense>}
         </>}
         {!projectId && !isKnowledge && !isGrowth && !isWorkbenchPage && <section className="process"><div><div className="eyebrow">THE PROCESS <span>/</span> 工程实践</div><h2>把复杂项目，拆成清晰的每一步。</h2><p>围绕真实项目，逐步构建完整的软件工程经验。</p></div><div className="process-grid">{workflow.map((item, i) => <div key={item}><span>0{i + 1}</span><strong>{item}</strong><small>{i === 0 ? '需求草稿已开放' : '已开放'}</small></div>)}</div></section>}

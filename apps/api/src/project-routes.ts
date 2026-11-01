@@ -3,6 +3,7 @@ import { promisify } from 'node:util';
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 import { z } from 'zod';
 import type { ProjectStore, User } from './project-store.js';
+import { RequirementWriteConflict } from './project-store.js';
 
 const scrypt = promisify(scryptCallback);
 const tokenHash = (token: string) => createHash('sha256').update(token).digest('hex');
@@ -19,6 +20,7 @@ const credentials = z.object({ email: z.string().trim().email().max(254).transfo
 const registration = credentials.extend({ name: z.string().trim().min(1).max(80) });
 const projectInput = z.object({ name: z.string().trim().min(1).max(120), description: z.string().max(10000).default('') });
 const requirementInput = z.object({ content: z.string().trim().min(1).max(50000) });
+const requirementSnapshot = z.object({ expectedContent: z.string().min(1).max(50000) });
 const projectParams = z.object({ projectId: z.string().uuid() });
 const requirementParams = projectParams.extend({ id: z.string().uuid() });
 
@@ -59,6 +61,25 @@ export async function registerProjectRoutes(app: FastifyInstance, store?: Projec
   app.get('/projects/:projectId', async (request, reply) => { const user = await authorizeRequest(request, store!); if (!user) return reply.code(401).send({ error: 'unauthorized' }); const params = projectParams.safeParse(request.params); if (!params.success) return reply.code(400).send({ error: 'invalid_input' }); const project = await store!.getProject(user.id, params.data.projectId); if (!project) return reply.code(404).send({ error: 'not_found' }); return { project, requirements: await store!.listRequirements(user.id, project.id) }; });
   app.get('/projects/:projectId/requirements', async (request, reply) => { const user = await authorizeRequest(request, store!); if (!user) return reply.code(401).send({ error: 'unauthorized' }); const params = projectParams.safeParse(request.params); if (!params.success) return reply.code(400).send({ error: 'invalid_input' }); const requirements = await store!.listRequirements(user.id, params.data.projectId); return requirements ? { requirements } : reply.code(404).send({ error: 'not_found' }); });
   app.post('/projects/:projectId/requirements', async (request, reply) => { const user = await authorizeRequest(request, store!); if (!user) return reply.code(401).send({ error: 'unauthorized' }); const params = projectParams.safeParse(request.params); const input = requirementInput.safeParse(request.body); if (!params.success || !input.success) return reply.code(400).send({ error: 'invalid_input' }); const requirement = await store!.createRequirement(user.id, params.data.projectId, input.data.content); return requirement ? reply.code(201).send({ requirement }) : reply.code(404).send({ error: 'not_found' }); });
-  app.patch('/projects/:projectId/requirements/:id', async (request, reply) => { const user = await authorizeRequest(request, store!); if (!user) return reply.code(401).send({ error: 'unauthorized' }); const params = requirementParams.safeParse(request.params); const input = requirementInput.safeParse(request.body); if (!params.success || !input.success) return reply.code(400).send({ error: 'invalid_input' }); const requirement = await store!.updateRequirement(user.id, params.data.projectId, params.data.id, input.data.content); return requirement ? { requirement } : reply.code(404).send({ error: 'not_found_or_confirmed' }); });
-  app.post('/projects/:projectId/requirements/:id/confirm', async (request, reply) => { const user = await authorizeRequest(request, store!); if (!user) return reply.code(401).send({ error: 'unauthorized' }); const params = requirementParams.safeParse(request.params); if (!params.success) return reply.code(400).send({ error: 'invalid_input' }); const requirement = await store!.confirmRequirement(user.id, params.data.projectId, params.data.id); return requirement ? { requirement } : reply.code(404).send({ error: 'not_found_or_confirmed' }); });
+  app.patch('/projects/:projectId/requirements/:id', async (request, reply) => {
+    const user = await authorizeRequest(request, store!); if (!user) return reply.code(401).send({error:'unauthorized'});
+    const params = requirementParams.safeParse(request.params), input = requirementInput.safeParse(request.body);
+    if (!params.success || !input.success) return reply.code(400).send({error:'invalid_input'});
+    if ((request.body as {expectedContent?:unknown})?.expectedContent === undefined) return reply.code(428).send({error:'requirement_snapshot_required'});
+    const snapshot = requirementSnapshot.safeParse(request.body); if (!snapshot.success) return reply.code(400).send({error:'invalid_input'});
+    try {
+      const requirement = await store!.updateRequirement(user.id, params.data.projectId, params.data.id, input.data.content, snapshot.data.expectedContent);
+      return requirement ? {requirement} : reply.code(404).send({error:'not_found_or_confirmed'});
+    } catch (error) { if (error instanceof RequirementWriteConflict) return reply.code(409).send({error:error.code}); throw error; }
+  });
+  app.post('/projects/:projectId/requirements/:id/confirm', async (request, reply) => {
+    const user = await authorizeRequest(request, store!); if (!user) return reply.code(401).send({error:'unauthorized'});
+    const params = requirementParams.safeParse(request.params); if (!params.success) return reply.code(400).send({error:'invalid_input'});
+    if ((request.body as {expectedContent?:unknown})?.expectedContent === undefined) return reply.code(428).send({error:'requirement_snapshot_required'});
+    const snapshot = requirementSnapshot.safeParse(request.body); if (!snapshot.success) return reply.code(400).send({error:'invalid_input'});
+    try {
+      const requirement = await store!.confirmRequirement(user.id, params.data.projectId, params.data.id, snapshot.data.expectedContent);
+      return requirement ? {requirement} : reply.code(404).send({error:'not_found_or_confirmed'});
+    } catch (error) { if (error instanceof RequirementWriteConflict) return reply.code(409).send({error:error.code}); throw error; }
+  });
 }
