@@ -1,0 +1,323 @@
+{
+  "schemaVersion": "gongxu-source-review-delivery-v4.1",
+  "createdAt": "2026-11-01T05:16:27.640Z",
+  "scope": "local_source_review_delivery_not_external_upload_or_contest_submission",
+  "sourceSnapshotCommit": "88f733dbe9ed906e5b3cdd10229cb3728d0523a8",
+  "desktop": {
+    "path": "C:\\Users\\30791\\Desktop\\gongxu-zhiban-review-v4.zip",
+    "bytes": 3737070,
+    "sha256": "ed76cb770e6184965e850cc0172ff057136a9ad662996bb634ef9b023be7bc36",
+    "overwrite": false,
+    "uploaded": false
+  },
+  "workspaceArchive": "E:\\ai\\.review-export\\v4-20261101-131409-841396\\gongxu-zhiban-review-v4.zip",
+  "archiveEntries": 320,
+  "sourceManifestFiles": 319,
+  "excludedRecords": 37,
+  "exclusionReasonCounts": {
+    "dependencies_generated_data_or_unreviewed_directory": 12,
+    "real_environment_never_opened": 1,
+    "generated_or_sensitive_file_type": 1,
+    "outside_review_allowlist_or_uncertain_historical_material": 19,
+    "unclassified_json_or_possible_business_data": 4
+  },
+  "copySanitizationFiles": [
+    {
+      "path": "compose.yaml",
+      "rules": {
+        "compose_local_placeholder": 3
+      }
+    },
+    {
+      "path": "apps/api/.env.example",
+      "rules": {
+        "empty_template_credentials": 2,
+        "template_database_placeholder": 1,
+        "database_url": 1
+      }
+    },
+    {
+      "path": "apps/api/src/projects.test.ts",
+      "rules": {
+        "credential_literal": 3
+      }
+    },
+    {
+      "path": "apps/api/src/ai/model.test.ts",
+      "rules": {
+        "credential_literal": 2
+      }
+    },
+    {
+      "path": "apps/api/src/rag/rag.test.ts",
+      "rules": {
+        "credential_literal": 1
+      }
+    },
+    {
+      "path": "apps/api/test-data/minimal.pdf",
+      "rules": {
+        "pdf_metadata_removed": 1
+      }
+    },
+    {
+      "path": "scripts/export-review.py",
+      "rules": {
+        "database_url": 2
+      }
+    },
+    {
+      "path": "scripts/export-review.test.py",
+      "rules": {
+        "credential_literal": 1,
+        "database_url": 1
+      }
+    },
+    {
+      "path": "scripts/workbench-models.test.mjs",
+      "rules": {
+        "credential_literal": 1
+      }
+    }
+  ],
+  "copySanitizationNote": "Only copies were changed. Matches include templates, synthetic test literals and PDF metadata; no claim that all matches were real credentials. Real .env was excluded before reading.",
+  "originalProjectModifiedByExporter": false,
+  "realEnvReadByExporter": false,
+  "stableV3Preserved": {
+    "path": "C:/Users/30791/Desktop/gongxu-zhiban-review-v3.zip",
+    "bytes": 2215125,
+    "sha256": "99d51186c3f726484a7d1974d74ed55a47d2f2e83cca622fb2938327163caf79"
+  },
+  "zipValidation": {
+    "crc": "passed",
+    "safeRelativePaths": "passed",
+    "allManifestFileHashes": "passed",
+    "requiredFiles": "passed",
+    "migrationFiles": 21,
+    "actualExtractionPath": "E:\\ai\\.review-export\\v4-20261101-131409-841396\\extracted-check-20261101-131421-662240\\gongxu-zhiban"
+  },
+  "extractedOfflineValidation": {
+    "entry": "node scripts/verify.mjs --python=<existing local Python>",
+    "equivalentEntry": "pnpm verify",
+    "report": "E:\\ai\\.review-export\\v4-20261101-131409-841396\\extracted-check-20261101-131421-662240\\gongxu-zhiban/.runtime/verification-v4-b07acd36-5021-4f10-92ba-0dc9c5a78336/report.json",
+    "sha256": "bac48307df762ef0ee8e56692863b144582ea0a6610a8b3dd1e5c459fe282085",
+    "status": "passed",
+    "steps": [
+      {
+        "id": "environment-templates",
+        "status": "passed",
+        "command": [
+          "node",
+          "scripts/check-env-templates.mjs"
+        ],
+        "cwd": "."
+      },
+      {
+        "id": "api-types",
+        "status": "passed",
+        "command": [
+          "node",
+          "node_modules/typescript/bin/tsc",
+          "--noEmit",
+          "-p",
+          "tsconfig.json"
+        ],
+        "cwd": "apps/api"
+      },
+      {
+        "id": "embedding-types",
+        "status": "passed",
+        "command": [
+          "node",
+          "node_modules/typescript/bin/tsc",
+          "--noEmit",
+          "-p",
+          "tsconfig.json"
+        ],
+        "cwd": "apps/embedding"
+      },
+      {
+        "id": "web-types",
+        "status": "passed",
+        "command": [
+          "node",
+          "node_modules/typescript/bin/tsc",
+          "--noEmit",
+          "-p",
+          "tsconfig.json"
+        ],
+        "cwd": "apps/web"
+      },
+      {
+        "id": "api-build",
+        "status": "passed",
+        "command": [
+          "node",
+          "node_modules/typescript/bin/tsc",
+          "-p",
+          "tsconfig.json"
+        ],
+        "cwd": "apps/api"
+      },
+      {
+        "id": "embedding-build",
+        "status": "passed",
+        "command": [
+          "node",
+          "node_modules/typescript/bin/tsc",
+          "-p",
+          "tsconfig.json"
+        ],
+        "cwd": "apps/embedding"
+      },
+      {
+        "id": "web-build",
+        "status": "passed",
+        "command": [
+          "node",
+          "node_modules/vite/bin/vite.js",
+          "build"
+        ],
+        "cwd": "apps/web"
+      },
+      {
+        "id": "api-test-build",
+        "status": "passed",
+        "command": [
+          "node",
+          "node_modules/typescript/bin/tsc",
+          "-p",
+          "tsconfig.test.json"
+        ],
+        "cwd": "apps/api"
+      },
+      {
+        "id": "embedding-test-build",
+        "status": "passed",
+        "command": [
+          "node",
+          "node_modules/typescript/bin/tsc",
+          "-p",
+          "tsconfig.test.json"
+        ],
+        "cwd": "apps/embedding"
+      },
+      {
+        "id": "api-unit",
+        "status": "passed",
+        "command": [
+          "node",
+          "--test",
+          "dist/**/*.test.js"
+        ],
+        "cwd": "apps/api"
+      },
+      {
+        "id": "embedding-unit",
+        "status": "passed",
+        "command": [
+          "node",
+          "--test",
+          "dist/**/*.test.js"
+        ],
+        "cwd": "apps/embedding"
+      },
+      {
+        "id": "root-script-unit",
+        "status": "passed",
+        "command": [
+          "node",
+          "--test",
+          "scripts/evaluation-report.test.mjs",
+          "scripts/evidence-state.test.mjs",
+          "scripts/historical-source.test.mjs",
+          "scripts/live-evaluation.test.mjs",
+          "scripts/request-transport.test.mjs",
+          "scripts/retrieval-evaluation.test.mjs",
+          "scripts/review-package.test.mjs",
+          "scripts/source-provenance.test.mjs",
+          "scripts/trace-next-action.test.mjs",
+          "scripts/ui-models.test.mjs",
+          "scripts/verify.test.mjs",
+          "scripts/workbench-models.test.mjs"
+        ],
+        "cwd": "."
+      },
+      {
+        "id": "python-package-regression",
+        "status": "passed",
+        "command": [
+          "python",
+          "scripts/export-review.test.py"
+        ],
+        "cwd": "."
+      },
+      {
+        "id": "offline-evaluation",
+        "status": "passed",
+        "command": [
+          "node",
+          "scripts/evaluate-offline.mjs"
+        ],
+        "cwd": "."
+      },
+      {
+        "id": "evaluation-preparation",
+        "status": "passed",
+        "command": [
+          "node",
+          "scripts/evaluate-prepare.mjs"
+        ],
+        "cwd": "."
+      }
+    ],
+    "dependencies": "Four node_modules junctions added only after archive extraction and file hash checks; existing installed dependencies reused. Dependencies are absent from ZIP.",
+    "realEnvPresent": false,
+    "paidModelCalls": 0,
+    "newMachineNetworkInstall": "not_executed",
+    "gitStatus": "unavailable"
+  },
+  "independentMaterials": [
+    {
+      "kind": "technical-pdf",
+      "file": "output/pdf/gongxu-zhiban-technical-v4.pdf",
+      "bytes": 1063954,
+      "sha256": "80f8d797b088c952b02e6f0a75e468a76cf6a121a5640c05481dd3a52f8359e1",
+      "pages": 29,
+      "review": "all_29_rendered_pages_inspected",
+      "officialSubmissionReady": false
+    },
+    {
+      "kind": "defense-pptx",
+      "file": "output/presentations/gongxu-zhiban-defense-v4-2026-11-01T04-54-50-759Z.pptx",
+      "bytes": 895956,
+      "sha256": "50e9f6a87eb7456397219356de054c6dd734a8811156ab556cc2391a9cf6e9d7",
+      "slides": 12,
+      "review": "all_12_rendered_slides_inspected",
+      "powerpointWpsSlideshow": "not_executed"
+    },
+    {
+      "kind": "engineering-video",
+      "file": "output/video/gongxu-zhiban-demo-v4-draft.mp4",
+      "bytes": 17388337,
+      "sha256": "15720995eb0491ebd191681163c1e1c125125b2ada5b87142ed3675a962f077b",
+      "seconds": 475.82,
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "validation": "full_decode_passed_and_all_scene_samples_visually_reviewed",
+      "humanAudioReview": "not_executed",
+      "model": "controlled_fixture_no_remote_calls",
+      "officialSubmissionReady": false
+    }
+  ],
+  "receiptInsideArchive": false,
+  "postArchiveChangesAllowed": "Only delivery receipt and completion status notes; no product source changes after snapshot.",
+  "limitations": [
+    "Pattern scanning cannot prove absence of every possible unknown secret.",
+    "Unknown data and documents excluded conservatively; see manifest hashed exclusion entries.",
+    "Real model evaluation pending explicit scoped approval.",
+    "No public deployment, remote push or contest submission."
+  ]
+}
