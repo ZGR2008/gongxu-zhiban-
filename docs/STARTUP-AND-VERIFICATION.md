@@ -40,6 +40,7 @@ API `/health`只证明进程在响应；`/ready`会核对数据库、迁移和pg
 | `pnpm eval:offline` | 8个版本化案例的实现协议检查 | 阻止网络调用；语义效果未评估 |
 | `pnpm eval:prepare`、`pnpm eval:report` | 捕获合成输入与核对明确提供的评测记录 | 不读取.env；不执行模型；缺少真实结果时保持待执行 |
 | `pnpm eval:prepare-historical`、`pnpm test:historical-source` | 固定本地Git提交的原始提示词组织及同输入配对检查 | 仅必要源码、合成存储与检索替身；拒绝网络，无历史数据库/模型执行；无Git副本不可重做历史捕获 |
+| `pnpm verify:fresh-database` | 新建隔离空数据库，实际迁移CLI运行两次，HTTP确认需求与保存草稿 | 仅使用现有本机角色权限；保留合成数据库，不改真实库或权限；4组通过，不等于全新机器安装 |
 | `pnpm verify:agent-recovery` | 过期运行、取消、重复请求与人工审核 | 真实本地DB、模型替身；保留合成运行记录 |
 | `pnpm verify:review-context` | 审查来源、换版、隔离、取消、桌面原文显示 | 真实本地DB/向量/浏览器；聊天替身；禁止外部网络，不执行输入代码 |
 | `pnpm verify:document-context` | 完整说明末尾、51条/30000字符阻止、账号和桌面恢复 | 真实本地DB/HTTP/浏览器，1次聊天替身；不截断、无收费 |
@@ -51,7 +52,7 @@ API `/health`只证明进程在响应；`/ready`会核对数据库、迁移和pg
 | `pnpm verify:embedding-mixed` | 三账号实际索引/检索与Agent共用推理队列，第四账号排队取消及恢复、资料/活动隔离 | 真实回环HTTP/DB/向量；4个新合成账号，聊天替身1次；不注入服务延迟、不代表课堂容量 |
 | `pnpm verify:requirement-preconditions` | 原文核对、并发更新/确认、最新版本、账号隔离及桌面刷新保护 | 真实本地HTTP/DB/浏览器；仅保存失败为受控响应，不调用模型 |
 | `pnpm verify:trace-concurrency` | 12个首次追踪读取、当前/历史版本、审核保留和证据修订 | 实际HTTP及SQL；测试门闩协调首批查询同时开始，不模拟数据库回复、不代表课堂容量 |
-| `pnpm verify:accessibility` | 19个桌面页面/弹窗的axe规则、可访问名称和ARIA | 全部合成API；自动结果不含人工对比度/屏幕阅读器验收；见ACCESSIBILITY-V3.md |
+| `pnpm verify:accessibility` | 20个桌面页面/弹窗的axe规则、可访问名称和ARIA | 全部合成API；自动结果不含人工对比度/屏幕阅读器验收；见ACCESSIBILITY-V3.md |
 | `pnpm eval:retrieval-local` | 冻结15篇合成资料及16问题的实际检索测量 | 真实本地向量/pgvector，不执行聊天；保留未召回和未评估语义支持 |
 | `pnpm verify:growth-scope` | 当前/历史统计、多个项目、账号隔离与桌面范围切换 | 真实本地DB/HTTP/浏览器；新建合成记录，无模型调用 |
 | `pnpm smoke --with-rag` | 实际运行API/数据库/PDF/本地索引及检索 | 先核对Embedding为已授权的本机服务；不用`--with-ai` |
@@ -60,7 +61,7 @@ API `/health`只证明进程在响应；`/ready`会核对数据库、迁移和pg
 
 上述真实联调会保留明确标为合成的测试项目，不清理用户数据。结果存放于被忽略的 `.runtime/`，对外报告只保留汇总和合成截图。不要把原始目录整体上传。
 
-受控可靠性脚本支持`--engine=webkit`和`--engine=firefox`；Windows可先设置`$env:PLAYWRIGHT_BROWSERS_PATH="$PWD/.runtime/browsers"`复用已装缓存。引擎30秒内未启动就标为未执行；CDP CPU减速场景只在Chromium执行，其他引擎不冒报通过。U4后Edge实际72组通过；Windows WebKit 27.2实际70组通过，CDP CPU减速及完整系统强制调色板渲染2组未执行（该引擎仅触发媒体规则，未模拟系统调色板；选中状态CSS用例仍执行通过）。Firefox启动超时、测试未运行。Windows WebKit结果不是Safari真机验收，浏览器模拟也不等于Windows高对比度或屏幕阅读器真机验收。
+受控可靠性脚本支持`--engine=webkit`和`--engine=firefox`；Windows可先设置`$env:PLAYWRIGHT_BROWSERS_PATH="$PWD/.runtime/browsers"`复用已装缓存。引擎30秒内未启动就标为未执行；CDP CPU减速场景只在Chromium执行，其他引擎不冒报通过。最终Edge77组通过；Firefox157.0完整76组通过、CDP CPU减速1组未执行；Windows WebKit27.2完整75组通过，CDP及完整系统强制调色板2组未执行（该引擎只触发媒体规则，未完整模拟系统调色板）。Firefox最初在受限子进程环境超时，正常本机测试进程实际运行成功，未改变安全设置。最终历史按钮名称修改后Firefox/WebKit另各复核7组通过，完整套件及目标复核分别留存，不能混成一次全量结果。Windows WebKit结果不是Safari真机验收，浏览器模拟也不等于Windows高对比度或屏幕阅读器真机验收。
 
 ## 尚未获授权的操作
 

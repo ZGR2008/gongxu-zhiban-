@@ -48,6 +48,7 @@
     "verify:embedding-mixed": "pnpm --filter @gongxu/api build && node scripts/embedding-mixed-local.mjs",
     "verify:requirement-preconditions": "pnpm --filter @gongxu/api build && node scripts/requirement-preconditions-local.mjs --browser",
     "verify:trace-concurrency": "pnpm --filter @gongxu/api build && node scripts/trace-concurrency-local.mjs",
+    "verify:fresh-database": "pnpm --filter @gongxu/api build && node scripts/fresh-database-local.mjs",
     "verify:growth-scope": "pnpm --filter @gongxu/api build && cd apps/api && node ../../scripts/growth-scope-local.mjs"
   },
   "devDependencies": {
