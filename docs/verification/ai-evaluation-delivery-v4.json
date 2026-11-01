@@ -1,0 +1,46 @@
+{
+  "createdAt": "2026-11-01T07:40:20.064879+00:00",
+  "scope": "local_delivery_after_explicitly_approved_real_model_evaluation",
+  "sourceSnapshotCommit": "3fd4a98308f20dcb31003a664b870e45b7fa09d2",
+  "desktop": {
+    "path": "C:\\Users\\30791\\Desktop\\gongxu-zhiban-review-v4-20261101-153930.zip",
+    "bytes": 3760048,
+    "sha256": "c9855c85c3e57b5e7a899cfa75ba626b2e2414f75f0af849ff16278e0aa9755a",
+    "overwrite": false
+  },
+  "workspaceArchive": "E:\\ai\\.review-export\\v4-20261101-153712-745906\\gongxu-zhiban-review-v4.zip",
+  "entries": 325,
+  "filesHashed": 324,
+  "migrations": 21,
+  "crc": "passed_in_workspace_and_desktop",
+  "extraction": "all_files_extracted_and_hashed",
+  "exclusions": {
+    "dependencies_generated_data_or_unreviewed_directory": 12,
+    "real_environment_never_opened": 1,
+    "generated_or_sensitive_file_type": 1,
+    "outside_review_allowlist_or_uncertain_historical_material": 19,
+    "unclassified_json_or_possible_business_data": 5
+  },
+  "copyOnlySanitizationFiles": 11,
+  "originalPackagesPreserved": {
+    "C:/Users/30791/Desktop/gongxu-zhiban-review-v3.zip": "99d51186c3f726484a7d1974d74ed55a47d2f2e83cca622fb2938327163caf79",
+    "C:/Users/30791/Desktop/gongxu-zhiban-review-v4.zip": "ed76cb770e6184965e850cc0172ff057136a9ad662996bb634ef9b023be7bc36"
+  },
+  "extractedVerification": {
+    "status": "passed",
+    "steps": 15,
+    "report": "E:\\ai\\.review-export\\v4-20261101-153712-745906\\extracted-check-20261101-153800-307989\\gongxu-zhiban\\.runtime\\verification-v4-59888d3a-2c93-4aa9-8675-06eb2ce6ba97\\report.json",
+    "sha256": "6d152d3ca2ccb9b90c09d71cce6fd36794bc352c125f8b15ebb732f8f3ba9960",
+    "dependencies": "Four directory links to existing local node_modules; no fresh-machine installation and no .env copied",
+    "paidCalls": 0
+  },
+  "aiEvidence": "docs/verification/ai-evaluation-v4.json",
+  "technicalPdf": "output/pdf/gongxu-zhiban-technical-v4-ai-evaluated-20261101-153409-305319.pdf",
+  "separateMaterialsExcludedFromSourceZip": true,
+  "archiveContainsThisReceipt": false,
+  "limitations": [
+    "Pattern scan cannot prove absence of every unknown secret.",
+    "Raw synthetic model outputs stay in local .runtime, not the source ZIP.",
+    "No push, deployment, external upload or contest submission."
+  ]
+}
