@@ -1,0 +1,382 @@
+{
+  "schemaVersion": "gongxu-source-delivery-v3.1",
+  "finishedAt": "2026-11-01T03:40:16.270287+00:00",
+  "archive": {
+    "path": "C:\\Users\\30791\\Desktop\\gongxu-zhiban-review-v3.zip",
+    "bytes": 2215125,
+    "copiedAt": "2026-11-01T03:39:03.9915351+00:00",
+    "sha256": "99d51186c3f726484a7d1974d74ed55a47d2f2e83cca622fb2938327163caf79",
+    "overwritten": false
+  },
+  "sourceReleaseCommit": "61baab002905e4f39844e1b7ae3180d6af1771e8",
+  "businessImplementationCommit": "42958a2",
+  "packageValidation": {
+    "crc": "passed",
+    "duplicateAndTraversalPaths": "passed",
+    "allEntrySizesAndHashes": "passed",
+    "requiredFilesAndExclusions": "passed",
+    "files": 284,
+    "manifestEntries": 283,
+    "migrations": 19
+  },
+  "isolatedVerification": {
+    "file": ".runtime/isolated-review-v3-6ea9a45b-804b-4d72-9bef-8303f35f4102/report.json",
+    "sha256": "cd0120b711dc9b30b7d2048373e151f6b19dfbf8666b1488a98917a7fc333c33",
+    "scope": "actual_zip_extraction_existing_local_dependencies_no_git_no_real_env_no_database_no_models",
+    "startedAt": "2026-11-01T03:36:49.529Z",
+    "finishedAt": "2026-11-01T03:37:08.353Z",
+    "checks": [
+      {
+        "name": "env_templates",
+        "status": "passed",
+        "exitCode": 0,
+        "command": [
+          "node",
+          "scripts/check-env-templates.mjs"
+        ],
+        "cwd": ".",
+        "durationMs": 64,
+        "logSha256": "49cd4932aec51f1f3d93b8431e098a3e423fd522807c3eccab06e23f0925f077"
+      },
+      {
+        "name": "api_typecheck",
+        "status": "passed",
+        "exitCode": 0,
+        "command": [
+          "node",
+          "E:\\ai\\.review-export\\v3-20261101-113635-518823\\verified-extraction\\gongxu-zhiban\\apps\\api\\node_modules\\typescript\\bin\\tsc",
+          "--noEmit",
+          "-p",
+          "tsconfig.json"
+        ],
+        "cwd": "apps/api",
+        "durationMs": 1535,
+        "logSha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+      },
+      {
+        "name": "embedding_typecheck",
+        "status": "passed",
+        "exitCode": 0,
+        "command": [
+          "node",
+          "E:\\ai\\.review-export\\v3-20261101-113635-518823\\verified-extraction\\gongxu-zhiban\\apps\\embedding\\node_modules\\typescript\\bin\\tsc",
+          "--noEmit",
+          "-p",
+          "tsconfig.json"
+        ],
+        "cwd": "apps/embedding",
+        "durationMs": 1106,
+        "logSha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+      },
+      {
+        "name": "web_typecheck",
+        "status": "passed",
+        "exitCode": 0,
+        "command": [
+          "node",
+          "E:\\ai\\.review-export\\v3-20261101-113635-518823\\verified-extraction\\gongxu-zhiban\\apps\\web\\node_modules\\typescript\\bin\\tsc",
+          "--noEmit",
+          "-p",
+          "tsconfig.json"
+        ],
+        "cwd": "apps/web",
+        "durationMs": 2528,
+        "logSha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+      },
+      {
+        "name": "api_build",
+        "status": "passed",
+        "exitCode": 0,
+        "command": [
+          "node",
+          "node_modules/typescript/bin/tsc",
+          "-p",
+          "tsconfig.json"
+        ],
+        "cwd": "apps/api",
+        "durationMs": 1501,
+        "logSha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+      },
+      {
+        "name": "api_test_compile",
+        "status": "passed",
+        "exitCode": 0,
+        "command": [
+          "node",
+          "node_modules/typescript/bin/tsc",
+          "-p",
+          "tsconfig.test.json"
+        ],
+        "cwd": "apps/api",
+        "durationMs": 1797,
+        "logSha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+      },
+      {
+        "name": "api_121_tests",
+        "status": "passed",
+        "exitCode": 0,
+        "command": [
+          "node",
+          "--test",
+          "dist/**/*.test.js"
+        ],
+        "cwd": "apps/api",
+        "durationMs": 1453,
+        "logSha256": "967508bf05f861eaa8e53a32df5e60d1479311f93878a1129d0e7b691396330a"
+      },
+      {
+        "name": "embedding_build",
+        "status": "passed",
+        "exitCode": 0,
+        "command": [
+          "node",
+          "node_modules/typescript/bin/tsc",
+          "-p",
+          "tsconfig.json"
+        ],
+        "cwd": "apps/embedding",
+        "durationMs": 1085,
+        "logSha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+      },
+      {
+        "name": "embedding_test_compile",
+        "status": "passed",
+        "exitCode": 0,
+        "command": [
+          "node",
+          "node_modules/typescript/bin/tsc",
+          "-p",
+          "tsconfig.test.json"
+        ],
+        "cwd": "apps/embedding",
+        "durationMs": 1111,
+        "logSha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+      },
+      {
+        "name": "embedding_4_tests",
+        "status": "passed",
+        "exitCode": 0,
+        "command": [
+          "node",
+          "--test",
+          "dist/**/*.test.js"
+        ],
+        "cwd": "apps/embedding",
+        "durationMs": 398,
+        "logSha256": "f45b225f12fd2bf454089801df2e119f7b94411e70386630b51a267cc2b83b44"
+      },
+      {
+        "name": "web_build",
+        "status": "passed",
+        "exitCode": 0,
+        "command": [
+          "node",
+          "node_modules/vite/bin/vite.js",
+          "build"
+        ],
+        "cwd": "apps/web",
+        "durationMs": 2393,
+        "logSha256": "9325204fb0d92cd9ae7e82a60dd72345ee2156a717605a493cd88c3b87523165"
+      },
+      {
+        "name": "rules_58_tests",
+        "status": "passed",
+        "exitCode": 0,
+        "command": [
+          "node",
+          "--test",
+          "scripts/ui-models.test.mjs",
+          "scripts/workbench-models.test.mjs",
+          "scripts/evidence-state.test.mjs",
+          "scripts/evaluation-report.test.mjs",
+          "scripts/retrieval-evaluation.test.mjs",
+          "scripts/review-package.test.mjs",
+          "scripts/source-provenance.test.mjs",
+          "scripts/historical-source.test.mjs"
+        ],
+        "cwd": ".",
+        "durationMs": 1291,
+        "logSha256": "17e3f0a27e1a136a8948a5f012560cb946c88d62a5913433adf512f76419bc90"
+      },
+      {
+        "name": "transport_8_tests",
+        "status": "passed",
+        "exitCode": 0,
+        "command": [
+          "node",
+          "--test",
+          "scripts/request-transport.test.mjs"
+        ],
+        "cwd": ".",
+        "durationMs": 853,
+        "logSha256": "18bc7abd13daa23f1aba6f7f4670a36b92e821cd84a8059c82d055a66015170f"
+      },
+      {
+        "name": "export_6_tests",
+        "status": "passed",
+        "exitCode": 0,
+        "command": [
+          "python",
+          "scripts/export-review.test.py"
+        ],
+        "cwd": ".",
+        "durationMs": 417,
+        "logSha256": "e46d56142b8015f3714f35c94b30c9191cc4d2fb71492bd95b77c55c42ed1117"
+      },
+      {
+        "name": "offline_8_cases",
+        "status": "passed",
+        "exitCode": 0,
+        "command": [
+          "node",
+          "scripts/evaluate-offline.mjs"
+        ],
+        "cwd": ".",
+        "durationMs": 836,
+        "logSha256": "1a512c02a99cdf619a12bc1f608cae1c789e43d22d27d6fb2879e40a3c90d70d"
+      },
+      {
+        "name": "prepared_18_records_no_git",
+        "status": "passed",
+        "exitCode": 0,
+        "command": [
+          "node",
+          "scripts/evaluate-prepare.mjs"
+        ],
+        "cwd": ".",
+        "durationMs": 410,
+        "logSha256": "3eed0764f1f2f59fed4f9934f50972f64b00a16bc39eb4b8907cf53038bdb5c5"
+      }
+    ],
+    "passedSteps": 16,
+    "dependencies": "existing_local_installations_no_network_install",
+    "actualCounts": {
+      "api": 121,
+      "embedding": 4,
+      "rules": 58,
+      "httpTransport": 8,
+      "exportTool": 6,
+      "offlineCases": 8,
+      "preparedInputs": 18
+    }
+  },
+  "privacy": {
+    "realEnvironmentRead": false,
+    "originalProjectOrDataDeleted": false,
+    "paidChatCalls": 0,
+    "externalUpload": false,
+    "excludedRecords": 36,
+    "exclusionsByReason": {
+      "dependencies_generated_data_or_unreviewed_directory": 12,
+      "real_environment_never_opened": 1,
+      "generated_or_sensitive_file_type": 1,
+      "outside_review_allowlist_or_uncertain_historical_material": 19,
+      "unclassified_json_or_possible_business_data": 3
+    },
+    "redactedFileCount": 9,
+    "redactionRuleCounts": {
+      "compose_local_placeholder": 3,
+      "empty_template_credentials": 2,
+      "template_database_placeholder": 1,
+      "database_url": 4,
+      "credential_literal": 8,
+      "pdf_metadata_removed": 1
+    },
+    "scope": "Copies only. Unknown-sensitive files excluded. Pattern scanning is not proof against all unknown secret formats."
+  },
+  "sourceFingerprintCheck": {
+    "files": 236,
+    "status": "passed"
+  },
+  "localServices": [
+    {
+      "checkedAt": "2026-11-01T03:39:36.5096201+00:00",
+      "httpStatus": 200,
+      "service": "web",
+      "state": "responding"
+    },
+    {
+      "checkedAt": "2026-11-01T03:39:36.5453269+00:00",
+      "httpStatus": 200,
+      "service": "api_database",
+      "state": "ready"
+    },
+    {
+      "checkedAt": "2026-11-01T03:39:36.5471635+00:00",
+      "httpStatus": 200,
+      "service": "embedding",
+      "state": "ready"
+    }
+  ],
+  "materials": [
+    {
+      "kind": "pdf",
+      "file": "output/pdf/gongxu-zhiban-technical-v3.pdf",
+      "bytes": 1031516,
+      "sha256": "13bd926dba5e26d6728a01d86e05bea9a8304935dfe26b84a3ddd2ee45321fdb",
+      "manifest": "output/pdf/technical-pdf-manifest.json",
+      "manifestSha256": "18804ef3e19d433fb23480aea3ff8d956cb32acb1751e0c6bd968db472ee1a4a",
+      "pages": 29,
+      "scope": "review_draft_all_rendered_pages_inspected_not_contest_submission"
+    },
+    {
+      "kind": "pptx",
+      "file": "output/presentations/gongxu-zhiban-defense-v3-2026-11-01T02-06-24-722Z.pptx",
+      "bytes": 818642,
+      "sha256": "f5b9466d7c71b957ecbebf1089ca9ccfebc270a90d10bed696d7d1e7ff391d43",
+      "manifest": "output/presentations/defense-manifest.json",
+      "manifestSha256": "bf343e582adbe6e9c19dab9bfcd1c7f4cdcb2c26cc92516ad532cfd4f5235b92",
+      "pages": 12,
+      "scope": "review_draft_all_rendered_pages_inspected_not_contest_submission"
+    },
+    {
+      "kind": "video",
+      "file": "output/video/gongxu-zhiban-demo-v3-draft-20261101-073052.mp4",
+      "bytes": 15682009,
+      "sha256": "7154fdb394072ceca5cc7b2101b3523ba082672754279098ab34dff9730ff0bf",
+      "manifest": "output/video/gongxu-zhiban-demo-v3-draft-20261101-073052.json",
+      "manifestSha256": "c3d0e72b65a093fc0cee82c723982fc8ceae704fde9e183d3295975571c2e562",
+      "pages": null,
+      "scope": "earlier_version_synthetic_db_embedding_chat_fixture_tts_draft_not_final_submission"
+    }
+  ],
+  "limitations": [
+    {
+      "name": "paid_chat_quality_comparison",
+      "reason": "No scoped model/call/cost and synthetic transfer authorization"
+    },
+    {
+      "name": "real_classroom_capacity_or_student_teacher_study",
+      "reason": "No actual participants or long-term load study; no contact authorized"
+    },
+    {
+      "name": "native_windows_high_contrast_screen_reader_browser_menu_zoom",
+      "reason": "Only browser controlled media/CSS zoom tested"
+    },
+    {
+      "name": "Safari_on_Apple_device",
+      "reason": "Windows Playwright WebKit is not Safari device validation"
+    },
+    {
+      "name": "PowerPoint_WPS_projection_and_speaker_timing",
+      "reason": "Local authoring renderer and structural checks only"
+    },
+    {
+      "name": "full_video_human_listening_and_final_ai_recording",
+      "reason": "Draft local TTS and explicit chat fixture"
+    },
+    {
+      "name": "public_deployment_push_upload_contest_submission",
+      "reason": "Separate authorization required; optional online bonus not achieved"
+    },
+    {
+      "name": "team_eligibility_full_contest_rules",
+      "reason": "Missing authentic team details and complete current rules"
+    }
+  ],
+  "remainingDiagnostics": [
+    "Two intermediate Firefox slow-detail checks observed an extra read; final fixed-source targeted and full checks passed. Independent cause remains unconfirmed.",
+    "Local services were absent at final readiness check, restarted using existing script and rechecked. No boot autostart or platform self-resume configured."
+  ],
+  "receiptDistribution": "Local companion receipt; excluded from the ZIP it binds to avoid a recursive hash."
+}
