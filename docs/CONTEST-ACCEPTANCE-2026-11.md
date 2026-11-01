@@ -14,7 +14,7 @@
 
 | 编号与性质 | 截图原要求（短摘录/准确归纳） | 项目现状与状态 | 差距与改进任务 | 验证证据/待提供证据 |
 | --- | --- | --- | --- | --- |
-| S1-1 作品要求 | 图1、2：聚焦 AI Native Web 前端应用，以现代前端框架为基础；AI 深度应用而非简单 API 调用 | React/TS/Vite，需求、Agent、RAG、审查、测试与文档贯穿确认版本。部分满足 | 实际工具、版本证据、独立执行修订和人工审核已验证；真实模型质量待范围批准 | apps/api/src、apps/web/src；FINAL-REVIEW-V4、verification/review-v4.json，数据库统一17步与真实服务8组 |
+| S1-1 作品要求 | 图1、2：聚焦 AI Native Web 前端应用，以现代前端框架为基础；AI 深度应用而非简单 API 调用 | React/TS/Vite，需求、Agent、RAG、审查、测试与文档贯穿确认版本。部分满足 | 实际工具、版本证据、独立执行修订和人工审核已验证；12次真实模型评测已执行，独立人工质量审核待完成，仍不宣称全部AI能力验收 | apps/api/src、apps/web/src；FINAL-REVIEW-V4、verification/review-v4.json；AI-EVALUATION-V4-2026-11-01及verification/ai-evaluation-v4.json |
 | S1-2 考察能力，未给权重 | 图1：前端工程、AI 技术集成、创新思维、用户体验设计 | 可靠性、账号隔离、桌面操作与真实状态有可复核实现。部分满足 | 不自拟分值；模型语义、课堂容量和真实师生试用待验证 | 离线15步；API125、Embedding4、根JS74、Python7分层通过；Edge96；Firefox/WebKit新增各10；axe24场景0工具违规且保留人审 |
 | S2-1 推荐/背景 | 图2：LLM、Agent、多模态、AI Native、MCP、端云协同背景；允许自拟相关选题 | 使用 LLM、Agent、本地 Embedding/pgvector；未实现多模态/MCP。部分满足 | 可见条款未要求每种技术全部实现，不为术语堆栈；不是必做功能缺项 | TECHNICAL-MATERIAL.md；聊天/向量独立配置，Agent实际工具和状态源码 |
 | S3-1 推荐方向 | 图3、4：AI 教育与学习平台、AI 代码开发辅助、Agent 助手、RAG 问答等可选方向 | 软件工程实训对应教育及代码辅助方向。已满足并验证（仅选题对应） | 教学成效不能由选题对应证明；试用仍待执行 | 现有需求/审查/测试界面；evaluation/README.md提供试用方案 |

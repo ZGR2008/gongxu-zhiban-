@@ -20,7 +20,9 @@ Python3及`pypdf`用于打包回归；找不到时可加`--python=<已安装Pyth
 
 [v4进度与恢复](docs/CONTINUATION-V4.md)记录本轮实际通过、失败与修复；[真实AI评测准备](docs/EVALUATION-V4.md)记录固定合成输入及费用审批范围。真实模型评测独立于`verify`，没有明确批准不会发起收费调用。公开案例核验和原创实现见[参考说明](docs/REFERENCE-REVIEW-V4.md)。本轮材料、实际修改、分层验证与剩余事项见[v4交付报告](docs/FINAL-REVIEW-V4.md)和[验证索引](docs/verification/review-v4.json)，比赛要求见[截图矩阵](docs/CONTEST-ACCEPTANCE-2026-11.md)。下方v3结果只作历史记录，不能充当v4结果。
 
-本轮离线15步通过，API125、Embedding4、根JS74、Python打包7分别通过；受控Edge96组、Firefox/WebKit本轮相关各10组、真实本地数据库统一17步和实际服务8组通过，不能跨层相加为全系统通过率。技术评审稿29页、答辩稿12页，视频更新为[十二场景v4工程草稿](docs/demo-v4/README.md)。材料明确合成数据与聊天替身，真实模型评测0次、师生试用未执行。
+v4初次交付离线15步通过，API125、Embedding4、根JS74、Python打包7分别通过；受控Edge96组、Firefox/WebKit本轮相关各10组、真实本地数据库统一17步和实际服务8组通过，不能跨层相加为全系统通过率。技术评审稿29页、答辩稿12页，视频为[十二场景v4工程草稿](docs/demo-v4/README.md)。视频中的聊天仍为替身，未重新拍摄真实模型片段。
+
+2026-11-01经范围批准，完成**12次真实DeepSeek评测调用**，没有重试或追加收费。该批返回内容、费用估算与局限见[真实评测补充报告](docs/AI-EVALUATION-V4-2026-11-01.md)及[脱敏证据](docs/verification/ai-evaluation-v4.json)。这不是12项质量全通过：长需求当前仍拒绝生成，人工盲评与师生试用未执行，不提供效果提升百分比。应用模型配置、业务代码和真实数据未因评测改动。
 
 ## v3 既有能力与历史验证（保留供对照）
 

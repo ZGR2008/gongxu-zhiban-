@@ -1,0 +1,274 @@
+{
+  "artifact": "gongxu-zhiban-technical-v4-ai-evaluated-20261101-153409-305319.pdf",
+  "pages": 29,
+  "chapters": [
+    {
+      "number": 1,
+      "title": "工序智伴"
+    },
+    {
+      "number": 2,
+      "title": "问题与产品边界"
+    },
+    {
+      "number": 3,
+      "title": "竞赛要求对照"
+    },
+    {
+      "number": 4,
+      "title": "需求与验收设计"
+    },
+    {
+      "number": 5,
+      "title": "产品功能与路由"
+    },
+    {
+      "number": 6,
+      "title": "系统技术架构"
+    },
+    {
+      "number": 7,
+      "title": "数据模型与增量迁移"
+    },
+    {
+      "number": 8,
+      "title": "Agent的实际执行流程"
+    },
+    {
+      "number": 9,
+      "title": "RAG资料进入知识库"
+    },
+    {
+      "number": 10,
+      "title": "RAG检索与并发控制"
+    },
+    {
+      "number": 11,
+      "title": "需求到任务及测试的追踪"
+    },
+    {
+      "number": 12,
+      "title": "需求变更的影响处理"
+    },
+    {
+      "number": 13,
+      "title": "并发与未保存编辑保护"
+    },
+    {
+      "number": 14,
+      "title": "审查、测试与文档生成"
+    },
+    {
+      "number": 15,
+      "title": "权限、数据与恢复"
+    },
+    {
+      "number": 16,
+      "title": "电脑工作台的阅读与交互"
+    },
+    {
+      "number": 17,
+      "title": "文档编辑与来源状态"
+    },
+    {
+      "number": 18,
+      "title": "审查依据可回看"
+    },
+    {
+      "number": 19,
+      "title": "当前进度与历史记录分开"
+    },
+    {
+      "number": 20,
+      "title": "首屏资源与排版失败恢复"
+    },
+    {
+      "number": 21,
+      "title": "完整原文的分段人工审阅"
+    },
+    {
+      "number": 22,
+      "title": "桌面可访问性与动效"
+    },
+    {
+      "number": 23,
+      "title": "真实本地检索测量"
+    },
+    {
+      "number": 24,
+      "title": "分层验证证据"
+    },
+    {
+      "number": 25,
+      "title": "真实模型评测与边界"
+    },
+    {
+      "number": 26,
+      "title": "创新与公开案例借鉴"
+    },
+    {
+      "number": 27,
+      "title": "启动、迁移与交付"
+    },
+    {
+      "number": 28,
+      "title": "剩余工作与验收结论"
+    },
+    {
+      "number": 29,
+      "title": "来源与原创实现说明"
+    }
+  ],
+  "scope": "technical_review_draft_not_official_acceptance",
+  "screenshots": "synthetic_local_account_real_db_model_fixture",
+  "visualReview": "all_rendered_pages_inspected",
+  "sha256": "736c562de000adb7263ef14869108288dbb3b1338a28b00543c290c5f00f29e8",
+  "layoutBounds": [
+    {
+      "page": 1,
+      "textCharacters": 412,
+      "outsideSafeBounds": 0
+    },
+    {
+      "page": 2,
+      "textCharacters": 562,
+      "outsideSafeBounds": 0
+    },
+    {
+      "page": 3,
+      "textCharacters": 683,
+      "outsideSafeBounds": 0
+    },
+    {
+      "page": 4,
+      "textCharacters": 526,
+      "outsideSafeBounds": 0
+    },
+    {
+      "page": 5,
+      "textCharacters": 502,
+      "outsideSafeBounds": 0
+    },
+    {
+      "page": 6,
+      "textCharacters": 555,
+      "outsideSafeBounds": 0
+    },
+    {
+      "page": 7,
+      "textCharacters": 754,
+      "outsideSafeBounds": 0
+    },
+    {
+      "page": 8,
+      "textCharacters": 507,
+      "outsideSafeBounds": 0
+    },
+    {
+      "page": 9,
+      "textCharacters": 556,
+      "outsideSafeBounds": 0
+    },
+    {
+      "page": 10,
+      "textCharacters": 590,
+      "outsideSafeBounds": 0
+    },
+    {
+      "page": 11,
+      "textCharacters": 503,
+      "outsideSafeBounds": 0
+    },
+    {
+      "page": 12,
+      "textCharacters": 466,
+      "outsideSafeBounds": 0
+    },
+    {
+      "page": 13,
+      "textCharacters": 583,
+      "outsideSafeBounds": 0
+    },
+    {
+      "page": 14,
+      "textCharacters": 561,
+      "outsideSafeBounds": 0
+    },
+    {
+      "page": 15,
+      "textCharacters": 457,
+      "outsideSafeBounds": 0
+    },
+    {
+      "page": 16,
+      "textCharacters": 330,
+      "outsideSafeBounds": 0
+    },
+    {
+      "page": 17,
+      "textCharacters": 291,
+      "outsideSafeBounds": 0
+    },
+    {
+      "page": 18,
+      "textCharacters": 329,
+      "outsideSafeBounds": 0
+    },
+    {
+      "page": 19,
+      "textCharacters": 349,
+      "outsideSafeBounds": 0
+    },
+    {
+      "page": 20,
+      "textCharacters": 564,
+      "outsideSafeBounds": 0
+    },
+    {
+      "page": 21,
+      "textCharacters": 559,
+      "outsideSafeBounds": 0
+    },
+    {
+      "page": 22,
+      "textCharacters": 563,
+      "outsideSafeBounds": 0
+    },
+    {
+      "page": 23,
+      "textCharacters": 617,
+      "outsideSafeBounds": 0
+    },
+    {
+      "page": 24,
+      "textCharacters": 669,
+      "outsideSafeBounds": 0
+    },
+    {
+      "page": 25,
+      "textCharacters": 724,
+      "outsideSafeBounds": 0
+    },
+    {
+      "page": 26,
+      "textCharacters": 604,
+      "outsideSafeBounds": 0
+    },
+    {
+      "page": 27,
+      "textCharacters": 597,
+      "outsideSafeBounds": 0
+    },
+    {
+      "page": 28,
+      "textCharacters": 617,
+      "outsideSafeBounds": 0
+    },
+    {
+      "page": 29,
+      "textCharacters": 690,
+      "outsideSafeBounds": 0
+    }
+  ],
+  "renderResolutionDpi": 90
+}

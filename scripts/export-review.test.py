@@ -74,6 +74,8 @@ class ExportTests(unittest.TestCase):
                 'docs/demo-v4/README.md':'Synthetic recording scope',
                 'docs/demo-v4/storyboard.json':'{"scope":"synthetic"}',
                 'docs/verification/review-v4.json':'{"paidModelCalls":0}',
+                'docs/AI-EVALUATION-V4-2026-11-01.md':'Synthetic real evaluation addendum without secrets',
+                'docs/verification/ai-evaluation-v4.json':'{"humanReview":{"reviewers":[]}}',
                 'apps/api/migrations/021_requirement_segment_reviews.sql':'-- synthetic schema fixture',
             }
             for relative,text in required.items():

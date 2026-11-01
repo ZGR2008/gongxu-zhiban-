@@ -6,9 +6,13 @@ from PIL import Image,ImageDraw
 ROOT=Path(__file__).resolve().parents[1]
 parser=argparse.ArgumentParser()
 parser.add_argument('--confirm-visual-review',action='store_true',help='Use only after inspecting every rendered page; this flag does not perform visual review.')
+parser.add_argument('--pdf',default='output/pdf/gongxu-zhiban-technical-v4.pdf')
+parser.add_argument('--render-dir',default='tmp/pdfs/v4')
 args=parser.parse_args()
-PDF=ROOT/'output/pdf/gongxu-zhiban-technical-v4.pdf'
-TMP=ROOT/'tmp/pdfs/v4'
+PDF=(ROOT/args.pdf).resolve()
+TMP=(ROOT/args.render_dir).resolve()
+assert PDF.is_relative_to(ROOT/'output/pdf') and PDF.suffix=='.pdf'
+assert TMP.is_relative_to(ROOT/'tmp/pdfs')
 reports=[]
 with pdfplumber.open(PDF) as pdf:
  assert 1<=len(pdf.pages)<=30
@@ -28,7 +32,7 @@ for start in range(0,len(pages),4):
  sheet.save(TMP/f'sheet-{start//4+1}.png')
 (TMP/'layout-check.json').write_text(json.dumps(reports,indent=2),encoding='utf-8')
 if args.confirm_visual_review:
- manifest_path=PDF.parent/'technical-pdf-v4-manifest.json'
+ manifest_path=PDF.parent/('technical-pdf-v4-manifest.json' if PDF.name=='gongxu-zhiban-technical-v4.pdf' else PDF.stem+'-manifest.json')
  manifest=json.loads(manifest_path.read_text(encoding='utf-8'))
  manifest.update({'visualReview':'all_rendered_pages_inspected','sha256':hashlib.sha256(PDF.read_bytes()).hexdigest(),'layoutBounds':reports,'renderResolutionDpi':90})
  manifest_path.write_text(json.dumps(manifest,ensure_ascii=False,indent=2),encoding='utf-8')

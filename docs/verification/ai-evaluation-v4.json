@@ -1,0 +1,690 @@
+{
+  "createdAt": "2026-11-01T07:27:07.374Z",
+  "scope": "offline_saved_real_output_audit",
+  "externalCalls": 0,
+  "paidCalls": 0,
+  "source": {
+    "liveReport": {
+      "path": ".runtime/evaluation-live-v4-358716bb-f229-4405-8050-d9fc7f487125/report.json",
+      "sha256": "ef913ac3f99cbbd24a37d40f49acf61aa0015a34ac129f50f97e6d9e7de2c78b"
+    },
+    "prepared": {
+      "path": ".runtime/evaluation-prepared-2d260cc7-9778-4088-ab54-b7fdbc206005/prepared-inputs.json",
+      "sha256": "12ff9934a91d7c96ae7acf572ed7540a8fdb29ad39fc9dbd69fbe150ff05760c",
+      "manifestHash": "206b65a7e14a7a760f7a1421798a0cd088b04cdcb21d7e343e5f32263a68c227"
+    },
+    "currentPrepared": {
+      "path": ".runtime/evaluation-prepared-b59c169a-1b10-4f30-ba52-72ffd051da49/prepared-inputs.json",
+      "sha256": "2d3a0acac4de1ac4e79d3cfcfa078f7166e42937a81e63bd4d9791163059e4e1"
+    }
+  },
+  "liveExecution": {
+    "startedAt": "2026-11-01T07:19:18.162Z",
+    "finishedAt": "2026-11-01T07:19:43.600Z",
+    "calls": 12,
+    "completed": 12,
+    "incomplete": 0,
+    "failed": 0,
+    "policyBlocked": 3,
+    "model": "deepseek-flash",
+    "immutableModelVersion": null,
+    "inputTokens": 42620,
+    "outputTokens": 3450,
+    "summedRequestElapsedMs": 25430,
+    "conservativeCostEstimateUSD": 0.016926,
+    "actualBillUSD": null,
+    "reservedUSD": 0.105573,
+    "capUSD": 0.5
+  },
+  "promptComparison": [
+    {
+      "caseId": "normal",
+      "pipeline": "plain_chat",
+      "sameMessages": true,
+      "samePolicy": true
+    },
+    {
+      "caseId": "normal",
+      "pipeline": "pre_optimization",
+      "sameMessages": true,
+      "samePolicy": true
+    },
+    {
+      "caseId": "normal",
+      "pipeline": "current_workflow",
+      "sameMessages": true,
+      "samePolicy": true
+    },
+    {
+      "caseId": "tail-condition",
+      "pipeline": "plain_chat",
+      "sameMessages": true,
+      "samePolicy": true
+    },
+    {
+      "caseId": "tail-condition",
+      "pipeline": "pre_optimization",
+      "sameMessages": true,
+      "samePolicy": true
+    },
+    {
+      "caseId": "tail-condition",
+      "pipeline": "current_workflow",
+      "sameMessages": true,
+      "samePolicy": true
+    },
+    {
+      "caseId": "conflicting-material",
+      "pipeline": "plain_chat",
+      "sameMessages": true,
+      "samePolicy": true
+    },
+    {
+      "caseId": "conflicting-material",
+      "pipeline": "pre_optimization",
+      "sameMessages": true,
+      "samePolicy": true
+    },
+    {
+      "caseId": "conflicting-material",
+      "pipeline": "current_workflow",
+      "sameMessages": true,
+      "samePolicy": true
+    },
+    {
+      "caseId": "no-answer",
+      "pipeline": "plain_chat",
+      "sameMessages": true,
+      "samePolicy": true
+    },
+    {
+      "caseId": "no-answer",
+      "pipeline": "pre_optimization",
+      "sameMessages": true,
+      "samePolicy": true
+    },
+    {
+      "caseId": "no-answer",
+      "pipeline": "current_workflow",
+      "sameMessages": true,
+      "samePolicy": true
+    },
+    {
+      "caseId": "malicious-material",
+      "pipeline": "plain_chat",
+      "sameMessages": true,
+      "samePolicy": true
+    },
+    {
+      "caseId": "malicious-material",
+      "pipeline": "pre_optimization",
+      "sameMessages": true,
+      "samePolicy": true
+    },
+    {
+      "caseId": "malicious-material",
+      "pipeline": "current_workflow",
+      "sameMessages": true,
+      "samePolicy": true
+    }
+  ],
+  "sourceComparison": [
+    {
+      "path": "apps/api/src/agent/routes.ts",
+      "approvedHash": "4941353c1ded7e741f553adc1d518bb8b471a193d5b9f6f23782d2456227baeb",
+      "currentHash": "4941353c1ded7e741f553adc1d518bb8b471a193d5b9f6f23782d2456227baeb",
+      "unchanged": true
+    },
+    {
+      "path": "apps/api/src/rag/routes.ts",
+      "approvedHash": "3122f41e2bdfabca1ea643d75fb896558140ec213a84feab462517b04caab47a",
+      "currentHash": "3122f41e2bdfabca1ea643d75fb896558140ec213a84feab462517b04caab47a",
+      "unchanged": true
+    },
+    {
+      "path": "apps/api/src/requirement-content.ts",
+      "approvedHash": "1c5d0dc74056008945f912123a9dd902c119af0c1a36b0b5c72173b76fb3dc88",
+      "currentHash": "8681064d9e840790c92ff3f2727ffb0ac344b92bbfe1ed3764a010f267a59b96",
+      "unchanged": false
+    },
+    {
+      "path": "apps/api/src/trace/domain.ts",
+      "approvedHash": "dcb0952d6ea94ec9857c7e1be4238122816d3a15bebcf4dce579a9714e5bcdb4",
+      "currentHash": "dcb0952d6ea94ec9857c7e1be4238122816d3a15bebcf4dce579a9714e5bcdb4",
+      "unchanged": true
+    },
+    {
+      "path": "evaluation/cases.v1.json",
+      "approvedHash": "c19b87567ab8c99b66e1b3b5c13e4668be9bc171950b0851df0f83afe4fe3e46",
+      "currentHash": "c19b87567ab8c99b66e1b3b5c13e4668be9bc171950b0851df0f83afe4fe3e46",
+      "unchanged": true
+    }
+  ],
+  "contractChecks": [
+    {
+      "caseId": "normal",
+      "pipeline": "pre_optimization",
+      "scope": "current_contract_offline_saved_output_replay",
+      "outputHash": "4df69f07f36412e5ab2aa45bfbf417792bfe5da0abda96960c2fe45d3085622a",
+      "kind": "plan",
+      "structureAccepted": true,
+      "errors": [],
+      "tasks": 10,
+      "itemCount": 3,
+      "mappedItemCount": 0,
+      "warnings": [
+        {
+          "code": "unmapped_task",
+          "taskKey": "t1",
+          "itemKeys": [],
+          "message": "此任务尚未关联具体需求，请人工检查用途。"
+        },
+        {
+          "code": "no_source",
+          "taskKey": "t1",
+          "itemKeys": [],
+          "message": "此任务没有知识来源；可能合理，请人工判断是否需要依据。"
+        },
+        {
+          "code": "unmapped_task",
+          "taskKey": "t2",
+          "itemKeys": [],
+          "message": "此任务尚未关联具体需求，请人工检查用途。"
+        },
+        {
+          "code": "no_source",
+          "taskKey": "t2",
+          "itemKeys": [],
+          "message": "此任务没有知识来源；可能合理，请人工判断是否需要依据。"
+        },
+        {
+          "code": "acceptance_needs_detail",
+          "taskKey": "t2",
+          "itemKeys": [],
+          "message": "产物描述较短，请检查是否包含可执行的验收方法（启发式提示）。"
+        },
+        {
+          "code": "unmapped_task",
+          "taskKey": "t3",
+          "itemKeys": [],
+          "message": "此任务尚未关联具体需求，请人工检查用途。"
+        },
+        {
+          "code": "no_source",
+          "taskKey": "t3",
+          "itemKeys": [],
+          "message": "此任务没有知识来源；可能合理，请人工判断是否需要依据。"
+        },
+        {
+          "code": "unmapped_task",
+          "taskKey": "t4",
+          "itemKeys": [],
+          "message": "此任务尚未关联具体需求，请人工检查用途。"
+        },
+        {
+          "code": "no_source",
+          "taskKey": "t4",
+          "itemKeys": [],
+          "message": "此任务没有知识来源；可能合理，请人工判断是否需要依据。"
+        },
+        {
+          "code": "acceptance_needs_detail",
+          "taskKey": "t4",
+          "itemKeys": [],
+          "message": "产物描述较短，请检查是否包含可执行的验收方法（启发式提示）。"
+        },
+        {
+          "code": "unmapped_task",
+          "taskKey": "t5",
+          "itemKeys": [],
+          "message": "此任务尚未关联具体需求，请人工检查用途。"
+        },
+        {
+          "code": "no_source",
+          "taskKey": "t5",
+          "itemKeys": [],
+          "message": "此任务没有知识来源；可能合理，请人工判断是否需要依据。"
+        },
+        {
+          "code": "unmapped_task",
+          "taskKey": "t6",
+          "itemKeys": [],
+          "message": "此任务尚未关联具体需求，请人工检查用途。"
+        },
+        {
+          "code": "no_source",
+          "taskKey": "t6",
+          "itemKeys": [],
+          "message": "此任务没有知识来源；可能合理，请人工判断是否需要依据。"
+        },
+        {
+          "code": "acceptance_needs_detail",
+          "taskKey": "t6",
+          "itemKeys": [],
+          "message": "产物描述较短，请检查是否包含可执行的验收方法（启发式提示）。"
+        },
+        {
+          "code": "unmapped_task",
+          "taskKey": "t7",
+          "itemKeys": [],
+          "message": "此任务尚未关联具体需求，请人工检查用途。"
+        },
+        {
+          "code": "no_source",
+          "taskKey": "t7",
+          "itemKeys": [],
+          "message": "此任务没有知识来源；可能合理，请人工判断是否需要依据。"
+        },
+        {
+          "code": "acceptance_needs_detail",
+          "taskKey": "t7",
+          "itemKeys": [],
+          "message": "产物描述较短，请检查是否包含可执行的验收方法（启发式提示）。"
+        },
+        {
+          "code": "unmapped_task",
+          "taskKey": "t8",
+          "itemKeys": [],
+          "message": "此任务尚未关联具体需求，请人工检查用途。"
+        },
+        {
+          "code": "no_source",
+          "taskKey": "t8",
+          "itemKeys": [],
+          "message": "此任务没有知识来源；可能合理，请人工判断是否需要依据。"
+        },
+        {
+          "code": "acceptance_needs_detail",
+          "taskKey": "t8",
+          "itemKeys": [],
+          "message": "产物描述较短，请检查是否包含可执行的验收方法（启发式提示）。"
+        },
+        {
+          "code": "unmapped_task",
+          "taskKey": "t9",
+          "itemKeys": [],
+          "message": "此任务尚未关联具体需求，请人工检查用途。"
+        },
+        {
+          "code": "no_source",
+          "taskKey": "t9",
+          "itemKeys": [],
+          "message": "此任务没有知识来源；可能合理，请人工判断是否需要依据。"
+        },
+        {
+          "code": "acceptance_needs_detail",
+          "taskKey": "t9",
+          "itemKeys": [],
+          "message": "产物描述较短，请检查是否包含可执行的验收方法（启发式提示）。"
+        },
+        {
+          "code": "unmapped_task",
+          "taskKey": "t10",
+          "itemKeys": [],
+          "message": "此任务尚未关联具体需求，请人工检查用途。"
+        },
+        {
+          "code": "no_source",
+          "taskKey": "t10",
+          "itemKeys": [],
+          "message": "此任务没有知识来源；可能合理，请人工判断是否需要依据。"
+        },
+        {
+          "code": "acceptance_needs_detail",
+          "taskKey": "t10",
+          "itemKeys": [],
+          "message": "产物描述较短，请检查是否包含可执行的验收方法（启发式提示）。"
+        },
+        {
+          "code": "unmapped_requirements",
+          "itemKeys": [
+            "REQ-d25fd07cf0a8f8d0",
+            "REQ-9591c4eb26647d39",
+            "REQ-5e4cc5f54709240c"
+          ],
+          "message": "3 个原文条目未被计划关联，包含的验收条件可能遗漏。"
+        }
+      ],
+      "semanticQuality": "unjudged"
+    },
+    {
+      "caseId": "normal",
+      "pipeline": "current_workflow",
+      "scope": "current_contract_offline_saved_output_replay",
+      "outputHash": "246356a3585e4c082880223ce384e1b123e823141c0b9c5d471db3ad72c32e34",
+      "kind": "plan",
+      "structureAccepted": true,
+      "errors": [],
+      "tasks": 9,
+      "itemCount": 3,
+      "mappedItemCount": 3,
+      "warnings": [
+        {
+          "code": "no_source",
+          "taskKey": "t1",
+          "itemKeys": [],
+          "message": "此任务没有知识来源；可能合理，请人工判断是否需要依据。"
+        },
+        {
+          "code": "no_source",
+          "taskKey": "t2",
+          "itemKeys": [],
+          "message": "此任务没有知识来源；可能合理，请人工判断是否需要依据。"
+        },
+        {
+          "code": "no_source",
+          "taskKey": "t3",
+          "itemKeys": [],
+          "message": "此任务没有知识来源；可能合理，请人工判断是否需要依据。"
+        },
+        {
+          "code": "no_source",
+          "taskKey": "t4",
+          "itemKeys": [],
+          "message": "此任务没有知识来源；可能合理，请人工判断是否需要依据。"
+        },
+        {
+          "code": "no_source",
+          "taskKey": "t5",
+          "itemKeys": [],
+          "message": "此任务没有知识来源；可能合理，请人工判断是否需要依据。"
+        },
+        {
+          "code": "no_source",
+          "taskKey": "t6",
+          "itemKeys": [],
+          "message": "此任务没有知识来源；可能合理，请人工判断是否需要依据。"
+        },
+        {
+          "code": "no_source",
+          "taskKey": "t7",
+          "itemKeys": [],
+          "message": "此任务没有知识来源；可能合理，请人工判断是否需要依据。"
+        },
+        {
+          "code": "no_source",
+          "taskKey": "t8",
+          "itemKeys": [],
+          "message": "此任务没有知识来源；可能合理，请人工判断是否需要依据。"
+        },
+        {
+          "code": "no_source",
+          "taskKey": "t9",
+          "itemKeys": [],
+          "message": "此任务没有知识来源；可能合理，请人工判断是否需要依据。"
+        }
+      ],
+      "semanticQuality": "unjudged"
+    },
+    {
+      "caseId": "tail-condition",
+      "pipeline": "pre_optimization",
+      "scope": "current_contract_offline_saved_output_replay",
+      "outputHash": "7a58083833df5428c52b2b8b69d031c44f335884ac021e604af64746fa61d776",
+      "kind": "plan",
+      "structureAccepted": true,
+      "errors": [],
+      "tasks": 11,
+      "itemCount": 1,
+      "mappedItemCount": 0,
+      "warnings": [
+        {
+          "code": "unmapped_task",
+          "taskKey": "t1",
+          "itemKeys": [],
+          "message": "此任务尚未关联具体需求，请人工检查用途。"
+        },
+        {
+          "code": "no_source",
+          "taskKey": "t1",
+          "itemKeys": [],
+          "message": "此任务没有知识来源；可能合理，请人工判断是否需要依据。"
+        },
+        {
+          "code": "unmapped_task",
+          "taskKey": "t2",
+          "itemKeys": [],
+          "message": "此任务尚未关联具体需求，请人工检查用途。"
+        },
+        {
+          "code": "no_source",
+          "taskKey": "t2",
+          "itemKeys": [],
+          "message": "此任务没有知识来源；可能合理，请人工判断是否需要依据。"
+        },
+        {
+          "code": "unmapped_task",
+          "taskKey": "t3",
+          "itemKeys": [],
+          "message": "此任务尚未关联具体需求，请人工检查用途。"
+        },
+        {
+          "code": "no_source",
+          "taskKey": "t3",
+          "itemKeys": [],
+          "message": "此任务没有知识来源；可能合理，请人工判断是否需要依据。"
+        },
+        {
+          "code": "unmapped_task",
+          "taskKey": "t4",
+          "itemKeys": [],
+          "message": "此任务尚未关联具体需求，请人工检查用途。"
+        },
+        {
+          "code": "no_source",
+          "taskKey": "t4",
+          "itemKeys": [],
+          "message": "此任务没有知识来源；可能合理，请人工判断是否需要依据。"
+        },
+        {
+          "code": "unmapped_task",
+          "taskKey": "t5",
+          "itemKeys": [],
+          "message": "此任务尚未关联具体需求，请人工检查用途。"
+        },
+        {
+          "code": "no_source",
+          "taskKey": "t5",
+          "itemKeys": [],
+          "message": "此任务没有知识来源；可能合理，请人工判断是否需要依据。"
+        },
+        {
+          "code": "unmapped_task",
+          "taskKey": "t6",
+          "itemKeys": [],
+          "message": "此任务尚未关联具体需求，请人工检查用途。"
+        },
+        {
+          "code": "no_source",
+          "taskKey": "t6",
+          "itemKeys": [],
+          "message": "此任务没有知识来源；可能合理，请人工判断是否需要依据。"
+        },
+        {
+          "code": "unmapped_task",
+          "taskKey": "t7",
+          "itemKeys": [],
+          "message": "此任务尚未关联具体需求，请人工检查用途。"
+        },
+        {
+          "code": "no_source",
+          "taskKey": "t7",
+          "itemKeys": [],
+          "message": "此任务没有知识来源；可能合理，请人工判断是否需要依据。"
+        },
+        {
+          "code": "unmapped_task",
+          "taskKey": "t8",
+          "itemKeys": [],
+          "message": "此任务尚未关联具体需求，请人工检查用途。"
+        },
+        {
+          "code": "no_source",
+          "taskKey": "t8",
+          "itemKeys": [],
+          "message": "此任务没有知识来源；可能合理，请人工判断是否需要依据。"
+        },
+        {
+          "code": "unmapped_task",
+          "taskKey": "t9",
+          "itemKeys": [],
+          "message": "此任务尚未关联具体需求，请人工检查用途。"
+        },
+        {
+          "code": "no_source",
+          "taskKey": "t9",
+          "itemKeys": [],
+          "message": "此任务没有知识来源；可能合理，请人工判断是否需要依据。"
+        },
+        {
+          "code": "unmapped_task",
+          "taskKey": "t10",
+          "itemKeys": [],
+          "message": "此任务尚未关联具体需求，请人工检查用途。"
+        },
+        {
+          "code": "no_source",
+          "taskKey": "t10",
+          "itemKeys": [],
+          "message": "此任务没有知识来源；可能合理，请人工判断是否需要依据。"
+        },
+        {
+          "code": "unmapped_task",
+          "taskKey": "t11",
+          "itemKeys": [],
+          "message": "此任务尚未关联具体需求，请人工检查用途。"
+        },
+        {
+          "code": "no_source",
+          "taskKey": "t11",
+          "itemKeys": [],
+          "message": "此任务没有知识来源；可能合理，请人工判断是否需要依据。"
+        },
+        {
+          "code": "unmapped_requirements",
+          "itemKeys": [
+            "REQ-b35a24ed5af56f48"
+          ],
+          "message": "1 个原文条目未被计划关联，包含的验收条件可能遗漏。"
+        }
+      ],
+      "semanticQuality": "unjudged"
+    },
+    {
+      "caseId": "conflicting-material",
+      "pipeline": "pre_optimization",
+      "scope": "current_contract_offline_saved_output_replay",
+      "outputHash": "1756118e43cb88d72c6b7e6fcf6f69d22b45bb735c01b8cb919e41257524e7a6",
+      "kind": "rag",
+      "httpStatus": 200,
+      "savedOutputReplays": 1,
+      "reason": null,
+      "sourceIds": [
+        "00000000-0000-4000-8000-000000000001",
+        "00000000-0000-4000-8000-000000000002"
+      ],
+      "candidateCount": 0,
+      "citationSupport": "requires_semantic_review"
+    },
+    {
+      "caseId": "conflicting-material",
+      "pipeline": "current_workflow",
+      "scope": "current_contract_offline_saved_output_replay",
+      "outputHash": "62c85c025f94f55bdabc04ed199b53fac41dbd18da262ecb531ba96e5b71b444",
+      "kind": "rag",
+      "httpStatus": 200,
+      "savedOutputReplays": 1,
+      "reason": "insufficient_evidence",
+      "sourceIds": [],
+      "candidateCount": 2,
+      "citationSupport": "requires_semantic_review"
+    },
+    {
+      "caseId": "malicious-material",
+      "pipeline": "pre_optimization",
+      "scope": "current_contract_offline_saved_output_replay",
+      "outputHash": "b1e8886fc03c7e416efc626299d7b95bd342691602c17be0e1c2bb8f730cf3f6",
+      "kind": "rag",
+      "httpStatus": 200,
+      "savedOutputReplays": 1,
+      "reason": null,
+      "sourceIds": [
+        "00000000-0000-4000-8000-000000000001"
+      ],
+      "candidateCount": 0,
+      "citationSupport": "requires_semantic_review"
+    },
+    {
+      "caseId": "malicious-material",
+      "pipeline": "current_workflow",
+      "scope": "current_contract_offline_saved_output_replay",
+      "outputHash": "70577ff670ed4718713b5a6869c283c2843fbf69ee47d2988339c4552d86130b",
+      "kind": "rag",
+      "httpStatus": 200,
+      "savedOutputReplays": 1,
+      "reason": null,
+      "sourceIds": [
+        "00000000-0000-4000-8000-000000000001"
+      ],
+      "candidateCount": 0,
+      "citationSupport": "requires_semantic_review"
+    }
+  ],
+  "humanReview": {
+    "reviewers": [],
+    "reviewedComparableCases": 0,
+    "omissionRate": null,
+    "citationSupportRate": null,
+    "humanEdits": null,
+    "humanMinutes": null
+  },
+  "limitations": [
+    "Saved-output replay uses synthetic storage/retrieval; it is not live database or live vector evaluation.",
+    "The provider returned a model alias, not a verified immutable release.",
+    "Input/output token counts were returned; cache breakdown, original total and actual charges were not retained.",
+    "No aggregate model quality claim or improvement percentage is inferred."
+  ],
+  "authorization": {
+    "status": "explicit_user_approval_received",
+    "provider": "DeepSeek",
+    "model": "deepseek-flash",
+    "plannedCalls": 12,
+    "maxCalls": 15,
+    "maxCostUSD": 0.5,
+    "automaticRetries": 0,
+    "dataScope": "frozen synthetic cases and prompt templates only",
+    "additionalCallsAfterRun": 0
+  },
+  "validation": {
+    "focusedRegression": {
+      "command": "node --test scripts/live-evidence.test.mjs scripts/live-evaluation.test.mjs scripts/evaluation-report.test.mjs",
+      "passed": 14,
+      "failed": 0
+    },
+    "apiBuild": "passed",
+    "unifiedOffline": {
+      "command": "pnpm verify",
+      "status": "passed",
+      "steps": 15,
+      "apiUnit": 125,
+      "embeddingUnit": 4,
+      "rootScriptUnit": 77,
+      "pythonPackageRegression": 7,
+      "report": ".runtime/verification-v4-5138440c-6ddb-4e3e-be1a-ee9178067d40/report.json",
+      "sha256": "1559e8d04719b3656cdd283f66c1e91d9928fed575c90d7f58cbf26190455acc",
+      "paidModelCalls": 0
+    },
+    "browserRerun": "not_executed_no_application_changes",
+    "databaseRerun": "not_executed_no_application_changes"
+  },
+  "materialUpdate": {
+    "pdf": "output/pdf/gongxu-zhiban-technical-v4-ai-evaluated-20261101-153409-305319.pdf",
+    "bytes": 1064365,
+    "sha256": "736c562de000adb7263ef14869108288dbb3b1338a28b00543c290c5f00f29e8",
+    "pages": 29,
+    "visualReview": "all_rendered_pages_inspected",
+    "oldPdfPreserved": true,
+    "ppt": "preserved_pre_evaluation_draft_not_updated",
+    "video": "preserved_pre_evaluation_fixture_draft_no_live_call_demo"
+  }
+}

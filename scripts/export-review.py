@@ -31,12 +31,14 @@ DOCS.add('ACCESSIBILITY-V3.md')
 DOCS.add('RETRIEVAL-STUDY-V3.md')
 DOCS.update({'DEFENSE-DECK-V3.md','DEFENSE-SPEAKER-NOTES-V3.md'})
 DOCS.update({'CONTINUATION-V4.md','LONG-REQUIREMENTS-V4.md','REFERENCE-REVIEW-V4.md','EVALUATION-V4.md','FINAL-REVIEW-V4.md','DEFENSE-DECK-V4.md','DEFENSE-SPEAKER-NOTES-V4.md'})
+DOCS.add('AI-EVALUATION-V4-2026-11-01.md')
 CURATED_SCREENSHOTS={'docs/screenshots/review-v2/trace-desktop.png','docs/screenshots/review-v3/task-test-chain-desktop.png','docs/screenshots/review-v3/documents-desktop.png','docs/screenshots/review-v3/review-source-desktop.png','docs/screenshots/review-v3/growth-current-desktop.png','docs/screenshots/review-v3/workspace-desktop.png'}
 CURATED_SCREENSHOTS.update('docs/screenshots/review-v4/'+name+'.png' for name in ['task-test-chain-desktop','documents-desktop','review-source-desktop','growth-current-desktop','workspace-desktop','requirement-segments-desktop','execution-conflict-desktop'])
 JSON_FILES={'package.json','evaluation/record-template.json','evaluation/cases.v1.json','evaluation/retrieval.v1.json','apps/embedding/model-manifest.json','apps/web/public/previews/vendor/manifest.json','docs/verification/review-v2.json','docs/verification/review-v3.json','docs/demo-v3/storyboard.json'}
 TEXT = {'.ts','.tsx','.js','.mjs','.cjs','.json','.yaml','.yml','.md','.css','.html','.sql','.txt','.svg','.glsl','.ps1','.py','.sh','.toml'}
 JSON_FILES.add('evaluation/retrieval-query-study.v1.json')
 JSON_FILES.update({'docs/verification/review-v4.json','docs/demo-v4/storyboard.json'})
+JSON_FILES.add('docs/verification/ai-evaluation-v4.json')
 FORBIDDEN = {'.log','.tsbuildinfo','.pem','.key','.p12','.pfx','.jks','.keystore','.sqlite','.sqlite3','.db','.dump','.backup','.bak','.zip','.7z','.mp4','.webm','.onnx','.bin'}
 excluded = []
 redactions = []
@@ -129,7 +131,7 @@ def candidate(relative):
     if len(parts)==1:return relative in ROOT_FILES
     if parts[0] not in {'apps','scripts','docs','evaluation','packages'}:return False
     if parts[0]=='docs':
-        return (len(parts)==2 and parts[1] in DOCS) or relative in CURATED_SCREENSHOTS or relative in {'docs/verification/review-v2.json','docs/verification/review-v3.json','docs/verification/review-v4.json','docs/demo-v3/README.md','docs/demo-v3/storyboard.json','docs/demo-v4/README.md','docs/demo-v4/storyboard.json'}
+        return (len(parts)==2 and parts[1] in DOCS) or relative in CURATED_SCREENSHOTS or relative in {'docs/verification/review-v2.json','docs/verification/review-v3.json','docs/verification/review-v4.json','docs/verification/ai-evaluation-v4.json','docs/demo-v3/README.md','docs/demo-v3/storyboard.json','docs/demo-v4/README.md','docs/demo-v4/storyboard.json'}
     return True
 
 STAGE.mkdir(parents=True,exist_ok=False)
