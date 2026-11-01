@@ -85,4 +85,18 @@ class ExportTests(unittest.TestCase):
             self.assertEqual((stage/'scripts/sample.py').read_text(encoding='utf-8'),sample)
             ast.parse((stage/'scripts/export-review.py').read_text(encoding='utf-8'))
 
+    def test_excluded_personal_filenames_are_not_disclosed_in_the_packaged_manifest(self):
+        with tempfile.TemporaryDirectory(prefix='gongxu-export-fixture-') as base:
+            root=self.fixture(base);(root/'docs').mkdir()
+            private_name='synthetic-student-at-private-school-notes.md'
+            source=root/'docs'/private_name;source.write_text('synthetic-private-content',encoding='utf-8')
+            before=hashlib.sha256(source.read_bytes()).hexdigest()
+            result=self.export(root,(source.resolve(),))
+            with zipfile.ZipFile(result['archive']) as bundle:
+                self.assertFalse(any(private_name in name or private_name.encode() in bundle.read(name) for name in bundle.namelist()))
+                manifest=json.loads(bundle.read('gongxu-zhiban/SOURCE-PACKAGE-MANIFEST.json'))
+                self.assertEqual(manifest['excluded'][0]['category'],'docs')
+                self.assertEqual(manifest['excluded'][0]['pathSha256'],hashlib.sha256(('docs/'+private_name).encode()).hexdigest())
+            self.assertEqual(hashlib.sha256(source.read_bytes()).hexdigest(),before)
+
 if __name__=='__main__':unittest.main()

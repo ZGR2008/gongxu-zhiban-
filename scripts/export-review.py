@@ -29,6 +29,7 @@ SKIP_DIRS = {'node_modules','.venv','venv','__pycache__','.git','.runtime','.mod
 DOCS = {'CONTEST-ACCEPTANCE-2026-11.md','OPTIMIZATION-PROGRESS.md','TRACEABILITY-AND-RECOVERY.md','FINAL-REVIEW-2026-11.md','STARTUP-AND-VERIFICATION.md','TECHNICAL-MATERIAL.md','DEMO-WALKTHROUGH.md','SOURCE-PACKAGE.md','CONTINUATION-2026-11-01.md','REFERENCE-REVIEW-V3.md','FINAL-REVIEW-V3-2026-11-01.md','PERFORMANCE-V3.md'}
 DOCS.add('ACCESSIBILITY-V3.md')
 DOCS.add('RETRIEVAL-STUDY-V3.md')
+DOCS.update({'DEFENSE-DECK-V3.md','DEFENSE-SPEAKER-NOTES-V3.md'})
 CURATED_SCREENSHOTS={'docs/screenshots/review-v2/trace-desktop.png','docs/screenshots/review-v3/task-test-chain-desktop.png','docs/screenshots/review-v3/documents-desktop.png','docs/screenshots/review-v3/review-source-desktop.png','docs/screenshots/review-v3/growth-current-desktop.png','docs/screenshots/review-v3/workspace-desktop.png'}
 JSON_FILES={'package.json','evaluation/record-template.json','evaluation/cases.v1.json','evaluation/retrieval.v1.json','apps/embedding/model-manifest.json','apps/web/public/previews/vendor/manifest.json','docs/verification/review-v2.json','docs/verification/review-v3.json','docs/demo-v3/storyboard.json'}
 TEXT = {'.ts','.tsx','.js','.mjs','.cjs','.json','.yaml','.yml','.md','.css','.html','.sql','.txt','.svg','.glsl','.ps1','.py','.sh','.toml'}
@@ -50,7 +51,11 @@ private_block = re.compile(r'-----BEGIN [A-Z ]*PRIVATE KEY-----[\s\S]+?-----END 
 local_user_path = re.compile(r'(?i)[A-Z]:[\\/]+Users[\\/]+[^\\/\s\"\'`<>]+')
 
 def skip(path, reason):
-    excluded.append({'path':path,'reason':reason})
+    # Excluded names can themselves contain personal identifiers. Keep a local
+    # reproducible digest and broad category, never those names in the ZIP.
+    first=path.split('/')[0]
+    category=first if first in {'apps','scripts','docs','evaluation','packages','node_modules','.git','.runtime','output','tmp'} else 'unclassified'
+    excluded.append({'category':category,'pathSha256':hashlib.sha256(path.encode('utf-8')).hexdigest(),'reason':reason})
 
 def replacement(value):
     if value not in replacements:
