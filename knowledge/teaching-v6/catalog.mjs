@@ -1,0 +1,7 @@
+import requirements from './requirements.mjs';import planning from './planning.mjs';import frontend from './frontend.mjs';import backend from './backend.mjs';import database from './database.mjs';import testing from './testing.mjs';import security from './security.mjs';import delivery from './delivery.mjs';import cases from './cases.mjs';import {sources} from './sources.mjs';
+const groups=[['REQ','需求分析',requirements],['PLAN','项目规划',planning],['FE','前端',frontend],['BE','后端与接口',backend],['DB','数据库',database],['TEST','测试验收',testing],['SEC','安全权限',security],['SHIP','项目交付',delivery],['CASE','原创案例',cases]];
+export const curriculum=groups.flatMap(([prefix,category,entries])=>entries.map(([n,title,scene,concept,example,mistakes,acceptance,refs])=>{
+ const lessonId=`GX-${prefix}-${n}`,version='1.0.0',citations=refs.map(key=>{if(!sources[key])throw Error('Unknown official reference');return sources[key];});
+ const text=`# ${title}\n\n资料编号：${lessonId}｜分类：${category}｜版本：${version}\n\n原创教学示例，非学校制度或官方标准。工序智伴研发过程中 AI 辅助编写并核对工程事实，独立教师尚未审阅。以下业务约定仅用于合成实训。\n\n## 场景\n${scene}\n\n## 知识点\n${concept}\n\n## 示例\n${example}\n\n## 常见错误与边界\n${mistakes}\n\n## 验收要点\n${acceptance}\n\n## 来源说明\n业务场景、措辞、示例和验收设计为本项目原创；没有搬运教材或其他参赛作品。${citations.length?'下列官方文档只支持对应技术概念，不为本案例业务规则背书；文档于 2026-11-01 查阅，持续更新页面不是不可变版本。\n'+citations.map(s=>`- ${s.title}（${s.version}）：${s.url}`).join('\n'):'本篇为原创工程练习方法，不引用外部制度，也不宣称属于正式标准。'}\n`;
+ return {lessonId,version,title,category,text,sources:citations};
+}));

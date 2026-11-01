@@ -19,7 +19,7 @@ import argparse
 
 parser=argparse.ArgumentParser(description='Create a local sanitized source review copy, never an external upload.')
 parser.add_argument('--source',type=Path,default=Path(__file__).resolve().parents[1],help='Source root; optional for isolated export regression fixtures.')
-parser.add_argument('--version',choices=['v4','v5'],default='v4',help='Explicit edition; old export commands keep their version.')
+parser.add_argument('--version',choices=['v4','v5','v6'],default='v4',help='Explicit edition; old export commands keep their version.')
 args=parser.parse_args()
 ROOT = args.source.resolve()
 STAMP = datetime.now().strftime('%Y%m%d-%H%M%S-%f')
@@ -34,6 +34,7 @@ DOCS.update({'DEFENSE-DECK-V3.md','DEFENSE-SPEAKER-NOTES-V3.md'})
 DOCS.update({'CONTINUATION-V4.md','LONG-REQUIREMENTS-V4.md','REFERENCE-REVIEW-V4.md','EVALUATION-V4.md','FINAL-REVIEW-V4.md','DEFENSE-DECK-V4.md','DEFENSE-SPEAKER-NOTES-V4.md'})
 DOCS.add('AI-EVALUATION-V4-2026-11-01.md')
 DOCS.update({'CONTINUATION-V5.md','LONG-REQUIREMENTS-V5.md','AI-REVIEW-PACK-V5.md','DEMO-SCRIPT-V5.md','DEMO-OPERATIONS-V5.md','FINAL-REVIEW-V5.md'})
+DOCS.update({'CONTINUATION-V6.md','TEACHING-AND-PERMISSIONS-V6.md','KNOWLEDGE-CURRICULUM-V6.md','REFERENCE-REVIEW-V6.md','AI-REVIEW-PACK-V6.md','DEMO-SCRIPT-V6.md','DEMO-OPERATIONS-V6.md','FINAL-REVIEW-V6.md'})
 CURATED_SCREENSHOTS={'docs/screenshots/review-v2/trace-desktop.png','docs/screenshots/review-v3/task-test-chain-desktop.png','docs/screenshots/review-v3/documents-desktop.png','docs/screenshots/review-v3/review-source-desktop.png','docs/screenshots/review-v3/growth-current-desktop.png','docs/screenshots/review-v3/workspace-desktop.png'}
 CURATED_SCREENSHOTS.update('docs/screenshots/review-v4/'+name+'.png' for name in ['task-test-chain-desktop','documents-desktop','review-source-desktop','growth-current-desktop','workspace-desktop','requirement-segments-desktop','execution-conflict-desktop'])
 CURATED_SCREENSHOTS.add('docs/screenshots/review-v5/adopted-desktop.png')
@@ -43,6 +44,8 @@ JSON_FILES.add('evaluation/retrieval-query-study.v1.json')
 JSON_FILES.update({'docs/verification/review-v4.json','docs/demo-v4/storyboard.json'})
 JSON_FILES.add('docs/verification/ai-evaluation-v4.json')
 JSON_FILES.add('docs/verification/review-v5.json')
+JSON_FILES.update({'docs/verification/review-v6.json','docs/verification/knowledge-v6.json'})
+CURATED_SCREENSHOTS.update('docs/screenshots/review-v6/'+name+'.png' for name in ['student-desktop','teacher-desktop','admin-desktop','public-knowledge-desktop'])
 FORBIDDEN = {'.log','.tsbuildinfo','.pem','.key','.p12','.pfx','.jks','.keystore','.sqlite','.sqlite3','.db','.dump','.backup','.bak','.zip','.7z','.mp4','.webm','.onnx','.bin'}
 excluded = []
 redactions = []
@@ -133,9 +136,10 @@ def clean_pdf_fixture(data):
 def candidate(relative):
     parts=Path(relative).parts
     if len(parts)==1:return relative in ROOT_FILES
-    if parts[0] not in {'apps','scripts','docs','evaluation','packages'}:return False
+    if parts[0] not in {'apps','scripts','docs','evaluation','packages','knowledge'}:return False
+    if parts[0]=='knowledge':return len(parts)==3 and parts[1]=='teaching-v6' and Path(relative).suffix=='.mjs'
     if parts[0]=='docs':
-        if relative=='docs/verification/review-v5.json':return True
+        if relative in {'docs/verification/review-v5.json','docs/verification/review-v6.json','docs/verification/knowledge-v6.json'}:return True
         return (len(parts)==2 and parts[1] in DOCS) or relative in CURATED_SCREENSHOTS or relative in {'docs/verification/review-v2.json','docs/verification/review-v3.json','docs/verification/review-v4.json','docs/verification/ai-evaluation-v4.json','docs/demo-v3/README.md','docs/demo-v3/storyboard.json','docs/demo-v4/README.md','docs/demo-v4/storyboard.json'}
     return True
 
@@ -144,7 +148,7 @@ for current, directories, names in os.walk(ROOT,followlinks=False):
     parent=Path(current)
     for name in list(directories):
         path=parent/name;relative=path.relative_to(ROOT).as_posix()
-        if name in SKIP_DIRS or path.is_symlink() or not path.resolve().is_relative_to(ROOT) or (parent==ROOT and name not in {'apps','scripts','docs','evaluation','packages'}):
+        if name in SKIP_DIRS or path.is_symlink() or not path.resolve().is_relative_to(ROOT) or (parent==ROOT and name not in {'apps','scripts','docs','evaluation','packages','knowledge'}):
             directories.remove(name);skip(relative+'/', 'dependencies_generated_data_or_unreviewed_directory')
     for name in sorted(names):
         source=parent/name;relative=source.relative_to(ROOT).as_posix()

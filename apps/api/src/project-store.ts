@@ -29,7 +29,7 @@ export class PgProjectStore implements ProjectStore {
   }
   async findUserByEmail(email: string) { const r = await this.pool.query(`SELECT id,name,email,password_hash AS "passwordHash" FROM users WHERE email=$1`, [email]); return r.rows[0] ?? null; }
   async createSession(userId: string, hash: string) { await this.pool.query(`INSERT INTO user_sessions(user_id,token_hash,expires_at) VALUES($1,$2,now()+interval '7 days')`, [userId,hash]); }
-  async userBySession(hash: string) { const r = await this.pool.query(`SELECT u.id,u.name,u.email FROM users u JOIN user_sessions s ON s.user_id=u.id WHERE s.token_hash=$1 AND s.expires_at > now()`, [hash]); return r.rows[0] ?? null; }
+  async userBySession(hash: string) { const r = await this.pool.query(`SELECT u.id,u.name,u.email FROM users u JOIN user_sessions s ON s.user_id=u.id WHERE s.token_hash=$1 AND s.expires_at > now() AND NOT EXISTS(SELECT 1 FROM teaching_accounts a WHERE a.user_id=u.id AND a.disabled)`, [hash]); return r.rows[0] ?? null; }
   async deleteSession(hash: string) { await this.pool.query(`DELETE FROM user_sessions WHERE token_hash=$1`, [hash]); }
   async listProjects(userId: string) { const r = await this.pool.query(`SELECT ${projectFields} FROM projects WHERE owner_id=$1 ORDER BY updated_at DESC`, [userId]); return r.rows; }
   async createProject(userId: string, name: string, description: string) { const r = await this.pool.query(`INSERT INTO projects(owner_id,name,description) VALUES($1,$2,$3) RETURNING ${projectFields}`, [userId,name,description]); return r.rows[0]; }

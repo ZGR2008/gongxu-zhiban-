@@ -1,6 +1,9 @@
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
-import { registerProjectRoutes } from './project-routes.js';
+import { registerProjectRoutes,authorizeRequest } from './project-routes.js';
+import {registerTeachingRoutes} from './teaching/routes.js';
+import {aiCaller} from './teaching/quota.js';
+import {registerPublicKnowledgeRoutes} from './rag/public.js';
 import type { ProjectStore } from './project-store.js';
 import type { Pool } from 'pg';
 import { registerAiRoutes } from './ai/routes.js';
@@ -33,9 +36,17 @@ export async function createApp(options: { database?: DatabaseCheck; pool?: Pool
     return reply.code(status).send({ error: status === 500 ? 'internal_error' : 'invalid_request' });
   });
   await app.register(cors, { origin: options.corsOrigin });
+  app.addHook('preHandler',(request,_reply,done)=>{
+    if(!options.pool||!options.projectStore){done();return;}
+    void authorizeRequest(request,options.projectStore).then(user=>{
+      if(user)aiCaller.run({pool:options.pool!,userId:user.id},done);else done();
+    }).catch(done);
+  });
   await registerProjectRoutes(app, options.projectStore);
+  await registerTeachingRoutes(app,options.projectStore,options.pool,options.aiConfig);
   await registerAiRoutes(app, options.projectStore, options.aiConfig, options.aiGenerationStore);
   await registerKnowledgeRoutes(app, options.projectStore, options.pool, options.embeddingConfig, options.aiConfig);
+  await registerPublicKnowledgeRoutes(app,options.projectStore,options.pool,options.embeddingConfig);
   await registerAgentRoutes(app, options.projectStore, options.pool, options.aiConfig, options.embeddingConfig);
   await registerPracticeRoutes(app, options.projectStore, options.pool, options.aiConfig,{embedding:options.embeddingConfig});
   await registerDocumentRoutes(app, options.projectStore, options.pool ? new PgDocumentStore(options.pool) : undefined, options.aiConfig);

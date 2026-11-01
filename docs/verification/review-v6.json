@@ -1,0 +1,854 @@
+{
+  "edition": "v6",
+  "baselineCommit": "231742122af80ab4c74d33e4c696dc853bfcc8f6",
+  "results": {
+    "offline": {
+      "path": ".runtime/verification-v4-894ef887-e056-4655-800f-455f222370c6/report.json",
+      "sha256": "2d6ed5cb6120d10bff9dac681c6199a78b8a79e16e1f7fea379dbe43b3dc1710",
+      "status": "passed",
+      "scope": "local_builds_unit_fixtures_and_protocols_no_model_no_database",
+      "steps": [
+        {
+          "id": "environment-templates",
+          "command": [
+            "node",
+            "scripts/check-env-templates.mjs"
+          ],
+          "cwd": ".",
+          "status": "passed",
+          "startedAt": "2026-11-01T13:04:11.258Z",
+          "exitCode": 0,
+          "elapsedMs": 68,
+          "log": "environment-templates.log"
+        },
+        {
+          "id": "api-types",
+          "command": [
+            "node",
+            "node_modules/typescript/bin/tsc",
+            "--noEmit",
+            "-p",
+            "tsconfig.json"
+          ],
+          "cwd": "apps/api",
+          "status": "passed",
+          "startedAt": "2026-11-01T13:04:11.328Z",
+          "exitCode": 0,
+          "elapsedMs": 1586,
+          "log": "api-types.log"
+        },
+        {
+          "id": "embedding-types",
+          "command": [
+            "node",
+            "node_modules/typescript/bin/tsc",
+            "--noEmit",
+            "-p",
+            "tsconfig.json"
+          ],
+          "cwd": "apps/embedding",
+          "status": "passed",
+          "startedAt": "2026-11-01T13:04:12.916Z",
+          "exitCode": 0,
+          "elapsedMs": 1062,
+          "log": "embedding-types.log"
+        },
+        {
+          "id": "web-types",
+          "command": [
+            "node",
+            "node_modules/typescript/bin/tsc",
+            "--noEmit",
+            "-p",
+            "tsconfig.json"
+          ],
+          "cwd": "apps/web",
+          "status": "passed",
+          "startedAt": "2026-11-01T13:04:13.979Z",
+          "exitCode": 0,
+          "elapsedMs": 2704,
+          "log": "web-types.log"
+        },
+        {
+          "id": "api-build",
+          "command": [
+            "node",
+            "node_modules/typescript/bin/tsc",
+            "-p",
+            "tsconfig.json"
+          ],
+          "cwd": "apps/api",
+          "status": "passed",
+          "startedAt": "2026-11-01T13:04:16.684Z",
+          "exitCode": 0,
+          "elapsedMs": 1769,
+          "log": "api-build.log"
+        },
+        {
+          "id": "embedding-build",
+          "command": [
+            "node",
+            "node_modules/typescript/bin/tsc",
+            "-p",
+            "tsconfig.json"
+          ],
+          "cwd": "apps/embedding",
+          "status": "passed",
+          "startedAt": "2026-11-01T13:04:18.456Z",
+          "exitCode": 0,
+          "elapsedMs": 1055,
+          "log": "embedding-build.log"
+        },
+        {
+          "id": "web-build",
+          "command": [
+            "node",
+            "node_modules/vite/bin/vite.js",
+            "build"
+          ],
+          "cwd": "apps/web",
+          "status": "passed",
+          "startedAt": "2026-11-01T13:04:19.511Z",
+          "exitCode": 0,
+          "elapsedMs": 2400,
+          "log": "web-build.log"
+        },
+        {
+          "id": "api-test-build",
+          "command": [
+            "node",
+            "node_modules/typescript/bin/tsc",
+            "-p",
+            "tsconfig.test.json"
+          ],
+          "cwd": "apps/api",
+          "status": "passed",
+          "startedAt": "2026-11-01T13:04:21.913Z",
+          "exitCode": 0,
+          "elapsedMs": 2022,
+          "log": "api-test-build.log"
+        },
+        {
+          "id": "embedding-test-build",
+          "command": [
+            "node",
+            "node_modules/typescript/bin/tsc",
+            "-p",
+            "tsconfig.test.json"
+          ],
+          "cwd": "apps/embedding",
+          "status": "passed",
+          "startedAt": "2026-11-01T13:04:23.936Z",
+          "exitCode": 0,
+          "elapsedMs": 1070,
+          "log": "embedding-test-build.log"
+        },
+        {
+          "id": "api-unit",
+          "command": [
+            "node",
+            "--test",
+            "dist/**/*.test.js"
+          ],
+          "cwd": "apps/api",
+          "status": "passed",
+          "startedAt": "2026-11-01T13:04:25.008Z",
+          "exitCode": 0,
+          "elapsedMs": 1509,
+          "log": "api-unit.log"
+        },
+        {
+          "id": "embedding-unit",
+          "command": [
+            "node",
+            "--test",
+            "dist/**/*.test.js"
+          ],
+          "cwd": "apps/embedding",
+          "status": "passed",
+          "startedAt": "2026-11-01T13:04:26.518Z",
+          "exitCode": 0,
+          "elapsedMs": 392,
+          "log": "embedding-unit.log"
+        },
+        {
+          "id": "root-script-unit",
+          "command": [
+            "node",
+            "--test",
+            "scripts/evaluation-report.test.mjs",
+            "scripts/evidence-state.test.mjs",
+            "scripts/historical-source.test.mjs",
+            "scripts/human-review-pack.test.mjs",
+            "scripts/live-evaluation.test.mjs",
+            "scripts/live-evidence.test.mjs",
+            "scripts/long-business-cases.test.mjs",
+            "scripts/request-transport.test.mjs",
+            "scripts/retrieval-evaluation.test.mjs",
+            "scripts/review-package.test.mjs",
+            "scripts/source-provenance.test.mjs",
+            "scripts/teaching-curriculum.test.mjs",
+            "scripts/trace-next-action.test.mjs",
+            "scripts/ui-models.test.mjs",
+            "scripts/verify.test.mjs",
+            "scripts/workbench-models.test.mjs"
+          ],
+          "cwd": ".",
+          "status": "passed",
+          "startedAt": "2026-11-01T13:04:26.911Z",
+          "exitCode": 0,
+          "elapsedMs": 1352,
+          "log": "root-script-unit.log"
+        },
+        {
+          "id": "python-package-regression",
+          "command": [
+            "python",
+            "scripts/export-review.test.py"
+          ],
+          "cwd": ".",
+          "status": "passed",
+          "startedAt": "2026-11-01T13:04:28.263Z",
+          "exitCode": 0,
+          "elapsedMs": 554,
+          "log": "python-package-regression.log"
+        },
+        {
+          "id": "offline-evaluation",
+          "command": [
+            "node",
+            "scripts/evaluate-offline.mjs"
+          ],
+          "cwd": ".",
+          "status": "passed",
+          "startedAt": "2026-11-01T13:04:28.819Z",
+          "exitCode": 0,
+          "elapsedMs": 838,
+          "log": "offline-evaluation.log"
+        },
+        {
+          "id": "evaluation-preparation",
+          "command": [
+            "node",
+            "scripts/evaluate-prepare.mjs"
+          ],
+          "cwd": ".",
+          "status": "passed",
+          "startedAt": "2026-11-01T13:04:29.657Z",
+          "exitCode": 0,
+          "elapsedMs": 470,
+          "log": "evaluation-preparation.log"
+        }
+      ]
+    },
+    "database": {
+      "path": ".runtime/verification-v4-f981d8e2-71df-4b28-8bf9-f5c089786161/report.json",
+      "sha256": "8db4de1150b6279449e7e64581b5d313fcf599d7014ecd450fc7f519acf48ffc",
+      "status": "passed",
+      "scope": "explicit_real_local_data_synthetic_accounts_and_model_fixtures",
+      "steps": [
+        {
+          "id": "api-build",
+          "command": [
+            "node",
+            "node_modules/typescript/bin/tsc",
+            "-p",
+            "tsconfig.json"
+          ],
+          "cwd": "apps/api",
+          "status": "passed",
+          "startedAt": "2026-11-01T13:07:02.450Z",
+          "exitCode": 0,
+          "elapsedMs": 1716,
+          "log": "api-build.log"
+        },
+        {
+          "id": "teaching",
+          "command": [
+            "node",
+            "../../scripts/teaching-local.mjs"
+          ],
+          "cwd": "apps/api",
+          "status": "passed",
+          "startedAt": "2026-11-01T13:07:04.861Z",
+          "exitCode": 0,
+          "elapsedMs": 2002,
+          "log": "teaching.log"
+        },
+        {
+          "id": "execution-concurrency",
+          "command": [
+            "node",
+            "../../scripts/execution-concurrency-local.mjs"
+          ],
+          "cwd": "apps/api",
+          "status": "passed",
+          "startedAt": "2026-11-01T13:07:06.864Z",
+          "exitCode": 0,
+          "elapsedMs": 1005,
+          "log": "execution-concurrency.log"
+        },
+        {
+          "id": "segment-review",
+          "command": [
+            "node",
+            "../../scripts/segment-review-local.mjs"
+          ],
+          "cwd": "apps/api",
+          "status": "passed",
+          "startedAt": "2026-11-01T13:07:07.869Z",
+          "exitCode": 0,
+          "elapsedMs": 915,
+          "log": "segment-review.log"
+        },
+        {
+          "id": "long-plan",
+          "command": [
+            "node",
+            "../../scripts/long-plan-local.mjs"
+          ],
+          "cwd": "apps/api",
+          "status": "passed",
+          "startedAt": "2026-11-01T13:07:08.784Z",
+          "exitCode": 0,
+          "elapsedMs": 2222,
+          "log": "long-plan.log"
+        },
+        {
+          "id": "reliability",
+          "command": [
+            "node",
+            "../../scripts/reliability-local.mjs"
+          ],
+          "cwd": "apps/api",
+          "status": "passed",
+          "startedAt": "2026-11-01T13:07:11.007Z",
+          "exitCode": 0,
+          "elapsedMs": 4033,
+          "log": "reliability.log"
+        },
+        {
+          "id": "requirement-preconditions",
+          "command": [
+            "node",
+            "../../scripts/requirement-preconditions-local.mjs"
+          ],
+          "cwd": "apps/api",
+          "status": "passed",
+          "startedAt": "2026-11-01T13:07:15.041Z",
+          "exitCode": 0,
+          "elapsedMs": 897,
+          "log": "requirement-preconditions.log"
+        },
+        {
+          "id": "trace-concurrency",
+          "command": [
+            "node",
+            "../../scripts/trace-concurrency-local.mjs"
+          ],
+          "cwd": "apps/api",
+          "status": "passed",
+          "startedAt": "2026-11-01T13:07:15.938Z",
+          "exitCode": 0,
+          "elapsedMs": 958,
+          "log": "trace-concurrency.log"
+        },
+        {
+          "id": "test-list",
+          "command": [
+            "node",
+            "../../scripts/test-list-local.mjs"
+          ],
+          "cwd": "apps/api",
+          "status": "passed",
+          "startedAt": "2026-11-01T13:07:16.897Z",
+          "exitCode": 0,
+          "elapsedMs": 5352,
+          "log": "test-list.log"
+        },
+        {
+          "id": "fresh-database",
+          "command": [
+            "node",
+            "../../scripts/fresh-database-local.mjs"
+          ],
+          "cwd": "apps/api",
+          "status": "passed",
+          "startedAt": "2026-11-01T13:07:22.250Z",
+          "exitCode": 0,
+          "elapsedMs": 1545,
+          "log": "fresh-database.log"
+        },
+        {
+          "id": "review-context",
+          "command": [
+            "node",
+            "../../scripts/review-context-local.mjs"
+          ],
+          "cwd": "apps/api",
+          "status": "passed",
+          "startedAt": "2026-11-01T13:07:23.795Z",
+          "exitCode": 0,
+          "elapsedMs": 4017,
+          "log": "review-context.log"
+        },
+        {
+          "id": "document-context",
+          "command": [
+            "node",
+            "../../scripts/document-context-local.mjs"
+          ],
+          "cwd": "apps/api",
+          "status": "passed",
+          "startedAt": "2026-11-01T13:07:27.813Z",
+          "exitCode": 0,
+          "elapsedMs": 2519,
+          "log": "document-context.log"
+        },
+        {
+          "id": "knowledge-answer",
+          "command": [
+            "node",
+            "../../scripts/knowledge-answer-local.mjs"
+          ],
+          "cwd": "apps/api",
+          "status": "passed",
+          "startedAt": "2026-11-01T13:07:30.333Z",
+          "exitCode": 0,
+          "elapsedMs": 658,
+          "log": "knowledge-answer.log"
+        },
+        {
+          "id": "document-list",
+          "command": [
+            "node",
+            "../../scripts/document-list-local.mjs"
+          ],
+          "cwd": "apps/api",
+          "status": "passed",
+          "startedAt": "2026-11-01T13:07:30.992Z",
+          "exitCode": 0,
+          "elapsedMs": 4543,
+          "log": "document-list.log"
+        },
+        {
+          "id": "knowledge-list",
+          "command": [
+            "node",
+            "../../scripts/knowledge-list-local.mjs"
+          ],
+          "cwd": "apps/api",
+          "status": "passed",
+          "startedAt": "2026-11-01T13:07:35.536Z",
+          "exitCode": 0,
+          "elapsedMs": 2997,
+          "log": "knowledge-list.log"
+        },
+        {
+          "id": "index-compatibility",
+          "command": [
+            "node",
+            "../../scripts/index-compatibility-local.mjs"
+          ],
+          "cwd": "apps/api",
+          "status": "passed",
+          "startedAt": "2026-11-01T13:07:38.534Z",
+          "exitCode": 0,
+          "elapsedMs": 3263,
+          "log": "index-compatibility.log"
+        },
+        {
+          "id": "embedding-mixed",
+          "command": [
+            "node",
+            "../../scripts/embedding-mixed-local.mjs"
+          ],
+          "cwd": "apps/api",
+          "status": "passed",
+          "startedAt": "2026-11-01T13:07:41.797Z",
+          "exitCode": 0,
+          "elapsedMs": 2393,
+          "log": "embedding-mixed.log"
+        },
+        {
+          "id": "growth-scope",
+          "command": [
+            "node",
+            "../../scripts/growth-scope-local.mjs"
+          ],
+          "cwd": "apps/api",
+          "status": "passed",
+          "startedAt": "2026-11-01T13:07:44.191Z",
+          "exitCode": 0,
+          "elapsedMs": 2142,
+          "log": "growth-scope.log"
+        },
+        {
+          "id": "agent-recovery",
+          "command": [
+            "node",
+            "../../scripts/agent-recovery-local.mjs"
+          ],
+          "cwd": "apps/api",
+          "status": "passed",
+          "startedAt": "2026-11-01T13:07:46.333Z",
+          "exitCode": 0,
+          "elapsedMs": 639,
+          "log": "agent-recovery.log"
+        }
+      ],
+      "isolation": "separate freshly created synthetic database; primary not used as fallback"
+    },
+    "browser": {
+      "path": ".runtime/verification-v4-35acd5be-cf9e-4965-a76a-75f863630ac8/report.json",
+      "sha256": "70c1af70a97a7a706a02ef37600b2b6a581e846f68072c22c7f507c1dc9ac535",
+      "status": "passed",
+      "scope": "controlled_browser_no_real_model",
+      "steps": [
+        {
+          "id": "controlled-browser",
+          "command": [
+            "node",
+            "scripts/reliability-browser.mjs"
+          ],
+          "cwd": ".",
+          "status": "passed",
+          "startedAt": "2026-11-01T13:07:37.838Z",
+          "exitCode": 0,
+          "elapsedMs": 179347,
+          "log": "controlled-browser.log"
+        },
+        {
+          "id": "api-build",
+          "command": [
+            "node",
+            "node_modules/typescript/bin/tsc",
+            "-p",
+            "tsconfig.json"
+          ],
+          "cwd": "apps/api",
+          "status": "passed",
+          "startedAt": "2026-11-01T13:10:37.187Z",
+          "exitCode": 0,
+          "elapsedMs": 1784,
+          "log": "api-build.log"
+        },
+        {
+          "id": "teaching-isolated-browser",
+          "command": [
+            "node",
+            "scripts/teaching-local.mjs",
+            "--browser"
+          ],
+          "cwd": ".",
+          "status": "passed",
+          "startedAt": "2026-11-01T13:10:38.971Z",
+          "exitCode": 0,
+          "elapsedMs": 7282,
+          "log": "teaching-isolated-browser.log"
+        },
+        {
+          "id": "production-build",
+          "command": [
+            "node",
+            "node_modules/vite/bin/vite.js",
+            "build"
+          ],
+          "cwd": "apps/web",
+          "status": "passed",
+          "startedAt": "2026-11-01T13:10:46.255Z",
+          "exitCode": 0,
+          "elapsedMs": 2505,
+          "log": "production-build.log"
+        },
+        {
+          "id": "production-recovery",
+          "command": [
+            "node",
+            "scripts/verify-production-recovery.mjs"
+          ],
+          "cwd": ".",
+          "status": "passed",
+          "startedAt": "2026-11-01T13:10:48.760Z",
+          "exitCode": 0,
+          "elapsedMs": 3790,
+          "log": "production-recovery.log"
+        },
+        {
+          "id": "entry-performance",
+          "command": [
+            "node",
+            "scripts/measure-web-entry.mjs",
+            "--assert-deferred"
+          ],
+          "cwd": ".",
+          "status": "passed",
+          "startedAt": "2026-11-01T13:10:52.550Z",
+          "exitCode": 0,
+          "elapsedMs": 5144,
+          "log": "entry-performance.log"
+        }
+      ]
+    },
+    "accessibility": {
+      "path": ".runtime/verification-v4-e1d46d28-4c97-4a53-a39b-ffa4152597ee/report.json",
+      "sha256": "ea30dc3f4a7eeb73f695fd07fcc3af1b5fd91fd9ae26ca848ea182aae9788c2a",
+      "status": "passed",
+      "scope": "controlled_browser_no_real_model",
+      "steps": [
+        {
+          "id": "desktop-accessibility",
+          "command": [
+            "node",
+            "scripts/reliability-browser.mjs",
+            "--accessibility"
+          ],
+          "cwd": ".",
+          "status": "passed",
+          "startedAt": "2026-11-01T13:11:32.124Z",
+          "exitCode": 0,
+          "elapsedMs": 33009,
+          "log": "desktop-accessibility.log"
+        }
+      ]
+    },
+    "newTeaching": {
+      "path": ".runtime/teaching-local-7171c363-4366-4ca6-b51d-79f3afec2ea7/report.json",
+      "sha256": "471028363a346165890f0d854198a9409e6a835021070456d76de68dc2cc2599",
+      "status": "passed",
+      "scope": "isolated_real_database_real_http_synthetic_accounts",
+      "steps": [
+        {
+          "name": "registration_cannot_self_elevate_and_roles_are_rechecked",
+          "status": "passed"
+        },
+        {
+          "name": "teacher_class_publish_explicit_student_join_and_cross_class_rejection",
+          "status": "passed"
+        },
+        {
+          "name": "concurrent_claim_is_idempotent_and_teacher_admin_cannot_read_private_project",
+          "status": "passed"
+        },
+        {
+          "name": "submit_checks_version_fingerprint_and_preserves_old_personal_projects",
+          "status": "passed"
+        },
+        {
+          "name": "feedback_is_private_until_teacher_confirms_then_return_and_resubmit_keeps_history",
+          "status": "passed"
+        },
+        {
+          "name": "role_and_membership_revocation_blocks_existing_session_and_draft_access",
+          "status": "passed"
+        },
+        {
+          "name": "atomic_call_quota_and_disabled_account_apply_without_paid_requests",
+          "status": "passed"
+        },
+        {
+          "name": "service_restart_retains_immutable_submissions_and_decisions",
+          "status": "passed"
+        },
+        {
+          "name": "public_curriculum_is_login_readable_readonly_to_ordinary_roles_and_never_publishes_private_data",
+          "status": "passed"
+        },
+        {
+          "name": "ai_draft_requires_teacher_edit_review_and_remains_private",
+          "status": "passed"
+        },
+        {
+          "name": "ai_failure_and_inflight_role_revocation_never_publish_or_automatically_retry",
+          "status": "passed"
+        },
+        {
+          "name": "public_version_is_append_only_and_publication_rolls_back_with_audit_transaction",
+          "status": "passed"
+        },
+        {
+          "name": "public_index_rechecks_revoked_maintainer_after_inference_before_commit",
+          "status": "passed"
+        }
+      ],
+      "browser": {
+        "engine": "Edge Chromium",
+        "version": "156.0.4314.50",
+        "checks": [
+          {
+            "scene": "teacher_publish_student_claim_submit_confirm_feedback_return",
+            "status": "passed",
+            "realDatabase": true
+          },
+          {
+            "scene": "student",
+            "axeViolations": []
+          },
+          {
+            "scene": "teacher",
+            "axeViolations": []
+          },
+          {
+            "scene": "desktop_sizes_zoom_keyboard_reduced_motion",
+            "status": "passed"
+          },
+          {
+            "scene": "admin",
+            "axeViolations": []
+          },
+          {
+            "scene": "public_curriculum_catalogue_pagination_source_reading_readonly",
+            "status": "passed",
+            "axeViolations": []
+          }
+        ],
+        "runtimeErrors": [],
+        "videoRecorded": false
+      }
+    },
+    "savedReview": {
+      "path": ".runtime/saved-review-v6-9a89e770-d167-49ca-85fd-8e978a64cfc3/report.json",
+      "sha256": "7d16802de9171b9120923af37610a742c1cb79ec4a96485618e8b0b8a5060633",
+      "status": "passed",
+      "scope": "saved_synthetic_real_responses_hash_and_offline_browser_no_new_calls",
+      "steps": []
+    }
+  },
+  "units": {
+    "api": 139,
+    "embedding": 4,
+    "rootJavaScript": 83,
+    "pythonPackaging": 9,
+    "crossLayerPassRate": null
+  },
+  "realModels": {
+    "v4HistoricalCalls": 12,
+    "newCalls": 0,
+    "independentHumanReviews": 0,
+    "qualityImprovementPercent": null
+  },
+  "curriculum": {
+    "documents": 51,
+    "chunks": 53,
+    "questions": 26,
+    "expectedSourceFound": 25,
+    "questionsWithExpectedSource": 25,
+    "answerQuality": "not_evaluated",
+    "independentTeacherReview": "not_performed"
+  },
+  "activation": {
+    "path": ".runtime/teaching-activation-v6-382da270-49fa-4cba-b411-f73852fd4415/report.json",
+    "oldPrivateDataCountsUnchanged": true,
+    "realRoleGrants": 0,
+    "schemaMigrations": 24
+  },
+  "freshInstallation": {
+    "status": "passed_with_limits",
+    "sourceCopy": "../.review-export/v6-20261101-211127-781237/gongxu-zhiban",
+    "freshDependencyDirectory": true,
+    "freshStore": true,
+    "initialAttempt": "354 downloaded; one large package timed out; failure retained",
+    "boundedRetry": {
+      "reusedFromThisAttempt": 354,
+      "downloaded": 1,
+      "totalInstalled": 355
+    },
+    "installScriptsExecuted": false,
+    "supplyChainPoliciesBypassed": false,
+    "offlineStepsPassed": 15,
+    "offlineReport": "../.review-export/v6-20261101-211127-781237/gongxu-zhiban/.runtime/verification-v4-5ce296a8-c5d1-4096-a046-d8dad08ba055/report.json",
+    "offlineReportSha256": "a647044f61a4de14ebadb75ebeed0c682772b065eeab8fb485186424de53814e",
+    "databaseReport": ".runtime/clean-install-v6-30228e3c-0570-4b78-9b0e-d82903c455c9/report.json",
+    "databaseReportSha256": "a749625fca264a97f8057763eac03a5165d41f7c9d2be2bc4a4ba613b7feb959",
+    "limits": "Existing Windows/Node/PostgreSQL runtimes; not a complete new-machine verification"
+  },
+  "materials": {
+    "videoProduced": false,
+    "videoSubmitted": false,
+    "realTeamData": "missing",
+    "pdf": "output/pdf/gongxu-zhiban-technical-v6-20261101-212058-487781.pdf",
+    "pdfPages": 20,
+    "pdfSha256": "4d9e84d3b0514895c5ecaaaac01a13d161451b7023f7ceaf74e4687ff89fd0f7",
+    "pdfVisualReview": "all_rendered_pages_inspected",
+    "script": "docs/DEMO-SCRIPT-V6.md",
+    "outline": "docs/DEMO-OPERATIONS-V6.md",
+    "savedResponseAuditPackage": "output/gongxu-zhiban-ai-review-v5-20261101-190101.zip"
+  },
+  "limitations": [
+    "Real teaching identities require explicit separate grant.",
+    "Saved review is not an independent human evaluation.",
+    "Long context only connected to planning.",
+    "Class knowledge sharing is not enabled.",
+    "Classroom load and new long-model quality unverified.",
+    "No upload, push, deployment or contest submission."
+  ],
+  "modifiedFiles": [
+    "README.md",
+    "apps/api/migrations/023_teaching_workflow.sql",
+    "apps/api/migrations/024_public_teaching_knowledge.sql",
+    "apps/api/src/ai/model.ts",
+    "apps/api/src/app.ts",
+    "apps/api/src/long-plan/worker.test.ts",
+    "apps/api/src/long-plan/worker.ts",
+    "apps/api/src/project-store.ts",
+    "apps/api/src/rag/public.ts",
+    "apps/api/src/rag/search.ts",
+    "apps/api/src/rag/service.ts",
+    "apps/api/src/teaching/domain.test.ts",
+    "apps/api/src/teaching/domain.ts",
+    "apps/api/src/teaching/quota.ts",
+    "apps/api/src/teaching/routes.ts",
+    "apps/api/src/teaching/store.ts",
+    "apps/web/public/THIRD-PARTY-LICENSES.txt",
+    "apps/web/src/App.tsx",
+    "apps/web/src/Modules.tsx",
+    "apps/web/src/components/PublicKnowledge.tsx",
+    "apps/web/src/main.tsx",
+    "apps/web/src/pages/TeachingWorkspace.tsx",
+    "apps/web/src/pages/teaching.css",
+    "docs/AI-REVIEW-PACK-V6.md",
+    "docs/CONTEST-ACCEPTANCE-2026-11.md",
+    "docs/CONTINUATION-V6.md",
+    "docs/DEMO-OPERATIONS-V6.md",
+    "docs/DEMO-SCRIPT-V6.md",
+    "docs/FINAL-REVIEW-V6.md",
+    "docs/KNOWLEDGE-CURRICULUM-V6.md",
+    "docs/REFERENCE-REVIEW-V6.md",
+    "docs/STARTUP-AND-VERIFICATION.md",
+    "docs/TEACHING-AND-PERMISSIONS-V6.md",
+    "docs/TECHNICAL-MATERIAL.md",
+    "docs/screenshots/review-v6/admin-desktop.png",
+    "docs/screenshots/review-v6/public-knowledge-desktop.png",
+    "docs/screenshots/review-v6/student-desktop.png",
+    "docs/screenshots/review-v6/teacher-desktop.png",
+    "docs/verification/knowledge-v6.json",
+    "docs/verification/review-v6.json",
+    "evaluation/teaching-questions-v6.mjs",
+    "knowledge/teaching-v6/backend.mjs",
+    "knowledge/teaching-v6/cases.mjs",
+    "knowledge/teaching-v6/catalog.mjs",
+    "knowledge/teaching-v6/database.mjs",
+    "knowledge/teaching-v6/delivery.mjs",
+    "knowledge/teaching-v6/frontend.mjs",
+    "knowledge/teaching-v6/planning.mjs",
+    "knowledge/teaching-v6/requirements.mjs",
+    "knowledge/teaching-v6/security.mjs",
+    "knowledge/teaching-v6/sources.mjs",
+    "knowledge/teaching-v6/testing.mjs",
+    "scripts/activate-teaching-v6.mjs",
+    "scripts/export-review.py",
+    "scripts/export-review.test.py",
+    "scripts/fresh-database-local.mjs",
+    "scripts/import-teaching-curriculum.mjs",
+    "scripts/isolated-verification-db.mjs",
+    "scripts/render-technical-v6.py",
+    "scripts/teaching-browser.mjs",
+    "scripts/teaching-curriculum.test.mjs",
+    "scripts/teaching-faults.mjs",
+    "scripts/teaching-local.mjs",
+    "scripts/verification-plan.mjs",
+    "scripts/verify-clean-install-v6.mjs",
+    "scripts/verify-saved-review-v6.mjs",
+    "scripts/verify.mjs"
+  ]
+}

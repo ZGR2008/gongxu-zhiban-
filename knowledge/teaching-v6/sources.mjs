@@ -1,0 +1,21 @@
+// Official documentation consulted on 2026-11-01. Business rules below are original teaching examples.
+export const sources={
+ pgConstraints:{title:'PostgreSQL 16 · Constraints',url:'https://www.postgresql.org/docs/16/ddl-constraints.html',version:'PostgreSQL 16'},
+ pgIsolation:{title:'PostgreSQL 16 · Transaction Isolation',url:'https://www.postgresql.org/docs/16/transaction-iso.html',version:'PostgreSQL 16'},
+ pgLocks:{title:'PostgreSQL 16 · Explicit Locking',url:'https://www.postgresql.org/docs/16/explicit-locking.html',version:'PostgreSQL 16'},
+ reactState:{title:'React · State as a Snapshot',url:'https://react.dev/learn/state-as-a-snapshot',version:'React 19 文档族；站点当前 19.3，非锁定快照'},
+ reactEffect:{title:'React · useEffect',url:'https://react.dev/reference/react/useEffect',version:'React 19 文档族；访问日 2026-11-01'},
+ reactDerived:{title:'React · You Might Not Need an Effect',url:'https://react.dev/learn/you-might-not-need-an-effect',version:'React 19 文档族；访问日 2026-11-01'},
+ ts:{title:'TypeScript Handbook · Narrowing',url:'https://www.typescriptlang.org/docs/handbook/2/narrowing.html',version:'TypeScript 5.x 核心类型收窄；持续更新文档'},
+ fastify:{title:'Fastify 5.2.x · Validation and Serialization',url:'https://fastify.dev/docs/v5.2.x/Reference/Validation-and-Serialization/',version:'Fastify 5.2.x'},
+ abort:{title:'MDN · AbortController',url:'https://developer.mozilla.org/en-US/docs/Web/API/AbortController',version:'Web 平台 API；访问日 2026-11-01'},
+ conflict:{title:'MDN · HTTP 409',url:'https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status/409',version:'HTTP 语义；访问日 2026-11-01'},
+ dialog:{title:'MDN · ARIA dialog role',url:'https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Reference/Roles/dialog_role',version:'WAI-ARIA；访问日 2026-11-01'},
+ wcag:{title:'W3C · WCAG 2.2',url:'https://www.w3.org/TR/WCAG22/',version:'Recommendation 2024-12-12'},
+ auth:{title:'OWASP · Authorization Cheat Sheet',url:'https://cheatsheetseries.owasp.org/cheatsheets/Authorization_Cheat_Sheet.html',version:'持续更新指导；访问日 2026-11-01'},
+ sql:{title:'OWASP · SQL Injection Prevention',url:'https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html',version:'持续更新指导；访问日 2026-11-01'},
+ upload:{title:'OWASP · File Upload',url:'https://cheatsheetseries.owasp.org/cheatsheets/File_Upload_Cheat_Sheet.html',version:'持续更新指导；访问日 2026-11-01'},
+ injection:{title:'OWASP · LLM Prompt Injection Prevention',url:'https://cheatsheetseries.owasp.org/cheatsheets/LLM_Prompt_Injection_Prevention_Cheat_Sheet.html',version:'持续更新指导；访问日 2026-11-01'},
+ nodeTest:{title:'Node.js 24 · Test runner',url:'https://nodejs.org/docs/latest-v24.x/api/test.html',version:'Node.js 24 文档族；站点 24.22.2，本机 24.22.1'},
+ git:{title:'Git · git-status',url:'https://git-scm.com/docs/git-status',version:'Git 2.x；访问日 2026-11-01'},
+};

@@ -110,6 +110,19 @@ class ExportTests(unittest.TestCase):
             with patch.object(Path,'resolve',redirected):result=self.export(root,(blocked,outside/'outside.ts'))
             with zipfile.ZipFile(result['archive']) as bundle:self.assertFalse(any('outside.ts' in item for item in bundle.namelist()))
 
+    def test_v6_public_original_curriculum_and_role_evidence_are_kept_but_unknown_knowledge_is_not_read(self):
+        with tempfile.TemporaryDirectory(prefix='gongxu-export-fixture-') as base:
+            root=self.fixture(base)
+            required=['knowledge/teaching-v6/catalog.mjs','docs/TEACHING-AND-PERMISSIONS-V6.md','docs/KNOWLEDGE-CURRICULUM-V6.md','docs/DEMO-SCRIPT-V6.md','docs/DEMO-OPERATIONS-V6.md','docs/FINAL-REVIEW-V6.md','docs/CONTINUATION-V6.md','docs/REFERENCE-REVIEW-V6.md','docs/verification/review-v6.json','docs/verification/knowledge-v6.json','apps/api/migrations/023_teaching_workflow.sql','apps/api/migrations/024_public_teaching_knowledge.sql']
+            for relative in required:
+                p=root/relative;p.parent.mkdir(parents=True,exist_ok=True);p.write_text('{}' if relative.endswith('.json') else 'Synthetic reviewed material',encoding='utf-8')
+            private=root/'knowledge/personal/notes.md';private.parent.mkdir(parents=True);private.write_text('synthetic-private-marker',encoding='utf-8')
+            result=self.export(root,(private.resolve(),),version='v6')
+            self.assertEqual(Path(result['archive']).name,'gongxu-zhiban-review-v6.zip')
+            with zipfile.ZipFile(result['archive']) as bundle:
+                self.assertTrue(all('gongxu-zhiban/'+p in bundle.namelist() for p in required))
+                self.assertFalse(any('/knowledge/personal/' in p for p in bundle.namelist()))
+
     def test_string_concatenation_and_tool_source_remain_valid_python(self):
         with tempfile.TemporaryDirectory(prefix='gongxu-export-fixture-') as base:
             root=self.fixture(base);(root/'scripts').mkdir()

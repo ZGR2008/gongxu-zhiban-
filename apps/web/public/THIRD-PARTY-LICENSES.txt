@@ -2847,3 +2847,5 @@ IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
 CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+V6 original teaching workflow and public knowledge catalogue (2026-11-01): no new application runtime dependencies or copied third-party UI/assets. Existing notices above remain in force. Original teaching examples and official documentation links are listed in knowledge/teaching-v6/sources.mjs; public platform reading permission does not change upstream licenses or license the whole project.

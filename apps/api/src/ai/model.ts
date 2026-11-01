@@ -1,11 +1,12 @@
 import {withAbort} from './abortable.js';
+import {reserveCall,CallBudgetError} from '../teaching/quota.js';
 export type AiConfig = { baseUrl: string; apiKey: string; model: string; timeoutMs: number; maxOutputTokens?: number; reasoningEffort?: 'none' | 'low' | 'high' | 'max' };
 export type CompletionOptions={signal?:AbortSignal;captureIncomplete?:boolean};
 export type ProviderUsage={inputTokens:number|null;outputTokens:number|null;totalTokens:number|null;cacheHitTokens:number|null;cacheMissTokens:number|null;reasoningTokens:number|null};
 export type ChatCompletion={content:string;usage:ProviderUsage;finishReason:string|null;durationMs:number};
 export type AiMessage = { role: 'system' | 'user' | 'assistant'; content: string };
 export class AiError extends Error {
-  constructor(public readonly code: 'ai_not_configured' | 'ai_timeout' | 'ai_cancelled' | 'ai_provider_error' | 'ai_auth_error' | 'ai_insufficient_balance' | 'ai_rate_limited' | 'ai_output_truncated') { super(code); }
+  constructor(public readonly code: 'ai_not_configured' | 'ai_timeout' | 'ai_cancelled' | 'ai_provider_error' | 'ai_auth_error' | 'ai_insufficient_balance' | 'ai_rate_limited' | 'ai_output_truncated' | 'ai_call_quota_exhausted' | 'account_disabled') { super(code); }
 }
 
 // Provider credentials are a server-side problem, never an application login failure.
@@ -14,6 +15,8 @@ export function aiErrorStatus(code: AiError['code']): number {
   if (code === 'ai_timeout') return 504;
   if (code === 'ai_cancelled') return 409;
   if (code === 'ai_rate_limited') return 429;
+  if (code === 'ai_call_quota_exhausted') return 429;
+  if (code === 'account_disabled') return 403;
   return 502;
 }
 
@@ -50,6 +53,9 @@ export function providerUsage(value:unknown):ProviderUsage{
 
 export async function completeChatWithMetadata(config: AiConfig | undefined, messages: AiMessage[], fetcher: typeof fetch = fetch, options:CompletionOptions={}): Promise<ChatCompletion> {
   if (!config) throw new AiError('ai_not_configured');
+  if(options.signal?.aborted)throw new AiError('ai_cancelled');
+  let receipt:Awaited<ReturnType<typeof reserveCall>>;
+  try{receipt=await reserveCall(config.model);}catch(error){if(error instanceof CallBudgetError)throw new AiError(error.code);throw error;}
   const started=performance.now();
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), config.timeoutMs);
@@ -91,8 +97,11 @@ export async function completeChatWithMetadata(config: AiConfig | undefined, mes
     if (typeof content !== 'string' || !content.trim() || content.length > 45_000) throw new AiError('ai_provider_error');
     const rawReason=choice?.finish_reason;
     const finishReason=typeof rawReason==='string'&&['stop','length','content_filter','tool_calls','function_call'].includes(rawReason)?rawReason:null;
-    return {content:content.trim(),usage:providerUsage((data as {usage?:unknown})?.usage),finishReason,durationMs:Math.max(0,Math.round(performance.now()-started))};
+    const usage=providerUsage((data as {usage?:unknown})?.usage);
+    await receipt?.finish('response_received',usage);
+    return {content:content.trim(),usage,finishReason,durationMs:Math.max(0,Math.round(performance.now()-started))};
   } catch (error) {
+    await receipt?.finish('failed_or_uncertain').catch(()=>{});
     if(options.signal?.aborted)throw new AiError('ai_cancelled');
     if (controller.signal.aborted) throw new AiError('ai_timeout');
     if (error instanceof AiError) throw error;

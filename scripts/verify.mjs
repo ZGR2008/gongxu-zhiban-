@@ -19,13 +19,15 @@ else{
  if(!python&&process.platform==='win32'&&process.env.USERPROFILE){const bundled=join(process.env.USERPROFILE,'.cache','codex-runtimes','codex-primary-runtime','dependencies','python','python.exe');try{await access(bundled);python=bundled;}catch{}}
  python??=process.platform==='win32'?'python':'python3';
  const succeeded=new Set();
+ let isolatedEnv=null;
  for(const step of steps){
   const entry={id:step.id,command:[step.engine==='python'?'python': 'node',...step.args],cwd:step.cwd,status:'running',startedAt:new Date().toISOString()};report.steps.push(entry);
   if(step.needs.some(id=>!succeeded.has(id))){entry.status='not_run';entry.reason='required_build_failed';console.log('NOT RUN '+step.id);continue;}
+  if(config.suite==='database'&&step.id!=='api-build'&&!isolatedEnv){entry.status='not_run';entry.reason='isolated_database_unavailable';console.log('NOT RUN '+step.id);continue;}
   console.log('RUN '+step.id);const log=createWriteStream(join(out,step.id+'.log'));
   const started=Date.now();
   const result=await new Promise(resolveResult=>{
-   const child=spawn(step.engine==='python'?python:process.execPath,step.args,{cwd:resolve(root,step.cwd),env:{...process.env},windowsHide:true,shell:false});
+   const child=spawn(step.engine==='python'?python:process.execPath,step.args,{cwd:resolve(root,step.cwd),env:{...process.env,...isolatedEnv},windowsHide:true,shell:false});
    child.stdout.pipe(log,{end:false});child.stderr.pipe(log,{end:false});let settled=false,timedOut=false,notRun=false;let tail='';
    child.stdout.on('data',chunk=>{tail=(tail+String(chunk)).slice(-4096);if(/(?:^|\n)NOT RUN\b/.test(tail))notRun=true;});
    const finish=value=>{if(settled)return;settled=true;clearTimeout(timer);resolveResult(value);};
@@ -35,6 +37,10 @@ else{
   await new Promise(resolveLog=>log.end(resolveLog));Object.assign(entry,result,{elapsedMs:Date.now()-started,log:step.id+'.log'});
   if(entry.status==='passed')succeeded.add(step.id);
   console.log(entry.status.toUpperCase()+' '+step.id);
+  if(config.suite==='database'&&step.id==='api-build'&&entry.status==='passed'){
+   try{const {isolatedVerificationDatabase}=await import('./isolated-verification-db.mjs');const isolated=await isolatedVerificationDatabase();isolatedEnv=isolated.env;report.databaseIsolation=isolated.evidence;console.log('READY isolated synthetic database');}
+   catch{report.databaseIsolation={status:'failed',reason:'local_setup_failed_configuration_suppressed'};console.log('NOT RUN isolated database setup failed; existing database is not used as fallback');}
+  }
   await writeFile(join(out,'report.json'),JSON.stringify(report,null,2)+'\n');
  }
  report.finishedAt=new Date().toISOString();report.status=report.steps.every(x=>x.status==='passed')?'passed':'incomplete_or_failed';

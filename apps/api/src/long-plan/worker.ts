@@ -1,4 +1,5 @@
 import {randomUUID} from 'node:crypto';
+import {aiCaller} from '../teaching/quota.js';
 import type {PoolClient} from 'pg';
 import {AiError,completeChatWithMetadata,type AiConfig,type AiMessage} from '../ai/model.js';
 import {withAbort} from '../ai/abortable.js';
@@ -18,7 +19,7 @@ export function fragmentMessages(source:string,scheme:Scheme,segment:Segment,sou
 }
 export function failureDisposition(error:unknown){
  const code=error instanceof AiError?error.code:'ai_provider_error';
- return {status:(['ai_rate_limited','ai_auth_error','ai_insufficient_balance','ai_not_configured'].includes(code)?'rejected':'uncertain') as 'rejected'|'uncertain',code,automaticRetry:false as const};
+ return {status:(['ai_rate_limited','ai_auth_error','ai_insufficient_balance','ai_not_configured','ai_call_quota_exhausted','account_disabled'].includes(code)?'rejected':'uncertain') as 'rejected'|'uncertain',code,automaticRetry:false as const};
 }
 export type WorkerDeps={complete?:typeof completeChatWithMetadata;retrieve?:typeof retrieveKnowledge};
 /** One worker across API processes. Starting/resuming is an explicit user action;
@@ -98,7 +99,7 @@ export class LongPlanWorker {
     await db.query('UPDATE long_plan_parts SET attempts=attempts+1 WHERE job_id=$1 AND segment_key=$2',[job.id,part.segment_key]);await event(db,job.id,'model_dispatched',null,{segmentKey:part.segment_key,attempt:part.attempts+1});return a;
    });
    try{
-    const result=await withAbort(signal,()=> (this.deps.complete??completeChatWithMetadata)(this.ai,messages,fetch,{signal,captureIncomplete:true}));
+    const result=await aiCaller.run({pool:this.store.pool,userId:job.owner_id},()=>withAbort(signal,()=> (this.deps.complete??completeChatWithMetadata)(this.ai,messages,fetch,{signal,captureIncomplete:true})));
     let output:ReturnType<typeof parseSegmentOutput>|null=null,errorCode:string|null=null;
     try{if(result.finishReason!=='stop')throw Error('incomplete');output=parseSegmentOutput(result.content,segment,job.scheme_snapshot,sources.map(s=>s.id));}catch{errorCode=result.finishReason!=='stop'?'incomplete_output':'invalid_segment_output';}
     // Raw response is retained even if cancellation/version change races completion.

@@ -7,6 +7,7 @@ import './components/workspace-chrome.css';
 import './components/evidence-views.css';
 import './components/plan-map.css';
 import './components/file-drop-zone.css';
+import './pages/teaching.css';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode><App /></React.StrictMode>,

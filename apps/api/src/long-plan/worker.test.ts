@@ -23,3 +23,7 @@ test('durable adapter can retain truncated response and usage without weakening 
  const result=await completeChatWithMetadata(config,[],fetcher,{captureIncomplete:true});
  assert.equal(result.finishReason,'length');assert.equal(result.content,'{"tasks":[');assert.equal(result.usage.totalTokens,7);
 });
+test('local quota rejection is not uncertain provider billing and never auto retries',()=>{
+ const result=failureDisposition(new AiError('ai_call_quota_exhausted'));
+ assert.equal(result.status,'rejected');assert.equal(result.automaticRetry,false);
+});
