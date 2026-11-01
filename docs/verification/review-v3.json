@@ -1,6 +1,6 @@
 {
   "schemaVersion": "gongxu-review-v3.2",
-  "generatedAt": "2026-11-01T03:34:06.845Z",
+  "generatedAt": "2026-11-01T03:36:35.251Z",
   "baseline": "4e3b4b9",
   "implementationHead": "3fff22d353d717a31b279011e1b672f343207798",
   "trackedWorktreeModified": true,
@@ -3455,7 +3455,247 @@
     }
   ],
   "sourcePackage": {
-    "status": "pending_final_isolated_verification",
-    "scope": "archive excludes .git and real data; does not replace contest repository"
+    "status": "sanitized_snapshot_reproduced",
+    "archiveCandidate": "../.review-export/v3-20261101-113428-895338/gongxu-zhiban-review-v3.zip",
+    "archiveSha256": "ae82c891a22c7b8002a228e0bd5fed24709e17930a8cb9e7dfa07b62b6020939",
+    "bytes": 2212896,
+    "files": 284,
+    "verification": {
+      "file": ".runtime/isolated-review-v3-87247dcb-f56c-4169-ad61-fa2da5df6abd/report.json",
+      "sha256": "c13e83e09d67ea2d31914dd1a4b976ef459e158b7ecdf14c1c8cf8eb1558fb7a",
+      "startedAt": "2026-11-01T03:34:42.965Z",
+      "finishedAt": "2026-11-01T03:35:15.186Z",
+      "scope": "actual_zip_extraction_existing_local_dependencies_no_git_no_real_env_no_database_no_models",
+      "checks": [
+        {
+          "name": "env_templates",
+          "status": "passed",
+          "exitCode": 0,
+          "command": [
+            "node",
+            "scripts/check-env-templates.mjs"
+          ],
+          "cwd": ".",
+          "durationMs": 69,
+          "logSha256": "49cd4932aec51f1f3d93b8431e098a3e423fd522807c3eccab06e23f0925f077"
+        },
+        {
+          "name": "api_typecheck",
+          "status": "passed",
+          "exitCode": 0,
+          "command": [
+            "node",
+            "E:\\ai\\.review-export\\v3-20261101-113428-895338\\verified-extraction\\gongxu-zhiban\\apps\\api\\node_modules\\typescript\\bin\\tsc",
+            "--noEmit",
+            "-p",
+            "tsconfig.json"
+          ],
+          "cwd": "apps/api",
+          "durationMs": 3455,
+          "logSha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+        },
+        {
+          "name": "embedding_typecheck",
+          "status": "passed",
+          "exitCode": 0,
+          "command": [
+            "node",
+            "E:\\ai\\.review-export\\v3-20261101-113428-895338\\verified-extraction\\gongxu-zhiban\\apps\\embedding\\node_modules\\typescript\\bin\\tsc",
+            "--noEmit",
+            "-p",
+            "tsconfig.json"
+          ],
+          "cwd": "apps/embedding",
+          "durationMs": 1772,
+          "logSha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+        },
+        {
+          "name": "web_typecheck",
+          "status": "passed",
+          "exitCode": 0,
+          "command": [
+            "node",
+            "E:\\ai\\.review-export\\v3-20261101-113428-895338\\verified-extraction\\gongxu-zhiban\\apps\\web\\node_modules\\typescript\\bin\\tsc",
+            "--noEmit",
+            "-p",
+            "tsconfig.json"
+          ],
+          "cwd": "apps/web",
+          "durationMs": 3547,
+          "logSha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+        },
+        {
+          "name": "api_build",
+          "status": "passed",
+          "exitCode": 0,
+          "command": [
+            "node",
+            "node_modules/typescript/bin/tsc",
+            "-p",
+            "tsconfig.json"
+          ],
+          "cwd": "apps/api",
+          "durationMs": 1566,
+          "logSha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+        },
+        {
+          "name": "api_test_compile",
+          "status": "passed",
+          "exitCode": 0,
+          "command": [
+            "node",
+            "node_modules/typescript/bin/tsc",
+            "-p",
+            "tsconfig.test.json"
+          ],
+          "cwd": "apps/api",
+          "durationMs": 1820,
+          "logSha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+        },
+        {
+          "name": "api_121_tests",
+          "status": "passed",
+          "exitCode": 0,
+          "command": [
+            "node",
+            "--test",
+            "dist/**/*.test.js"
+          ],
+          "cwd": "apps/api",
+          "durationMs": 4858,
+          "logSha256": "f317c45b1b07581dafe42863a3d977a1b5f6d6ba4c06865086f22d1af1ece585"
+        },
+        {
+          "name": "embedding_build",
+          "status": "passed",
+          "exitCode": 0,
+          "command": [
+            "node",
+            "node_modules/typescript/bin/tsc",
+            "-p",
+            "tsconfig.json"
+          ],
+          "cwd": "apps/embedding",
+          "durationMs": 1126,
+          "logSha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+        },
+        {
+          "name": "embedding_test_compile",
+          "status": "passed",
+          "exitCode": 0,
+          "command": [
+            "node",
+            "node_modules/typescript/bin/tsc",
+            "-p",
+            "tsconfig.test.json"
+          ],
+          "cwd": "apps/embedding",
+          "durationMs": 1119,
+          "logSha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+        },
+        {
+          "name": "embedding_4_tests",
+          "status": "passed",
+          "exitCode": 0,
+          "command": [
+            "node",
+            "--test",
+            "dist/**/*.test.js"
+          ],
+          "cwd": "apps/embedding",
+          "durationMs": 405,
+          "logSha256": "da634f1b5836aa180d6c5c0579ec4ebdcf9e43d43775986a17ef97a668fdbb9d"
+        },
+        {
+          "name": "web_build",
+          "status": "passed",
+          "exitCode": 0,
+          "command": [
+            "node",
+            "node_modules/vite/bin/vite.js",
+            "build"
+          ],
+          "cwd": "apps/web",
+          "durationMs": 8558,
+          "logSha256": "e3e7cbcbfff7f04ef1c206f86d81c03dec8a762bcba6ace932d367a43e76565a"
+        },
+        {
+          "name": "rules_58_tests",
+          "status": "passed",
+          "exitCode": 0,
+          "command": [
+            "node",
+            "--test",
+            "scripts/ui-models.test.mjs",
+            "scripts/workbench-models.test.mjs",
+            "scripts/evidence-state.test.mjs",
+            "scripts/evaluation-report.test.mjs",
+            "scripts/retrieval-evaluation.test.mjs",
+            "scripts/review-package.test.mjs",
+            "scripts/source-provenance.test.mjs",
+            "scripts/historical-source.test.mjs"
+          ],
+          "cwd": ".",
+          "durationMs": 1327,
+          "logSha256": "bcb30daf946173b02fa473019f96983b0facd2abcbf8d882eeaee4338465c2d7"
+        },
+        {
+          "name": "transport_8_tests",
+          "status": "passed",
+          "exitCode": 0,
+          "command": [
+            "node",
+            "--test",
+            "scripts/request-transport.test.mjs"
+          ],
+          "cwd": ".",
+          "durationMs": 842,
+          "logSha256": "33909a245b0926e478753f72832b91bf12e03aa3a002f622a8a893f94be19b5e"
+        },
+        {
+          "name": "export_6_tests",
+          "status": "passed",
+          "exitCode": 0,
+          "command": [
+            "python",
+            "scripts/export-review.test.py"
+          ],
+          "cwd": ".",
+          "durationMs": 449,
+          "logSha256": "bc2308a12318cf5169f39726a20896e92bcd79346f0942907848cb813f682e78"
+        },
+        {
+          "name": "offline_8_cases",
+          "status": "passed",
+          "exitCode": 0,
+          "command": [
+            "node",
+            "scripts/evaluate-offline.mjs"
+          ],
+          "cwd": ".",
+          "durationMs": 846,
+          "logSha256": "1a512c02a99cdf619a12bc1f608cae1c789e43d22d27d6fb2879e40a3c90d70d"
+        },
+        {
+          "name": "prepared_18_records_no_git",
+          "status": "passed",
+          "exitCode": 0,
+          "command": [
+            "node",
+            "scripts/evaluate-prepare.mjs"
+          ],
+          "cwd": ".",
+          "durationMs": 408,
+          "logSha256": "dc3933d8390ca070c32c04559aa972d668836bc27598fd5e2f141f4fb5eed068"
+        }
+      ]
+    },
+    "environment": {
+      "realEnvironmentRead": false,
+      "paidModelCalls": 0,
+      "networkInstall": false,
+      "dependencies": "reused_existing_local_installations_only"
+    },
+    "finalArchiveBinding": "The companion local receipt docs/verification/source-package-v3.json binds the final ZIP, final extracted-copy tests and Desktop copy; it is excluded from its own archive to avoid a self-referential hash."
   }
 }
