@@ -13,4 +13,5 @@ uploads/
 .runtime/
 tmp/pdfs/
 tmp/video/
+tmp/presentations/
 output/video/*.mp4

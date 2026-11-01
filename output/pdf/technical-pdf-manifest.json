@@ -1,6 +1,6 @@
 {
   "artifact": "gongxu-zhiban-technical-v3.pdf",
-  "pages": 27,
+  "pages": 29,
   "chapters": [
     {
       "number": 1,
@@ -84,37 +84,45 @@
     },
     {
       "number": 21,
-      "title": "真实本地检索测量"
+      "title": "完整统计与可管理的历史资料"
     },
     {
       "number": 22,
-      "title": "实际验证证据"
+      "title": "桌面可访问性与动效"
     },
     {
       "number": 23,
-      "title": "版本化效果评测准备"
+      "title": "真实本地检索测量"
     },
     {
       "number": 24,
-      "title": "创新与公开案例借鉴"
+      "title": "实际验证证据"
     },
     {
       "number": 25,
-      "title": "启动、迁移与交付"
+      "title": "版本化效果评测准备"
     },
     {
       "number": 26,
-      "title": "剩余工作与验收结论"
+      "title": "创新与公开案例借鉴"
     },
     {
       "number": 27,
+      "title": "启动、迁移与交付"
+    },
+    {
+      "number": 28,
+      "title": "剩余工作与验收结论"
+    },
+    {
+      "number": 29,
       "title": "来源与原创实现说明"
     }
   ],
   "scope": "technical_review_draft_not_official_acceptance",
   "screenshots": "synthetic_local_account_real_db_model_fixture",
   "visualReview": "all_rendered_pages_inspected",
-  "sha256": "5a891298f412bf5e3311451e5689edf073a5fd0c1958885be09e811a4c869248",
+  "sha256": "a04dd410df3aa525f5f6ae05410b3f56b3d0a00ff2bcdd692d83d0c147cf42f5",
   "layoutBounds": [
     {
       "page": 1,
@@ -158,12 +166,12 @@
     },
     {
       "page": 9,
-      "textCharacters": 506,
+      "textCharacters": 556,
       "outsideSafeBounds": 0
     },
     {
       "page": 10,
-      "textCharacters": 509,
+      "textCharacters": 525,
       "outsideSafeBounds": 0
     },
     {
@@ -218,36 +226,46 @@
     },
     {
       "page": 21,
-      "textCharacters": 711,
+      "textCharacters": 608,
       "outsideSafeBounds": 0
     },
     {
       "page": 22,
-      "textCharacters": 729,
+      "textCharacters": 555,
       "outsideSafeBounds": 0
     },
     {
       "page": 23,
-      "textCharacters": 576,
+      "textCharacters": 611,
       "outsideSafeBounds": 0
     },
     {
       "page": 24,
-      "textCharacters": 604,
+      "textCharacters": 765,
       "outsideSafeBounds": 0
     },
     {
       "page": 25,
-      "textCharacters": 597,
+      "textCharacters": 628,
       "outsideSafeBounds": 0
     },
     {
       "page": 26,
-      "textCharacters": 597,
+      "textCharacters": 604,
       "outsideSafeBounds": 0
     },
     {
       "page": 27,
+      "textCharacters": 597,
+      "outsideSafeBounds": 0
+    },
+    {
+      "page": 28,
+      "textCharacters": 597,
+      "outsideSafeBounds": 0
+    },
+    {
+      "page": 29,
       "textCharacters": 677,
       "outsideSafeBounds": 0
     }

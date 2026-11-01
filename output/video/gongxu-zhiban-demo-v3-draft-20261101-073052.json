@@ -1,0 +1,193 @@
+{
+  "file": "gongxu-zhiban-demo-v3-draft-20261101-073052.mp4",
+  "seconds": 451.588,
+  "dimensions": [
+    1920,
+    1080
+  ],
+  "codec": "H.264 / AAC",
+  "fps": 30,
+  "scope": "合成账号与项目；真实本地HTTP、PostgreSQL及Embedding；聊天模型为明确替身；非正式参赛成片",
+  "voice": "Windows 本机中文合成语音，正式成片建议由参赛者重新录音",
+  "captionAlignment": "clause_proportional_needs_final_human_timing_review",
+  "scenes": [
+    {
+      "id": "intro",
+      "title": "01 工程流程与真实性边界",
+      "startSeconds": 9.470000000010259e-05,
+      "durationSeconds": 40.2210648
+    },
+    {
+      "id": "requirements",
+      "title": "02 保存并确认需求版本",
+      "startSeconds": 40.221175300000006,
+      "durationSeconds": 41.78381719999999
+    },
+    {
+      "id": "guard",
+      "title": "03 未保存内容与离开保护",
+      "startSeconds": 82.0378952,
+      "durationSeconds": 36.7587102
+    },
+    {
+      "id": "knowledge",
+      "title": "04 本地向量检索与原文",
+      "startSeconds": 118.7966272,
+      "durationSeconds": 41.1643613
+    },
+    {
+      "id": "agent",
+      "title": "05 实际工具步骤与人工计划审核",
+      "startSeconds": 159.96100399999997,
+      "durationSeconds": 46.013148400000006
+    },
+    {
+      "id": "review",
+      "title": "06 代码草稿、审查范围与来源快照",
+      "startSeconds": 205.9741643,
+      "durationSeconds": 40.43622190000001
+    },
+    {
+      "id": "tests",
+      "title": "07 当前版本用例与人工结果",
+      "startSeconds": 246.41040040000001,
+      "durationSeconds": 40.27405489999996
+    },
+    {
+      "id": "trace",
+      "title": "08 需求到任务及执行证据",
+      "startSeconds": 286.68446980000004,
+      "durationSeconds": 46.012671499999996
+    },
+    {
+      "id": "documents",
+      "title": "09 文档来源快照与修订历史",
+      "startSeconds": 332.6971556,
+      "durationSeconds": 42.00197210000001
+    },
+    {
+      "id": "change",
+      "title": "10 需求改变后保留历史、重新验证",
+      "startSeconds": 374.6991707,
+      "durationSeconds": 35.00519149999996
+    },
+    {
+      "id": "growth",
+      "title": "11 当前进度、历史累计与交付边界",
+      "startSeconds": 409.7043794,
+      "durationSeconds": 41.88409110000002
+    }
+  ],
+  "rawRecordingSha256": "35623114ed394c98cab0e00a8ae0fb70192325cf9d8f36e31b83be57897dd4c1",
+  "sha256": "7154fdb394072ceca5cc7b2101b3523ba082672754279098ab34dff9730ff0bf",
+  "bytes": 15682009,
+  "validation": "full_decode_passed_and_all_scene_samples_visually_reviewed",
+  "officialSubmissionReady": false,
+  "sourceCommit": "6c1abe29964c1a90e8940ceb96725937129ac50a",
+  "sourceModified": true,
+  "narrationHashes": [
+    {
+      "id": "intro",
+      "textSha256": "68e08dae313efec4261e30175d19587aad461241f33eb1c497e7a12c974349a6",
+      "audioSha256": "7178fd3984f1c9b23c8179b4291c10bd90376f805fba37af46dfae41d5f9017d"
+    },
+    {
+      "id": "requirements",
+      "textSha256": "51180744708d7b3fa9a63a26c437be12f80051412f124e7f73cb46beb325b346",
+      "audioSha256": "67a96d1a82fab1f891c3c5849c7852abd1f6bc19c36968e0b76ef8f7b805aa42"
+    },
+    {
+      "id": "guard",
+      "textSha256": "c0f91562fea555bffbe5283d4939f1e736de7a55d4cec6578db05f56124a04ac",
+      "audioSha256": "a5819a335de5c07b5b52a4f8ce1c2acdb3b36cafe0596b004cc00c2796003f49"
+    },
+    {
+      "id": "knowledge",
+      "textSha256": "ea2712c7a6e131e7925848b1845daf20ce92c81ef73d4128978e7df58d11ae26",
+      "audioSha256": "c4eb3c9fcabd67b07b87ae9cd6092510621e4a5b4d9ebb354640bc3382f32714"
+    },
+    {
+      "id": "agent",
+      "textSha256": "22b20f345029d6c535d87fd161710ae3529b746bb3368b7f44be5941a148d4b2",
+      "audioSha256": "230945dc439d2ad9cd47c7126f1c8a9e6c564bd29b5d544b671a8335565d38e0"
+    },
+    {
+      "id": "review",
+      "textSha256": "9925ca4733f6fe7de636921180fafdd98e79b6443019b4c92059222e789c88fe",
+      "audioSha256": "b010ede9f0ebbc2bff2179f57a4b3f3d8a607e2ac3cd066db74941b35065c476"
+    },
+    {
+      "id": "tests",
+      "textSha256": "092e1f91a89f8f84b0a8f770f71f411ecd23575ef1b3a4ebfcd90885c78c99c3",
+      "audioSha256": "970f272cdd08673152333d884acc33782af17afcc334c0c009c46494cc7dba5d"
+    },
+    {
+      "id": "trace",
+      "textSha256": "526848bce48a876daeac98df0cb90923d6081dec5c2681385a9ebc32f33a0d63",
+      "audioSha256": "dc138c43328dee9f6da995a85528c25474365977d2b19db9dc5b3e0ff69636b6"
+    },
+    {
+      "id": "documents",
+      "textSha256": "6e0b4f21a6d0d98fe24400423e8a73762e2d7d283569b65775b50ef4d15199d7",
+      "audioSha256": "2504351ada2d42aaacb196e763f2513c9dbc0608300d322fad9557899ebb5c40"
+    },
+    {
+      "id": "change",
+      "textSha256": "36831cb0353beac22b601c783b0a6abc23f89d9eff88376e22f4ee7c46702252",
+      "audioSha256": "24cb4bcab389a61b7acdd269145bdd63e258ea33f60b14d9a1c4d1ae4746b657"
+    },
+    {
+      "id": "growth",
+      "textSha256": "defc7daa256c10cd2a66513d0f5e32bae454c3ef7f9037f3503f11c21dbf76a9",
+      "audioSha256": "3aee0d0c68ec2456056e29e4a3ffaace0b295c3323f64afd99916fd0d6190774"
+    }
+  ],
+  "decodedSeconds": 451.59,
+  "reviewFrames": [
+    {
+      "scene": "intro",
+      "sampleSeconds": 15.0000947
+    },
+    {
+      "scene": "requirements",
+      "sampleSeconds": 55.221175300000006
+    },
+    {
+      "scene": "guard",
+      "sampleSeconds": 97.0378952
+    },
+    {
+      "scene": "knowledge",
+      "sampleSeconds": 133.7966272
+    },
+    {
+      "scene": "agent",
+      "sampleSeconds": 174.96100399999997
+    },
+    {
+      "scene": "review",
+      "sampleSeconds": 220.9741643
+    },
+    {
+      "scene": "tests",
+      "sampleSeconds": 261.4104004
+    },
+    {
+      "scene": "trace",
+      "sampleSeconds": 301.68446980000004
+    },
+    {
+      "scene": "documents",
+      "sampleSeconds": 347.6971556
+    },
+    {
+      "scene": "change",
+      "sampleSeconds": 389.6991707
+    },
+    {
+      "scene": "growth",
+      "sampleSeconds": 424.7043794
+    }
+  ],
+  "humanAudioReview": "not_executed"
+}

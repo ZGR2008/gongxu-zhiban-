@@ -1,0 +1,20 @@
+{
+  "file": "gongxu-zhiban-defense-v3-2026-11-01T00-03-26-916Z.pptx",
+  "bytes": 818444,
+  "sha256": "4b68f3c2749f14874b770528b7e1d1e679a6d4725a63fabc16ce3d5792959dde",
+  "slides": 12,
+  "sourceCommit": "d70a5d2294430d2377a575ae6b27c3dec92e905a",
+  "scope": "local_defence_draft_not_contest_submission",
+  "visualReview": "all_12_final_slides_individually_inspected",
+  "packageIntegrity": "passed",
+  "layoutGeometry": "passed",
+  "fontPolicy": "passed_Microsoft_YaHei",
+  "nativeTableSlides": [
+    8,
+    9
+  ],
+  "runtimeReimport": "passed",
+  "powerpointOrWpsPlayback": "not_run",
+  "speakerTiming": "not_run_estimate_only",
+  "sourceScreenshotScope": "synthetic_accounts_real_local_database_and_embeddings_chat_fixture"
+}
