@@ -84,6 +84,7 @@
   gap: 7px;
 }
 .preference-options label {
+  position: relative;
   margin: 0;
   cursor: pointer;
 }
@@ -100,8 +101,12 @@
 }
 .preference-options input {
   position: absolute;
-  width: 1px;
-  height: 1px;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  z-index: 1;
+  cursor: pointer;
   opacity: 0;
 }
 .preference-options input:checked + span {
@@ -604,6 +609,20 @@ body[data-text-size='large'] .project-info small {
 /* Forced colors may remove fills and glow. Keep selection distinct without
    opting out of the user's system palette or changing the default dark skin. */
 @media (forced-colors: active) {
+  .app-shell .hero.hero--cosmic h2 em {
+    color: CanvasText;
+    -webkit-text-fill-color: CanvasText;
+    background: none;
+    background-clip: border-box;
+  }
+
+  .app-shell .button {
+    color: ButtonText;
+    background: ButtonFace;
+    border: 1px solid ButtonText;
+    box-shadow: none;
+  }
+
   .app-shell [aria-current='page'],
   .app-shell button[aria-pressed='true'],
   .preference-options input:checked + span {

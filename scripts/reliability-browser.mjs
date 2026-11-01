@@ -65,7 +65,7 @@ async function scenario(name,work){
  if(engine!=='chromium'&&name==='code_draft_save_and_leave_checks_committed_state_under_cpu_throttle'){
   report.checks.push({name,status:'not_run',reason:'This case requires Chromium CDP CPU emulation; not supported by this engine.'});console.log(`NOT RUN ${name} (Chromium-only CPU emulation)`);return;
  }
- if(engine!=='chromium'&&name==='forced_colors_keeps_headings_controls_selection_and_keyboard_visible'){
+ if(engine==='webkit'&&name==='forced_colors_keeps_headings_controls_selection_and_keyboard_visible'){
   // Windows WebKit changes the media query but did not force the palette in
   // our captured run. Keep the rendering assertions for Chromium; CSS-only
   // selection checks below remain active on the other engine.
@@ -234,6 +234,10 @@ try{
   await page.goto(`${origin.origin}${path}`);await page.locator(selector).first().waitFor();
   await auditAccessibility(page,`accessibility_${name}`);
  });
+ await scenario('accessibility_trace_preparation',async(page,state)=>{
+  traceFixture(state);state.traceData.tasks=[];state.traceData.cases=[];state.traceData.links=[];state.traceData.items[0].coverage={suggested:0,confirmedTasks:0,confirmedCases:0,stale:0,manualEvidence:0};
+  await page.goto(`${origin.origin}/projects/${A}/requirements`);await page.getByRole('group',{name:'关联准备'}).waitFor();await auditAccessibility(page,'accessibility_trace_preparation');
+ });
  await scenario('accessibility_edit_guard_dialog',async(page)=>{
   await page.goto(`${origin.origin}/projects/${A}/requirements`);await page.locator('#requirement').fill('合成未保存草稿');
   await page.getByRole('link',{name:'我的项目',exact:true}).first().click();await page.getByRole('dialog',{name:'保留未保存的编辑'}).waitFor();
@@ -256,7 +260,7 @@ try{
   await auditAccessibility(page,'accessibility_create_project');
  });
  await scenario('accessibility_requirement_history',async(page)=>{
-  await page.goto(`${origin.origin}/projects/${A}/requirements`);await page.getByRole('button',{name:'查看需求版本 1',exact:true}).click();
+  await page.goto(`${origin.origin}/projects/${A}/requirements`);await page.getByRole('button',{name:/^版本 1\b/}).click();
   await page.getByRole('button',{name:'使用此版本编辑',exact:true}).waitFor();
   await auditAccessibility(page,'accessibility_requirement_history');
  });
@@ -748,6 +752,38 @@ try{
   await page.getByRole('dialog',{name:'保留未保存的编辑'}).getByRole('button',{name:'放弃并继续'}).click();await page.locator('#requirement').waitFor();await page.waitForTimeout(600);
   assert.ok(page.url().includes(B));assert.equal(await page.locator('#requirement').inputValue(),'项目 B 的需求正文');assert.equal(state.writes.length,1);assert.ok(state.writes[0].path.includes(A));
  });
+ await scenario('trace_empty_preparation_explains_missing_assets_without_dead_end_forms',async(page,state)=>{
+  traceFixture(state);state.traceData.tasks=[];state.traceData.cases=[];state.traceData.links=[];state.traceData.items[0].coverage={suggested:0,confirmedTasks:0,confirmedCases:0,stale:0,manualEvidence:0};
+  await page.goto(`${origin.origin}/projects/${A}/requirements`);await page.getByRole('group',{name:'当前版本追踪统计'}).waitFor();
+  await page.screenshot({path:fileURLToPath(new URL('trace-empty-preparation.png',directory)),fullPage:true});
+  await page.locator('.trace-panel').screenshot({path:fileURLToPath(new URL('trace-empty-preparation-panel.png',directory))});
+  assert.equal(await page.locator('.trace-panel form').count(),0,'no empty task/case selectors before any applicable target exists');
+  assert.match(await page.locator('.trace-panel').innerText(),/Agent 规划/);assert.match(await page.locator('.trace-panel').innerText(),/智能测试/);
+  assert.equal(await page.getByRole('group',{name:'当前版本追踪统计'}).locator('strong').nth(1).innerText(),'1','the coverage gap remains visible');
+  state.traceData.tasks=[{id:RA,title:'合成审批任务'}];await page.getByRole('button',{name:'刷新追踪',exact:true}).click();
+  await page.getByRole('combobox',{name:'当前版本对象',exact:true}).selectOption(RA);
+  assert.equal(await page.getByRole('combobox',{name:'验证链开发任务',exact:true}).count(),0,'pairing waits until both kinds of objects exist');
+  const test={id:RB,title:'补充合成用例',revision:1,result:'not_run',steps:'人工核对',expected:'保留记录'};state.traceData.cases=[test];
+  await page.getByRole('button',{name:'刷新追踪',exact:true}).click();await page.getByRole('combobox',{name:'验证链测试用例',exact:true}).selectOption(RB);
+  assert.equal(state.writes.length,0,'preparation and refresh never trigger model or evidence writes');
+ });
+ await scenario('trace_empty_assets_keep_change_review_and_pending_input',async(page,state)=>{
+  traceFixture(state);state.traceData.previousItems=[{id:'prior-item',position:1,text:'旧版合成原文'}];state.traceData.tasks=[];state.traceData.cases=[];state.traceData.links=[];
+  await page.goto(`${origin.origin}/projects/${A}/requirements`);await page.getByRole('combobox',{name:'或登记改写自哪个旧条目',exact:true}).selectOption('prior-item');
+  await page.getByRole('textbox',{name:'审核依据',exact:true}).fill('旧版条目改为当前审批要求');
+  await page.getByRole('button',{name:'刷新追踪',exact:true}).click();await page.getByRole('dialog').getByRole('button',{name:'留在此页',exact:true}).click();
+  assert.equal(await page.getByRole('textbox',{name:'审核依据',exact:true}).inputValue(),'旧版条目改为当前审批要求');assert.equal(state.writes.length,0);
+ });
+ await scenario('display_radio_hit_area_matches_label_and_keyboard_does_not_jump',async(page)=>{
+  await page.goto(`${origin.origin}/dashboard`);await page.locator('.display-settings summary').click();
+  const radio=page.getByRole('radio',{name:'紧凑',exact:true}),label=radio.locator('..');
+  const inputBounds=await radio.boundingBox(),labelBounds=await label.boundingBox();assert.ok(inputBounds&&labelBounds);
+  assert.ok(inputBounds.width>=labelBounds.width-2&&inputBounds.height>=labelBounds.height-2,'native control should cover its visible choice');
+  assert.ok(Math.abs(inputBounds.x-labelBounds.x)<=1&&Math.abs(inputBounds.y-labelBounds.y)<=1,'native control must be positioned inside its own label');
+  const scroll=await page.evaluate(()=>window.scrollY);await radio.check();assert.equal(await radio.isChecked(),true);
+  await radio.focus();await page.keyboard.press('ArrowLeft');assert.equal(await page.getByRole('radio',{name:'舒适',exact:true}).isChecked(),true);
+  assert.equal(await page.evaluate(()=>window.scrollY),scroll);await page.keyboard.press('Escape');assert.ok(await page.locator('.display-settings summary').evaluate(el=>el===document.activeElement));
+ });
  await scenario('forced_colors_keeps_headings_controls_selection_and_keyboard_visible',async(page)=>{
   await page.emulateMedia({forcedColors:'active',colorScheme:'dark'});await page.goto(`${origin.origin}/dashboard`);await page.locator('.hero h2 em').waitFor();
   const heading=await page.locator('.hero h2 em').evaluate(el=>({color:getComputedStyle(el).color,image:getComputedStyle(el).backgroundImage}));
@@ -778,7 +814,7 @@ try{
   await page.emulateMedia({reducedMotion:'reduce'});await page.getByRole('button',{name:'静态预览',exact:true}).waitFor();assert.ok(await page.getByRole('button',{name:'静态预览',exact:true}).isDisabled());assert.equal(await visual.getAttribute('data-motion'),'paused');
  });
  await scenario('restoring_history_requires_a_choice_and_cancel_does_not_claim_success',async(page)=>{
-  await page.goto(`${origin.origin}/projects/${A}/requirements`);await page.locator('#requirement').fill('恢复历史时不能静默覆盖的草稿');await page.getByRole('button',{name:'查看需求版本 1',exact:true}).click();
+  await page.goto(`${origin.origin}/projects/${A}/requirements`);await page.locator('#requirement').fill('恢复历史时不能静默覆盖的草稿');await page.getByRole('button',{name:/^版本 1\b/}).click();
   await page.getByRole('button',{name:'使用此版本编辑',exact:true}).click();await page.getByRole('button',{name:'替换编辑区内容',exact:true}).click();
   const guard=page.getByRole('dialog',{name:'保留未保存的编辑'});await guard.waitFor();await guard.getByRole('button',{name:'留在此页'}).click();assert.equal(await page.locator('#requirement').inputValue(),'恢复历史时不能静默覆盖的草稿');assert.equal(await page.locator('.history-notice').count(),0);
  });

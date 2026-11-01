@@ -70,7 +70,7 @@ try {
   await check('historic_preview_diff_targets_and_read_only_behavior', async () => {
     const localEdit = secondText + '\n\n尚未保存的验收边界。';
     await page.getByLabel('需求内容', { exact: true }).fill(localEdit);
-    await page.getByRole('button', { name: '查看需求版本 1', exact: true }).click();
+    await page.getByRole('button', { name: /^版本 1\b/ }).click();
     await page.locator('.history-dialog[open]').waitFor();
     assert((await page.locator('.history-preview').textContent()).includes('2 本书'), 'wrong_history');
     await page.getByRole('button', { name: '差异对比', exact: true }).click();
@@ -83,16 +83,16 @@ try {
     const state = await api(projectPath); assert(state.requirements.length === 2, 'comparison_wrote_data');
     await closeDialog();
     assert(await page.getByLabel('需求内容', { exact: true }).inputValue() === localEdit, 'view_overwrote_draft');
-    await page.waitForFunction(() => document.activeElement?.getAttribute('aria-label') === '查看需求版本 1');
+    await page.waitForFunction(element => document.activeElement === element, await page.getByRole('button', { name: /^版本 1\b/ }).elementHandle());
   });
   await check('restore_requires_confirmation_and_explicit_version_save', async () => {
     const oldDraft = await page.locator('#requirement').inputValue();
-    await page.getByRole('button', { name: '查看需求版本 1', exact: true }).click();
+    await page.getByRole('button', { name: /^版本 1\b/ }).click();
     await page.getByRole('button', { name: '使用此版本编辑', exact: true }).click();
     await page.getByRole('button', { name: '保留当前编辑', exact: true }).click();
     await closeDialog();
     assert(await page.locator('#requirement').inputValue() === oldDraft, 'cancel_lost_draft');
-    await page.getByRole('button', { name: '查看需求版本 1', exact: true }).click();
+    await page.getByRole('button', { name: /^版本 1\b/ }).click();
     await page.getByRole('button', { name: '使用此版本编辑', exact: true }).click();
     await page.getByRole('button', { name: '替换编辑区内容', exact: true }).click();
     await page.locator('.history-dialog[open]').waitFor({ state: 'hidden' });
@@ -165,7 +165,7 @@ try {
     await page.locator('#requirement').fill('# 安全预览\n<script>window.__history_script_executed=true</script>\n![不得请求外部图片](https://invalid.example.test/pixel.png)');
     await saveRequirement(await page.locator('#requirement').inputValue());
     let externalImages = 0; page.on('request', request => { if (request.url().includes('invalid.example.test')) externalImages++; });
-    await page.getByRole('button', { name: '查看需求版本 4', exact: true }).click();
+    await page.getByRole('button', { name: /^版本 4\b/ }).click();
     await page.locator('.history-preview').waitFor();
     assert(!(await page.evaluate(() => window.__history_script_executed)), 'historic_html_executed');
     assert(await page.locator('.history-preview img').count() === 0 && externalImages === 0, 'historic_external_image_loaded');
