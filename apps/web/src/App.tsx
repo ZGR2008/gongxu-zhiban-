@@ -1,5 +1,6 @@
 import { lazy, Suspense, useCallback, useEffect, useRef, useState, type FormEvent } from 'react';
 import { RequestScope } from './components/request-scope';
+import {fetchJsonResponse,invalidResponse} from './components/request-transport';
 import { EditGuardProvider, useEditGuard, useUnsavedEdit } from './components/EditGuard';
 import { useGuardedRoute } from './components/useGuardedRoute';
 import { ProjectCreateForm } from './components/ProjectCreateForm';
@@ -32,14 +33,7 @@ function ConnectionStatus({ connection, onCheck }: { connection: Connection; onC
 function readSession() { try { return localStorage.getItem('gongxu_token') || ''; } catch { return ''; } }
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const session = readSession();
-  let response: Response;
-  try {
-    response = await fetch(`/api${path}`, { ...options, headers: { ...(options?.body != null ? { 'Content-Type': 'application/json' } : {}), ...(session ? { Authorization: `Bearer ${session}` } : {}), ...options?.headers } });
-  } catch (error) {
-    if (options?.signal?.aborted) throw error;
-    throw new Error('无法连接服务，请检查后端是否启动。');
-  }
-  const data: unknown = await response.json().catch(() => ({}));
+  const {response,data} = await fetchJsonResponse(`/api${path}`, { ...options, headers: { ...(options?.body != null ? { 'Content-Type': 'application/json' } : {}), ...(session ? { Authorization: `Bearer ${session}` } : {}), ...options?.headers } });
   // A reply belongs to the session that started it, even after logout/login in
   // another tab. Do not allow old success callbacks to navigate or populate UI.
   if (session !== readSession()) throw Object.assign(new Error('登录会话已变化，旧请求结果已忽略。'), {code:'session_changed'});
@@ -186,7 +180,12 @@ function Workspace({token,onAuthenticated}:{token:string;onAuthenticated:(token:
     const ticket = projectScope.current.begin('list');
     setLoading(true); setError('');
     const current = () => projectScope.current.accepts(ticket, activeProject.current ? undefined : 'list');
-    try { const data = await request<{ projects: Project[] }>('/projects', { signal: ticket.signal }); if (current()) setProjects(data.projects); }
+    try {
+      const data = await request<{ projects: Project[] }>('/projects', { signal: ticket.signal });
+      if (!current()) return;
+      if (!Array.isArray(data.projects) || data.projects.some(row=>!row || typeof row.id!=='string' || typeof row.name!=='string' || typeof row.description!=='string' || typeof row.updatedAt!=='string')) throw invalidResponse();
+      setProjects(data.projects);
+    }
     catch (err) { if (current()) setError(message(err)); }
     finally { if (current()) setLoading(false); }
   }, []);
@@ -200,6 +199,7 @@ function Workspace({token,onAuthenticated}:{token:string;onAuthenticated:(token:
     try {
       const data = await request<Detail>(`/projects/${encodeURIComponent(id)}`, { signal: ticket.signal });
       if (!current()) return;
+      if (!data.project || typeof data.project.name!=='string' || typeof data.project.description!=='string' || !Array.isArray(data.requirements) || data.requirements.some(row=>!row || typeof row.id!=='string' || !Number.isInteger(row.version) || typeof row.status!=='string')) throw invalidResponse();
       if (data.project.id !== id) throw new Error('项目响应归属不一致，已阻止载入。请重新读取。');
       const text = data.requirements[0] ? textContent(data.requirements[0].content) : data.project.description;
       draftOwner.current = id; baselineDraft.current = text;

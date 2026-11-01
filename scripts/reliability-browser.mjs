@@ -153,8 +153,8 @@ async function scenario(name,work){
   else if(/\/agent\/runs\/[^/]+\/cancel$/.test(path)&&method==='POST'){
    state.writes.push({path});state.runs=state.runs.map(run=>path.endsWith('/'+run.id+'/cancel')?{...run,status:'failed',errorCode:'agent_cancelled'}:run);body={status:'cancelled'};
   }
-  else if(path.endsWith('/agent/runs'))body={runs:state.runs};
-  else if(/\/agent\/runs\/[^/]+$/.test(path)){const id=path.split('/').at(-1);state.runCounts[id]=(state.runCounts[id]||0)+1;await new Promise(r=>setTimeout(r,state.runDelay(id)));body={run:state.runs.find(r=>r.id===id),steps:[{id:'s',stage:'plan_1',status:'succeeded',outputSummary:id===RA?'运行A输出':'运行B输出',tools:[]}]};}
+  else if(path.endsWith('/agent/runs')){state.runListReads=(state.runListReads??0)+1;if(state.runListGate)await state.runListGate;status=state.runListStatus??200;body=status===200?{runs:state.runs}:{error:'database_unavailable'};}
+  else if(/\/agent\/runs\/[^/]+$/.test(path)){const id=path.split('/').at(-1);state.runCounts[id]=(state.runCounts[id]||0)+1;if(state.runDetailGate)await state.runDetailGate;await new Promise(r=>setTimeout(r,state.runDelay(id)));body={run:state.runs.find(r=>r.id===id),steps:[{id:'s',stage:'plan_1',status:'succeeded',outputSummary:id===RA?'运行A输出':'运行B输出',tools:[]}]};}
   else if(path.endsWith('/trace')){state.traceReads=(state.traceReads??0)+1;status=state.traceStatus??200;body=structuredClone(status===200?(state.traceData??{version:null,items:[],links:[],tasks:[],cases:[],previousItems:[],impact:null}):{error:'trace_refresh_required'});await new Promise(r=>setTimeout(r,state.traceDelay??0));}
   else if(/\/trace\/(links|task-tests)$/.test(path)&&method==='POST'){const input=route.request().postDataJSON();state.writes.push({path,body:input});if(path.endsWith('/links')&&state.traceData){state.traceData.links=state.traceData.links.map(link=>(input.targetKind==='case'?link.caseId:link.taskId)===input.targetId?{...link,status:input.decision,reviewNote:input.note}:link);}body={status:'confirmed'};}
   else if(path==='/knowledge'){
@@ -832,6 +832,46 @@ try{
   await page.locator('#requirement').fill('键盘保护草稿');const link=page.getByRole('link',{name:'我的项目',exact:true}).first();await link.focus();await page.keyboard.press('Enter');const dialog=page.getByRole('dialog',{name:'保留未保存的编辑'});await dialog.waitFor();
   for(let i=0;i<7;i++){await page.keyboard.press('Tab');assert.ok(await dialog.evaluate(el=>el.contains(document.activeElement)));}
   await page.keyboard.press('Escape');assert.equal(await dialog.isVisible(),false);assert.ok(await link.evaluate(el=>el===document.activeElement));assert.equal(await page.locator('#requirement').inputValue(),'键盘保护草稿');
+ });
+ for(const pending of ['list','detail'])await scenario(`run_history_auto_refresh_waits_for_slow_${pending}_and_recovers`,async(page,state)=>{
+  state.runs=[{id:RA,requirementVersionId:RA,status:'confirmed',plan:null,errorCode:null,createdAt:now,finishedAt:now,modelName:'controlled-fixture'}];
+  let release,initialReads,initialDetails;const gate=new Promise(resolve=>{release=resolve;});state[pending==='list'?'runListGate':'runDetailGate']=gate;
+  try{
+   await page.goto(`${origin.origin}/runs`);await page.getByRole('checkbox',{name:'每 10 秒刷新',exact:true}).waitFor();await waitFor(()=>pending==='list'?state.runListReads>=1:state.runCounts[RA]>=1);
+   initialReads=state.runListReads;initialDetails=state.runCounts[RA];
+   await page.getByRole('checkbox',{name:'每 10 秒刷新',exact:true}).check();
+   // A real polling period, shorter than the existing 15-second read deadline.
+   await page.waitForTimeout(10400);assert.equal(state.runListReads,initialReads,'automatic polling must not cancel a legitimate slow read');
+   if(pending==='detail')assert.equal(state.runCounts[RA],initialDetails,'pending detail must not restart');
+   assert.ok(await page.getByRole('button',{name:'刷新记录',exact:true}).isDisabled());
+  }finally{release();state.runListGate=null;state.runDetailGate=null;}
+  await page.locator('.run-step-evidence').first().waitFor();
+  await page.waitForTimeout(10400);assert.equal(state.runListReads,initialReads+1,'automatic polling resumes once after the slow response settles');
+  await page.getByRole('checkbox',{name:'每 10 秒刷新',exact:true}).uncheck();
+  state.runListStatus=503;await page.getByRole('button',{name:'刷新记录',exact:true}).click();await page.getByRole('alert').filter({hasText:'数据服务暂不可用'}).waitFor();
+  state.runListStatus=200;await page.getByRole('button',{name:'重新读取',exact:true}).click();await page.locator('.run-step-evidence').first().waitFor();
+  assert.equal(state.runListReads,initialReads+3);assert.equal(await page.getByRole('alert').count(),0);
+ });
+ await scenario('project_read_invalid_json_has_a_recoverable_error',async(page,state)=>{
+  let invalid=true;await page.route('**/api/projects',route=>invalid?route.fulfill({status:200,contentType:'text/html',body:'<h1>synthetic proxy response</h1>'}):route.fallback());
+  await page.goto(`${origin.origin}/projects`);await page.getByRole('alert').filter({hasText:'服务响应格式无效'}).waitFor();
+  assert.equal(await page.getByText('synthetic proxy response',{exact:true}).count(),0);invalid=false;
+  await page.getByRole('button',{name:'重试',exact:true}).click();await page.locator('.project-explorer').getByText('受控项目 A',{exact:true}).waitFor();
+  assert.equal(await page.getByRole('alert').count(),0);assert.equal(await page.evaluate(()=>localStorage.getItem('gongxu_token')),'controlled-browser-fixture');
+ });
+ await scenario('project_read_invalid_shapes_never_crash_the_workspace',async(page)=>{
+  let payload={};await page.route('**/api/projects',route=>route.fulfill({status:200,json:payload}));
+  for(const value of [{},{projects:null},{projects:[{id:A}]}]){
+   payload=value;await page.goto(`${origin.origin}/projects`);await page.getByRole('alert').filter({hasText:'服务响应格式无效'}).waitFor();
+   assert.equal(await page.locator('.project-explorer').count(),0);assert.equal(await page.getByRole('button',{name:'重试',exact:true}).count(),1);
+  }
+ });
+ await scenario('project_read_deadline_stops_loading_and_allows_safe_retry',async(page,state)=>{
+  let release;const gate=new Promise(resolve=>{release=resolve;});state.detailGate=()=>gate;
+  try{await page.goto(`${origin.origin}/projects/${A}/requirements`);await page.getByRole('alert').filter({hasText:'读取超时'}).waitFor({timeout:20000});}
+  finally{state.detailGate=null;release();}
+  assert.equal(await page.locator('#requirement').count(),0);await page.getByRole('button',{name:'重试',exact:true}).click();await page.locator('#requirement').waitFor();
+  assert.equal(await page.locator('#requirement').inputValue(),'项目 A 的需求正文');assert.equal(await page.getByRole('alert').count(),0);
  });
  await scenario('late_agent_run_detail_does_not_replace_the_new_selection',async(page,state)=>{
   state.runs=[RA,RB].map((id,i)=>({id,requirementVersionId:RA,status:'confirmed',plan:null,errorCode:null,createdAt:i?now:'2026-10-31T11:00:00Z'}));state.runDelay=id=>id===RA?400:0;

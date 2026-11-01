@@ -76,14 +76,17 @@ export default function RunHistory({
       : null,
     revision,
   );
+  const refreshing = history.loading || requirements.loading || detail.loading;
   useEffect(() => {
-    if (!automatic || !projectId) return;
+    // Start the next interval after all reads settle. A 10-second poll must
+    // not repeatedly cancel a valid response within the 15-second deadline.
+    if (!automatic || !projectId || refreshing) return;
     const timer = setInterval(() => {
       if (document.visibilityState === "visible")
         setRevision((value) => value + 1);
     }, 10000);
     return () => clearInterval(timer);
-  }, [automatic, projectId]);
+  }, [automatic, projectId, refreshing]);
   const refresh = () => setRevision((value) => value + 1);
   if (!projectId)
     return (
@@ -134,12 +137,12 @@ export default function RunHistory({
           type="button"
           className="button secondary"
           onClick={refresh}
-          disabled={history.loading}
+          disabled={refreshing}
         >
           刷新记录
         </button>
         <span className="wb-read-state" role="status">
-          {history.loading
+          {refreshing
             ? "正在读取…"
             : automatic
               ? "自动刷新已开启，离开页面后停止"

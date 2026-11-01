@@ -17,6 +17,7 @@
     "smoke:ui": "node scripts/ui-smoke.mjs",
     "smoke:visual": "node scripts/visual-smoke.mjs",
     "test:ui-models": "node --test scripts/ui-models.test.mjs",
+    "test:request-transport": "node --test scripts/request-transport.test.mjs",
     "test:workbench": "node --test scripts/workbench-models.test.mjs",
     "test:evidence": "node --test scripts/evidence-state.test.mjs",
     "verify:agent-recovery": "pnpm --filter @gongxu/api build && cd apps/api && node ../../scripts/agent-recovery-local.mjs",
