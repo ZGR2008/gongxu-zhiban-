@@ -1,0 +1,3333 @@
+{
+  "schemaVersion": "gongxu-review-v3.1",
+  "generatedAt": "2026-11-01T01:23:41.686Z",
+  "baseline": "4e3b4b9",
+  "implementationHead": "806146b2ebed9cef994c23d85b834963b9b44bfd",
+  "trackedWorktreeModified": true,
+  "contestBasis": "Seven readable screenshot portions only; missing weights/national rules/cropped content remain unknown.",
+  "sourceManifest": [
+    {
+      "file": "apps/api/migrations/001_initial.sql",
+      "sha256": "b2c5c8324e86c2d55fa9b6e32e5fa3426ceadc149a1541e999f67bf809d8a6f9"
+    },
+    {
+      "file": "apps/api/migrations/002_sessions.sql",
+      "sha256": "e0e7a4ee334ee44178895b504da0ec2c1b5e6ca1e86f5aa841e1f38329007593"
+    },
+    {
+      "file": "apps/api/migrations/003_knowledge_staging.sql",
+      "sha256": "912ebad603a95268e9ec08c59fbf15502a2c53c0b2eae088d06730652743b9df"
+    },
+    {
+      "file": "apps/api/migrations/004_agent.sql",
+      "sha256": "d157ab0a4f002bc79c28f57176d2b17ff38c8830784a634e96b0adf632b50cd0"
+    },
+    {
+      "file": "apps/api/migrations/005_ai_generations.sql",
+      "sha256": "7391f02c155db7a5c0dccef1489bb0c6cc950fb645cf94cdf5a6542c215f2b91"
+    },
+    {
+      "file": "apps/api/migrations/006_practice.sql",
+      "sha256": "3c1a12d61c46c4012f32db994425904344f68607aa428d6f9a4179a51253f060"
+    },
+    {
+      "file": "apps/api/migrations/007_documents.sql",
+      "sha256": "02abf3080c75083fad3b39d5185bbac6c34f5931979854db53f913f87222be9a"
+    },
+    {
+      "file": "apps/api/migrations/008_growth.sql",
+      "sha256": "f93ec76347aa3447ce94a941d0db6da06b5fca09a50501c498b0494f65e828f5"
+    },
+    {
+      "file": "apps/api/migrations/009_agent_skipped_step.sql",
+      "sha256": "9a3cc80dd4a5c93e500c1c63aaab0d6fd919079d1f38a877ece3afb1dd6ddb5e"
+    },
+    {
+      "file": "apps/api/migrations/010_test_case_history.sql",
+      "sha256": "791567cd567d5ed739539cfc6cd443eabaa15d9dd05d50b8853ec55f06543933"
+    },
+    {
+      "file": "apps/api/migrations/011_requirement_trace.sql",
+      "sha256": "cbd22efded5c0997a6dc66745311a33581632056874a74cd31a1defaa6a526b4"
+    },
+    {
+      "file": "apps/api/migrations/012_document_revisions.sql",
+      "sha256": "3755ac0072de96778c73346b76330d0a21313890ac2dcebb9c812f51ed354b2c"
+    },
+    {
+      "file": "apps/api/migrations/013_evidence_snapshots.sql",
+      "sha256": "655cc0d46b60494a1845fa0b96c8d051011e91b545445cdd1532150dcd589fc5"
+    },
+    {
+      "file": "apps/api/migrations/014_agent_recovery.sql",
+      "sha256": "e3826f1422770f1f2169ca1deb3a1eda8f6af06169841c766965c8a107e4e3ee"
+    },
+    {
+      "file": "apps/api/migrations/015_agent_request_identity.sql",
+      "sha256": "a454562f320ac0d3a687a556fe9dacb04d48ce407acb62c30a6456b30fc944aa"
+    },
+    {
+      "file": "apps/api/migrations/016_plan_review.sql",
+      "sha256": "c542bd0d84322133b945a029532230fb57045029084b4ff3e98a27b1c06c71ec"
+    },
+    {
+      "file": "apps/api/migrations/017_task_test_evidence.sql",
+      "sha256": "6823c9a7ff5cd7e5cee60d331e3cf9f00dfdeecc65ab6d7e15f887a477c1ce3b"
+    },
+    {
+      "file": "apps/api/migrations/018_code_review_drafts.sql",
+      "sha256": "a174a872707cc45002674634ea88af5bc50089c13fc9a8bfa508a68ad2196cbc"
+    },
+    {
+      "file": "apps/api/migrations/019_code_review_context.sql",
+      "sha256": "5dabb73d108eaecc0aa77443becb21b7d1d3c953e38713ba119976598426d55e"
+    },
+    {
+      "file": "apps/api/package.json",
+      "sha256": "2f65e0255a0fb12366c3392fbba2c8b59a5f2c14869b0f5418c19373665e52b5"
+    },
+    {
+      "file": "apps/api/src/agent/concurrency.test.ts",
+      "sha256": "5c8d9e603711a0dc4fdeaaf0a2afa54565c0270589321ef6ab4830a315017584"
+    },
+    {
+      "file": "apps/api/src/agent/lifecycle.test.ts",
+      "sha256": "f0ce0b823b414478aa310ae3e754174b9c36e6ccd19c520494f910d8a77206b2"
+    },
+    {
+      "file": "apps/api/src/agent/lifecycle.ts",
+      "sha256": "6c0cdaff614dba842b7b36a089ac14932a66491b1767b3312e127f95b54d595b"
+    },
+    {
+      "file": "apps/api/src/agent/routes.test.ts",
+      "sha256": "4e351560737aa5c5d1d0402a20644ecb1f6c8493588cf78c14d93d99f5dff6c8"
+    },
+    {
+      "file": "apps/api/src/agent/routes.ts",
+      "sha256": "c43c8270f8e7e40fb242ada3992a48ee0de1eafa79c5d4b1fe8eb31de2a6c163"
+    },
+    {
+      "file": "apps/api/src/agent/trace-contract.test.ts",
+      "sha256": "a711bd84130b5f8f09644a38bdbf7fda3f86bfa2811b41a81d8e4721b86c753c"
+    },
+    {
+      "file": "apps/api/src/agent/validate.test.ts",
+      "sha256": "77e2c325636f9ca914bdb46fe79237ec7a9ffdd8ace88ccd525da244e247bca4"
+    },
+    {
+      "file": "apps/api/src/agent/validate.ts",
+      "sha256": "4a6917c6b4e37e118367afbc5a505e3e95f8860cf3c2d4795afe023228093125"
+    },
+    {
+      "file": "apps/api/src/ai/abortable.ts",
+      "sha256": "b71995ac579e864607dad7657c963b90a3e78a1d97d08f116371a223534f1ab6"
+    },
+    {
+      "file": "apps/api/src/ai/cancellation.test.ts",
+      "sha256": "961e6bcd01eac62f63d75d5f650aca895081000b85637c4af6262a01a3041e8e"
+    },
+    {
+      "file": "apps/api/src/ai/check.ts",
+      "sha256": "380599f9d085f88c67d18562d07c2bf9da5399e3940f1d9b4b52b5dfd3bbf37b"
+    },
+    {
+      "file": "apps/api/src/ai/model.test.ts",
+      "sha256": "5fcf8f2aa33fc7afe5035e51ab4ff806e798cde3cb7a360c421c7316cd9da85e"
+    },
+    {
+      "file": "apps/api/src/ai/model.ts",
+      "sha256": "3f063dff4957642ca668533566b55f3c62fd562d5c4b1d40ecd6eb2b3f118ff5"
+    },
+    {
+      "file": "apps/api/src/ai/routes.ts",
+      "sha256": "b4dd41e523cc45692c35e708c9cf96d26b516241b04717318aeaffdd5eec0306"
+    },
+    {
+      "file": "apps/api/src/ai/store.ts",
+      "sha256": "5a9948821e700551f752d888cc6f33ba65726bd4e3d94e5e3e7447f32e006ac0"
+    },
+    {
+      "file": "apps/api/src/ai/usage.test.ts",
+      "sha256": "88fc1def5891feb7f9714fb61a58b53f0f81f6a301d8116c684bfb5dab3e4c2a"
+    },
+    {
+      "file": "apps/api/src/app.test.ts",
+      "sha256": "d178c5b8f4527fac78ceb994696f779c4320e4d1b37d2decff666850099618a0"
+    },
+    {
+      "file": "apps/api/src/app.ts",
+      "sha256": "0c6d0ec01e5d0ac595e6689d2df7ad57e6dc0863518e4cf627267bd92a118cd9"
+    },
+    {
+      "file": "apps/api/src/config.ts",
+      "sha256": "2e53e8d02e5c1148cd3cf183cf7527b21f3b0f378b34d46f7f63c374572355c4"
+    },
+    {
+      "file": "apps/api/src/database-readiness.ts",
+      "sha256": "fc9f3c13c009a2ce8bd6ebcef978f720c45e0606b4427e6fb615f792d1017ee8"
+    },
+    {
+      "file": "apps/api/src/database.test.ts",
+      "sha256": "6c02d078702adf13fdb7c030dbe45611a4e887994fdf8a7ee5411e1808814fca"
+    },
+    {
+      "file": "apps/api/src/database.ts",
+      "sha256": "68934d258e6c421b9ddf3cd74efa7f9c3a2511adc04af80c009dec4dedac2627"
+    },
+    {
+      "file": "apps/api/src/documents/evidence.ts",
+      "sha256": "8ba385ea60fc595b4fc17c3ea84faa6eabdd4c0f9a3d16ae76c0670e4f5b85ab"
+    },
+    {
+      "file": "apps/api/src/documents/listing.test.ts",
+      "sha256": "972c13be1778d6a4ad08cb090b0a423461f89e37cce58dcc4343c9cc7d462896"
+    },
+    {
+      "file": "apps/api/src/documents/listing.ts",
+      "sha256": "335f9194a7eee1f971095c54ff4d00ad8528f8b4d52a5a7da10564085ce11b23"
+    },
+    {
+      "file": "apps/api/src/documents/revisions.test.ts",
+      "sha256": "d881f106b74b600109c21152df198c3d74e46e4472e066408620bd7cac3677e3"
+    },
+    {
+      "file": "apps/api/src/documents/routes.test.ts",
+      "sha256": "5d800638a72eded91b6a995712db005bc431b5c691540a77a8ea3744a7c5a60c"
+    },
+    {
+      "file": "apps/api/src/documents/routes.ts",
+      "sha256": "65987c2cdf5a41306ab09fec82a7983f7a136e2e9c90627a73920e812a8f4432"
+    },
+    {
+      "file": "apps/api/src/documents/store.ts",
+      "sha256": "e14e93c8378769ce8124af5441daf9c2750dc7d2daeddae719cedc3cfe5148c7"
+    },
+    {
+      "file": "apps/api/src/growth/routes.test.ts",
+      "sha256": "f394c5e9782e5793c079d0aa730ca63aaec16610d9bcadd5dddad7bb69e98c53"
+    },
+    {
+      "file": "apps/api/src/growth/routes.ts",
+      "sha256": "594916f1928ec8a4e1c1ae31528b55b44da7f46a199203c77aae3dea7d87acdc"
+    },
+    {
+      "file": "apps/api/src/migrate.ts",
+      "sha256": "987c561c8319a809d6b75f819f32c1220acd7eb7fddefabece3ea82954693f14"
+    },
+    {
+      "file": "apps/api/src/practice/context.test.ts",
+      "sha256": "c2e06978cc3eb3f6e24c3b7f347232ed350fb4f6f0f1843c74a5179e83be3aaf"
+    },
+    {
+      "file": "apps/api/src/practice/drafts.test.ts",
+      "sha256": "8e79d17d92ff6e10b8e0ca71e650dd727aaf03100b3f992c085f3b687d2ede8c"
+    },
+    {
+      "file": "apps/api/src/practice/history.test.ts",
+      "sha256": "34fce4067c4813b598271653e0784215add4c040eb8f8fadc3f3d107699aaa85"
+    },
+    {
+      "file": "apps/api/src/practice/listing.test.ts",
+      "sha256": "9402157c6282ad77774bce3140c9e77556ffa95b26c7ab332071d371201a86a3"
+    },
+    {
+      "file": "apps/api/src/practice/listing.ts",
+      "sha256": "901ce0fb63d1ddb2f3d9ac19003b19cbbe9b21ca8163c86843a45ab9779ddf80"
+    },
+    {
+      "file": "apps/api/src/practice/practice.test.ts",
+      "sha256": "936f20cf317ed19e2cc0c30faf7811564e57142f7f3b91f8903bcb7dc4c337d5"
+    },
+    {
+      "file": "apps/api/src/practice/review-context.ts",
+      "sha256": "b6358bd47cd60bd74799b3f9309f3fb93da801203ce17bb3a3338d0d575ee6f4"
+    },
+    {
+      "file": "apps/api/src/practice/routes.ts",
+      "sha256": "563e5c5f38b2cc5c4a5f76e503cc6920f435a32a2ed5e3f0f910cde4a0fa2521"
+    },
+    {
+      "file": "apps/api/src/practice/validation.ts",
+      "sha256": "f9b638a6a9c01cc2018d57041fd14fe21986072b000f5ec19cfe219ccd158b57"
+    },
+    {
+      "file": "apps/api/src/project-routes.ts",
+      "sha256": "8433191b673d4eb06f0cde0c45e1b981f57945d2003b09b79232b24b317c5046"
+    },
+    {
+      "file": "apps/api/src/project-store.ts",
+      "sha256": "67f6cd553bb9282c955ba6c764c8d25d8bc82337148adb78ed54048434f5b2f6"
+    },
+    {
+      "file": "apps/api/src/projects.test.ts",
+      "sha256": "bee2de460a736e634220bb07b6b849ee2f52b9bb945fd2e9e1ca95373e641e86"
+    },
+    {
+      "file": "apps/api/src/rag/activity.ts",
+      "sha256": "f055aca77199934748d984ce0fbff07dd6497a191e1b1950d5cd1d750c02d86c"
+    },
+    {
+      "file": "apps/api/src/rag/chunk.ts",
+      "sha256": "ef26170869d5ef9f3104cfb1c5cc5577c2f420b507621e52edd89494a4afbbdf"
+    },
+    {
+      "file": "apps/api/src/rag/embedding-concurrency.test.ts",
+      "sha256": "f8bab3107197bf0c95ce85894dd52d061d6c51f5e26e23e94ccb90b035fb187a"
+    },
+    {
+      "file": "apps/api/src/rag/embedding-queue.ts",
+      "sha256": "bbacc1e6cdde403c08cdf4bb1a5ca1c665e55f8a154a50ee10aa0e1f57eee7e6"
+    },
+    {
+      "file": "apps/api/src/rag/embeddings.ts",
+      "sha256": "384edc432bc5daeb1dfc1aade1dcd55fd74478f3e7fddc9e1f379495f45eef91"
+    },
+    {
+      "file": "apps/api/src/rag/index-compatibility.test.ts",
+      "sha256": "d66c21c28d8eec9a49f1516356e0288a4310bcff3ede6bf78fa2c0c31e99a832"
+    },
+    {
+      "file": "apps/api/src/rag/index-compatibility.ts",
+      "sha256": "d4f3cde090677bb56a09dc90933e8fb5f65b5109a49518279ba9e14d5d86e536"
+    },
+    {
+      "file": "apps/api/src/rag/listing.test.ts",
+      "sha256": "da46dc20cbe42abf049c85786f1e42483f44e83a6b95ed1e6d92c6e55a22e74e"
+    },
+    {
+      "file": "apps/api/src/rag/listing.ts",
+      "sha256": "dbecce01d464acf219b1284c47218a6aeea6a429793f758a8a00da937a14ef34"
+    },
+    {
+      "file": "apps/api/src/rag/pdf.test.ts",
+      "sha256": "84beca5114c012d9c731fa7f27930acaef0c66ced0596ed642e634086d06325e"
+    },
+    {
+      "file": "apps/api/src/rag/pdf.ts",
+      "sha256": "389dd2ae254fd99fa7962fcf93ef524be706a2fe3013308e1b98d47d44a910d7"
+    },
+    {
+      "file": "apps/api/src/rag/rag.test.ts",
+      "sha256": "41cc60dfa1b29a70829947bce5c528f396960db2f7a6a9cc0512064fe0b43bf3"
+    },
+    {
+      "file": "apps/api/src/rag/routes.test.ts",
+      "sha256": "65416dcec7ee7abb6eedfc13300bc783675f16d7e01cf8aea5bfb66cbf7dcec4"
+    },
+    {
+      "file": "apps/api/src/rag/routes.ts",
+      "sha256": "30d0744e318d128dec99589bcbec908fce0fa926080f8bc850414af49e1a5e41"
+    },
+    {
+      "file": "apps/api/src/rag/search.ts",
+      "sha256": "595c75f5287782564bfc683612eb26ab08d042de356b28567c233bc1b5d45357"
+    },
+    {
+      "file": "apps/api/src/rag/service.ts",
+      "sha256": "a852b541dde3391d04e9b0ef840410b2e28bc98e9437c4c14af9c3d7e2477485"
+    },
+    {
+      "file": "apps/api/src/rag/upload-boundary.test.ts",
+      "sha256": "e8e3fdb1d21f2313368dacb824d2ddf9a60b46f82fc55db6999fa895d353457c"
+    },
+    {
+      "file": "apps/api/src/requirement-content.ts",
+      "sha256": "c937744007be4b523824fb53c9414940af3f8056a9f03c9de20d2d903d70e3fe"
+    },
+    {
+      "file": "apps/api/src/requirement-preconditions.test.ts",
+      "sha256": "9540d05906724492b5858694a24080dcf0e3491396b5677a619f8bd95067f146"
+    },
+    {
+      "file": "apps/api/src/requirements-boundary.test.ts",
+      "sha256": "ee8a60b61e1e7c794e7eebf36997a4acf861d061b352099f789d065ca0e18c58"
+    },
+    {
+      "file": "apps/api/src/server.ts",
+      "sha256": "98149c9d93b5b84983b06c934c497289feb6c7841f023a0ffda5a65a425dea57"
+    },
+    {
+      "file": "apps/api/src/trace/domain.test.ts",
+      "sha256": "66ab410214b970f57eb198c4b0b94a5a8f004d6e69d840701a5ca4aac1c6a0ff"
+    },
+    {
+      "file": "apps/api/src/trace/domain.ts",
+      "sha256": "366c0e205ed9fc2d444fdb54cccc91b10507bad5a870299fc3d175c8ef6f12b5"
+    },
+    {
+      "file": "apps/api/src/trace/routes.ts",
+      "sha256": "e91e8151395a6f8732b41fb4662a25130f87f94da1d459455537cfd6ba7f285c"
+    },
+    {
+      "file": "apps/api/src/trace/task-test.test.ts",
+      "sha256": "754d6568a67b6186a6804faf0df57728baf4d1d6bc5f7287ef0ab23665f63606"
+    },
+    {
+      "file": "apps/api/src/trace/task-test.ts",
+      "sha256": "31e2f4619cd9b2f4d587b9f3454974a77ec2108676748c6c168b39572a691e71"
+    },
+    {
+      "file": "apps/api/tsconfig.json",
+      "sha256": "79c6b5d13270ee7598f5db233329e9ab0ae15abe7d3db3638d5f83d59e0e0f43"
+    },
+    {
+      "file": "apps/api/tsconfig.test.json",
+      "sha256": "8a8640e56fb0afd6756465405b12e66e65a342a2deb821f17b9c7cb6acfc3932"
+    },
+    {
+      "file": "apps/embedding/model-manifest.json",
+      "sha256": "967f986273d97fc9eae3fd79d30b75fdb18f91a6f97823fba53ddccc6ec11ef9"
+    },
+    {
+      "file": "apps/embedding/package.json",
+      "sha256": "fb0299829ea15a42545d59a282e371a8c6025a2733d8f22c3a5aa4dcccb36eb6"
+    },
+    {
+      "file": "apps/embedding/scripts/download-model.mjs",
+      "sha256": "cde21f4749f28db1a97e7232deb0ae08f973f0a06bcaa55d53af4eb23857864f"
+    },
+    {
+      "file": "apps/embedding/src/app.test.ts",
+      "sha256": "7bb4bd394e2ec8a99c1615ac0c2bbd27f691c1273bcb4f9b75541b4a44323db8"
+    },
+    {
+      "file": "apps/embedding/src/app.ts",
+      "sha256": "ab2fcb2fa3eedb4d5c7ef867b7140e20ffc55747401452c47504db66a3be4c89"
+    },
+    {
+      "file": "apps/embedding/src/check.ts",
+      "sha256": "8f85b454663c4f29e0b53e61ad487d52a98837deef56cbd86735e9577d69e51a"
+    },
+    {
+      "file": "apps/embedding/src/model.ts",
+      "sha256": "f934cfbcdd7e7f220f1a822831f8d270ed63fcfc6388a18aa6e27c1ed63b4f15"
+    },
+    {
+      "file": "apps/embedding/src/server.ts",
+      "sha256": "79eb26e01c53cc1990fb44fd1e7dc5b67cf06066c6df3975f850f2839a09974e"
+    },
+    {
+      "file": "apps/embedding/tsconfig.json",
+      "sha256": "79c6b5d13270ee7598f5db233329e9ab0ae15abe7d3db3638d5f83d59e0e0f43"
+    },
+    {
+      "file": "apps/embedding/tsconfig.test.json",
+      "sha256": "f02d039d449e496d6dc5fea49607b9e94f3617c7641285b08194a32a3ee6c2e4"
+    },
+    {
+      "file": "apps/web/index.html",
+      "sha256": "e51cf7ea3e7b0cbd80367dc2274905a3c194e09467faf5f3a866cd4f7ceb73b0"
+    },
+    {
+      "file": "apps/web/package.json",
+      "sha256": "94d591a984ccc30c484c0b8132b7f72d8132fb06e2791f6bd4b9b5012dd6ba99"
+    },
+    {
+      "file": "apps/web/postcss.config.js",
+      "sha256": "08910ce1d5cd87d2167e9c78b77262bf985b3f07dc5037ff745ecd6a759fd0c0"
+    },
+    {
+      "file": "apps/web/public/previews/archive/planet-orbit-css-v2.html",
+      "sha256": "39140ad02eb2cf324eb53911386d66247553132c3fd835477d35cd1dd5b0a4a2"
+    },
+    {
+      "file": "apps/web/public/previews/orbit-scene.js",
+      "sha256": "a9eedf2289d4570a253b1856dc22b698f61d4d342d82a04e98375e94368d7c6f"
+    },
+    {
+      "file": "apps/web/public/previews/planet-orbit.html",
+      "sha256": "af9f9d9aac3a58c09f1ade0c35353e200d74ff508b2df45956697883fdd0a9f7"
+    },
+    {
+      "file": "apps/web/public/previews/vendor/manifest.json",
+      "sha256": "0d5ab4be18a1c0806126d6db249c6c5d9d96199b7f9fd43a62428e23362c0e82"
+    },
+    {
+      "file": "apps/web/public/previews/vendor/saturn-webgl/original-orbit.vert.glsl",
+      "sha256": "ca40e9ad7a2cc7b991d0a80cafe7b2b37cf5ece5e4296a1e59eb33152167de93"
+    },
+    {
+      "file": "apps/web/public/previews/vendor/saturn-webgl/particle-ring.js",
+      "sha256": "f4d6ae46d421f4fe84d71d55576a7ef83d853607300203d9fd6abc18ef4471e2"
+    },
+    {
+      "file": "apps/web/public/previews/vendor/three/three.module.min.js",
+      "sha256": "ccf5fbb596958fef03e81d631b3316730d9146d0d1cb6a4e99b1fd2388cef573"
+    },
+    {
+      "file": "apps/web/src/App.tsx",
+      "sha256": "b2091e21d9cad529aa44b91fd112b62c783d8eef81a2217db6836143c6cc0452"
+    },
+    {
+      "file": "apps/web/src/Modules.tsx",
+      "sha256": "c210fe11992701c340ddfc7f4124b83ffcd44b8b76233b2cea51614d55a45e25"
+    },
+    {
+      "file": "apps/web/src/Practice.tsx",
+      "sha256": "78672308759d3bd8142fb1f8fa5a98f4ea778236884966cd33585dfe73e12702"
+    },
+    {
+      "file": "apps/web/src/components/CodeReviewWorkspace.tsx",
+      "sha256": "97ff5177ed3c504c8dba2b75838f9232c282d183c340800e020b3bee7b85b455"
+    },
+    {
+      "file": "apps/web/src/components/ContentView.tsx",
+      "sha256": "11d1f48f80332c4cf967a9fad6ee83832daa38dae3d9ab9711d578602771f49c"
+    },
+    {
+      "file": "apps/web/src/components/DocumentRevisionHistory.tsx",
+      "sha256": "3bbf6d5f9eb5df932d9bb735493a61987a9132916686af0bdec75c406f9e4d80"
+    },
+    {
+      "file": "apps/web/src/components/DocumentWorkspace.tsx",
+      "sha256": "b2a2911da99046d4369412fc1737917c0c5460534036e50139ac90e628577469"
+    },
+    {
+      "file": "apps/web/src/components/EditGuard.tsx",
+      "sha256": "9963469efdfdfe497c07978be41fd94685fb3060ceeb6958ebdb268f78fe35ee"
+    },
+    {
+      "file": "apps/web/src/components/EmbeddingActivity.tsx",
+      "sha256": "6e6a0f6d6db1011974cc44c879e17926f0fa00bad19ebf63e9d58188712809b0"
+    },
+    {
+      "file": "apps/web/src/components/EvidenceViews.tsx",
+      "sha256": "fdec4ef2ead13c98dda20a1976a04a8fa32b3b92652b929eb76ac45ce2d34909"
+    },
+    {
+      "file": "apps/web/src/components/FileDropZone.tsx",
+      "sha256": "3bb3931e7ac049d628e0535cc2daff2c10c9fff50eb86827b1fcb66d72f20b86"
+    },
+    {
+      "file": "apps/web/src/components/GrowthWorkspace.tsx",
+      "sha256": "af1d7fc3d21d8fabbb95966ee8eddb2357186431f0ad6a8b8f43d1c3bc54564f"
+    },
+    {
+      "file": "apps/web/src/components/KnowledgeDocumentList.tsx",
+      "sha256": "6da6998a927b112b796d0a98f73f3c5c5509ee937f971a1fef3d7d692f95fd74"
+    },
+    {
+      "file": "apps/web/src/components/MarkdownRenderer.tsx",
+      "sha256": "cd0860469960b63e70ada6742426167159fd805a85d798e3494b678bdd0eb23c"
+    },
+    {
+      "file": "apps/web/src/components/PlanMap.tsx",
+      "sha256": "f045b84da0364bfc9f63379817e2bea1a8bda92cb9aece83330d22bcff30e45d"
+    },
+    {
+      "file": "apps/web/src/components/PlanReview.tsx",
+      "sha256": "80cf0972446aba995b457b31497d9b599b9f95f99fff5110cb46e7e48194292e"
+    },
+    {
+      "file": "apps/web/src/components/ProjectCreateForm.tsx",
+      "sha256": "819aba3ce6735fbe59c8dd73fbdb1277e7cb709b4af112918aff3482102db059"
+    },
+    {
+      "file": "apps/web/src/components/ProjectPulse.tsx",
+      "sha256": "946705970f77659ac43fbe749379edd8239726bb156aa25771d79ee7ee78eadc"
+    },
+    {
+      "file": "apps/web/src/components/RequirementHistory.tsx",
+      "sha256": "fabc6e27067d2a18899577904ac3e3cac3cbdbf7ece0a3a24d9b5f507125b2ec"
+    },
+    {
+      "file": "apps/web/src/components/RequirementTrace.tsx",
+      "sha256": "59051c0bcdde14b1dd91ac7ef351c7ac4e40c81f1088677e0f525170370ec7b1"
+    },
+    {
+      "file": "apps/web/src/components/ReviewSources.tsx",
+      "sha256": "d78a92f575b24899b245abf457482128b6c710c38f283ebd7779b90240cf6348"
+    },
+    {
+      "file": "apps/web/src/components/TaskTestEvidence.tsx",
+      "sha256": "42f20096c0986a87ee6cdeac048a4f60a15299f0fa533f980d7758488bf979a7"
+    },
+    {
+      "file": "apps/web/src/components/UiIcon.tsx",
+      "sha256": "c96132144a777f8d38c03b7e3477eb6aefdcc58e14957462ad9f8721f11a0384"
+    },
+    {
+      "file": "apps/web/src/components/WorkspaceChrome.tsx",
+      "sha256": "f43f89087ec64bf60c6001b31195d0926a77e57799bf224dcf2a85e8b85f7b77"
+    },
+    {
+      "file": "apps/web/src/components/WorkspacePlanet.tsx",
+      "sha256": "e7b113140d0219f5712086389323fc365d4d5f0f3b2f506e49bfdfd2103f2d85"
+    },
+    {
+      "file": "apps/web/src/components/WorkspaceTools.tsx",
+      "sha256": "55055867a9fd876d6967f819b7a1341176aff53b156e164265eebe7d8c117e45"
+    },
+    {
+      "file": "apps/web/src/components/art/nebula.svg",
+      "sha256": "6f188e779d18370c7638fa3e47fd2910bfd77575f7f8e194638318a0773d7fa2"
+    },
+    {
+      "file": "apps/web/src/components/art/planet.svg",
+      "sha256": "8b8e853a57e12a2d3e77bade63468422150f8f3816bb89efb46d9d448da3d7b9"
+    },
+    {
+      "file": "apps/web/src/components/code-review-workspace.css",
+      "sha256": "884de97e4f623576b4eb30921837afc8d5d1bdc1f72a0e26a958a15b3671d068"
+    },
+    {
+      "file": "apps/web/src/components/content-fallback.css",
+      "sha256": "01990bb79c12a29467442c1392052d55227de3e6b75249b159729cb2c5a0465b"
+    },
+    {
+      "file": "apps/web/src/components/document-workspace.css",
+      "sha256": "03c2d2f7c83a668369560216ecc3935d24a54f3b7d82fb23f1f2c8615c43adf3"
+    },
+    {
+      "file": "apps/web/src/components/edit-guard.css",
+      "sha256": "ec6c1d1959d807ebea9488d06d98f6c36b391c5d0efe87bc1a6755197fa96454"
+    },
+    {
+      "file": "apps/web/src/components/evidence-state.ts",
+      "sha256": "8c2d6a561d6757cae37e17e46556b0b02b23465c17c556c7a998c857b9cbe47e"
+    },
+    {
+      "file": "apps/web/src/components/evidence-views.css",
+      "sha256": "476c4689faf245051131dee0653169fab903d763844bf49a86617462d4ab43e7"
+    },
+    {
+      "file": "apps/web/src/components/file-drop-zone.css",
+      "sha256": "dd2db91df97c908f4d225899f90cc8172568da5ffe831c6b2b5877ea6940011e"
+    },
+    {
+      "file": "apps/web/src/components/growth-workspace.css",
+      "sha256": "3e0af9c06a696f867d00f731b82737df9f620d52eba0ecc3a872539ab6467098"
+    },
+    {
+      "file": "apps/web/src/components/line-diff.ts",
+      "sha256": "6f4be1e0b3e6ec94fc924ea166204be39a2e1f921981b530f975bb4e37660a70"
+    },
+    {
+      "file": "apps/web/src/components/plan-map.css",
+      "sha256": "e53d3af5d8738792419bf3e113f905cd9f18ed059230f0125628bf9d10944997"
+    },
+    {
+      "file": "apps/web/src/components/project-pulse-model.ts",
+      "sha256": "b4f0abe7caa82b8fbd858f08b86d85bf2977a412c550ab92bc42e20849c70afa"
+    },
+    {
+      "file": "apps/web/src/components/project-pulse.css",
+      "sha256": "122602cfa0974454f6afe9885e24ce0feacea6024e5815b5b9f932a9481bb338"
+    },
+    {
+      "file": "apps/web/src/components/request-scope.ts",
+      "sha256": "a9429394cc7a9c16639be51978e2384e2b2539c4be05edb467ba68d1788871ea"
+    },
+    {
+      "file": "apps/web/src/components/requirement-history.css",
+      "sha256": "dfb89bdc76448106e45bd1de981d023db2463dc3db5c622b63769d0929282a8e"
+    },
+    {
+      "file": "apps/web/src/components/requirement-trace.css",
+      "sha256": "25dbd0a2b578d14e36172e1a37c725937ae3e240044c1fb75d661aa41129b31c"
+    },
+    {
+      "file": "apps/web/src/components/test-case-page.ts",
+      "sha256": "7b05f78c47925823a4ee89b9d73a6fe411a7367bd758bd711c850c9329c413bd"
+    },
+    {
+      "file": "apps/web/src/components/test-pagination.css",
+      "sha256": "2c780702611d5a4bb2c1fa9e95e7de0a6dcec245394b28fdd8f5257c8187a019"
+    },
+    {
+      "file": "apps/web/src/components/useGuardedRoute.ts",
+      "sha256": "de2a16c3398e8a3b4ec1cc851beed468dfdd32d54f76a3e4f93bfc048e19151a"
+    },
+    {
+      "file": "apps/web/src/components/workspace-chrome.css",
+      "sha256": "e078f478360af26290077ed3c6dacab580ea30a67a758d15b35a3e7249a49fd4"
+    },
+    {
+      "file": "apps/web/src/components/workspace-skin.css",
+      "sha256": "a425beed5993458fde1e89021ec990764b68f4ddb5691f6d019d1bcfbf4ba608"
+    },
+    {
+      "file": "apps/web/src/cosmic.css",
+      "sha256": "415011c0e221ebaf3a769b1d1123d57ad7afcd1651084be80a6c731961e9cc44"
+    },
+    {
+      "file": "apps/web/src/main.tsx",
+      "sha256": "5e20852bde30f363145a5b4c1320a9c6102e36e6b574bd1d0949b10b0dece66d"
+    },
+    {
+      "file": "apps/web/src/pages/Delivery.tsx",
+      "sha256": "cf841783a7250f3f700f4e6fa8baf1226aeb670a45a89b9bd6169e0457ff4e4b"
+    },
+    {
+      "file": "apps/web/src/pages/Missions.tsx",
+      "sha256": "e44566f8e80842c1c65b626f893ade3152b1c4e2fa5900d7588b82adfac43947"
+    },
+    {
+      "file": "apps/web/src/pages/RunHistory.tsx",
+      "sha256": "3b81a1446809a9241a421598638c17572ad4e3f7f8436e0c44e86866433e250c"
+    },
+    {
+      "file": "apps/web/src/pages/WorkbenchPages.tsx",
+      "sha256": "3e8ef13c6bb22246282a2ec005d78378655314a060e101326642b536991ac69f"
+    },
+    {
+      "file": "apps/web/src/pages/WorkbenchShared.tsx",
+      "sha256": "496fa8b3b3062c5ced46fe78bf98354d07c43587836e44b95fd29dabc84b47c1"
+    },
+    {
+      "file": "apps/web/src/pages/workbench-data.ts",
+      "sha256": "90c8bb2acefc0b3c85bbc834a77a85def5eda9d50ef7a50526a65bd2cb114b67"
+    },
+    {
+      "file": "apps/web/src/pages/workbench.css",
+      "sha256": "d483be4d6e4a5aa91187f1274da0e3bce61cf652b1f74898ea71e00e91d58082"
+    },
+    {
+      "file": "apps/web/src/styles.css",
+      "sha256": "8731d79738cdcf6f92d75e258deac0828905eed87b929ecc324124208fb1fe04"
+    },
+    {
+      "file": "apps/web/tailwind.config.js",
+      "sha256": "a90b465712485695cacb312092500f8775d2fb8ef00b0cfb5992dd196bd0c2db"
+    },
+    {
+      "file": "apps/web/tsconfig.json",
+      "sha256": "af38e9ab5cccee73633b7df57b4d8f655c784fbfff1500eadfb66bed94ffb7e4"
+    },
+    {
+      "file": "apps/web/vite.config.ts",
+      "sha256": "722dbeaad2aaad5e2e2add8d72d8ce19ed94810fb3258d24b836e9ce0ce4dd42"
+    },
+    {
+      "file": "evaluation/cases.v1.json",
+      "sha256": "49a19a32a82ec81dc4c32dc93e1fd6db5177c18b3d6e11a537477e9254b34c3a"
+    },
+    {
+      "file": "evaluation/historical-records.mjs",
+      "sha256": "a3e45d901e0293145f196794bd51defac4ae8dac46b7d98d7e871901e0950814"
+    },
+    {
+      "file": "evaluation/historical-source.mjs",
+      "sha256": "20967d858540da4e8bd6e45896057ab36b05ccf2ce92c74f0f556f7e1f8bee3a"
+    },
+    {
+      "file": "evaluation/record-template.json",
+      "sha256": "15adb02123b205c08567a69085ddde112736a7435e3c6b39ebabbc1a863d60b1"
+    },
+    {
+      "file": "evaluation/report.mjs",
+      "sha256": "7f164cb53ec78ac75cc4f39137d054ac20d439f0fb723c68dcb9883555650a7d"
+    },
+    {
+      "file": "evaluation/retrieval-query-study.v1.json",
+      "sha256": "22d7ad13c7cf7ca0b4b92c465b3a7fbc94788bbd3f08c22bb0aa915dbef013ff"
+    },
+    {
+      "file": "evaluation/retrieval.mjs",
+      "sha256": "784e6a4341df4790dca4987b4d88c90df958a4408fbf7bfd70afae2e110741ab"
+    },
+    {
+      "file": "evaluation/retrieval.v1.json",
+      "sha256": "ffbf8737801bf45cb3609c42287eadb5491a48ade101c76cc0d9a9d09f4919e2"
+    },
+    {
+      "file": "evaluation/source-provenance.mjs",
+      "sha256": "059670d0c2967af2c983d448b7b41a981c14a8822108b95db124ceaaaa3c47b2"
+    },
+    {
+      "file": "scripts/agent-recovery-local.mjs",
+      "sha256": "698ce21d4a757bcff532c9cd47baa09b450f1b5b9cb2884cb6f24c92f2624fd6"
+    },
+    {
+      "file": "scripts/assemble-demo-draft.py",
+      "sha256": "feb4f8dc8f2c2779c1b77927cedc090ec7bd23660c940fb6908533750252b05d"
+    },
+    {
+      "file": "scripts/browser-smoke.mjs",
+      "sha256": "0dfd3481248791df28fe9c7849c887973a360408d378813f7fbb3013de0f849f"
+    },
+    {
+      "file": "scripts/check-env-templates.mjs",
+      "sha256": "30c124dd8d79a3851f674c04d12f0e718be4569579ad0eaa95485ce38845b96e"
+    },
+    {
+      "file": "scripts/document-context-local.mjs",
+      "sha256": "19415aefb621f4d7bc76d60588e000335e720a53f31465386d1ff1e4019f9b8f"
+    },
+    {
+      "file": "scripts/document-list-local.mjs",
+      "sha256": "83aef9725851065cf542e81e4d869fcd5c6d92c455bf93e0aa77f6b2071ecba6"
+    },
+    {
+      "file": "scripts/embedding-mixed-local.mjs",
+      "sha256": "f4fa3339c9cbe186dfef66bfea769a966107732b580192fe4fc09853f5b12184"
+    },
+    {
+      "file": "scripts/evaluate-offline.mjs",
+      "sha256": "ccae38f16c15e894efd1c4bd7e8a5dc26147323433b13004c2ff8805d3694d83"
+    },
+    {
+      "file": "scripts/evaluate-prepare.mjs",
+      "sha256": "e6e3a24a5811ecef002b34d8233c7e8c0f0b57fdef6dfe80ef650390e3675e07"
+    },
+    {
+      "file": "scripts/evaluate-report.mjs",
+      "sha256": "5af49ce05ba806e12f555a8e36da088f9aa46a05764b932be3799ef35ce358e5"
+    },
+    {
+      "file": "scripts/evaluate-retrieval-local.mjs",
+      "sha256": "30319de8aa024ec18fff58575824c2e773fde33df530f2da2ed61a15e8a28fca"
+    },
+    {
+      "file": "scripts/evaluation-report.test.mjs",
+      "sha256": "e0d7a44aa6286ab97c4402c4e21763464b8084826e767c4c3e4a4f1bfb52f357"
+    },
+    {
+      "file": "scripts/evidence-state.test.mjs",
+      "sha256": "baf761571d6bb159b97712560358236ac7941e23b1cda91368405de4bfa749d4"
+    },
+    {
+      "file": "scripts/export-review.py",
+      "sha256": "32c3686b25b1c553456c503bbcfb21aba45ec19ca754f4842df7fad21a0673d4"
+    },
+    {
+      "file": "scripts/export-review.test.py",
+      "sha256": "d757bcf5542a5fb766b47c2de371f47bdfcd92b283fe4287f82f25483dd0a669"
+    },
+    {
+      "file": "scripts/fresh-database-local.mjs",
+      "sha256": "138a97b9afce303139608f9144ca0034b45ca25b87f6d5e71cde14db668acc59"
+    },
+    {
+      "file": "scripts/growth-scope-local.mjs",
+      "sha256": "2e05a5f82d4862d7b74d8b448c8059abcfac12621b5bf790b09d822af469252f"
+    },
+    {
+      "file": "scripts/historical-source.test.mjs",
+      "sha256": "4b61c16f1775c987ebed135a824b9324681d302c39a059886dd2abb435ac44b2"
+    },
+    {
+      "file": "scripts/index-compatibility-local.mjs",
+      "sha256": "2e622cd6c9ccb7ea3acefef57552d3e0f4871441a884d8d2c1fb019ade74d817"
+    },
+    {
+      "file": "scripts/install-windows-startup.ps1",
+      "sha256": "3ee1dabdd52ef9ddf8a388488135b137c46b94428bdc4706fd669b5491432957"
+    },
+    {
+      "file": "scripts/knowledge-answer-local.mjs",
+      "sha256": "3d9be12bff2003055ce98fa0cea39490ed5acd5cb45e1e4063c43c7bd927a353"
+    },
+    {
+      "file": "scripts/knowledge-list-local.mjs",
+      "sha256": "f7943bb08a28bf991f4be83259f132eef0d4cd6fcacdc123d29cc5e57e886854"
+    },
+    {
+      "file": "scripts/launch-local.ps1",
+      "sha256": "4d44bbbd766cfa3433c02f31de37da6be87e03090ca023c60bd7712d752a34f5"
+    },
+    {
+      "file": "scripts/live-smoke.mjs",
+      "sha256": "28a167681db7db35bee320211bb955b0e17e78e82b0b1cbe5fb6175531841a2e"
+    },
+    {
+      "file": "scripts/local-desktop-check.mjs",
+      "sha256": "6825e45c580bc643f5d42ba0c4fe7dfd600ca9e4e714a565f02bc44c7b70b0c1"
+    },
+    {
+      "file": "scripts/measure-web-entry.mjs",
+      "sha256": "eed2d116c92b3a90681338dd26c99719f32be8f4626717fe1e54bf91a9dce37e"
+    },
+    {
+      "file": "scripts/narrate-demo-local.ps1",
+      "sha256": "097769768e3fc2796b21a1b267970ff849be6120d05889fd247f93b7b444075f"
+    },
+    {
+      "file": "scripts/no-paid-model-guard.mjs",
+      "sha256": "8bce72984555ab916ce69b3e25f2119fc26cbfd1e5f57fc0266b3e3cc5c48f4c"
+    },
+    {
+      "file": "scripts/prepare-historical-prompts.mjs",
+      "sha256": "70b7600568cc3331da1205cd0d62a36eb5327e2b5c44b27c1218de4923361de3"
+    },
+    {
+      "file": "scripts/project-controls-smoke.mjs",
+      "sha256": "9d79614f0dc6b2bdc8c2566b1569f434f379d5e64cfeb5e882d0f9cfdf5903a7"
+    },
+    {
+      "file": "scripts/record-demo-draft.mjs",
+      "sha256": "a577f0bbfc7a85e734cc990150281ce11dac7d2f1eac4efc33d8cdce36524432"
+    },
+    {
+      "file": "scripts/reliability-browser.mjs",
+      "sha256": "c18d564dfcd2066dbf2ca4dad57e7b10ca4eefad2f15e4f59419fb05d827d6cb"
+    },
+    {
+      "file": "scripts/reliability-local.mjs",
+      "sha256": "c2cadcf4aefdfcad09d5216e37ca39f07b1bc46ca9e72ea708a2b749815b41a7"
+    },
+    {
+      "file": "scripts/render-defense-deck.mjs",
+      "sha256": "00d39eb55b688f96ff39e4471abdec9d83a75ce76b8d1aeae356d1bb3898506d"
+    },
+    {
+      "file": "scripts/render-technical-report.py",
+      "sha256": "a2a9e5c3a829eae98e260eaf204aae5e57ef3554a81610b6e61ac6a404cfd4f1"
+    },
+    {
+      "file": "scripts/requirement-preconditions-local.mjs",
+      "sha256": "82b6dfb49c8c26ae2647a034d902fdd93d18b9962036219a1c9bbdf16f231248"
+    },
+    {
+      "file": "scripts/retrieval-evaluation.test.mjs",
+      "sha256": "e6eb762ba243088796660ee89ad7cc78c9782b09b83e53a5dbcbdd03ec25f7e9"
+    },
+    {
+      "file": "scripts/review-context-local.mjs",
+      "sha256": "a6fa874fd4eadb687a1ad806cb5b69dee7089b8d078b48581f38fcf4bd29886f"
+    },
+    {
+      "file": "scripts/review-package.test.mjs",
+      "sha256": "3078b3d9a1eac7eb63accd545c079ab872d22f2798e9c81eeea1531f5e66de34"
+    },
+    {
+      "file": "scripts/source-provenance.test.mjs",
+      "sha256": "4688965db8f2e07677334129448213b76355730e58a1b1c6b976bf653820aa82"
+    },
+    {
+      "file": "scripts/start-local.ps1",
+      "sha256": "849cb01082f830bc5fc5007b9465148aee2847ad3efa35614ee8e5dfedac39ae"
+    },
+    {
+      "file": "scripts/test-list-local.mjs",
+      "sha256": "0a475e44f3e54ec6d702a3b9ee46e2395005efba3b6b9206f094b7bad277ae04"
+    },
+    {
+      "file": "scripts/trace-concurrency-local.mjs",
+      "sha256": "aa1260389e99fd9b6f38cf141354764e0bd4d49ce6f6f6a4dc7312e5e9513303"
+    },
+    {
+      "file": "scripts/ui-models.test.mjs",
+      "sha256": "650be4ac3980db8141be7be5535868d5e19cf0e48a14e878e5c338ed26ceedfc"
+    },
+    {
+      "file": "scripts/ui-smoke.mjs",
+      "sha256": "35ceb599413f5aa5f2d93b4b3bf185a16cef8bd2ab5da1b7c21f70f9f3a0d0bf"
+    },
+    {
+      "file": "scripts/verify-demo-draft.py",
+      "sha256": "3a4f7843fa02062b36989a9795b378073bd08b2e0ed1d7d1b583d4183207f73e"
+    },
+    {
+      "file": "scripts/verify-technical-pdf.py",
+      "sha256": "45285d46caf961211d73ee3ff0c1bd018a050735cf33343aa77577ece47778f8"
+    },
+    {
+      "file": "scripts/visual-smoke.mjs",
+      "sha256": "f6dc11828d3d5b3e229a301af1d494561d0f73364ad480c409254297edf18c02"
+    },
+    {
+      "file": "scripts/workbench-models.test.mjs",
+      "sha256": "20a37b8f18075bb5488452bbdb0e31a8480574233a55144178026694655c29c1"
+    },
+    {
+      "file": "scripts/workbench-smoke.mjs",
+      "sha256": "c69d0307ed78bfb6809f986004097e4b86a2e860a00f3f722a39f0a59d03d9e1"
+    }
+  ],
+  "modifiedFiles": [
+    ".gitattributes",
+    ".gitignore",
+    "README.md",
+    "apps/api/migrations/012_document_revisions.sql",
+    "apps/api/migrations/013_evidence_snapshots.sql",
+    "apps/api/migrations/014_agent_recovery.sql",
+    "apps/api/migrations/015_agent_request_identity.sql",
+    "apps/api/migrations/016_plan_review.sql",
+    "apps/api/migrations/017_task_test_evidence.sql",
+    "apps/api/migrations/018_code_review_drafts.sql",
+    "apps/api/migrations/019_code_review_context.sql",
+    "apps/api/src/agent/concurrency.test.ts",
+    "apps/api/src/agent/lifecycle.test.ts",
+    "apps/api/src/agent/lifecycle.ts",
+    "apps/api/src/agent/routes.test.ts",
+    "apps/api/src/agent/routes.ts",
+    "apps/api/src/ai/abortable.ts",
+    "apps/api/src/ai/cancellation.test.ts",
+    "apps/api/src/ai/model.ts",
+    "apps/api/src/ai/usage.test.ts",
+    "apps/api/src/app.ts",
+    "apps/api/src/database.test.ts",
+    "apps/api/src/database.ts",
+    "apps/api/src/documents/evidence.ts",
+    "apps/api/src/documents/listing.test.ts",
+    "apps/api/src/documents/listing.ts",
+    "apps/api/src/documents/revisions.test.ts",
+    "apps/api/src/documents/routes.test.ts",
+    "apps/api/src/documents/routes.ts",
+    "apps/api/src/documents/store.ts",
+    "apps/api/src/growth/routes.test.ts",
+    "apps/api/src/growth/routes.ts",
+    "apps/api/src/practice/context.test.ts",
+    "apps/api/src/practice/drafts.test.ts",
+    "apps/api/src/practice/history.test.ts",
+    "apps/api/src/practice/listing.test.ts",
+    "apps/api/src/practice/listing.ts",
+    "apps/api/src/practice/review-context.ts",
+    "apps/api/src/practice/routes.ts",
+    "apps/api/src/project-routes.ts",
+    "apps/api/src/project-store.ts",
+    "apps/api/src/projects.test.ts",
+    "apps/api/src/rag/activity.ts",
+    "apps/api/src/rag/index-compatibility.test.ts",
+    "apps/api/src/rag/index-compatibility.ts",
+    "apps/api/src/rag/listing.test.ts",
+    "apps/api/src/rag/listing.ts",
+    "apps/api/src/rag/pdf.test.ts",
+    "apps/api/src/rag/pdf.ts",
+    "apps/api/src/rag/routes.test.ts",
+    "apps/api/src/rag/routes.ts",
+    "apps/api/src/rag/service.ts",
+    "apps/api/src/rag/upload-boundary.test.ts",
+    "apps/api/src/requirement-preconditions.test.ts",
+    "apps/api/src/server.ts",
+    "apps/api/src/trace/routes.ts",
+    "apps/api/src/trace/task-test.test.ts",
+    "apps/api/src/trace/task-test.ts",
+    "apps/web/src/App.tsx",
+    "apps/web/src/Modules.tsx",
+    "apps/web/src/Practice.tsx",
+    "apps/web/src/components/CodeReviewWorkspace.tsx",
+    "apps/web/src/components/ContentView.tsx",
+    "apps/web/src/components/DocumentRevisionHistory.tsx",
+    "apps/web/src/components/DocumentWorkspace.tsx",
+    "apps/web/src/components/EditGuard.tsx",
+    "apps/web/src/components/EmbeddingActivity.tsx",
+    "apps/web/src/components/FileDropZone.tsx",
+    "apps/web/src/components/GrowthWorkspace.tsx",
+    "apps/web/src/components/KnowledgeDocumentList.tsx",
+    "apps/web/src/components/MarkdownRenderer.tsx",
+    "apps/web/src/components/ProjectCreateForm.tsx",
+    "apps/web/src/components/ProjectPulse.tsx",
+    "apps/web/src/components/RequirementHistory.tsx",
+    "apps/web/src/components/RequirementTrace.tsx",
+    "apps/web/src/components/ReviewSources.tsx",
+    "apps/web/src/components/TaskTestEvidence.tsx",
+    "apps/web/src/components/WorkspaceChrome.tsx",
+    "apps/web/src/components/code-review-workspace.css",
+    "apps/web/src/components/content-fallback.css",
+    "apps/web/src/components/document-workspace.css",
+    "apps/web/src/components/evidence-state.ts",
+    "apps/web/src/components/evidence-views.css",
+    "apps/web/src/components/growth-workspace.css",
+    "apps/web/src/components/project-pulse-model.ts",
+    "apps/web/src/components/requirement-trace.css",
+    "apps/web/src/components/test-case-page.ts",
+    "apps/web/src/components/test-pagination.css",
+    "apps/web/src/components/workspace-chrome.css",
+    "apps/web/src/cosmic.css",
+    "apps/web/src/pages/Delivery.tsx",
+    "apps/web/src/pages/workbench-data.ts",
+    "apps/web/src/pages/workbench.css",
+    "apps/web/src/styles.css",
+    "docs/ACCESSIBILITY-V3.md",
+    "docs/CONTEST-ACCEPTANCE-2026-11.md",
+    "docs/CONTINUATION-2026-11-01.md",
+    "docs/DEFENSE-DECK-V3.md",
+    "docs/DEFENSE-SPEAKER-NOTES-V3.md",
+    "docs/DEMO-WALKTHROUGH.md",
+    "docs/FINAL-REVIEW-V3-2026-11-01.md",
+    "docs/PERFORMANCE-V3.md",
+    "docs/REFERENCE-REVIEW-V3.md",
+    "docs/RETRIEVAL-STUDY-V3.md",
+    "docs/SOURCE-PACKAGE.md",
+    "docs/STARTUP-AND-VERIFICATION.md",
+    "docs/TECHNICAL-MATERIAL.md",
+    "docs/TRACEABILITY-AND-RECOVERY.md",
+    "docs/demo-v3/README.md",
+    "docs/demo-v3/storyboard.json",
+    "docs/screenshots/review-v3/documents-desktop.png",
+    "docs/screenshots/review-v3/growth-current-desktop.png",
+    "docs/screenshots/review-v3/review-source-desktop.png",
+    "docs/screenshots/review-v3/task-test-chain-desktop.png",
+    "docs/screenshots/review-v3/workspace-desktop.png",
+    "docs/verification/review-v3.json",
+    "evaluation/README.md",
+    "evaluation/historical-records.mjs",
+    "evaluation/historical-source.mjs",
+    "evaluation/record-template.json",
+    "evaluation/report.mjs",
+    "evaluation/retrieval-query-study.v1.json",
+    "evaluation/retrieval.mjs",
+    "evaluation/retrieval.v1.json",
+    "evaluation/source-provenance.mjs",
+    "output/pdf/gongxu-zhiban-technical-v3.pdf",
+    "output/pdf/technical-pdf-manifest.json",
+    "output/presentations/defense-manifest.json",
+    "output/presentations/gongxu-zhiban-defense-v3-2026-10-31T23-18-53-038Z.pptx",
+    "output/presentations/gongxu-zhiban-defense-v3-2026-10-31T23-23-01-611Z.pptx",
+    "output/presentations/gongxu-zhiban-defense-v3-2026-11-01T00-01-19-078Z.pptx",
+    "output/presentations/gongxu-zhiban-defense-v3-2026-11-01T00-03-26-916Z.pptx",
+    "output/presentations/gongxu-zhiban-defense-v3-2026-11-01T01-18-43-763Z.pptx",
+    "output/video/gongxu-zhiban-demo-v3-draft-20261101-031806.json",
+    "output/video/gongxu-zhiban-demo-v3-draft-20261101-031806.srt",
+    "output/video/gongxu-zhiban-demo-v3-draft-20261101-052933.json",
+    "output/video/gongxu-zhiban-demo-v3-draft-20261101-052933.srt",
+    "output/video/gongxu-zhiban-demo-v3-draft-20261101-073052.json",
+    "output/video/gongxu-zhiban-demo-v3-draft-20261101-073052.srt",
+    "output/video/gongxu-zhiban-demo-v3-draft.json",
+    "output/video/gongxu-zhiban-demo-v3-draft.srt",
+    "package.json",
+    "pnpm-lock.yaml",
+    "scripts/agent-recovery-local.mjs",
+    "scripts/assemble-demo-draft.py",
+    "scripts/document-context-local.mjs",
+    "scripts/document-list-local.mjs",
+    "scripts/embedding-mixed-local.mjs",
+    "scripts/evaluate-prepare.mjs",
+    "scripts/evaluate-report.mjs",
+    "scripts/evaluate-retrieval-local.mjs",
+    "scripts/evaluation-report.test.mjs",
+    "scripts/evidence-state.test.mjs",
+    "scripts/export-review.py",
+    "scripts/export-review.test.py",
+    "scripts/fresh-database-local.mjs",
+    "scripts/growth-scope-local.mjs",
+    "scripts/historical-source.test.mjs",
+    "scripts/index-compatibility-local.mjs",
+    "scripts/knowledge-answer-local.mjs",
+    "scripts/knowledge-list-local.mjs",
+    "scripts/live-smoke.mjs",
+    "scripts/local-desktop-check.mjs",
+    "scripts/measure-web-entry.mjs",
+    "scripts/narrate-demo-local.ps1",
+    "scripts/prepare-historical-prompts.mjs",
+    "scripts/project-controls-smoke.mjs",
+    "scripts/record-demo-draft.mjs",
+    "scripts/reliability-browser.mjs",
+    "scripts/reliability-local.mjs",
+    "scripts/render-defense-deck.mjs",
+    "scripts/render-technical-report.py",
+    "scripts/requirement-preconditions-local.mjs",
+    "scripts/retrieval-evaluation.test.mjs",
+    "scripts/review-context-local.mjs",
+    "scripts/source-provenance.test.mjs",
+    "scripts/test-list-local.mjs",
+    "scripts/trace-concurrency-local.mjs",
+    "scripts/ui-models.test.mjs",
+    "scripts/ui-smoke.mjs",
+    "scripts/verify-demo-draft.py",
+    "scripts/verify-technical-pdf.py",
+    "scripts/workbench-smoke.mjs"
+  ],
+  "commits": [
+    "c6e5dc5869e1cb9642dbd730184676ac36e4ec3e",
+    "e1ae8194ea29200039027a916e162b63f8d3091f",
+    "383b25b3a2967325c7f309d098e8051d6960224c",
+    "c0ce58c812751b39fa181893a0c82a001a00128f",
+    "d07be5bfc30673342e7e033deaf03185ac1ebd96",
+    "02035495c8d7d7c2d0a7e2778c9761a73d5d8607",
+    "0dca8873c186ba12c3940efcd9f9e230d05781c5",
+    "fee41de76b623fbf3f063981a5aa842ebce0501b",
+    "fd4aa610d03e22f2a80086ae94e8bfe07d027c81",
+    "620476e18bbeb3d9a1ed4ab29c65215ff376f8bb",
+    "2677378e902799957678d0214f5467376b03c194",
+    "d6ab0734a703dbce299ec519f6a34753b2abd2ff",
+    "c965e4158981aa20369c9b77217ccb3731851f8e",
+    "e5abf19eeeefb22374b176034f631a67583c0859",
+    "18d9698f3a744336e574cb8d5c37327bddceece3",
+    "da59287128acb4063efbe3abfe2dc4ae6dae3e77",
+    "d53f55f4db7ce27c83014159b4931f0b08c85843",
+    "d749a2f8d6d791895d8be7e14d46ed7c0e75b55b",
+    "0227e58908dfe96d85dcf5b6320be20f7be562da",
+    "33597d89728983a071ca23c836b7c689e5f1e9ae",
+    "c45e3ca2d2522f1b08e7c52140d7e3dbc5ddfcee",
+    "39ba99a94b8fc15f5be2d32532351c0b16f69585",
+    "deefa45ea0a5bd3b05915f8b48a79c1031da78b7",
+    "8d93fba01f777354fe61258d38e93088be3dc23e",
+    "be50f22029c594044a0f5cae6fb2286871d7ae64",
+    "8f0a9a35110e3fbd92b6438f70b06db467dd05f9",
+    "1fb1d728a2b165f9d3b2f728855f6dfccb1f4ac4",
+    "7456a136277e90ca3aba97284c88d8448ee21407",
+    "9ddce5b1fcc2884261fe5eaa1894de30e14dfdf9",
+    "e48080db594b95f31ffdc926ab977d7546c562e3",
+    "09d4deb464c04fd43104102133aee51cac379fab",
+    "08d1f81b5007efcd68ceb09f985f5e24240cd734",
+    "1b97d3f486ec96d040ad7caa66ed156ce390f046",
+    "67f685612a20b061695ece415bdc7752f781f17f",
+    "147ad178e02122c3aa04a5572245d879e2ef28a3",
+    "5b820a0db1c64c06a17e63f631e13fa8ad1afb22",
+    "6c1abe29964c1a90e8940ceb96725937129ac50a",
+    "6e8885eb1f47d15dbc916aab865f453776be7fce",
+    "f3f2c80034883e62a49f30c3cac60a76e3cde0c5",
+    "58c50acbfccf00dc15187105c4fdba8dbb98d3d1",
+    "d70a5d2294430d2377a575ae6b27c3dec92e905a",
+    "b59f37a20f652f45dd72cd892b067e873b27ce60",
+    "0a3833daf99e8ac007a91e9ba122690aef7a6e29",
+    "4696b5ce2c6576698db1758180b2d244f106d035",
+    "87470bdc709db15e0883226683c0aa528808998c",
+    "806146b2ebed9cef994c23d85b834963b9b44bfd"
+  ],
+  "paidChatCalls": 0,
+  "externalUploads": 0,
+  "realBusinessDataPackaged": false,
+  "logs": [
+    {
+      "id": "unit",
+      "file": ".runtime/final-unit.log",
+      "sha256": "1a66f429fde09644ec4a8b014b725f7346b901d10fbaa93d3d607566c8b29384",
+      "command": "pnpm test",
+      "status": "passed",
+      "results": {
+        "api": 119,
+        "embedding": 4,
+        "envTemplates": 2
+      }
+    },
+    {
+      "id": "offline_rules",
+      "file": ".runtime/final-rules.log",
+      "sha256": "152ce5011ba52d6079a439eebfcd12e1c03fe984989624cf12963c890eece042",
+      "command": "node --test scripts/ui-models.test.mjs scripts/workbench-models.test.mjs scripts/evidence-state.test.mjs scripts/evaluation-report.test.mjs scripts/retrieval-evaluation.test.mjs scripts/review-package.test.mjs scripts/source-provenance.test.mjs scripts/historical-source.test.mjs",
+      "status": "passed",
+      "results": {
+        "passed": 58
+      }
+    },
+    {
+      "id": "export_tools",
+      "file": ".runtime/final-export-tools.log",
+      "sha256": "31e100037a628230088b672aada292342b10505c28448cfdb5475b9d1fbf06ce",
+      "command": "python scripts/export-review.test.py",
+      "status": "passed",
+      "results": {
+        "passed": 6
+      }
+    },
+    {
+      "id": "types",
+      "file": ".runtime/final-typecheck.log",
+      "sha256": "8e0ba02f845bdd4b3e2022ccb6f6e6812e86bdbc1d9be0b9de228ce7b9e1ee91",
+      "command": "pnpm typecheck",
+      "status": "passed",
+      "results": {
+        "workspaces": 3
+      }
+    },
+    {
+      "id": "build",
+      "file": ".runtime/final-build.log",
+      "sha256": "d0ad05fb9e6609706e666f2e136bdd86023d4873ae222e88520ed070098cf4ea",
+      "command": "pnpm build",
+      "status": "passed",
+      "results": {
+        "webEntryKilobytes": 295.78,
+        "webEntryGzipKilobytes": 93.11
+      }
+    }
+  ],
+  "runs": [
+    {
+      "id": "edge_full",
+      "command": "pnpm verify:reliability-ui",
+      "scope": "controlled_browser_all_apis_fixture",
+      "file": ".runtime/reliability-ui-aea69613-aee0-4a02-b831-afc2b740ed2a/report.json",
+      "sha256": "ebfb40183997ee50d26766138ad028c5615a17c59dc00b496f13be7bf660366d",
+      "reportedScope": "controlled_browser_responses",
+      "startedAt": "2026-11-01T01:09:12.129Z",
+      "finishedAt": "2026-11-01T01:10:53.918Z",
+      "browserEngine": "chromium",
+      "browserVersion": "156.0.4314.50",
+      "counts": {
+        "passed": 77
+      },
+      "checks": [
+        {
+          "name": "keyboard_skip_navigation_preserves_route_and_marks_current_page",
+          "status": "passed"
+        },
+        {
+          "name": "requirement_confirmation_posts_seen_snapshot_once_and_preserves_new_typing",
+          "status": "passed"
+        },
+        {
+          "name": "requirement_confirmation_conflict_refresh_protects_edits_and_failed_save",
+          "status": "passed"
+        },
+        {
+          "name": "markdown_deferred_load_keeps_complete_draft_and_builds_outline",
+          "status": "passed"
+        },
+        {
+          "name": "markdown_failed_chunk_retains_raw_text_and_retries_without_losing_edits",
+          "status": "passed"
+        },
+        {
+          "name": "markdown_late_renderer_never_reintroduces_previous_project_content",
+          "status": "passed"
+        },
+        {
+          "name": "growth_scope_fast_switch_discards_late_history_and_hides_old_statistics",
+          "status": "passed"
+        },
+        {
+          "name": "growth_scope_failure_and_mismatched_response_never_show_successful_statistics",
+          "status": "passed"
+        },
+        {
+          "name": "growth_scope_keyboard_and_desktop_controls_remain_reachable",
+          "status": "passed"
+        },
+        {
+          "name": "code_review_sources_distinguish_supplied_context_history_and_unknown",
+          "status": "passed"
+        },
+        {
+          "name": "code_review_cancellation_keeps_draft_and_ignores_late_advice",
+          "status": "passed"
+        },
+        {
+          "name": "code_draft_save_and_leave_checks_committed_state_under_cpu_throttle",
+          "status": "passed"
+        },
+        {
+          "name": "project_creation_guard_blocks_loss_and_only_leaves_after_success",
+          "status": "passed"
+        },
+        {
+          "name": "project_creation_single_flight_and_new_input_survive_response",
+          "status": "passed"
+        },
+        {
+          "name": "project_creation_close_and_back_navigation_keep_cancelled_input",
+          "status": "passed"
+        },
+        {
+          "name": "project_create_navigation_waits_for_committed_clear_not_a_frame",
+          "status": "passed"
+        },
+        {
+          "name": "session_new_account_cannot_see_previous_project_cache",
+          "status": "passed"
+        },
+        {
+          "name": "session_storage_change_invalidates_old_editor_and_late_response",
+          "status": "passed"
+        },
+        {
+          "name": "session_normal_logout_still_requires_unsaved_choice",
+          "status": "passed"
+        },
+        {
+          "name": "code_workspace_desktop_primary_actions_and_long_input_fit",
+          "status": "passed"
+        },
+        {
+          "name": "code_review_late_reply_preserves_selected_history_and_newer_draft",
+          "status": "passed"
+        },
+        {
+          "name": "code_draft_leave_guard_saves_without_invoking_ai",
+          "status": "passed"
+        },
+        {
+          "name": "code_draft_save_conflict_and_new_input_never_discard_content",
+          "status": "passed"
+        },
+        {
+          "name": "knowledge_upload_leave_guard_save_failure_and_success",
+          "status": "passed"
+        },
+        {
+          "name": "knowledge_upload_single_flight_preserves_new_typing",
+          "status": "passed"
+        },
+        {
+          "name": "knowledge_invalid_file_keeps_draft_and_replacement_is_guarded",
+          "status": "passed"
+        },
+        {
+          "name": "knowledge_file_read_order_and_new_typing_are_protected",
+          "status": "passed"
+        },
+        {
+          "name": "knowledge_saved_document_is_not_resubmitted_when_list_refresh_fails",
+          "status": "passed"
+        },
+        {
+          "name": "trace_confirming_source_preserves_pair_draft_and_unlocks_pairing",
+          "status": "passed"
+        },
+        {
+          "name": "trace_slow_source_refresh_keeps_new_input_and_version_change_blocks_writes",
+          "status": "passed"
+        },
+        {
+          "name": "trace_parallel_review_drafts_survive_either_form_save",
+          "status": "passed"
+        },
+        {
+          "name": "trace_read_failure_marks_old_snapshot_readonly_until_recovery",
+          "status": "passed"
+        },
+        {
+          "name": "test_definition_save_locks_inputs_until_response_and_retains_saved_text",
+          "status": "passed"
+        },
+        {
+          "name": "saving_test_result_preserves_unfinished_task_test_review",
+          "status": "passed"
+        },
+        {
+          "name": "agent_selection_hides_previous_actions_while_new_run_loads",
+          "status": "passed"
+        },
+        {
+          "name": "agent_review_note_cannot_be_discarded_or_implicitly_approved_by_navigation",
+          "status": "passed"
+        },
+        {
+          "name": "late_A_response_cannot_replace_B_or_change_save_target",
+          "status": "passed"
+        },
+        {
+          "name": "requirement_cancel_and_save_failure_preserve_content_and_route",
+          "status": "passed"
+        },
+        {
+          "name": "document_switch_does_not_discard_edit_and_failed_save_does_not_navigate",
+          "status": "passed"
+        },
+        {
+          "name": "document_generation_boundary_preserves_selected_content_and_can_recover",
+          "status": "passed"
+        },
+        {
+          "name": "document_catalogue_pages_preserve_edits_on_cancel_failed_save_and_failed_read",
+          "status": "passed"
+        },
+        {
+          "name": "document_catalogue_rejects_stale_cursor_and_refresh_recovers_without_losing_editor",
+          "status": "passed"
+        },
+        {
+          "name": "document_late_save_cannot_reselect_previous_document",
+          "status": "passed"
+        },
+        {
+          "name": "document_new_typing_during_save_blocks_save_and_leave",
+          "status": "passed"
+        },
+        {
+          "name": "document_refresh_is_ordered_and_loading_prevents_editing",
+          "status": "passed"
+        },
+        {
+          "name": "document_conflict_preserves_draft_and_explicit_merge_uses_latest_revision",
+          "status": "passed"
+        },
+        {
+          "name": "document_history_restore_is_guarded_and_successful_save_allows_navigation",
+          "status": "passed"
+        },
+        {
+          "name": "agent_cancel_keeps_stopped_record_and_never_automatically_restarts",
+          "status": "passed"
+        },
+        {
+          "name": "agent_task_board_defaults_to_current_version_and_history_is_read_only",
+          "status": "passed"
+        },
+        {
+          "name": "agent_stale_task_write_is_disabled_and_refresh_preserves_review_choice",
+          "status": "passed"
+        },
+        {
+          "name": "delivery_rechecks_changed_evidence_without_discarding_manual_notes",
+          "status": "passed"
+        },
+        {
+          "name": "delivery_storage_failure_blocks_navigation_until_saved_or_explicitly_discarded",
+          "status": "passed"
+        },
+        {
+          "name": "test_pages_show_complete_totals_and_reach_the_hidden_failure",
+          "status": "passed"
+        },
+        {
+          "name": "test_page_navigation_guards_cancel_repeated_clicks_and_failed_save",
+          "status": "passed"
+        },
+        {
+          "name": "test_page_stale_cursor_and_refresh_failure_keep_edits_until_recovery",
+          "status": "passed"
+        },
+        {
+          "name": "test_center_defaults_to_latest_confirmed_version_not_old_passes",
+          "status": "passed"
+        },
+        {
+          "name": "A_B_A_uses_request_generation_not_only_matching_project_id",
+          "status": "passed"
+        },
+        {
+          "name": "back_cancel_and_forward_preserve_history_cursor_and_unsaved_content",
+          "status": "passed"
+        },
+        {
+          "name": "switching_during_save_cannot_restore_the_old_editor",
+          "status": "passed"
+        },
+        {
+          "name": "trace_empty_preparation_explains_missing_assets_without_dead_end_forms",
+          "status": "passed"
+        },
+        {
+          "name": "trace_empty_assets_keep_change_review_and_pending_input",
+          "status": "passed"
+        },
+        {
+          "name": "display_radio_hit_area_matches_label_and_keyboard_does_not_jump",
+          "status": "passed"
+        },
+        {
+          "name": "forced_colors_keeps_headings_controls_selection_and_keyboard_visible",
+          "status": "passed"
+        },
+        {
+          "name": "forced_colors_display_choices_and_quick_selection_remain_distinct",
+          "status": "passed"
+        },
+        {
+          "name": "workspace_motion_is_opt_in_and_reduced_motion_disables_playback",
+          "status": "passed"
+        },
+        {
+          "name": "restoring_history_requires_a_choice_and_cancel_does_not_claim_success",
+          "status": "passed"
+        },
+        {
+          "name": "failed_project_load_recovers_without_editing_the_wrong_project",
+          "status": "passed"
+        },
+        {
+          "name": "old_unauthorized_response_cannot_clear_a_newer_session",
+          "status": "passed"
+        },
+        {
+          "name": "repeated_save_is_single_write_and_keyboard_cancel_restores_focus",
+          "status": "passed"
+        },
+        {
+          "name": "late_agent_run_detail_does_not_replace_the_new_selection",
+          "status": "passed"
+        },
+        {
+          "name": "knowledge_cancel_ignores_late_result_and_allows_retry",
+          "status": "passed"
+        },
+        {
+          "name": "knowledge_answer_cancel_and_retry_keep_response_question_identity",
+          "status": "passed"
+        },
+        {
+          "name": "knowledge_catalogue_paging_failure_and_reindex_keep_upload_and_question_drafts",
+          "status": "passed"
+        },
+        {
+          "name": "knowledge_catalogue_membership_change_requires_refresh_and_retains_original_list",
+          "status": "passed"
+        },
+        {
+          "name": "knowledge_index_origin_is_explicit_and_rebuild_is_manual_and_recoverable",
+          "status": "passed"
+        },
+        {
+          "name": "knowledge_upload_limits_show_specific_causes_and_keep_the_entire_draft",
+          "status": "passed"
+        },
+        {
+          "name": "knowledge_search_result_keeps_original_question_when_input_changes",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "id": "firefox_full_before_U7",
+      "command": "node scripts/reliability-browser.mjs --engine=firefox",
+      "scope": "controlled_browser_all_apis_fixture_before_final_history_label_change",
+      "file": ".runtime/reliability-ui-172096f8-1e8e-4797-beed-2c3f854a1496/report.json",
+      "sha256": "3f4abf4d38c3d97fca2c7e4edd621c1c1e36a00385f18245009e4de31b0892d3",
+      "reportedScope": "controlled_browser_responses",
+      "startedAt": "2026-11-01T00:58:59.498Z",
+      "finishedAt": "2026-11-01T01:01:04.126Z",
+      "browserEngine": "firefox",
+      "browserVersion": "157.0",
+      "counts": {
+        "passed": 76,
+        "not_run": 1
+      },
+      "checks": [
+        {
+          "name": "keyboard_skip_navigation_preserves_route_and_marks_current_page",
+          "status": "passed"
+        },
+        {
+          "name": "requirement_confirmation_posts_seen_snapshot_once_and_preserves_new_typing",
+          "status": "passed"
+        },
+        {
+          "name": "requirement_confirmation_conflict_refresh_protects_edits_and_failed_save",
+          "status": "passed"
+        },
+        {
+          "name": "markdown_deferred_load_keeps_complete_draft_and_builds_outline",
+          "status": "passed"
+        },
+        {
+          "name": "markdown_failed_chunk_retains_raw_text_and_retries_without_losing_edits",
+          "status": "passed"
+        },
+        {
+          "name": "markdown_late_renderer_never_reintroduces_previous_project_content",
+          "status": "passed"
+        },
+        {
+          "name": "growth_scope_fast_switch_discards_late_history_and_hides_old_statistics",
+          "status": "passed"
+        },
+        {
+          "name": "growth_scope_failure_and_mismatched_response_never_show_successful_statistics",
+          "status": "passed"
+        },
+        {
+          "name": "growth_scope_keyboard_and_desktop_controls_remain_reachable",
+          "status": "passed"
+        },
+        {
+          "name": "code_review_sources_distinguish_supplied_context_history_and_unknown",
+          "status": "passed"
+        },
+        {
+          "name": "code_review_cancellation_keeps_draft_and_ignores_late_advice",
+          "status": "passed"
+        },
+        {
+          "name": "code_draft_save_and_leave_checks_committed_state_under_cpu_throttle",
+          "status": "not_run",
+          "reason": "This case requires Chromium CDP CPU emulation; not supported by this engine."
+        },
+        {
+          "name": "project_creation_guard_blocks_loss_and_only_leaves_after_success",
+          "status": "passed"
+        },
+        {
+          "name": "project_creation_single_flight_and_new_input_survive_response",
+          "status": "passed"
+        },
+        {
+          "name": "project_creation_close_and_back_navigation_keep_cancelled_input",
+          "status": "passed"
+        },
+        {
+          "name": "project_create_navigation_waits_for_committed_clear_not_a_frame",
+          "status": "passed"
+        },
+        {
+          "name": "session_new_account_cannot_see_previous_project_cache",
+          "status": "passed"
+        },
+        {
+          "name": "session_storage_change_invalidates_old_editor_and_late_response",
+          "status": "passed"
+        },
+        {
+          "name": "session_normal_logout_still_requires_unsaved_choice",
+          "status": "passed"
+        },
+        {
+          "name": "code_workspace_desktop_primary_actions_and_long_input_fit",
+          "status": "passed"
+        },
+        {
+          "name": "code_review_late_reply_preserves_selected_history_and_newer_draft",
+          "status": "passed"
+        },
+        {
+          "name": "code_draft_leave_guard_saves_without_invoking_ai",
+          "status": "passed"
+        },
+        {
+          "name": "code_draft_save_conflict_and_new_input_never_discard_content",
+          "status": "passed"
+        },
+        {
+          "name": "knowledge_upload_leave_guard_save_failure_and_success",
+          "status": "passed"
+        },
+        {
+          "name": "knowledge_upload_single_flight_preserves_new_typing",
+          "status": "passed"
+        },
+        {
+          "name": "knowledge_invalid_file_keeps_draft_and_replacement_is_guarded",
+          "status": "passed"
+        },
+        {
+          "name": "knowledge_file_read_order_and_new_typing_are_protected",
+          "status": "passed"
+        },
+        {
+          "name": "knowledge_saved_document_is_not_resubmitted_when_list_refresh_fails",
+          "status": "passed"
+        },
+        {
+          "name": "trace_confirming_source_preserves_pair_draft_and_unlocks_pairing",
+          "status": "passed"
+        },
+        {
+          "name": "trace_slow_source_refresh_keeps_new_input_and_version_change_blocks_writes",
+          "status": "passed"
+        },
+        {
+          "name": "trace_parallel_review_drafts_survive_either_form_save",
+          "status": "passed"
+        },
+        {
+          "name": "trace_read_failure_marks_old_snapshot_readonly_until_recovery",
+          "status": "passed"
+        },
+        {
+          "name": "test_definition_save_locks_inputs_until_response_and_retains_saved_text",
+          "status": "passed"
+        },
+        {
+          "name": "saving_test_result_preserves_unfinished_task_test_review",
+          "status": "passed"
+        },
+        {
+          "name": "agent_selection_hides_previous_actions_while_new_run_loads",
+          "status": "passed"
+        },
+        {
+          "name": "agent_review_note_cannot_be_discarded_or_implicitly_approved_by_navigation",
+          "status": "passed"
+        },
+        {
+          "name": "late_A_response_cannot_replace_B_or_change_save_target",
+          "status": "passed"
+        },
+        {
+          "name": "requirement_cancel_and_save_failure_preserve_content_and_route",
+          "status": "passed"
+        },
+        {
+          "name": "document_switch_does_not_discard_edit_and_failed_save_does_not_navigate",
+          "status": "passed"
+        },
+        {
+          "name": "document_generation_boundary_preserves_selected_content_and_can_recover",
+          "status": "passed"
+        },
+        {
+          "name": "document_catalogue_pages_preserve_edits_on_cancel_failed_save_and_failed_read",
+          "status": "passed"
+        },
+        {
+          "name": "document_catalogue_rejects_stale_cursor_and_refresh_recovers_without_losing_editor",
+          "status": "passed"
+        },
+        {
+          "name": "document_late_save_cannot_reselect_previous_document",
+          "status": "passed"
+        },
+        {
+          "name": "document_new_typing_during_save_blocks_save_and_leave",
+          "status": "passed"
+        },
+        {
+          "name": "document_refresh_is_ordered_and_loading_prevents_editing",
+          "status": "passed"
+        },
+        {
+          "name": "document_conflict_preserves_draft_and_explicit_merge_uses_latest_revision",
+          "status": "passed"
+        },
+        {
+          "name": "document_history_restore_is_guarded_and_successful_save_allows_navigation",
+          "status": "passed"
+        },
+        {
+          "name": "agent_cancel_keeps_stopped_record_and_never_automatically_restarts",
+          "status": "passed"
+        },
+        {
+          "name": "agent_task_board_defaults_to_current_version_and_history_is_read_only",
+          "status": "passed"
+        },
+        {
+          "name": "agent_stale_task_write_is_disabled_and_refresh_preserves_review_choice",
+          "status": "passed"
+        },
+        {
+          "name": "delivery_rechecks_changed_evidence_without_discarding_manual_notes",
+          "status": "passed"
+        },
+        {
+          "name": "delivery_storage_failure_blocks_navigation_until_saved_or_explicitly_discarded",
+          "status": "passed"
+        },
+        {
+          "name": "test_pages_show_complete_totals_and_reach_the_hidden_failure",
+          "status": "passed"
+        },
+        {
+          "name": "test_page_navigation_guards_cancel_repeated_clicks_and_failed_save",
+          "status": "passed"
+        },
+        {
+          "name": "test_page_stale_cursor_and_refresh_failure_keep_edits_until_recovery",
+          "status": "passed"
+        },
+        {
+          "name": "test_center_defaults_to_latest_confirmed_version_not_old_passes",
+          "status": "passed"
+        },
+        {
+          "name": "A_B_A_uses_request_generation_not_only_matching_project_id",
+          "status": "passed"
+        },
+        {
+          "name": "back_cancel_and_forward_preserve_history_cursor_and_unsaved_content",
+          "status": "passed"
+        },
+        {
+          "name": "switching_during_save_cannot_restore_the_old_editor",
+          "status": "passed"
+        },
+        {
+          "name": "trace_empty_preparation_explains_missing_assets_without_dead_end_forms",
+          "status": "passed"
+        },
+        {
+          "name": "trace_empty_assets_keep_change_review_and_pending_input",
+          "status": "passed"
+        },
+        {
+          "name": "display_radio_hit_area_matches_label_and_keyboard_does_not_jump",
+          "status": "passed"
+        },
+        {
+          "name": "forced_colors_keeps_headings_controls_selection_and_keyboard_visible",
+          "status": "passed"
+        },
+        {
+          "name": "forced_colors_display_choices_and_quick_selection_remain_distinct",
+          "status": "passed"
+        },
+        {
+          "name": "workspace_motion_is_opt_in_and_reduced_motion_disables_playback",
+          "status": "passed"
+        },
+        {
+          "name": "restoring_history_requires_a_choice_and_cancel_does_not_claim_success",
+          "status": "passed"
+        },
+        {
+          "name": "failed_project_load_recovers_without_editing_the_wrong_project",
+          "status": "passed"
+        },
+        {
+          "name": "old_unauthorized_response_cannot_clear_a_newer_session",
+          "status": "passed"
+        },
+        {
+          "name": "repeated_save_is_single_write_and_keyboard_cancel_restores_focus",
+          "status": "passed"
+        },
+        {
+          "name": "late_agent_run_detail_does_not_replace_the_new_selection",
+          "status": "passed"
+        },
+        {
+          "name": "knowledge_cancel_ignores_late_result_and_allows_retry",
+          "status": "passed"
+        },
+        {
+          "name": "knowledge_answer_cancel_and_retry_keep_response_question_identity",
+          "status": "passed"
+        },
+        {
+          "name": "knowledge_catalogue_paging_failure_and_reindex_keep_upload_and_question_drafts",
+          "status": "passed"
+        },
+        {
+          "name": "knowledge_catalogue_membership_change_requires_refresh_and_retains_original_list",
+          "status": "passed"
+        },
+        {
+          "name": "knowledge_index_origin_is_explicit_and_rebuild_is_manual_and_recoverable",
+          "status": "passed"
+        },
+        {
+          "name": "knowledge_upload_limits_show_specific_causes_and_keep_the_entire_draft",
+          "status": "passed"
+        },
+        {
+          "name": "knowledge_search_result_keeps_original_question_when_input_changes",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "id": "webkit_full_before_U7",
+      "command": "node scripts/reliability-browser.mjs --engine=webkit",
+      "scope": "controlled_browser_all_apis_fixture_before_final_history_label_change",
+      "file": ".runtime/reliability-ui-62f85adb-06d7-4c6b-9232-7e8331e1e5d2/report.json",
+      "sha256": "ab12bfb05a32f0fc67566a9ca9d1dd52e31af4b6dec0778bd69e628d869485b1",
+      "reportedScope": "controlled_browser_responses",
+      "startedAt": "2026-11-01T00:58:42.213Z",
+      "finishedAt": "2026-11-01T01:01:08.590Z",
+      "browserEngine": "webkit",
+      "browserVersion": "27.2",
+      "counts": {
+        "passed": 75,
+        "not_run": 2
+      },
+      "checks": [
+        {
+          "name": "keyboard_skip_navigation_preserves_route_and_marks_current_page",
+          "status": "passed"
+        },
+        {
+          "name": "requirement_confirmation_posts_seen_snapshot_once_and_preserves_new_typing",
+          "status": "passed"
+        },
+        {
+          "name": "requirement_confirmation_conflict_refresh_protects_edits_and_failed_save",
+          "status": "passed"
+        },
+        {
+          "name": "markdown_deferred_load_keeps_complete_draft_and_builds_outline",
+          "status": "passed"
+        },
+        {
+          "name": "markdown_failed_chunk_retains_raw_text_and_retries_without_losing_edits",
+          "status": "passed"
+        },
+        {
+          "name": "markdown_late_renderer_never_reintroduces_previous_project_content",
+          "status": "passed"
+        },
+        {
+          "name": "growth_scope_fast_switch_discards_late_history_and_hides_old_statistics",
+          "status": "passed"
+        },
+        {
+          "name": "growth_scope_failure_and_mismatched_response_never_show_successful_statistics",
+          "status": "passed"
+        },
+        {
+          "name": "growth_scope_keyboard_and_desktop_controls_remain_reachable",
+          "status": "passed"
+        },
+        {
+          "name": "code_review_sources_distinguish_supplied_context_history_and_unknown",
+          "status": "passed"
+        },
+        {
+          "name": "code_review_cancellation_keeps_draft_and_ignores_late_advice",
+          "status": "passed"
+        },
+        {
+          "name": "code_draft_save_and_leave_checks_committed_state_under_cpu_throttle",
+          "status": "not_run",
+          "reason": "This case requires Chromium CDP CPU emulation; not supported by this engine."
+        },
+        {
+          "name": "project_creation_guard_blocks_loss_and_only_leaves_after_success",
+          "status": "passed"
+        },
+        {
+          "name": "project_creation_single_flight_and_new_input_survive_response",
+          "status": "passed"
+        },
+        {
+          "name": "project_creation_close_and_back_navigation_keep_cancelled_input",
+          "status": "passed"
+        },
+        {
+          "name": "project_create_navigation_waits_for_committed_clear_not_a_frame",
+          "status": "passed"
+        },
+        {
+          "name": "session_new_account_cannot_see_previous_project_cache",
+          "status": "passed"
+        },
+        {
+          "name": "session_storage_change_invalidates_old_editor_and_late_response",
+          "status": "passed"
+        },
+        {
+          "name": "session_normal_logout_still_requires_unsaved_choice",
+          "status": "passed"
+        },
+        {
+          "name": "code_workspace_desktop_primary_actions_and_long_input_fit",
+          "status": "passed"
+        },
+        {
+          "name": "code_review_late_reply_preserves_selected_history_and_newer_draft",
+          "status": "passed"
+        },
+        {
+          "name": "code_draft_leave_guard_saves_without_invoking_ai",
+          "status": "passed"
+        },
+        {
+          "name": "code_draft_save_conflict_and_new_input_never_discard_content",
+          "status": "passed"
+        },
+        {
+          "name": "knowledge_upload_leave_guard_save_failure_and_success",
+          "status": "passed"
+        },
+        {
+          "name": "knowledge_upload_single_flight_preserves_new_typing",
+          "status": "passed"
+        },
+        {
+          "name": "knowledge_invalid_file_keeps_draft_and_replacement_is_guarded",
+          "status": "passed"
+        },
+        {
+          "name": "knowledge_file_read_order_and_new_typing_are_protected",
+          "status": "passed"
+        },
+        {
+          "name": "knowledge_saved_document_is_not_resubmitted_when_list_refresh_fails",
+          "status": "passed"
+        },
+        {
+          "name": "trace_confirming_source_preserves_pair_draft_and_unlocks_pairing",
+          "status": "passed"
+        },
+        {
+          "name": "trace_slow_source_refresh_keeps_new_input_and_version_change_blocks_writes",
+          "status": "passed"
+        },
+        {
+          "name": "trace_parallel_review_drafts_survive_either_form_save",
+          "status": "passed"
+        },
+        {
+          "name": "trace_read_failure_marks_old_snapshot_readonly_until_recovery",
+          "status": "passed"
+        },
+        {
+          "name": "test_definition_save_locks_inputs_until_response_and_retains_saved_text",
+          "status": "passed"
+        },
+        {
+          "name": "saving_test_result_preserves_unfinished_task_test_review",
+          "status": "passed"
+        },
+        {
+          "name": "agent_selection_hides_previous_actions_while_new_run_loads",
+          "status": "passed"
+        },
+        {
+          "name": "agent_review_note_cannot_be_discarded_or_implicitly_approved_by_navigation",
+          "status": "passed"
+        },
+        {
+          "name": "late_A_response_cannot_replace_B_or_change_save_target",
+          "status": "passed"
+        },
+        {
+          "name": "requirement_cancel_and_save_failure_preserve_content_and_route",
+          "status": "passed"
+        },
+        {
+          "name": "document_switch_does_not_discard_edit_and_failed_save_does_not_navigate",
+          "status": "passed"
+        },
+        {
+          "name": "document_generation_boundary_preserves_selected_content_and_can_recover",
+          "status": "passed"
+        },
+        {
+          "name": "document_catalogue_pages_preserve_edits_on_cancel_failed_save_and_failed_read",
+          "status": "passed"
+        },
+        {
+          "name": "document_catalogue_rejects_stale_cursor_and_refresh_recovers_without_losing_editor",
+          "status": "passed"
+        },
+        {
+          "name": "document_late_save_cannot_reselect_previous_document",
+          "status": "passed"
+        },
+        {
+          "name": "document_new_typing_during_save_blocks_save_and_leave",
+          "status": "passed"
+        },
+        {
+          "name": "document_refresh_is_ordered_and_loading_prevents_editing",
+          "status": "passed"
+        },
+        {
+          "name": "document_conflict_preserves_draft_and_explicit_merge_uses_latest_revision",
+          "status": "passed"
+        },
+        {
+          "name": "document_history_restore_is_guarded_and_successful_save_allows_navigation",
+          "status": "passed"
+        },
+        {
+          "name": "agent_cancel_keeps_stopped_record_and_never_automatically_restarts",
+          "status": "passed"
+        },
+        {
+          "name": "agent_task_board_defaults_to_current_version_and_history_is_read_only",
+          "status": "passed"
+        },
+        {
+          "name": "agent_stale_task_write_is_disabled_and_refresh_preserves_review_choice",
+          "status": "passed"
+        },
+        {
+          "name": "delivery_rechecks_changed_evidence_without_discarding_manual_notes",
+          "status": "passed"
+        },
+        {
+          "name": "delivery_storage_failure_blocks_navigation_until_saved_or_explicitly_discarded",
+          "status": "passed"
+        },
+        {
+          "name": "test_pages_show_complete_totals_and_reach_the_hidden_failure",
+          "status": "passed"
+        },
+        {
+          "name": "test_page_navigation_guards_cancel_repeated_clicks_and_failed_save",
+          "status": "passed"
+        },
+        {
+          "name": "test_page_stale_cursor_and_refresh_failure_keep_edits_until_recovery",
+          "status": "passed"
+        },
+        {
+          "name": "test_center_defaults_to_latest_confirmed_version_not_old_passes",
+          "status": "passed"
+        },
+        {
+          "name": "A_B_A_uses_request_generation_not_only_matching_project_id",
+          "status": "passed"
+        },
+        {
+          "name": "back_cancel_and_forward_preserve_history_cursor_and_unsaved_content",
+          "status": "passed"
+        },
+        {
+          "name": "switching_during_save_cannot_restore_the_old_editor",
+          "status": "passed"
+        },
+        {
+          "name": "trace_empty_preparation_explains_missing_assets_without_dead_end_forms",
+          "status": "passed"
+        },
+        {
+          "name": "trace_empty_assets_keep_change_review_and_pending_input",
+          "status": "passed"
+        },
+        {
+          "name": "display_radio_hit_area_matches_label_and_keyboard_does_not_jump",
+          "status": "passed"
+        },
+        {
+          "name": "forced_colors_keeps_headings_controls_selection_and_keyboard_visible",
+          "status": "not_run",
+          "reason": "Forced palette rendering was not reproduced in this engine; media-query selection rules are checked separately."
+        },
+        {
+          "name": "forced_colors_display_choices_and_quick_selection_remain_distinct",
+          "status": "passed"
+        },
+        {
+          "name": "workspace_motion_is_opt_in_and_reduced_motion_disables_playback",
+          "status": "passed"
+        },
+        {
+          "name": "restoring_history_requires_a_choice_and_cancel_does_not_claim_success",
+          "status": "passed"
+        },
+        {
+          "name": "failed_project_load_recovers_without_editing_the_wrong_project",
+          "status": "passed"
+        },
+        {
+          "name": "old_unauthorized_response_cannot_clear_a_newer_session",
+          "status": "passed"
+        },
+        {
+          "name": "repeated_save_is_single_write_and_keyboard_cancel_restores_focus",
+          "status": "passed"
+        },
+        {
+          "name": "late_agent_run_detail_does_not_replace_the_new_selection",
+          "status": "passed"
+        },
+        {
+          "name": "knowledge_cancel_ignores_late_result_and_allows_retry",
+          "status": "passed"
+        },
+        {
+          "name": "knowledge_answer_cancel_and_retry_keep_response_question_identity",
+          "status": "passed"
+        },
+        {
+          "name": "knowledge_catalogue_paging_failure_and_reindex_keep_upload_and_question_drafts",
+          "status": "passed"
+        },
+        {
+          "name": "knowledge_catalogue_membership_change_requires_refresh_and_retains_original_list",
+          "status": "passed"
+        },
+        {
+          "name": "knowledge_index_origin_is_explicit_and_rebuild_is_manual_and_recoverable",
+          "status": "passed"
+        },
+        {
+          "name": "knowledge_upload_limits_show_specific_causes_and_keep_the_entire_draft",
+          "status": "passed"
+        },
+        {
+          "name": "knowledge_search_result_keeps_original_question_when_input_changes",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "id": "firefox_final_history",
+      "command": "node scripts/reliability-browser.mjs --engine=firefox --case=history",
+      "scope": "controlled_browser_final_history_label_change",
+      "file": ".runtime/reliability-ui-3a4cf418-a688-4bde-9754-88d6287fb344/report.json",
+      "sha256": "b4c154ec426d6477420df91460c2c2b51bf71ffe13f0eac1440fe66c6c42e31a",
+      "reportedScope": "controlled_browser_responses",
+      "startedAt": "2026-11-01T01:09:16.253Z",
+      "finishedAt": "2026-11-01T01:09:27.055Z",
+      "browserEngine": "firefox",
+      "browserVersion": "157.0",
+      "counts": {
+        "passed": 7
+      },
+      "checks": [
+        {
+          "name": "growth_scope_fast_switch_discards_late_history_and_hides_old_statistics",
+          "status": "passed"
+        },
+        {
+          "name": "code_review_sources_distinguish_supplied_context_history_and_unknown",
+          "status": "passed"
+        },
+        {
+          "name": "code_review_late_reply_preserves_selected_history_and_newer_draft",
+          "status": "passed"
+        },
+        {
+          "name": "document_history_restore_is_guarded_and_successful_save_allows_navigation",
+          "status": "passed"
+        },
+        {
+          "name": "agent_task_board_defaults_to_current_version_and_history_is_read_only",
+          "status": "passed"
+        },
+        {
+          "name": "back_cancel_and_forward_preserve_history_cursor_and_unsaved_content",
+          "status": "passed"
+        },
+        {
+          "name": "restoring_history_requires_a_choice_and_cancel_does_not_claim_success",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "id": "webkit_final_history",
+      "command": "node scripts/reliability-browser.mjs --engine=webkit --case=history",
+      "scope": "controlled_browser_final_history_label_change",
+      "file": ".runtime/reliability-ui-dff2f1ec-9d3d-4473-b388-7693b94d90e1/report.json",
+      "sha256": "f37e009eabad8eec48186ccbab298dc1a70a550648d032c26d8fcdedc990fa10",
+      "reportedScope": "controlled_browser_responses",
+      "startedAt": "2026-11-01T01:09:50.750Z",
+      "finishedAt": "2026-11-01T01:10:02.675Z",
+      "browserEngine": "webkit",
+      "browserVersion": "27.2",
+      "counts": {
+        "passed": 7
+      },
+      "checks": [
+        {
+          "name": "growth_scope_fast_switch_discards_late_history_and_hides_old_statistics",
+          "status": "passed"
+        },
+        {
+          "name": "code_review_sources_distinguish_supplied_context_history_and_unknown",
+          "status": "passed"
+        },
+        {
+          "name": "code_review_late_reply_preserves_selected_history_and_newer_draft",
+          "status": "passed"
+        },
+        {
+          "name": "document_history_restore_is_guarded_and_successful_save_allows_navigation",
+          "status": "passed"
+        },
+        {
+          "name": "agent_task_board_defaults_to_current_version_and_history_is_read_only",
+          "status": "passed"
+        },
+        {
+          "name": "back_cancel_and_forward_preserve_history_cursor_and_unsaved_content",
+          "status": "passed"
+        },
+        {
+          "name": "restoring_history_requires_a_choice_and_cancel_does_not_claim_success",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "id": "axe_20_scenes",
+      "command": "pnpm verify:accessibility",
+      "scope": "automated_axe_rules_fixture_states_manual_incomplete_items_retained",
+      "file": ".runtime/reliability-ui-ddacb5a4-b55c-4c58-ab14-1e35b939d4db/report.json",
+      "sha256": "088c087297680631e382f213c9e7ceb8f8df4ff7cd10e2d7d53feaf137da7bdc",
+      "reportedScope": "controlled_browser_responses",
+      "startedAt": "2026-11-01T01:08:02.161Z",
+      "finishedAt": "2026-11-01T01:08:27.021Z",
+      "browserEngine": "chromium",
+      "browserVersion": "156.0.4314.50",
+      "counts": {
+        "passed": 20
+      },
+      "checks": [
+        {
+          "name": "accessibility_dashboard",
+          "status": "passed"
+        },
+        {
+          "name": "accessibility_projects",
+          "status": "passed"
+        },
+        {
+          "name": "accessibility_missions",
+          "status": "passed"
+        },
+        {
+          "name": "accessibility_runs",
+          "status": "passed"
+        },
+        {
+          "name": "accessibility_delivery",
+          "status": "passed"
+        },
+        {
+          "name": "accessibility_knowledge",
+          "status": "passed"
+        },
+        {
+          "name": "accessibility_growth",
+          "status": "passed"
+        },
+        {
+          "name": "accessibility_overview",
+          "status": "passed"
+        },
+        {
+          "name": "accessibility_requirements",
+          "status": "passed"
+        },
+        {
+          "name": "accessibility_agent",
+          "status": "passed"
+        },
+        {
+          "name": "accessibility_reviews",
+          "status": "passed"
+        },
+        {
+          "name": "accessibility_tests",
+          "status": "passed"
+        },
+        {
+          "name": "accessibility_documents",
+          "status": "passed"
+        },
+        {
+          "name": "accessibility_trace_preparation",
+          "status": "passed"
+        },
+        {
+          "name": "accessibility_edit_guard_dialog",
+          "status": "passed"
+        },
+        {
+          "name": "accessibility_auth",
+          "status": "passed"
+        },
+        {
+          "name": "accessibility_quick_navigation_dialog",
+          "status": "passed"
+        },
+        {
+          "name": "accessibility_display_settings",
+          "status": "passed"
+        },
+        {
+          "name": "accessibility_create_project",
+          "status": "passed"
+        },
+        {
+          "name": "accessibility_requirement_history",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "id": "local_integrated",
+      "command": "node scripts/reliability-local.mjs --browser",
+      "scope": "real_local_postgres_embedding_http_browser_chat_fixture",
+      "file": ".runtime/reliability-local-c83e1587-c700-4997-9dce-4852bea51f03/report.json",
+      "sha256": "359036041535881f177fac9f3ed0e2c8349749ef3285406f1ad8d5132e7ead03",
+      "reportedScope": "real_local_database_and_optional_local_embedding",
+      "startedAt": "2026-11-01T00:41:16.006Z",
+      "finishedAt": "2026-11-01T00:41:23.043Z",
+      "browserEngine": null,
+      "browserVersion": null,
+      "counts": {
+        "passed": 21
+      },
+      "checks": [
+        {
+          "name": "isolated_accounts_and_owned_project",
+          "status": "passed"
+        },
+        {
+          "name": "code_draft_concurrency_noop_and_owner_isolation_without_model",
+          "status": "passed"
+        },
+        {
+          "name": "confirmed_requirement_and_generated_fixture_cases",
+          "status": "passed"
+        },
+        {
+          "name": "trace_suggestions_require_human_review_and_never_fake_execution",
+          "status": "passed"
+        },
+        {
+          "name": "task_test_pair_requires_reviewed_sources_and_never_infers_execution",
+          "status": "passed"
+        },
+        {
+          "name": "editing_invalidates_current_result_but_retains_previous_evidence",
+          "status": "passed"
+        },
+        {
+          "name": "pair_recheck_preserves_previous_review_and_never_inherits_old_pass",
+          "status": "passed"
+        },
+        {
+          "name": "foreign_account_cannot_read_or_write_execution_evidence",
+          "status": "passed"
+        },
+        {
+          "name": "current_version_statistics_do_not_inherit_historical_passes",
+          "status": "passed"
+        },
+        {
+          "name": "trace_version_change_impact_is_reviewed_without_copying_evidence",
+          "status": "passed"
+        },
+        {
+          "name": "cross_project_trace_target_rejected_even_for_same_owner",
+          "status": "passed"
+        },
+        {
+          "name": "document_concurrent_writes_preserve_history_and_reject_stale_revision",
+          "status": "passed"
+        },
+        {
+          "name": "real_database_desktop_trace_review_keyboard_and_layout",
+          "status": "passed"
+        },
+        {
+          "name": "document_source_snapshot_detects_same_version_changes_without_rewriting_document",
+          "status": "passed"
+        },
+        {
+          "name": "document_context_and_source_counters_share_one_database_snapshot",
+          "status": "passed"
+        },
+        {
+          "name": "trace_pairs_and_case_results_share_one_read_snapshot",
+          "status": "passed"
+        },
+        {
+          "name": "task_test_pairing_rejects_foreign_project_targets_of_same_owner",
+          "status": "passed"
+        },
+        {
+          "name": "trace_version_change_during_preparation_requires_refresh",
+          "status": "passed"
+        },
+        {
+          "name": "trace_snapshot_query_failure_releases_connection_and_recovers",
+          "status": "passed"
+        },
+        {
+          "name": "change_review_cannot_overtake_an_earlier_requirement_confirmation",
+          "status": "passed"
+        },
+        {
+          "name": "real_local_embedding_concurrent_index_search_and_owner_isolation",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "id": "agent_recovery",
+      "command": "pnpm verify:agent-recovery",
+      "scope": "real_local_postgres_http_chat_fixture",
+      "file": ".runtime/agent-recovery-45baea6e-f9a4-4aa4-8ef3-e866d5c70226/report.json",
+      "sha256": "52f5794ce0a0132056e41da57442e565f96a18835f6ccfc3980c62f08654fce9",
+      "reportedScope": "real_local_postgresql_controlled_model_no_remote_calls",
+      "startedAt": "2026-11-01T00:41:14.852Z",
+      "finishedAt": "2026-11-01T00:41:15.278Z",
+      "browserEngine": null,
+      "browserVersion": null,
+      "counts": {
+        "passed": 8
+      },
+      "checks": [
+        {
+          "name": "runtime_database_timeout_is_active_and_cancelled_statement_can_recover",
+          "status": "passed"
+        },
+        {
+          "name": "isolated_synthetic_accounts_project_and_confirmed_requirement",
+          "status": "passed"
+        },
+        {
+          "name": "expired_heartbeat_recovers_running_children_but_keeps_completed_tool_evidence",
+          "status": "passed"
+        },
+        {
+          "name": "total_deadline_expires_even_with_a_recent_heartbeat",
+          "status": "passed"
+        },
+        {
+          "name": "explicit_cancel_is_owned_and_late_model_output_cannot_resurrect_run",
+          "status": "passed"
+        },
+        {
+          "name": "human_restart_creates_a_new_run_and_keeps_failure_history",
+          "status": "passed"
+        },
+        {
+          "name": "duplicate_request_identity_never_duplicates_model_calls",
+          "status": "passed"
+        },
+        {
+          "name": "human_plan_adoption_is_persisted_and_cannot_be_forged_by_client_metadata",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "id": "document_context",
+      "command": "pnpm verify:document-context",
+      "scope": "real_local_postgres_http_browser_chat_fixture",
+      "file": ".runtime/document-context-local-fd1f9464-c1e2-41e6-9894-69ab9a527ffa/report.json",
+      "sha256": "dd2e6630d72141b3141ae90aaff27cd119a2605f82a9b96664a21f8744936aed",
+      "reportedScope": "real_local_database_http_browser_with_document_chat_fixture",
+      "startedAt": "2026-11-01T00:41:26.409Z",
+      "finishedAt": "2026-11-01T00:41:28.602Z",
+      "browserEngine": null,
+      "browserVersion": null,
+      "counts": {
+        "passed": 6
+      },
+      "checks": [
+        {
+          "name": "real_context_retains_tail_note_task_and_case_identity",
+          "status": "passed"
+        },
+        {
+          "name": "real_51_case_details_are_explicitly_blocked",
+          "status": "passed"
+        },
+        {
+          "name": "real_51_task_details_are_explicitly_blocked",
+          "status": "passed"
+        },
+        {
+          "name": "real_large_evidence_blocks_before_generation_and_keeps_original_notes",
+          "status": "passed"
+        },
+        {
+          "name": "foreign_account_cannot_generate_or_read_document_sources",
+          "status": "passed"
+        },
+        {
+          "name": "real_desktop_displays_boundary_and_preserves_document",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "id": "document_catalogue",
+      "command": "pnpm verify:document-list",
+      "scope": "real_local_postgres_http_browser_synthetic_records",
+      "file": ".runtime/document-list-local-d104b018-ea3f-4dd3-904d-955436883779/report.json",
+      "sha256": "e3883b6cc76fa6b08d6c9148495510b1d6b663ae3b091a915a9bd103e009c100",
+      "reportedScope": "real_local_database_http_browser_document_catalogue",
+      "startedAt": "2026-11-01T00:43:35.215Z",
+      "finishedAt": "2026-11-01T00:43:39.796Z",
+      "browserEngine": null,
+      "browserVersion": null,
+      "counts": {
+        "passed": 6
+      },
+      "checks": [
+        {
+          "name": "complete_summary_includes_hidden_current_type_without_bodies_or_old_version",
+          "status": "passed"
+        },
+        {
+          "name": "six_bounded_pages_preserve_equal_microsecond_timestamps_and_oldest_body",
+          "status": "passed"
+        },
+        {
+          "name": "foreign_and_tampered_cursors_are_rejected_without_disclosing_documents",
+          "status": "passed"
+        },
+        {
+          "name": "editing_invalidates_catalogue_cursor_and_keeps_revision_history_and_export",
+          "status": "passed"
+        },
+        {
+          "name": "desktop_opens_oldest_document_and_overview_delivery_use_complete_type_summary",
+          "status": "passed"
+        },
+        {
+          "name": "new_confirmed_requirement_has_no_inherited_documents_while_history_remains_accessible",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "id": "test_catalogue",
+      "command": "pnpm verify:test-list",
+      "scope": "real_local_postgres_http_browser_synthetic_records",
+      "file": ".runtime/test-list-local-517fed2a-4b02-4d9b-8793-b80fddd3b611/report.json",
+      "sha256": "fa958babe4d8404c88434a2f18cadb74cec996160355bd2c04e9f01afc057c20",
+      "reportedScope": "real_local_database_http_browser_test_pagination",
+      "startedAt": "2026-11-01T00:43:35.778Z",
+      "finishedAt": "2026-11-01T00:43:40.940Z",
+      "browserEngine": null,
+      "browserVersion": null,
+      "counts": {
+        "passed": 6
+      },
+      "checks": [
+        {
+          "name": "first_page_reports_all_201_cases_including_the_older_failure",
+          "status": "passed"
+        },
+        {
+          "name": "five_keyset_pages_preserve_microseconds_and_equal_timestamps_without_gaps",
+          "status": "passed"
+        },
+        {
+          "name": "summary_history_growth_and_foreign_isolation_agree",
+          "status": "passed"
+        },
+        {
+          "name": "editing_increments_revision_invalidates_old_cursor_and_preserves_history",
+          "status": "passed"
+        },
+        {
+          "name": "desktop_test_overview_delivery_and_historical_view_show_full_totals",
+          "status": "passed"
+        },
+        {
+          "name": "confirming_a_new_requirement_rejects_default_cursor_but_keeps_explicit_history",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "id": "knowledge_catalogue",
+      "command": "pnpm verify:knowledge-list",
+      "scope": "real_local_postgres_embedding_http_browser_synthetic_records",
+      "file": ".runtime/knowledge-list-local-15858cd6-c70d-41ed-9097-5503d2d75556/report.json",
+      "sha256": "17488f2ffe4bb618f65a6ea0e7f1b4663b1402d6a4fb4dcf17ccae70bbe51431",
+      "reportedScope": "real_local_database_embedding_http_browser_knowledge_pagination",
+      "startedAt": "2026-10-31T23:08:13.609Z",
+      "finishedAt": "2026-10-31T23:08:16.039Z",
+      "browserEngine": null,
+      "browserVersion": null,
+      "counts": {
+        "passed": 5
+      },
+      "checks": [
+        {
+          "name": "bounded_page_has_complete_count_and_legacy_range_is_explicit",
+          "status": "passed"
+        },
+        {
+          "name": "eleven_pages_reach_oldest_document_without_microsecond_gaps_or_duplicates",
+          "status": "passed"
+        },
+        {
+          "name": "foreign_invalid_and_missing_anchor_cursors_cannot_reveal_owned_documents",
+          "status": "passed"
+        },
+        {
+          "name": "desktop_last_page_explicit_index_retains_page_and_unsaved_inputs",
+          "status": "passed"
+        },
+        {
+          "name": "indexed_oldest_source_is_retrievable_and_new_upload_invalidates_old_membership_cursor",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "id": "growth_and_task_scope",
+      "command": "pnpm verify:growth-scope",
+      "scope": "real_local_postgres_http_browser_synthetic_records",
+      "file": ".runtime/growth-scope-local-dd8a3fac-a69d-4b0a-8164-c84660809408/report.json",
+      "sha256": "950b90691e5e91c3b3de1c07ef16a863ed234aeffa5c0b38edbbda4edd0c5c86",
+      "reportedScope": "real_local_database_synthetic_records_no_model",
+      "startedAt": "2026-11-01T00:43:36.118Z",
+      "finishedAt": "2026-11-01T00:43:38.745Z",
+      "browserEngine": null,
+      "browserVersion": null,
+      "counts": {
+        "passed": 6
+      },
+      "checks": [
+        {
+          "name": "growth_defaults_to_each_projects_current_version_without_inheriting_old_results",
+          "status": "passed"
+        },
+        {
+          "name": "explicit_history_keeps_prior_records_and_does_not_change_current_scope",
+          "status": "passed"
+        },
+        {
+          "name": "scope_validation_and_account_isolation_are_enforced",
+          "status": "passed"
+        },
+        {
+          "name": "desktop_current_and_history_statistics_match_real_database",
+          "status": "passed"
+        },
+        {
+          "name": "historical_task_update_is_rejected_without_changing_status_or_events",
+          "status": "passed"
+        },
+        {
+          "name": "task_waiting_on_confirmation_lock_rechecks_the_committed_requirement",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "id": "review_context",
+      "command": "pnpm verify:review-context",
+      "scope": "real_local_postgres_embedding_http_browser_chat_fixture",
+      "file": ".runtime/review-context-local-338793ca-db15-4879-8863-56c881f1b694/report.json",
+      "sha256": "0cc0ccdd8dc34409bbb03418e83f89cb7709d58dff01ed072f999c3c7a8082ca",
+      "reportedScope": "real_local_database_embedding_http_browser_with_chat_fixture",
+      "startedAt": "2026-11-01T00:46:44.710Z",
+      "finishedAt": "2026-11-01T00:46:48.438Z",
+      "browserEngine": null,
+      "browserVersion": null,
+      "counts": {
+        "passed": 6
+      },
+      "checks": [
+        {
+          "name": "real_review_context_uses_owned_vectors_full_requirement_and_persists_source",
+          "status": "passed"
+        },
+        {
+          "name": "review_in_flight_keeps_its_source_version_after_new_confirmation",
+          "status": "passed"
+        },
+        {
+          "name": "foreign_review_access_and_cross_project_context_are_rejected",
+          "status": "passed"
+        },
+        {
+          "name": "long_requirement_blocks_project_review_but_explicit_code_only_is_truthful",
+          "status": "passed"
+        },
+        {
+          "name": "disconnect_cancels_waiting_review_without_persisting_late_model_advice",
+          "status": "passed"
+        },
+        {
+          "name": "real_desktop_displays_historical_requirement_and_actual_source_text",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "id": "mixed_embedding",
+      "command": "pnpm verify:embedding-mixed",
+      "scope": "real_local_embedding_four_synthetic_accounts_chat_fixture_not_classroom_capacity",
+      "file": ".runtime/embedding-mixed-local-ed0a52bf-d651-46ed-9300-d60663eb468e/report.json",
+      "sha256": "e483c680b6943b4d6d26accdb78fd42a8566811954f9e5b05bd9b4c9dbc67930",
+      "reportedScope": "real_loopback_http_postgresql_embeddings_four_synthetic_accounts",
+      "startedAt": "2026-11-01T00:47:20.247Z",
+      "finishedAt": "2026-11-01T00:47:22.370Z",
+      "browserEngine": null,
+      "browserVersion": null,
+      "counts": {
+        "passed": 3
+      },
+      "checks": [
+        {
+          "name": "real_mixed_index_search_and_agent_share_one_provider_slot",
+          "status": "passed"
+        },
+        {
+          "name": "queue_cancel_is_final_and_recovery_preserves_account_isolation",
+          "status": "passed"
+        },
+        {
+          "name": "actual_index_chunks_remain_complete_after_the_mixed_requests",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "id": "index_compatibility",
+      "command": "pnpm verify:index-compatibility",
+      "scope": "real_local_postgres_embedding_http_synthetic_records",
+      "file": ".runtime/index-compatibility-local-84370d51-4d05-4606-a910-c19c4a222287/report.json",
+      "sha256": "2382b788d1b59cf9faa4e9a46e533972460afdce8a042ede0e5032f201f25f9b",
+      "reportedScope": "real_local_embedding_database_http_browser_with_controlled_old_identity_and_transport_failure",
+      "startedAt": "2026-10-31T23:09:40.903Z",
+      "finishedAt": "2026-10-31T23:09:43.609Z",
+      "browserEngine": null,
+      "browserVersion": null,
+      "counts": {
+        "passed": 4
+      },
+      "checks": [
+        {
+          "name": "actual_index_is_current_only_after_embedding_and_owned_chunks_match",
+          "status": "passed"
+        },
+        {
+          "name": "controlled_old_identity_stops_current_search_and_is_not_exposed_to_browser",
+          "status": "passed"
+        },
+        {
+          "name": "desktop_explicit_rebuild_failure_recovery_and_upload_draft_preservation",
+          "status": "passed"
+        },
+        {
+          "name": "rebuild_restores_actual_retrieval_without_changing_original_text",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "id": "answer_cancel",
+      "command": "pnpm verify:knowledge-answer",
+      "scope": "real_local_embedding_http_model_stage_fixture",
+      "file": ".runtime/knowledge-answer-local-b7800880-3a64-4c1a-a43b-e2bf647f321a/report.json",
+      "sha256": "90b788383af30559301c5b185376b53ce88bb8564fd3bcabf362be066f2938ca",
+      "reportedScope": "real_local_http_disconnect_database_embedding_chat_fixture",
+      "startedAt": "2026-10-31T22:05:19.478Z",
+      "finishedAt": "2026-10-31T22:05:19.785Z",
+      "browserEngine": null,
+      "browserVersion": null,
+      "counts": {
+        "passed": 3
+      },
+      "checks": [
+        {
+          "name": "real_retrieval_then_http_disconnect_never_starts_chat",
+          "status": "passed"
+        },
+        {
+          "name": "three_http_model_disconnects_forward_signal_and_release_active_capacity",
+          "status": "passed"
+        },
+        {
+          "name": "actual_sources_and_foreign_account_no_evidence_remain_correct",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "id": "requirement_preconditions",
+      "command": "pnpm verify:requirement-preconditions",
+      "scope": "real_local_postgres_http_browser_one_failed_save_injected",
+      "file": ".runtime/requirement-preconditions-local-775fed62-cc1d-4f69-a61d-4ac3d7e1fb90/report.json",
+      "sha256": "d452f2849c370a5a179f624264053e463af81e9de29cb11959ab617fc898b851",
+      "reportedScope": "real_local_database_and_http_new_synthetic_accounts",
+      "startedAt": "2026-11-01T00:39:01.626Z",
+      "finishedAt": "2026-11-01T00:39:04.107Z",
+      "browserEngine": null,
+      "browserVersion": null,
+      "counts": {
+        "passed": 7
+      },
+      "checks": [
+        {
+          "name": "missing_snapshot_rejected_without_modifying_or_confirming",
+          "status": "passed"
+        },
+        {
+          "name": "concurrent_edits_have_one_winner_and_old_content_cannot_be_confirmed",
+          "status": "passed"
+        },
+        {
+          "name": "confirmation_only_accepts_latest_reviewed_draft_and_confirmed_content_is_immutable",
+          "status": "passed"
+        },
+        {
+          "name": "competing_confirmation_and_edit_never_confirm_unreviewed_content",
+          "status": "passed"
+        },
+        {
+          "name": "foreign_account_cannot_edit_confirm_or_read_the_owned_snapshot",
+          "status": "passed"
+        },
+        {
+          "name": "real_browser_refuses_confirmation_of_text_changed_after_read",
+          "status": "passed"
+        },
+        {
+          "name": "browser_refresh_cancellation_and_injected_save_failure_preserve_edits",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "id": "trace_initialization",
+      "command": "pnpm verify:trace-concurrency",
+      "scope": "real_local_postgres_12_coordinated_sql_requests_synthetic_records",
+      "file": ".runtime/trace-concurrency-local-6e730132-672b-462c-80ce-c705dea63667/report.json",
+      "sha256": "a7a1f1d0a6f103c4375e598208e93109685706bfcb8fbdc0b128e06b492f8a2a",
+      "reportedScope": "real_local_http_and_database_concurrent_trace_initialization",
+      "startedAt": "2026-11-01T00:38:24.590Z",
+      "finishedAt": "2026-11-01T00:38:25.103Z",
+      "browserEngine": null,
+      "browserVersion": null,
+      "counts": {
+        "passed": 4
+      },
+      "checks": [
+        {
+          "name": "twelve_first_reads_initialize_all_items_without_duplicate_key_errors",
+          "status": "passed"
+        },
+        {
+          "name": "current_and_historical_reads_keep_version_ids_and_original_offsets_separate",
+          "status": "passed"
+        },
+        {
+          "name": "repeat_reads_preserve_human_change_review_without_incrementing_evidence",
+          "status": "passed"
+        },
+        {
+          "name": "foreign_account_cannot_read_or_initialize_owned_trace",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "id": "fresh_database",
+      "command": "pnpm verify:fresh-database",
+      "scope": "real_separate_empty_database_19_actual_cli_migrations_twice_http_no_ai",
+      "file": ".runtime/fresh-database-local-e7b1ac88-c19d-4785-888a-3a4bd974fdc9/report.json",
+      "sha256": "c865570eac3ba5142f4d9ed0749c1db25bfc17e8d07f29c2b5bc418f3d36e0ab",
+      "reportedScope": "real_local_fresh_database_actual_migration_cli_and_loopback_http",
+      "startedAt": "2026-11-01T01:16:57.057Z",
+      "finishedAt": "2026-11-01T01:16:58.183Z",
+      "browserEngine": null,
+      "browserVersion": null,
+      "counts": {
+        "passed": 4
+      },
+      "checks": [
+        {
+          "name": "empty_database_has_no_project_tables_or_migration_history",
+          "status": "passed"
+        },
+        {
+          "name": "actual_cli_installs_all_nineteen_migrations_and_vector_on_empty_database",
+          "status": "passed"
+        },
+        {
+          "name": "second_cli_run_preserves_migration_timestamps_and_empty_business_tables",
+          "status": "passed"
+        },
+        {
+          "name": "fresh_service_is_ready_and_manual_workflow_persists_without_ai",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "id": "real_ui",
+      "command": "pnpm smoke:ui",
+      "scope": "real_local_services_browser_synthetic_account_no_paid_model",
+      "file": ".runtime/ui-7a4401c3-a810-4aa8-9756-f0b521424ff3/report.json",
+      "sha256": "056672df189680d6511f519815cbae31b72d5db7acee13918c6c7fbe40624b7b",
+      "reportedScope": null,
+      "startedAt": "2026-11-01T01:05:38.566Z",
+      "finishedAt": "2026-11-01T01:05:51.999Z",
+      "browserEngine": null,
+      "browserVersion": null,
+      "counts": {
+        "passed": 8
+      },
+      "checks": [
+        {
+          "name": "registration_and_honest_empty_workspace",
+          "status": "passed"
+        },
+        {
+          "name": "display_preferences_and_quick_navigation",
+          "status": "passed"
+        },
+        {
+          "name": "project_creation_filters_and_view_switch",
+          "status": "passed"
+        },
+        {
+          "name": "markdown_preview_outline_safety_and_save",
+          "status": "passed"
+        },
+        {
+          "name": "code_draft_keyboard_copy_and_size_controls",
+          "status": "passed"
+        },
+        {
+          "name": "knowledge_sources_real_index_and_copy",
+          "status": "passed"
+        },
+        {
+          "name": "responsive_layout_and_dark_surfaces",
+          "status": "passed"
+        },
+        {
+          "name": "session_logout",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "id": "project_controls",
+      "command": "pnpm smoke:project-controls",
+      "scope": "real_local_services_browser_synthetic_account_no_paid_model",
+      "file": ".runtime/project-controls-d5f81c33-6473-438b-9ab8-b564c9d3ff60/report.json",
+      "sha256": "409ee55a487d59828a18507560431389773bbb74e11d4f6d63b135350489b543",
+      "reportedScope": null,
+      "startedAt": "2026-11-01T01:08:02.525Z",
+      "finishedAt": "2026-11-01T01:08:09.449Z",
+      "browserEngine": null,
+      "browserVersion": null,
+      "counts": {
+        "passed": 8
+      },
+      "checks": [
+        {
+          "name": "real_registration_project_and_empty_overview",
+          "status": "passed"
+        },
+        {
+          "name": "two_real_versions_saved_and_confirmed",
+          "status": "passed"
+        },
+        {
+          "name": "historic_preview_diff_targets_and_read_only_behavior",
+          "status": "passed"
+        },
+        {
+          "name": "restore_requires_confirmation_and_explicit_version_save",
+          "status": "passed"
+        },
+        {
+          "name": "partial_failure_refresh_and_snapshot_copy",
+          "status": "passed"
+        },
+        {
+          "name": "controlled_cross_version_evidence_and_status_counts",
+          "status": "passed"
+        },
+        {
+          "name": "responsive_long_diff_and_safe_markdown",
+          "status": "passed"
+        },
+        {
+          "name": "no_automatic_model_calls_and_logout",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "id": "workbench",
+      "command": "pnpm smoke:workbench",
+      "scope": "real_local_services_browser_synthetic_account_no_paid_model",
+      "file": ".runtime/workbench-4e929237-d59e-44f1-b345-c391a461f7d9/report.json",
+      "sha256": "fa8c8efea8d01b5177665349f2b4f5f6df8abea6dd18c7f4c8d7a7b5ba0c8e7a",
+      "reportedScope": null,
+      "startedAt": "2026-11-01T00:46:48.890Z",
+      "finishedAt": "2026-11-01T00:47:11.554Z",
+      "browserEngine": null,
+      "browserVersion": null,
+      "counts": {
+        "passed": 11
+      },
+      "checks": [
+        {
+          "name": "real_registration_and_empty_global_pages",
+          "status": "passed"
+        },
+        {
+          "name": "mission_search_filters_and_empty_recovery",
+          "status": "passed"
+        },
+        {
+          "name": "local_bookmarks_survive_refresh_and_can_be_removed",
+          "status": "passed"
+        },
+        {
+          "name": "original_brief_creates_real_project_and_confirmed_requirement",
+          "status": "passed"
+        },
+        {
+          "name": "manual_delivery_persistence_export_and_server_read_only",
+          "status": "passed"
+        },
+        {
+          "name": "checklists_are_isolated_by_project_and_requirement",
+          "status": "passed"
+        },
+        {
+          "name": "partial_read_failure_and_storage_denial_remain_explicit",
+          "status": "passed"
+        },
+        {
+          "name": "controlled_run_evidence_filters_export_and_safe_text",
+          "status": "passed"
+        },
+        {
+          "name": "run_fetch_failure_recovery_and_opt_in_refresh",
+          "status": "passed"
+        },
+        {
+          "name": "responsive_routes_navigation_and_no_unrequested_ai_calls",
+          "status": "passed"
+        },
+        {
+          "name": "quick_navigation_and_logout",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "id": "offline_cases",
+      "command": "node scripts/evaluate-offline.mjs",
+      "scope": "offline_implementation_protocol_not_semantic_quality",
+      "file": ".runtime/evaluation-1793495391901.json",
+      "sha256": "0cb2cade689518eabf622f22c852ef77dbe045adeff91f16f4fa4a9b8f371d4c",
+      "reportedScope": "offline_contract_and_fixture_checks",
+      "startedAt": "2026-11-01T01:09:51.247Z",
+      "finishedAt": "2026-11-01T01:09:51.901Z",
+      "browserEngine": null,
+      "browserVersion": null,
+      "counts": {
+        "passed": 8
+      },
+      "checks": [
+        {
+          "name": "normal",
+          "status": "passed"
+        },
+        {
+          "name": "tail-condition",
+          "status": "passed"
+        },
+        {
+          "name": "version-change",
+          "status": "passed"
+        },
+        {
+          "name": "conflicting-material",
+          "status": "passed"
+        },
+        {
+          "name": "no-answer",
+          "status": "passed"
+        },
+        {
+          "name": "malicious-material",
+          "status": "passed"
+        },
+        {
+          "name": "account-isolation",
+          "status": "passed"
+        },
+        {
+          "name": "service-failure",
+          "status": "passed"
+        }
+      ]
+    }
+  ],
+  "retainedFailureEvidence": [
+    {
+      "issue": "trace_initial_primary_key_conflict",
+      "file": ".runtime/trace-concurrency-local-fed15618-3fba-4e56-a7be-b96c2ec6fd40/report.json",
+      "sha256": "d5970b523765da438856dfa85b07a50fd8bafdf80e1d07c0be4372789156d723",
+      "retained": true
+    },
+    {
+      "issue": "empty_trace_before_fix",
+      "file": ".runtime/reliability-ui-f6bd7ffa-2171-4300-94a0-c6b1d7d7e673/report.json",
+      "sha256": "6f4c9aa3851f410a128ec2b9aa5cafc0fe95b1ed8d4248f56182e02f84183f65",
+      "retained": true
+    },
+    {
+      "issue": "firefox_radio_before_fix",
+      "file": ".runtime/reliability-ui-b6842fdf-bda2-4a79-93b6-425f5a87f9d8/report.json",
+      "sha256": "96eead1b6b62abb2f3972e424f6a55ffd1d4d8ef57ac7f0255c91386d9e571c2",
+      "retained": true
+    },
+    {
+      "issue": "firefox_forced_palette_before_fix",
+      "file": ".runtime/reliability-ui-15c595a9-1a24-4554-91c4-70d08511acfb/report.json",
+      "sha256": "f4e358548c04216394040cdc9adae41d61c8461b9481a396f0550189d26a0698",
+      "retained": true
+    },
+    {
+      "issue": "history_accessible_name_before_fix",
+      "file": ".runtime/reliability-ui-9be52a3b-97b4-43a3-8477-be525ff9be09/report.json",
+      "sha256": "45230d7d627ac07c11d731cadf65fea2878bf45dfc7ffadd51d10aa68bb50ed3",
+      "retained": true
+    },
+    {
+      "issue": "fresh_runner_wrong_201_expectation",
+      "file": ".runtime/fresh-database-local-bb04dd9a-ec37-4bc4-b97c-f7bd028935b8/report.json",
+      "sha256": "0e6ded663a74dc43c24822548f988d6b619217ba073a48b66b70213f0bf561b1",
+      "retained": true
+    }
+  ],
+  "evaluation": {
+    "offlineCases": 8,
+    "preparedRecords": 18,
+    "historicalSourceProtocol": "5 cases / 6 checks; current compiler and fixtures, not full historical install",
+    "retrieval": {
+      "file": ".runtime/retrieval-local-ada74135-c1e9-4c11-9172-36526bb804ba/report.json",
+      "sha256": "e1e599c3a822e27533314733f4b1bf077b4d0abc6d89e7cadae68e9aad4dbbd7",
+      "documents": 15,
+      "queries": 30,
+      "actualLocalQueryEmbeddingCalls": 60,
+      "improvementDemonstrated": false,
+      "productionDefaultChanged": false,
+      "addedAnswerableTop1Both": "9/12",
+      "addedAnswerableTop3Both": "12/12"
+    },
+    "comparison": {
+      "file": ".runtime/evaluation-report-7f68e3ac-e223-4533-b8b2-fd8603aaaac2/report.json",
+      "sha256": "4560a0ea6e87bcbc91e37f2feade3c45472fac0bd4637099139306db50443657",
+      "candidateRecords": 15,
+      "comparableGroups": 0,
+      "realModelQuality": "not_run",
+      "humanBlindReview": "not_run",
+      "studentStudy": "not_run"
+    }
+  },
+  "materials": [
+    {
+      "kind": "pdf",
+      "file": "output/pdf/gongxu-zhiban-technical-v3.pdf",
+      "bytes": 1030746,
+      "sha256": "55ed377dbfbf56850053b51099ab73d869e0265af5484c48945d0e60af16f91e",
+      "manifest": "output/pdf/technical-pdf-manifest.json",
+      "manifestSha256": "1b9829cd3303cf18440131c1b4001eb9b9612191d099aa5ad1a821f44659841c",
+      "pages": 29,
+      "scope": "review_draft_all_rendered_pages_inspected_not_contest_submission"
+    },
+    {
+      "kind": "pptx",
+      "file": "output/presentations/gongxu-zhiban-defense-v3-2026-11-01T01-18-43-763Z.pptx",
+      "bytes": 818504,
+      "sha256": "bb4b3bd73bc942220f9f12d4d88dfda73cacdfaabb4d275c6673ceb040b0a1e6",
+      "manifest": "output/presentations/defense-manifest.json",
+      "manifestSha256": "7af7c6cb9a4b3ef372439afdec6c4601d8cda7850203e4da8589b2d7b8512eb5",
+      "pages": 12,
+      "scope": "review_draft_all_rendered_pages_inspected_not_contest_submission"
+    },
+    {
+      "kind": "video",
+      "file": "output/video/gongxu-zhiban-demo-v3-draft-20261101-073052.mp4",
+      "bytes": 15682009,
+      "sha256": "7154fdb394072ceca5cc7b2101b3523ba082672754279098ab34dff9730ff0bf",
+      "manifest": "output/video/gongxu-zhiban-demo-v3-draft-20261101-073052.json",
+      "manifestSha256": "c3d0e72b65a093fc0cee82c723982fc8ceae704fde9e183d3295975571c2e562",
+      "pages": null,
+      "scope": "earlier_version_synthetic_db_embedding_chat_fixture_tts_draft_not_final_submission"
+    }
+  ],
+  "notRun": [
+    {
+      "name": "paid_chat_quality_comparison",
+      "reason": "No scoped model/call/cost and synthetic transfer authorization"
+    },
+    {
+      "name": "real_classroom_capacity_or_student_teacher_study",
+      "reason": "No actual participants or long-term load study; no contact authorized"
+    },
+    {
+      "name": "native_windows_high_contrast_screen_reader_browser_menu_zoom",
+      "reason": "Only browser controlled media/CSS zoom tested"
+    },
+    {
+      "name": "Safari_on_Apple_device",
+      "reason": "Windows Playwright WebKit is not Safari device validation"
+    },
+    {
+      "name": "PowerPoint_WPS_projection_and_speaker_timing",
+      "reason": "Local authoring renderer and structural checks only"
+    },
+    {
+      "name": "full_video_human_listening_and_final_ai_recording",
+      "reason": "Draft local TTS and explicit chat fixture"
+    },
+    {
+      "name": "public_deployment_push_upload_contest_submission",
+      "reason": "Separate authorization required; optional online bonus not achieved"
+    },
+    {
+      "name": "team_eligibility_full_contest_rules",
+      "reason": "Missing authentic team details and complete current rules"
+    }
+  ],
+  "sourcePackage": {
+    "status": "pending_final_isolated_verification",
+    "scope": "archive excludes .git and real data; does not replace contest repository"
+  }
+}

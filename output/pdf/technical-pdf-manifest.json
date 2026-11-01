@@ -122,7 +122,7 @@
   "scope": "technical_review_draft_not_official_acceptance",
   "screenshots": "synthetic_local_account_real_db_model_fixture",
   "visualReview": "all_rendered_pages_inspected",
-  "sha256": "a04dd410df3aa525f5f6ae05410b3f56b3d0a00ff2bcdd692d83d0c147cf42f5",
+  "sha256": "55ed377dbfbf56850053b51099ab73d869e0265af5484c48945d0e60af16f91e",
   "layoutBounds": [
     {
       "page": 1,
@@ -186,7 +186,7 @@
     },
     {
       "page": 13,
-      "textCharacters": 517,
+      "textCharacters": 598,
       "outsideSafeBounds": 0
     },
     {
@@ -241,7 +241,7 @@
     },
     {
       "page": 24,
-      "textCharacters": 765,
+      "textCharacters": 878,
       "outsideSafeBounds": 0
     },
     {
@@ -261,7 +261,7 @@
     },
     {
       "page": 28,
-      "textCharacters": 597,
+      "textCharacters": 601,
       "outsideSafeBounds": 0
     },
     {
