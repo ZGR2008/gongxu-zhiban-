@@ -47,3 +47,24 @@
 | 在`apps/api`运行`node ../../scripts/reliability-local.mjs --browser` | 真实本地数据库/Embedding、聊天替身，21组通过；`reliability-local-1ef7b375-f4b8-42b6-b2bc-81f63a95d985/report.json`。首次从根目录运行因既有dotenv相对路径提示缺少本地数据库，改正确工作目录后通过 |
 
 恢复注意：主API仍需在最终联调前使用已有启动方式重启到新构建，前后端需一起更新独立执行令牌；模型收费调用尚未获本轮明确范围批准，未执行。
+
+## 阶段二：长需求准备、追踪体验与统一验证
+
+- 迁移021新增分段审核及历史，保留原文与当前单次生成限制。已实现逐段位置/标识/哈希、跨段条目提示、人工接受/需调整、独立修订、版本与权限隔离。处理与合并适配器已用替身验证缺段、漏条目、跨段遗漏、取消与失败；生产长需求模型生成仍未启用，边界见LONG-REQUIREMENTS-V4。
+- 追踪界面按真实关系和配对记录显示下一步及待处理条目数。配对表单按需展开，折叠保留草稿。180ms反馈，减少动态效果时关闭；新增4组桌面尺寸/CSS缩放检查，原生浏览器菜单缩放未执行。
+- 主动复核新分段页面发现刷新失败后仍可点保存：先新增失败回归(`reliability-ui-e875e8ca-334a-46b8-a945-7994f510bb0a`)，再改为旧快照只读，修复后通过(`reliability-ui-28292909-facb-4794-9bed-d78bd0ff3f75`)。
+- `pnpm verify`默认离线，自动发现全部根JS回归并纳入Python打包回归、类型、构建与离线评测。浏览器、可访问性、数据库必须明确选层，真实模型不在此入口。超时等待子进程关闭后才继续；子脚本明确NOT RUN不能当通过。
+- 模型评测已离线生成可审核的12个调用帧，准备固定DeepSeek flash、15次/0.50美元上限、无重试的执行器及3项替身测试。已通过异步问题申请范围批准，**尚未收到批准，实际调用0**；不读取密钥值。EVALUATION-V4记录可比性限制与师生方案。
+- 公开案例二次核对见REFERENCE-REVIEW-V4，未复制任何作品资源或引入新的应用运行时依赖。
+
+| 实际命令/范围 | 结果 |
+| --- | --- |
+| `pnpm verify` | 15步通过；API125、Embedding4、根JS74、Python6分别通过；环境模板、8类离线协议、18条准备记录无模型调用。`.runtime/verification-v4-ffe06cc7-0965-4c89-b2ea-818e50b2804f/report.json`。随后只调整runner结束/NOT RUN处理和分段刷新只读，收尾需重跑受影响层 |
+| `pnpm verify --suite=database` | 17步通过（构建+16类真实本地检查），`.runtime/verification-v4-c1feac8d-331d-4fb5-8e81-a7afd8b7b462/report.json`，子日志给出各自报告；不跨层合计成全系统通过率 |
+| `node scripts/segment-review-local.mjs` | 5组通过，`.runtime/segment-review-local-e6086064-2c9f-4052-98d9-6d69e8cab08d/report.json`；首次测试工具漏配corsOrigin导致setup失败，修正工具配置后通过，不隐去失败 |
+| `node scripts/fresh-database-local.mjs` | 4组通过，21个迁移实际安装和重复运行，独立合成库保留；`fresh-database-local-8f4723d6-46e9-4f78-9759-acf402d5bda2/report.json` |
+| `node scripts/reliability-browser.mjs` | 95组完整Edge回归通过，`reliability-ui-4dfefe87-f1e2-4ed9-adf1-5aa87bede87b/report.json`；随后新增桌面1组并强化分段失败检查，新增/受影响10组通过`reliability-ui-2b17458a-c44c-4270-9dc8-e2b3aaa5993c` |
+| `node scripts/reliability-browser.mjs --accessibility` | 24场景自动扫描0违规规则；渐变/滚动对比等人工待核项保留，不能宣称完整WCAG符合；`reliability-ui-c8500775-8017-4ace-b6df-6d46e255522e` |
+| Firefox新增/受影响10组 | 普通Windows进程全部通过，`reliability-ui-fbed6b60-01e9-451d-8b7b-705a06fab02c`；受限进程首次页面崩溃记录`reliability-ui-988cfb6b-8b32-46a6-949b-53d939e9281b`，未关闭安全保护 |
+
+下一步：本轮代码检查点、实际浏览器/生产资源和主API恢复检查、PDF/视频/PPT更新并逐页/抽帧检查、最终比赛矩阵、脱敏v4 ZIP与桌面独立副本。旧v3包及材料保留。材料工具按本机已安装运行库使用，当前工具目录没有load_workspace_dependencies入口，不上传到外部制作平台。已读取PDF与Presentations技能，创建前需运行各自mark_artifact_operation_started；尚未生成v4正式材料。

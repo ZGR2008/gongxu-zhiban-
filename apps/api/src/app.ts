@@ -14,6 +14,7 @@ import { registerDocumentRoutes } from './documents/routes.js';
 import { PgDocumentStore } from './documents/store.js';
 import { registerGrowthRoutes } from './growth/routes.js';
 import { registerTraceRoutes } from './trace/routes.js';
+import { registerSegmentRoutes } from './trace/segment-routes.js';
 import { databaseReadiness, migrationFiles } from './database-readiness.js';
 
 export interface DatabaseCheck {
@@ -39,6 +40,7 @@ export async function createApp(options: { database?: DatabaseCheck; pool?: Pool
   await registerDocumentRoutes(app, options.projectStore, options.pool ? new PgDocumentStore(options.pool) : undefined, options.aiConfig);
   await registerGrowthRoutes(app, options.projectStore, options.pool);
   await registerTraceRoutes(app, options.projectStore, options.pool);
+  await registerSegmentRoutes(app, options.projectStore, options.pool);
   app.get('/health', async () => ({ status: 'ok', service: 'gongxu-api' }));
   app.get('/ready', async (_request, reply) => {
     if (!options.database) {

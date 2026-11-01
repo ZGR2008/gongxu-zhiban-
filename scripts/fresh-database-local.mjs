@@ -19,8 +19,8 @@ const local=url=>['localhost','127.0.0.1','[::1]'].includes(new URL(url).hostnam
 if(!config.DATABASE_URL||!local(config.DATABASE_URL))throw Error('An existing loopback database is required');
 const {Pool}=require('pg'),exec=promisify(execFile);
 const source=new Pool({connectionString:config.DATABASE_URL,connectionTimeoutMillis:3000,query_timeout:10000});
-const name='gx_review_v3_'+randomUUID().replaceAll('-','');
-assert.match(name,/^gx_review_v3_[a-f0-9]{32}$/);
+const name='gx_review_v4_'+randomUUID().replaceAll('-','');
+assert.match(name,/^gx_review_v4_[a-f0-9]{32}$/);
 const target=new URL(config.DATABASE_URL);assert.notEqual(target.pathname,'/'+name);target.pathname='/'+name;
 const directory=new URL(`../.runtime/fresh-database-local-${randomUUID()}/`,import.meta.url);await mkdir(directory,{recursive:true});
 const report={scope:'real_local_fresh_database_actual_migration_cli_and_loopback_http',originalDatabaseModified:false,credentialsChanged:false,permissionsChanged:false,realModel:false,externalCalls:0,syntheticRecords:true,checks:[],httpChecks:[],startedAt:new Date().toISOString(),retainedSyntheticDatabase:null};
@@ -32,7 +32,7 @@ async function migrate(expected){
  // Child env changes only the test destination; no .env files or service config are written.
  const result=await exec(process.execPath,[fileURLToPath(new URL('../apps/api/dist/migrate.js',import.meta.url))],{cwd:fileURLToPath(new URL('../apps/api/',import.meta.url)),env:{...process.env,DATABASE_URL:target.href},timeout:30000,maxBuffer:128000,windowsHide:true});
  const lines=result.stdout.split(/\r?\n/).filter(line=>/^(Applied migration|Migration \d+_[a-z0-9_]+ already applied)/.test(line));
- assert.equal(lines.length,19);assert.equal(lines.filter(line=>line.startsWith('Applied migration')).length,expected);
+ assert.equal(lines.length,21);assert.equal(lines.filter(line=>line.startsWith('Applied migration')).length,expected);
  return lines.map(line=>line.match(/\d+_[a-z0-9_]+/)[0]);
 }
 async function call(method,path,body){const response=await fetch(new URL(path,origin),{method,headers:{...(identity?{authorization:'Bearer '+identity.token}:{}),...(body?{'content-type':'application/json'}:{})},body:body?JSON.stringify(body):undefined,signal:AbortSignal.timeout(15000)});return {status:response.status,body:await response.json()};}
@@ -41,13 +41,13 @@ try{
  const permission=await source.query('SELECT rolcreatedb OR rolsuper AS allowed FROM pg_roles WHERE rolname=current_user');
  if(!permission.rows[0]?.allowed){report.status='not_run';report.reason='Existing role cannot create an isolated database; no permission changes attempted';console.log('NOT RUN existing role has no database creation permission');}
  else{
-  const files=await migrationFiles();assert.equal(files.length,19);
+  const files=await migrationFiles();assert.equal(files.length,21);assert.ok(files.includes('020_test_execution_revision.sql'));assert.ok(files.includes('021_requirement_segment_reviews.sql'));
   report.migrations=await Promise.all(files.map(async file=>({file,sha256:createHash('sha256').update(await readFile(new URL(file,migrationDirectory))).digest('hex')})));
   await source.query(`CREATE DATABASE ${name} TEMPLATE template0`);report.retainedSyntheticDatabase=name;
   pool=new Pool({connectionString:target.href,connectionTimeoutMillis:3000,statement_timeout:15000,query_timeout:18000});
   await check('empty_database_has_no_project_tables_or_migration_history',async()=>{const r=await pool.query("SELECT to_regclass('users') IS NULL AND to_regclass('schema_migrations') IS NULL AS empty");assert.equal(r.rows[0].empty,true);});
   let installed;
-  await check('actual_cli_installs_all_nineteen_migrations_and_vector_on_empty_database',async()=>{installed=await migrate(19);const r=await pool.query("SELECT version FROM schema_migrations ORDER BY version");assert.deepEqual(r.rows.map(row=>row.version),installed);assert.equal((await pool.query("SELECT COUNT(*)::int AS n FROM pg_extension WHERE extname IN ('vector','pgcrypto')")).rows[0].n,2);});
+  await check('actual_cli_installs_all_twenty_one_migrations_and_vector_on_empty_database',async()=>{installed=await migrate(21);const r=await pool.query("SELECT version FROM schema_migrations ORDER BY version");assert.deepEqual(r.rows.map(row=>row.version),installed);assert.equal((await pool.query("SELECT COUNT(*)::int AS n FROM pg_extension WHERE extname IN ('vector','pgcrypto')")).rows[0].n,2);assert.equal((await pool.query("SELECT column_default FROM information_schema.columns WHERE table_name='practice_test_cases' AND column_name='execution_revision'")).rows[0].column_default,'0');});
   await check('second_cli_run_preserves_migration_timestamps_and_empty_business_tables',async()=>{const before=(await pool.query('SELECT version,applied_at FROM schema_migrations ORDER BY version')).rows;assert.deepEqual(await migrate(0),installed);assert.deepEqual((await pool.query('SELECT version,applied_at FROM schema_migrations ORDER BY version')).rows,before);assert.equal((await pool.query('SELECT COUNT(*)::int AS n FROM users')).rows[0].n,0);});
   app=await createApp({projectStore:new PgProjectStore(pool),pool,database:{query:sql=>pool.query(sql),end:async()=>{}},corsOrigin:'http://127.0.0.1:5173'});origin=await app.listen({host:'127.0.0.1',port:0});
   await check('fresh_service_is_ready_and_manual_workflow_persists_without_ai',async()=>{

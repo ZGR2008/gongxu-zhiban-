@@ -1,6 +1,8 @@
 import {useCallback,useEffect,useRef,useState} from 'react';
 import {useEditGuard,useUnsavedEdit} from './EditGuard';
 import {TaskTestEvidence,type TaskTestPair,type PairHistory} from './TaskTestEvidence';
+import {RequirementSegments} from './RequirementSegments';
+import {traceNextAction} from './trace-next-action';
 import './requirement-trace.css';
 type Api=<T>(path:string,options?:RequestInit)=>Promise<T>;
 type Item={id:string;key:string;position:number;start:number;end:number;text:string;change:string;predecessorId:string|null;changeReviewNote:string|null;coverage:{suggested:number;confirmedTasks:number;confirmedCases:number;stale:number;manualEvidence:number}};
@@ -12,6 +14,8 @@ const labels:Record<string,string>={suggested:'模型建议 · 待确认',confir
 export function RequirementTrace({request,projectId,versionId,refreshKey=''}:{request:Api;projectId:string;versionId?:string;refreshKey?:string}){
   const [data,setData]=useState<Data|null>(null),[loading,setLoading]=useState(true),[error,setError]=useState(''),[notice,setNotice]=useState('');
   const [selected,setSelected]=useState(''),[target,setTarget]=useState(''),[kind,setKind]=useState<'task'|'case'>('task'),[note,setNote]=useState(''),[predecessor,setPredecessor]=useState('');
+  const [segmentsOpen,setSegmentsOpen]=useState(false);
+  const detailHeading=useRef<HTMLHeadingElement>(null);
   const [busy,setBusy]=useState(false),[deferred,setDeferred]=useState(false),[readFailed,setReadFailed]=useState(false),[preserving,setPreserving]=useState(false),[draftsRetained,setDraftsRetained]=useState(false);const saving=useRef(false),generation=useRef(0);const {protect,hasDirty}=useEditGuard();
   const dataRef=useRef(data);dataRef.current=data;
   const base=`/projects/${projectId}/trace`,item=data?.items.find(i=>i.id===selected);
@@ -44,6 +48,8 @@ export function RequirementTrace({request,projectId,versionId,refreshKey=''}:{re
   function choose(id:string){protect(()=>{setSelected(id);setNote('');setTarget('');setPredecessor('');setNotice('');});}
   const related=data?.links.filter(link=>link.itemId===selected)??[];
   const canReview=Boolean(data&&(data.tasks.length||data.cases.length||data.previousItems.length||note||target||predecessor));
+  const next=item&&data?traceNextAction(item,data.taskTests??[],Boolean(data.version?.current)):null;
+  const pendingItems=data?.items.filter(i=>traceNextAction(i,data.taskTests??[],Boolean(data.version?.current)).pending)??[];
   return <section className="editor-panel trace-panel" aria-label="需求到验证证据追踪">
     <div className="panel-heading"><div><span className="eyebrow">REQUIREMENT → EVIDENCE</span><h3>需求到验证证据</h3><p>{data?.version?`需求 v${data.version.number} · ${data.version.current?'当前确认版本':'历史版本（只读）'}`:'确认需求后建立条目追踪'} · 关联、审核、执行分别记录</p></div><button type="button" className="button secondary" disabled={busy||loading} onClick={()=>protect(()=>{setNote('');setTarget('');setPredecessor('');setNotice('');void load();})}>刷新追踪</button></div>
     {error&&<p className="alert error" role="alert">{error}</p>}{notice&&<p className="alert success" role="status">{notice}</p>}
@@ -54,9 +60,12 @@ export function RequirementTrace({request,projectId,versionId,refreshKey=''}:{re
     {loading&&!preserving?<div className="trace-skeleton" role="status">正在核对需求原文、任务与用例证据…</div>:data?.items.length?<>
       <div className="trace-metrics" role="group" aria-label="当前版本追踪统计"><span><strong>{data.items.length}</strong> 原文条目</span><span><strong>{data.items.filter(i=>!i.coverage.confirmedTasks||!i.coverage.confirmedCases).length}</strong> 任务或测试关联缺口</span><span><strong>{data.items.filter(i=>i.coverage.stale>0).length}</strong> 关联需要复核</span><span><strong>{data.items.filter(i=>i.coverage.manualEvidence>0).length}</strong> 有人工通过记录及说明</span></div>
       <p className="muted-text">{data.scope} “有记录”不是对需求正确性的自动认证。</p>
+      <div className="trace-action-strip" role="group" aria-label="待处理追踪事项"><div><strong>{pendingItems.length} 个条目还有下一步</strong><span>按失效关联、需求关联、任务配对及执行证据逐项核对，不自动替你确认。</span></div><button className="button secondary" type="button" disabled={!pendingItems.length||busy} onClick={()=>protect(()=>{setSelected(pendingItems[0].id);setNote('');setTarget('');setPredecessor('');setNotice('');requestAnimationFrame(()=>detailHeading.current?.focus());})}>定位首个待处理条目</button></div>
+      {data.version&&<><button type="button" className="text-link" aria-expanded={segmentsOpen} onClick={()=>protect(()=>setSegmentsOpen(open=>!open))}>{segmentsOpen?'收起原文分段审阅':'分段审阅完整原文 →'}</button>{segmentsOpen&&<RequirementSegments key={data.version.id} projectId={projectId} versionId={data.version.id} request={request}/>}</>}
       {data.impact?.previousVersion&&<details className="trace-impact"><summary>需求变更影响 · 对照 v{data.impact.previousVersion}</summary><p>其他版本保留 {data.impact.historicalAssets.tasks} 项任务、{data.impact.historicalAssets.cases} 条用例、{data.impact.historicalAssets.documents} 份文档，全部需核对后重新用于当前版本。</p><p>{data.impact.removedOrChanged.length} 个旧条目已删除或改写；下列原文仅帮助人工对照，不自动推断变更关系。</p>{data.impact.removedOrChanged.map(i=><blockquote key={i.id}><code>{i.key}</code><p>{i.text}</p></blockquote>)}</details>}
       <div className="trace-layout"><nav className="trace-item-list" aria-label="选择需求条目">{data.items.map(i=><button type="button" key={i.id} aria-pressed={i.id===selected} onClick={()=>choose(i.id)}><span>条目 {i.position} · {i.coverage.stale?'需复核':!i.coverage.confirmedCases?'测试关联缺口':'已关联测试'}</span><strong>{i.text}</strong><small>{labels[i.change]}</small></button>)}</nav>
-      {item&&<fieldset className="trace-detail trace-interactions" disabled={readFailed}><code>{item.key}</code><h4>原文与版本来源</h4><blockquote className="trace-source">{item.text}</blockquote><p className="muted-text">v{data.version?.number} · 原文字符位置 {item.start}–{item.end}（UTF-16） · {labels[item.change]}</p>{item.changeReviewNote&&<p>变更审核：{item.changeReviewNote}</p>}
+      {item&&<fieldset className="trace-detail trace-interactions" disabled={readFailed}><code>{item.key}</code><h4 ref={detailHeading} tabIndex={-1}>原文与版本来源</h4><blockquote className="trace-source">{item.text}</blockquote><p className="muted-text">v{data.version?.number} · 原文字符位置 {item.start}–{item.end}（UTF-16） · {labels[item.change]}</p>{item.changeReviewNote&&<p>变更审核：{item.changeReviewNote}</p>}
+        {next&&<aside className="trace-next" aria-label="所选条目的下一步"><span className="eyebrow">下一步</span><strong>{next.title}</strong><p>{next.detail}</p></aside>}
         <h4>条目关联的任务、用例与人工记录</h4>{related.length?<ul className="trace-links">{related.map(link=>{
           const row=(link.taskId?data.tasks:data.cases).find(t=>t.id===(link.taskId??link.caseId));const stale=!!link.caseId&&row?.revision!==link.caseRevision;
           return <li key={link.id}><strong>{link.taskId?'任务':'测试'} · {row?.title??'关联对象不可用'}</strong><p>{labels[link.status]} · 最初来源：{link.origin==='model'?'模型建议':'人工添加'}{stale?' · 用例已修改，关联失效待复核':''}</p>{link.reviewNote&&<p>审核依据：{link.reviewNote}</p>}{link.caseId&&<details><summary>核对用例及执行证据</summary><p>步骤：{row?.steps}</p><p>预期：{row?.expected}</p><p>{labels[row?.result??'not_run']} · 当前修订 {row?.revision} / 关联修订 {link.caseRevision}</p><blockquote>{row?.executionNote||'没有执行说明，不能作为充分证据。'}</blockquote><p>{row?.executedAt?new Date(row.executedAt).toLocaleString('zh-CN'):'暂无执行时间'}</p></details>}<button type="button" className="text-link" disabled={busy||!data.version?.current} onClick={()=>protect(()=>{setKind(link.taskId?'task':'case');setTarget(link.taskId??link.caseId??'');setNote('');setPredecessor('');})}>人工复核此关联 →</button></li>;

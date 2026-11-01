@@ -4,7 +4,7 @@ export const REQUIREMENT_GENERATION_LIMIT = 20_000;
 export function requirementGenerationIssue(content: string) {
   return content.length > REQUIREMENT_GENERATION_LIMIT ? {
     error: 'requirement_generation_limit', actual: content.length, limit: REQUIREMENT_GENERATION_LIMIT,
-    message: '需求完整保留，但超过单次生成的 20000 字符边界。请拆分为可独立验收的需求范围后再生成；本次未调用模型，也未丢弃尾部内容。',
+    message: '需求完整保留，但超过单次生成的 20000 字符边界。可在追踪视图分段审阅原文与跨段依赖；分段模型生成尚未启用。本次未调用模型，也未丢弃尾部内容，无需删除原始证据。',
   } : undefined;
 }
 export function requirementSegments(content: string, maxLength = 4000) {

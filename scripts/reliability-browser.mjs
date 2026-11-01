@@ -157,6 +157,8 @@ async function scenario(name,work){
   }
   else if(path.endsWith('/agent/runs')){state.pollingTimes?.push({phase:'list_request',ms:Date.now()-state.pollStarted});state.runListReads=(state.runListReads??0)+1;if(state.runListGate)await state.runListGate;status=state.runListStatus??200;body=status===200?{runs:state.runs}:{error:'database_unavailable'};}
   else if(/\/agent\/runs\/[^/]+$/.test(path)){state.pollingTimes?.push({phase:'detail_request',ms:Date.now()-state.pollStarted});const id=path.split('/').at(-1);state.runCounts[id]=(state.runCounts[id]||0)+1;if(state.runDetailGate)await state.runDetailGate;await new Promise(r=>setTimeout(r,state.runDelay(id)));body={run:state.runs.find(r=>r.id===id),steps:[{id:'s',stage:'plan_1',status:'succeeded',outputSummary:id===RA?'运行A输出':'运行B输出',tools:[]}]};}
+  else if(path.endsWith('/segments')&&method==='GET'){state.segmentReads=(state.segmentReads??0)+1;status=state.segmentStatus??200;body=status===200?structuredClone(state.segmentData):{error:'database_unavailable'};}
+  else if(path.endsWith('/segments/reviews')&&method==='POST'){const input=route.request().postDataJSON();state.writes.push({path,body:input});status=state.segmentSaveStatus??200;body=status===200?{review:{...input,revision:input.expectedRevision+1,reviewedAt:now}}:{error:'segment_review_changed'};if(status===200)state.segmentData.reviews=[...state.segmentData.reviews.filter(r=>r.segmentKey!==input.segmentKey),body.review];}
   else if(path.endsWith('/trace')){state.traceReads=(state.traceReads??0)+1;status=state.traceStatus??200;body=structuredClone(status===200?(state.traceData??{version:null,items:[],links:[],tasks:[],cases:[],previousItems:[],impact:null}):{error:'trace_refresh_required'});await new Promise(r=>setTimeout(r,state.traceDelay??0));}
   else if(/\/trace\/(links|task-tests)$/.test(path)&&method==='POST'){const input=route.request().postDataJSON();state.writes.push({path,body:input});if(path.endsWith('/links')&&state.traceData){state.traceData.links=state.traceData.links.map(link=>(input.targetKind==='case'?link.caseId:link.taskId)===input.targetId?{...link,status:input.decision,reviewNote:input.note}:link);}body={status:'confirmed'};}
   else if(path==='/knowledge'){
@@ -197,11 +199,13 @@ async function scenario(name,work){
  finally{await context.close();}
 }
 async function routeTo(page,id){await page.evaluate(path=>{history.pushState({},'',path);dispatchEvent(new PopStateEvent('popstate'));},`/projects/${id}/requirements`);}
-async function waitFor(check){for(let i=0;i<100;i++){if(check())return;await new Promise(resolve=>setTimeout(resolve,20));}throw Error('Fixture request not observed');}
+async function waitFor(check){for(let i=0;i<100;i++){if(await check())return;await new Promise(resolve=>setTimeout(resolve,20));}throw Error('Fixture request not observed');}
 function casePageFixture(state,count=201){
  state.detailOverride={project:project(A),requirements:[{id:RA,version:2,status:'confirmed',content:'完整测试统计 · 合成',createdAt:now}]};
  state.cases=Array.from({length:count},(_,i)=>({id:`fixture-case-${i}`,title:i===count-1?'末页失败不能被隐藏':`分页合成用例 ${i+1}`,requirementVersionId:RA,category:'normal',revision:1,preconditions:'独立合成资料',steps:'人工检查',expected:'保留真实记录',result:i===count-1?'failed':'passed',executionNote:'合成记录，不是真实产品测试证据',executedAt:now}));
 }
+async function openPairReview(page){const details=page.locator('.trace-advanced');await details.waitFor();if(!await details.evaluate(node=>node.open))await details.locator('summary').click();}
+function segmentFixture(state){state.segmentData={versionId:RA,versionNumber:1,current:true,sourceHash:'c'.repeat(64),sourceLength:4008,generationEnabled:false,scope:'合成完整原文分段，未调用模型',segments:[{key:'SEG-'+'a'.repeat(20),part:1,start:0,end:4000,content:'第一段合成上下文。'.padEnd(4000,'。'),sourceHash:'a'.repeat(64),itemKeys:['REQ-fixture'],crossBoundaryKeys:['REQ-fixture']},{key:'SEG-'+'b'.repeat(20),part:2,start:4000,end:4008,content:'尾部禁止自行审批',sourceHash:'b'.repeat(64),itemKeys:['REQ-tail'],crossBoundaryKeys:[]}],reviews:[]};}
 function traceFixture(state){
  const test={id:RB,title:'合成配对用例',requirementVersionId:RA,category:'normal',revision:1,preconditions:'',steps:'核对登记',expected:'审批留存',result:'not_run',executionNote:'',executedAt:null};
  state.detailOverride={project:project(A),requirements:[{id:RA,version:1,status:'confirmed',content:'审批留档',createdAt:now}]};state.cases=[test];
@@ -301,6 +305,8 @@ try{
   traceFixture(state);state.traceData.tasks=[];state.traceData.cases=[];state.traceData.links=[];state.traceData.items[0].coverage={suggested:0,confirmedTasks:0,confirmedCases:0,stale:0,manualEvidence:0};
   await page.goto(`${origin.origin}/projects/${A}/requirements`);await page.getByRole('group',{name:'关联准备'}).waitFor();await auditAccessibility(page,'accessibility_trace_preparation');
  });
+ await scenario('accessibility_v4_expanded_evidence',async(page,state)=>{traceFixture(state);await page.goto(`${origin.origin}/projects/${A}/tests`);await openPairReview(page);await auditAccessibility(page,'accessibility_v4_expanded_evidence');});
+ await scenario('accessibility_v4_segment_review',async(page,state)=>{traceFixture(state);segmentFixture(state);await page.goto(`${origin.origin}/projects/${A}/requirements`);await page.getByRole('button',{name:'分段审阅完整原文 →'}).click();await page.getByLabel('分段审核说明').waitFor();await auditAccessibility(page,'accessibility_v4_segment_review');});
  await scenario('accessibility_rag_insufficient_candidates',async(page,state)=>{
   state.answerResponse={answer:'合成缺口：请补充对应版本的资料。',reason:'insufficient_evidence',sources:[],candidates:[{id:RA,document_name:'合成候选资料',content:'这只是供核对的候选内容。',page:1,distance:0.1}]};
   await page.goto(`${origin.origin}/knowledge`);await page.getByLabel('检索问题').fill('合成资料外的问题');await page.getByRole('button',{name:/知识增强回答/}).click();await page.getByText('资料不足（模型判断）',{exact:true}).waitFor();await auditAccessibility(page,'accessibility_rag_insufficient_candidates');
@@ -531,9 +537,41 @@ try{
   state.failKnowledgeAfterUpload=true;await page.goto(`${origin.origin}/knowledge`);await page.locator('#knowledge-name').fill('已持久化的资料');await page.locator('#knowledge-content').fill('列表刷新失败不等于提交失败');await page.getByRole('button',{name:/保存并分块/}).click();await page.getByText(/数据服务暂不可用/).waitFor();assert.equal(state.writes.length,1);assert.equal(await page.locator('#knowledge-content').inputValue(),'');assert.ok((await page.locator('.alert.success').innerText()).includes('文档已保存'));
   state.knowledgeStatus=200;await page.getByRole('button',{name:'重新检查',exact:true}).click();await page.waitForTimeout(120);assert.equal(state.writes.length,1);assert.equal(await page.getByRole('button',{name:/保存并分块/}).isDisabled(),true);
  });
+ await scenario('v4_desktop_trace_controls_fit_zoom_and_reduced_motion',async(page,state)=>{
+  traceFixture(state);segmentFixture(state);await page.goto(`${origin.origin}/projects/${A}/requirements`);await page.getByRole('button',{name:'分段审阅完整原文 →'}).click();await page.getByLabel('分段审核说明').waitFor();await page.emulateMedia({reducedMotion:'reduce'});
+  for(const [width,height,zoom]of [[1366,768,1],[1536,864,1.25],[1920,1080,1.5],[1024,768,1]]){
+   await page.setViewportSize({width,height});await page.evaluate(value=>document.body.style.zoom=String(value),zoom);
+   const button=page.getByRole('button',{name:'保存分段审核'});await button.scrollIntoViewIfNeeded();await button.focus();
+   assert.ok(await button.evaluate(el=>{const r=el.getBoundingClientRect();return r.left>=0&&r.right<=innerWidth+1&&el.contains(document.elementFromPoint(r.x+r.width/2,r.y+r.height/2));}),'primary action visible and not covered');
+   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2),'no page horizontal overflow');
+   assert.equal(await page.getByRole('region',{name:'原文分段审阅'}).evaluate(el=>getComputedStyle(el).animationName),'none');
+   await page.screenshot({path:fileURLToPath(new URL(`v4-desktop-${width}-csszoom-${zoom}.png`,directory))});
+  }
+  assert.equal(state.writes.length,0);
+ });
+ await scenario('v4_trace_next_action_is_real_and_advanced_draft_survives_collapse',async(page,state)=>{
+  traceFixture(state);await page.goto(`${origin.origin}/projects/${A}/tests`);
+  const panel=page.getByRole('region',{name:'需求到验证证据追踪'});await panel.getByRole('group',{name:'待处理追踪事项'}).waitFor();
+  assert.match(await panel.getByRole('complementary',{name:'所选条目的下一步'}).innerText(),/明确任务由哪个用例检查/);
+  const advanced=panel.locator('.trace-advanced');assert.equal(await advanced.evaluate(n=>n.open),false);assert.equal(state.writes.length,0);
+  await advanced.locator('summary').focus();await page.keyboard.press('Enter');await panel.getByLabel('任务验证依据').fill('折叠时仍保留人工审核输入');await advanced.locator('summary').click();
+  await panel.getByRole('button',{name:'定位首个待处理条目'}).click();await page.getByRole('dialog').getByRole('button',{name:'留在此页'}).click();await advanced.locator('summary').click();assert.equal(await panel.getByLabel('任务验证依据').inputValue(),'折叠时仍保留人工审核输入');assert.equal(state.writes.length,0);
+  await panel.screenshot({path:fileURLToPath(new URL('v4-trace-guided.png',directory))});
+ });
+ await scenario('v4_segment_review_keeps_tail_source_conflict_input_and_navigation_guard',async(page,state)=>{
+  traceFixture(state);state.segmentStatus=503;state.segmentData={versionId:RA,versionNumber:1,current:true,sourceHash:'c'.repeat(64),sourceLength:4008,generationEnabled:false,scope:'合成完整原文分段，未调用模型',segments:[{key:'SEG-'+'a'.repeat(20),part:1,start:0,end:4000,content:'第一段上下文',sourceHash:'a'.repeat(64),itemKeys:['REQ-fixture'],crossBoundaryKeys:['REQ-fixture']},{key:'SEG-'+'b'.repeat(20),part:2,start:4000,end:4008,content:'尾部禁止自行审批',sourceHash:'b'.repeat(64),itemKeys:['REQ-tail'],crossBoundaryKeys:[]}],reviews:[]};
+  await page.goto(`${origin.origin}/projects/${A}/requirements`);await page.getByRole('button',{name:'分段审阅完整原文 →'}).click();const panel=page.getByRole('region',{name:'原文分段审阅'});await panel.getByRole('alert').waitFor();state.segmentStatus=200;await panel.getByRole('button',{name:'刷新分段'}).click();await panel.getByRole('button',{name:/第 2 段/}).click();assert.equal(await panel.getByLabel('完整分段原文').innerText(),'尾部禁止自行审批');
+  await panel.getByLabel('分段审核说明').fill('尾部权限约束需要与第一段一起处理');state.segmentSaveStatus=409;await panel.getByRole('button',{name:'保存分段审核'}).click();await panel.getByRole('alert').waitFor();assert.equal(await panel.getByLabel('分段审核说明').inputValue(),'尾部权限约束需要与第一段一起处理');
+  await page.getByRole('button',{name:'收起原文分段审阅'}).click();await page.getByRole('dialog').getByRole('button',{name:'留在此页'}).click();assert.equal(await panel.getByLabel('分段审核说明').inputValue(),'尾部权限约束需要与第一段一起处理');
+  state.segmentSaveStatus=200;await panel.getByRole('button',{name:'保存分段审核'}).click();await panel.getByText(/分段审核已保存/).waitFor();assert.equal(state.writes.at(-1).body.expectedRevision,0);assert.equal(state.writes.at(-1).body.segmentKey,'SEG-'+'b'.repeat(20));
+  await panel.getByRole('button',{name:'刷新分段'}).click();await panel.getByLabel('分段审核说明').waitFor();assert.equal(await panel.getByLabel('分段审核说明').inputValue(),'尾部权限约束需要与第一段一起处理');assert.equal(state.writes.length,2);
+  await panel.screenshot({path:fileURLToPath(new URL('v4-segment-review.png',directory))});
+  state.segmentStatus=503;await panel.getByRole('button',{name:'刷新分段'}).click();await panel.getByRole('alert').waitFor();assert.equal(await panel.getByRole('button',{name:'保存分段审核'}).isDisabled(),true,'old snapshot cannot still offer writes after refresh failure');
+  state.segmentStatus=200;await panel.getByRole('button',{name:'刷新分段'}).click();await panel.getByRole('button',{name:'保存分段审核'}).waitFor();await waitFor(async()=>await panel.getByRole('button',{name:'保存分段审核'}).isEnabled());
+ });
  await scenario('trace_confirming_source_preserves_pair_draft_and_unlocks_pairing',async(page,state)=>{
   traceFixture(state);state.traceData.links[1].status='suggested';await page.goto(`${origin.origin}/projects/${A}/tests`);
-  const trace=page.getByRole('region',{name:'需求到验证证据追踪'});
+  const trace=page.getByRole('region',{name:'需求到验证证据追踪'});await openPairReview(page);
   await trace.getByLabel('验证链开发任务').selectOption(RA);await trace.getByLabel('验证链测试用例').selectOption(RB);await trace.getByLabel('任务验证依据').fill('先写配对依据，审核来源后继续');
   assert.equal(await trace.getByRole('button',{name:'确认任务与用例配对'}).isDisabled(),true);
   await trace.getByLabel('关联类型',{exact:true}).selectOption('case');await trace.getByLabel('当前版本对象',{exact:true}).selectOption(RB);await trace.getByLabel('审核依据',{exact:true}).fill('人工核对用例检查审批记录');
@@ -543,7 +581,7 @@ try{
   await trace.getByRole('button',{name:'确认任务与用例配对'}).click();await waitFor(()=>state.writes.length===2);assert.ok(state.writes[1].path.endsWith('/task-tests'));
  });
  await scenario('trace_slow_source_refresh_keeps_new_input_and_version_change_blocks_writes',async(page,state)=>{
-  traceFixture(state);await page.goto(`${origin.origin}/projects/${A}/tests`);const trace=page.getByRole('region',{name:'需求到验证证据追踪'});
+  traceFixture(state);await page.goto(`${origin.origin}/projects/${A}/tests`);const trace=page.getByRole('region',{name:'需求到验证证据追踪'});await openPairReview(page);
   await trace.getByLabel('当前版本对象',{exact:true}).selectOption(RA);await trace.getByLabel('审核依据',{exact:true}).fill('上方关联准备保存');
   const before=state.traceReads;state.traceDelay=650;await trace.getByRole('button',{name:'确认关联',exact:true}).click();await waitFor(()=>state.traceReads>before);
   await trace.getByLabel('任务验证依据').fill('刷新未返回时新增的配对审核');await page.waitForTimeout(800);assert.equal(await trace.getByLabel('任务验证依据').inputValue(),'刷新未返回时新增的配对审核');
@@ -555,7 +593,7 @@ try{
  });
  await scenario('trace_parallel_review_drafts_survive_either_form_save',async(page,state)=>{
   traceFixture(state);await page.goto(`${origin.origin}/projects/${A}/tests`);
-  const trace=page.getByRole('region',{name:'需求到验证证据追踪'});
+  const trace=page.getByRole('region',{name:'需求到验证证据追踪'});await openPairReview(page);
   await trace.getByLabel('当前版本对象',{exact:true}).selectOption(RA);await trace.getByLabel('审核依据',{exact:true}).fill('上方关联审核准备保存');
   await trace.getByLabel('验证链开发任务').selectOption(RA);await trace.getByLabel('验证链测试用例').selectOption(RB);await trace.getByLabel('任务验证依据').fill('下方配对审核不能随上方刷新丢失');
   await trace.getByRole('button',{name:'确认关联',exact:true}).click();await waitFor(()=>state.writes.length===1);await page.waitForTimeout(200);
@@ -565,7 +603,7 @@ try{
   assert.equal(await trace.getByLabel('审核依据',{exact:true}).inputValue(),'这次上方审核草稿不得被配对保存卸载');assert.ok((await trace.innerText()).includes('来源记录已更新'));
  });
  await scenario('trace_read_failure_marks_old_snapshot_readonly_until_recovery',async(page,state)=>{
-  traceFixture(state);await page.goto(`${origin.origin}/projects/${A}/tests`);const trace=page.getByRole('region',{name:'需求到验证证据追踪'});await trace.getByLabel('审核依据',{exact:true}).waitFor();
+  traceFixture(state);await page.goto(`${origin.origin}/projects/${A}/tests`);const trace=page.getByRole('region',{name:'需求到验证证据追踪'});await openPairReview(page);await trace.getByLabel('审核依据',{exact:true}).waitFor();
   state.traceStatus=409;await trace.getByRole('button',{name:'刷新追踪'}).click();await trace.getByText(/读取期间需求版本发生变化/).waitFor();
   assert.equal(await trace.getByRole('button',{name:'确认关联',exact:true}).isDisabled(),true);assert.equal(await trace.getByLabel('验证链开发任务').isDisabled(),true);assert.ok((await trace.innerText()).includes('上次读取快照'));
   state.traceStatus=200;await trace.getByRole('button',{name:'刷新追踪'}).click();await trace.getByLabel('审核依据',{exact:true}).waitFor();await page.waitForTimeout(80);
@@ -581,7 +619,7 @@ try{
   const test={id:RB,title:'合成配对用例',requirementVersionId:RA,category:'normal',revision:1,preconditions:'',steps:'核对登记',expected:'审批留存',result:'not_run',executionNote:'',executedAt:null};
   state.detailOverride={project:project(A),requirements:[{id:RA,version:1,status:'confirmed',content:'审批留档',createdAt:now}]};state.cases=[test];
   state.traceData={version:{id:RA,number:1,current:true},items:[{id:RA,key:'REQ-fixture',position:1,start:0,end:4,text:'审批留档',change:'initial',coverage:{suggested:0,confirmedTasks:1,confirmedCases:1,stale:0,manualEvidence:0}}],links:[{id:'task-link',itemId:RA,taskId:RA,caseId:null,status:'confirmed',origin:'human'},{id:'case-link',itemId:RA,taskId:null,caseId:RB,caseRevision:1,status:'confirmed',origin:'human'}],tasks:[{id:RA,title:'合成审批任务'}],cases:[test],previousItems:[],impact:null,taskTests:[],taskTestHistory:[],scope:'受控浏览器替身，不是业务数据'};
-  await page.goto(`${origin.origin}/projects/${A}/tests`);await page.getByLabel('验证链开发任务').selectOption(RA);await page.getByLabel('验证链测试用例').selectOption(RB);await page.getByLabel('任务验证依据').fill('未完成的配对审核不得丢失');
+  await page.goto(`${origin.origin}/projects/${A}/tests`);await openPairReview(page);await page.getByLabel('验证链开发任务').selectOption(RA);await page.getByLabel('验证链测试用例').selectOption(RB);await page.getByLabel('任务验证依据').fill('未完成的配对审核不得丢失');
   await page.locator(`#${RB}-result`).selectOption('blocked');await page.locator(`#${RB}-note`).fill('合成登记：测试环境未就绪');await page.getByRole('button',{name:'保存执行结果',exact:true}).click();await waitFor(()=>state.writes.length===1);await page.waitForTimeout(250);
   assert.equal(await page.getByLabel('任务验证依据').inputValue(),'未完成的配对审核不得丢失');assert.ok((await page.getByRole('region',{name:'需求到验证证据追踪'}).innerText()).includes('来源记录已更新'));
  });
@@ -836,7 +874,7 @@ try{
   await page.getByRole('combobox',{name:'当前版本对象',exact:true}).selectOption(RA);
   assert.equal(await page.getByRole('combobox',{name:'验证链开发任务',exact:true}).count(),0,'pairing waits until both kinds of objects exist');
   const test={id:RB,title:'补充合成用例',revision:1,result:'not_run',steps:'人工核对',expected:'保留记录'};state.traceData.cases=[test];
-  await page.getByRole('button',{name:'刷新追踪',exact:true}).click();await page.getByRole('combobox',{name:'验证链测试用例',exact:true}).selectOption(RB);
+  await page.getByRole('button',{name:'刷新追踪',exact:true}).click();await openPairReview(page);await page.getByRole('combobox',{name:'验证链测试用例',exact:true}).selectOption(RB);
   assert.equal(state.writes.length,0,'preparation and refresh never trigger model or evidence writes');
  });
  await scenario('trace_empty_assets_keep_change_review_and_pending_input',async(page,state)=>{
