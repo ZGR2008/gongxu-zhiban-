@@ -20,6 +20,7 @@
 | R15/R18/R19 | 固定列表上限掩盖第201条失败、较早文档类型及知识资料。新增有界游标目录与完整当前版本统计，保留旧接口范围；修改或目录成员变化需刷新 | practice/documents/rag列表接口及原页面；真实201条用例、102份文档、201份资料，分别6/6/5组检查 |
 | R16/R17 | 更换向量模型后旧索引仍被标为可检索；上传边界报错不准确。展示实际模型/维度兼容状态，显式手动重建；分别解释字节/页数/字符/分块限制 | `rag/service.ts`、`rag/routes.ts`及上传状态；实际200000/200001字符PDF、250/251分块与索引恢复检查 |
 | R20 | 交付页面和导出仍写旧的截断统计范围。复用同一范围说明，区分完整版本测试/文档摘要与最近100条规划/审查 | `pages/workbench-data.ts`、交付页面与导出；真实工作台11组回归 |
+| R23/R24/R25 | 自动刷新抢占慢读取、成功状态损坏JSON和模块下载失败导致不可恢复。等待读取完成后再刷新，普通GET限时及结构核对；导入失败局部提示，重载遵守编辑保护 | `RunHistory.tsx`、`request-transport.ts`、`recoverable-lazy.tsx`；8项真实回环HTTP检查、受控回归及冻结生产构建3项 |
 | R21 | 草稿PATCH无并发原文核对，确认可能采用用户未读过的新正文或旧草稿。更新/确认必须提交已读`expectedContent`，同一项目锁内核对原文及最新版本；冲突保留输入并受保护重读 | `project-store.ts`、`project-routes.ts`、`App.tsx`；5项API回归、7组真实HTTP/DB/桌面检查 |
 | R22 | 追踪条目有两套唯一约束，首次并发初始化只处理其中一个，实际出现主键冲突。改为覆盖所有唯一冲突的幂等插入，不覆盖人工审核 | `trace/routes.ts`；12个实际首次SQL协调并发，旧版4个500，修复后4组检查通过，条目/审核/证据序号保持正确 |
 | T1—T6 | 需求、任务、测试、文档和成长口径不一致。建立明确任务—用例配对、定义修订和人工依据；文档保留生成时快照、同版本变动提示复核；追踪一致快照和双表单草稿保留；成长默认当前确认版本 | 迁移013/017、`trace/task-test.ts`、`documents/evidence.ts`、`evidence-state.ts`、成长界面；21组真实综合及6组成长/任务检查 |
@@ -63,7 +64,9 @@ Agent保留真实工具调用、状态与校验结果；计划结构通过不等
 | 代码及说明 | 源码、锁文件、配置模板、迁移、测试、评测、README与恢复说明；保留真实本地Git历史 | 远程可访问仓库的核验/推送需授权；ZIP不含.git，不能替代比赛仓库 |
 | 公网及提交 | 本机运行和部署说明已有 | 公网演示是可选加分项，尚未部署；没有官网提交回执 |
 
-视频录制源码为`6c1abe2`，清单如实记录当时存在工作区修改；它不展示之后全部U4—U7/R20—R22边界。不能因为新报告引用旧草稿就宣称这些修复在片中演示。PDF/PPT的最终文件与检查清单另有版本和哈希，不能混用旧渲染证据。
+RAG新增明确的资料不足分支：候选存在但模型判断不足时不强迫凑引用，候选原文与答案引用分开。正常引用身份仍严格校验；新增2项协议回归、三状态浏览器及真实本地检索/HTTP4组通过，聊天为替身，不能据此声称幻觉降低。
+
+视频录制源码为`6c1abe2`，清单如实记录当时存在工作区修改；它不展示之后全部U4—U8/R20—R25/A7边界。不能因为新报告引用旧草稿就宣称这些修复在片中演示。PDF/PPT的最终文件与检查清单另有版本和哈希，不能混用旧渲染证据。
 
 [公开参考核验](REFERENCE-REVIEW-V3.md)区分第八届C组省一/国三、AI WEB国二、组别不明的国家一等奖线索和作者自述仓库。未找到可完整复核的“同届同赛道C组国一源码”案例，不能编造获奖原因。只借鉴垂直场景、完整流程和信息组织等通用思路，没有复制参赛项目代码、文案、素材或特色界面。既有SaturnWebGL/Three.js、PDF.js及测试工具按各自许可记录；开源装饰组件不是原创AI算法。
 
@@ -73,20 +76,22 @@ Agent保留真实工具调用、状态与校验结果；计划结构通过不等
 
 | 实际命令或入口 | 结果 | 证据范围 |
 | --- | --- | --- |
-| `pnpm test` | API 119/119、Embedding 4/4，环境模板2份合格 | 单元/协议替身；不是119次真实模型调用 |
+| `pnpm test` | API 121/121、Embedding 4/4，环境模板2份合格 | 单元/协议替身；不是121次真实模型调用 |
 | `node --test`运行索引列明的8个scripts测试文件 | 58/58 | UI规则、证据、评测核算、无Git来源与打包规则 |
+| `pnpm test:request-transport` | 8/8 | 真实回环HTTP头部/正文截止、取消、损坏JSON、慢POST边界 |
+| `pnpm verify:production-recovery` | 3/3 | 冻结生产构建及实际浏览器；全部API为合成响应 |
 | `python scripts/export-review.test.py` | 6/6 | 合成文件脱敏、原文件不改、未知资料和链接保护 |
-| `pnpm typecheck`、`pnpm build` | 3个工作区类型检查和生产构建通过 | 最终Web入口295.78kB，gzip93.11kB；不能代替视觉验收 |
-| `pnpm verify:reliability-ui` | Edge 77/77 | 全部API受控，覆盖乱序、保存失败、版本、分页、键盘及动效 |
-| `node scripts/reliability-browser.mjs --engine=firefox` | 完整76通过/1未执行；最终历史名称修改后另7/7 | Firefox157.0，CDP减速不适用；正常本机进程、没有关闭安全保护 |
-| 同一脚本`--engine=webkit` | 完整75通过/2未执行；最终历史名称修改后另7/7 | Windows WebKit27.2；CDP与完整强制调色板不适用，不是Safari真机 |
-| `pnpm verify:accessibility` | 20场景，无工具判定违规 | axe自动规则；保留对比度、关闭符号等人工待核对项 |
+| `pnpm typecheck`、`pnpm build` | 3个工作区类型检查和生产构建通过 | 最终Web入口297.76kB，gzip93.89kB；不能代替视觉验收 |
+| `pnpm verify:reliability-ui` | Edge 86/86 | 全部API受控，覆盖乱序、保存失败、版本、分页、键盘及动效 |
+| `node scripts/reliability-browser.mjs --engine=firefox` | 完整85通过/1未执行 | Firefox157.0，CDP减速不适用；正常本机进程、没有关闭安全保护 |
+| 同一脚本`--engine=webkit` | 完整84通过/2未执行 | Windows WebKit27.2；CDP与完整强制调色板不适用，不是Safari真机 |
+| `pnpm verify:accessibility` | 22场景，无工具判定违规 | axe自动规则；保留对比度、关闭符号等人工待核对项 |
 | `node scripts/reliability-local.mjs --browser` | 21组通过 | 真实本地PostgreSQL/向量/HTTP/浏览器，聊天替身 |
 | `verify:requirement-preconditions`、`verify:trace-concurrency` | 7组、4组通过 | 真实原文前置条件、项目锁、12个实际首次SQL协调竞争 |
 | `verify:fresh-database` | 4组通过 | 独立空库、19个实际CLI迁移两次、需求/追踪/草稿HTTP持久化，无模型 |
 | `verify:review-context`、`verify:growth-scope`、`verify:document-context` | 各6组通过 | 真实本地版本/来源、完整尾部资料及隔离；生成步骤为替身 |
 | `verify:test-list`、`verify:document-list`、`verify:knowledge-list` | 6、6、5组通过 | 实际201用例、102文档、201资料及完整统计；合成账号 |
-| `verify:index-compatibility`、`verify:knowledge-answer`、`verify:embedding-mixed` | 4、3、3组通过 | 本地真实向量及取消/恢复；混合负载为4个合成账号 |
+| `verify:index-compatibility`、`verify:knowledge-answer`、`verify:embedding-mixed` | 4、4、3组通过 | 本地真实向量及取消/恢复；混合负载为4个合成账号 |
 | `verify:agent-recovery` | 8组通过 | 真实数据库中断、重复身份、取消、人工审核，聊天替身 |
 | `smoke:ui`、`smoke:project-controls`、`smoke:workbench` | 8、8、11组通过 | 本机运行服务和浏览器，新建合成账号，不调用收费模型 |
 | `node scripts/evaluate-offline.mjs` | 8类协议案例通过 | 无模型语义效果判断；真实模型比较仍待执行 |
@@ -98,6 +103,8 @@ Agent保留真实工具调用、状态与校验结果；计划结构通过不等
 最终新包为桌面`gongxu-zhiban-review-v3.zip`；如同名已存在，添加时间戳，绝不覆盖旧包。只在独立副本扫描/替换疑似硬编码秘密；真实.env在读取前排除，未分类资料先排除并记录类别及路径摘要，排除文件名也不泄露身份。保留前后端源码、模板、依赖清单/锁文件、数据库迁移、测试/评测和文档；排除node_modules、.venv、构建产物、缓存/日志、.git、模型权重、凭据、真实上传/业务数据、未知历史材料。PDF/PPT/MP4作为独立材料，不塞入源码ZIP。
 
 校验包括ZIP路径/CRC、清单哈希、必要文件/排除项、解压后编译与离线测试。解压副本复用本机已安装依赖，不称为全新机器联网安装。无Git当前评测可运行并记录未知提交；历史捕获必须有原始Git历史，缺少时明确拒绝，不从外网偷偷补拉。落盘路径、大小、SHA-256和最终副本验证结果以实际完成后的回执为准。
+
+Firefox中间两次慢详情检查出现额外一次读取，失败计数保留；在固定页面源码后定向2项及完整85项均通过。额外请求的独立根因尚未证明，不将推测写成已解决事实；后续开发热更新与长会话仍应关注这条诊断记录。
 
 ## 保留的边界与下一步
 
