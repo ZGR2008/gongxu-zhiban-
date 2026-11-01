@@ -1,4 +1,5 @@
-import { lazy, Suspense } from "react";
+import { Suspense } from "react";
+import { recoverableLazy as lazy } from "../components/recoverable-lazy";
 import type { PageProps } from "./WorkbenchShared";
 import "./workbench.css";
 const Missions = lazy(() => import("./Missions"));

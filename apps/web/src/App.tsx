@@ -1,4 +1,5 @@
-import { lazy, Suspense, useCallback, useEffect, useRef, useState, type FormEvent } from 'react';
+import { Suspense, useCallback, useEffect, useRef, useState, type FormEvent } from 'react';
+import { recoverableLazy as lazy } from './components/recoverable-lazy';
 import { RequestScope } from './components/request-scope';
 import {fetchJsonResponse,invalidResponse} from './components/request-transport';
 import { EditGuardProvider, useEditGuard, useUnsavedEdit } from './components/EditGuard';

@@ -238,6 +238,11 @@ try{
   traceFixture(state);state.traceData.tasks=[];state.traceData.cases=[];state.traceData.links=[];state.traceData.items[0].coverage={suggested:0,confirmedTasks:0,confirmedCases:0,stale:0,manualEvidence:0};
   await page.goto(`${origin.origin}/projects/${A}/requirements`);await page.getByRole('group',{name:'关联准备'}).waitFor();await auditAccessibility(page,'accessibility_trace_preparation');
  });
+ await scenario('accessibility_workspace_load_failure',async(page)=>{
+  await page.route(/\/Modules\.tsx(?:\?|$)/,route=>route.abort('failed'));
+  await page.goto(`${origin.origin}/knowledge`);await page.getByRole('alert').filter({hasText:'此工作区暂时无法加载'}).waitFor();
+  await auditAccessibility(page,'accessibility_workspace_load_failure');
+ });
  await scenario('accessibility_edit_guard_dialog',async(page)=>{
   await page.goto(`${origin.origin}/projects/${A}/requirements`);await page.locator('#requirement').fill('合成未保存草稿');
   await page.getByRole('link',{name:'我的项目',exact:true}).first().click();await page.getByRole('dialog',{name:'保留未保存的编辑'}).waitFor();
@@ -851,6 +856,32 @@ try{
   state.runListStatus=503;await page.getByRole('button',{name:'刷新记录',exact:true}).click();await page.getByRole('alert').filter({hasText:'数据服务暂不可用'}).waitFor();
   state.runListStatus=200;await page.getByRole('button',{name:'重新读取',exact:true}).click();await page.locator('.run-step-evidence').first().waitFor();
   assert.equal(state.runListReads,initialReads+3);assert.equal(await page.getByRole('alert').count(),0);
+ });
+ for(const [routeName,moduleName] of [['knowledge','Modules'],['runs','RunHistory']])await scenario(`workspace_load_${routeName}_failure_keeps_navigation`,async(page)=>{
+  await page.route(new RegExp(`/${moduleName}\\.tsx(?:\\?|$)`),route=>route.abort('failed'));
+  await page.goto(`${origin.origin}/${routeName}`);
+  const failure=page.getByRole('alert').filter({hasText:'此工作区暂时无法加载'});await failure.waitFor();
+  const reload=failure.getByRole('button',{name:'重新加载页面',exact:true});await reload.focus();assert.ok(await reload.evaluate(node=>node===document.activeElement));
+  await page.screenshot({path:fileURLToPath(new URL(`workspace_load_${routeName}.png`,directory)),fullPage:true});
+  await page.getByRole('link',{name:'我的项目',exact:true}).first().click();await page.waitForURL('**/projects');
+  await page.locator('.project-explorer').getByText('受控项目 A',{exact:true}).waitFor();assert.equal(await failure.count(),0);
+ });
+ await scenario('workspace_load_failure_reload_respects_unsaved_edit_and_save_failure',async(page,state)=>{
+  let release;const gate=new Promise(resolve=>{release=resolve;});let failModule=true;
+  await page.route(/\/RequirementHistory\.tsx(?:\?|$)/,async route=>{if(failModule){await gate;return route.abort('failed');}return route.continue();});
+  try{
+   await page.goto(`${origin.origin}/projects/${A}/requirements`);await page.waitForFunction(()=>document.querySelector('#requirement')?.value==='项目 A 的需求正文');
+   const draft='侧栏下载失败时，末尾验收条件也不能丢失。';await page.locator('#requirement').fill(draft);release();
+   const failure=page.getByRole('alert').filter({hasText:'此工作区暂时无法加载'});await failure.waitFor();assert.equal(await page.locator('#requirement').inputValue(),draft);
+   await page.screenshot({path:fileURLToPath(new URL('workspace_load_preserved_editor.png',directory)),fullPage:true});
+   const reload=failure.getByRole('button',{name:'重新加载页面',exact:true}),dialog=page.getByRole('dialog',{name:'保留未保存的编辑'});
+   await reload.click();await dialog.getByRole('button',{name:'留在此页',exact:true}).click();assert.equal(await page.locator('#requirement').inputValue(),draft);assert.equal(await page.locator('#requirement').count(),1);
+   let reloads=0;page.on('framenavigated',frame=>{if(frame===page.mainFrame())reloads++;});state.failSave=true;
+   await reload.click();await dialog.getByRole('button',{name:'保存并继续',exact:true}).click();await dialog.getByText(/保存未成功/).waitFor();assert.equal(reloads,0);assert.equal(await page.locator('#requirement').inputValue(),draft);
+   state.failSave=false;failModule=false;state.makeDetail=id=>detail(id,id===A?draft:undefined);
+   await dialog.getByRole('button',{name:'保存并继续',exact:true}).click();await waitFor(()=>reloads===1);await page.waitForFunction(expected=>document.querySelector('#requirement')?.value===expected,draft);await page.getByRole('heading',{name:'版本记录',exact:true}).waitFor();
+   assert.equal(await failure.count(),0);assert.equal(state.writes.length,2);assert.ok(state.writes.every(write=>write.path===`/projects/${A}/requirements`&&write.body.content===draft));
+  }finally{release();}
  });
  await scenario('project_read_invalid_json_has_a_recoverable_error',async(page,state)=>{
   let invalid=true;await page.route('**/api/projects',route=>invalid?route.fulfill({status:200,contentType:'text/html',body:'<h1>synthetic proxy response</h1>'}):route.fallback());
