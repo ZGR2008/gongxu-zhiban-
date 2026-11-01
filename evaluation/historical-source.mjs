@@ -3,6 +3,7 @@ import {createRequire} from 'node:module';
 import {createHash} from 'node:crypto';
 import {mkdir,writeFile,symlink} from 'node:fs/promises';
 import path from 'node:path';
+import {sourceProvenance} from './source-provenance.mjs';
 
 export const historicalCommit='5740ec36d03fffd30122e06287c92ef63a2ac5b1';
 const sourceRoot='apps/api/src/';
@@ -16,9 +17,10 @@ export function historicalDependency(from,specifier){
 // Read a fixed, local Git object. Never checkout old code over the current tree,
 // inspect historical configuration, run migrations, or install dependencies.
 export async function prepareHistoricalSource(root,directory){
+ if(!sourceProvenance(root).commit)throw Error('Historical Git commit is unavailable for this project; do not substitute reconstructed prompts');
  const require=createRequire(path.join(root,'apps/api/package.json'));
  const ts=require('typescript');
- const git=(args)=>execFileSync('git',args,{cwd:root,encoding:'utf8',stdio:['ignore','pipe','pipe'],maxBuffer:4_000_000});
+ const git=(args)=>execFileSync('git',args,{cwd:root,encoding:'utf8',stdio:['ignore','pipe','pipe'],maxBuffer:4_000_000,timeout:5000});
  try{if(git(['rev-parse',`${historicalCommit}^{commit}`]).trim()!==historicalCommit)throw Error();}
  catch{throw Error('Historical Git commit is unavailable; do not substitute reconstructed prompts');}
  const sourceDirectory=path.join(directory,'historical-source');

@@ -3,11 +3,11 @@ import {fileURLToPath} from 'node:url';
 import path from 'node:path';
 import {createRequire} from 'node:module';
 import {createHash,randomUUID} from 'node:crypto';
-import {execFileSync} from 'node:child_process';
 import assert from 'node:assert/strict';
 import {registerAgentRoutes} from '../apps/api/dist/agent/routes.js';
 import {registerKnowledgeRoutes} from '../apps/api/dist/rag/routes.js';
 import {historicalInput} from '../evaluation/historical-records.mjs';
+import {sourceProvenance} from '../evaluation/source-provenance.mjs';
 
 // Preparation only. No dotenv, credentials, external requests or real-model outputs.
 const args=process.argv.slice(2);
@@ -27,8 +27,8 @@ const hash=value=>createHash('sha256').update(JSON.stringify(value)).digest('hex
 const project='11111111-1111-4111-8111-111111111111',version='22222222-2222-4222-8222-222222222222',runId='33333333-3333-4333-8333-333333333333';
 const auth={authorization:'Bearer '+'e'.repeat(64)};
 const output=new URL(`../.runtime/evaluation-prepared-${randomUUID()}/`,import.meta.url);await mkdir(output,{recursive:true});
-const commit=execFileSync('git',['rev-parse','HEAD'],{cwd:new URL('../',import.meta.url),encoding:'utf8'}).trim();
-const workingTreeClean=!execFileSync('git',['status','--porcelain'],{cwd:new URL('../',import.meta.url),encoding:'utf8'}).trim();
+const provenance=sourceProvenance(new URL('../',import.meta.url));
+const {commit,workingTreeClean}=provenance;
 const sourceHashes={};for(const path of ['apps/api/src/agent/routes.ts','apps/api/src/rag/routes.ts','apps/api/src/requirement-content.ts','apps/api/src/trace/domain.ts','evaluation/cases.v1.json'])sourceHashes[path]=hash(await readFile(new URL('../'+path,import.meta.url),'utf8'));
 const frames=[];
 for(const sample of dataset.cases){
@@ -63,7 +63,7 @@ for(const sample of dataset.cases){
  }finally{await app.close();}
  console.log(`PREPARED ${sample.id}`);
 }
-const manifest={createdAt:new Date().toISOString(),datasetVersion:dataset.version,commit,workingTreeClean,sourceHashes,scope:'production_route_prompt_capture_with_fixed_synthetic_retrieval',historicalRouteInputsPrepared:Boolean(historical),historicalSource:historical?.historicalSource??null,fullHistoricalWorkflow:'not_reproduced',externalCalls:0,paidCalls:0,comparisonResults:'not_executed',frames};
+const manifest={createdAt:new Date().toISOString(),datasetVersion:dataset.version,commit,workingTreeClean,gitStatus:provenance.gitStatus,sourceHashes,scope:'production_route_prompt_capture_with_fixed_synthetic_retrieval',historicalRouteInputsPrepared:Boolean(historical),historicalSource:historical?.historicalSource??null,fullHistoricalWorkflow:'not_reproduced',externalCalls:0,paidCalls:0,comparisonResults:'not_executed',frames};
 const review={status:'not_executed',instructions:'No outputs exist yet. After authorized identical-model runs, blind reviewers mark coverage, omissions and citation support using actual output excerpts.',cases:dataset.cases.map(sample=>({caseId:sample.id,criteria:sample.acceptance.map((text,i)=>({id:`${sample.id}:${i+1}`,text,judgment:'unjudged',outputEvidence:null,note:null,reviewerCodes:[]})),citationJudgments:[],humanEdits:null,humanMinutes:null,reviewerCodes:[]}))};
 const template=JSON.parse(await readFile(new URL('../evaluation/record-template.json',import.meta.url),'utf8'));
 const records=frames.filter(frame=>frame.pipeline).map(frame=>({...structuredClone(template),caseId:frame.caseId,pipeline:frame.pipeline,datasetVersion:dataset.version,commit:frame.pipeline==='pre_optimization'?(historical?frame.commit:null):commit,

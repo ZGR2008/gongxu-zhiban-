@@ -4,7 +4,7 @@ import {extname,resolve,relative,sep,join} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {randomUUID,createHash} from 'node:crypto';
 import {gzipSync} from 'node:zlib';
-import {execFileSync} from 'node:child_process';
+import {sourceProvenance} from '../evaluation/source-provenance.mjs';
 import assert from 'node:assert/strict';
 import {chromium} from 'playwright';
 
@@ -16,7 +16,7 @@ const source=resolve(root,process.argv.find(arg=>arg.startsWith('--dist='))?.sli
 if(!source.startsWith(resolve(root)+sep)||!source.endsWith(sep+'dist'))throw Error('Only local workspace production dist directories are accepted');
 const out=join(root,'.runtime',`web-entry-${label}-${randomUUID()}`),dist=join(out,'dist');
 await mkdir(out,{recursive:true});await cp(source,dist,{recursive:true,errorOnExist:true,force:false});
-const report={scope:'loopback_production_assets_controlled_api_not_user_speed_or_ai_quality',label,commit:execFileSync('git',['rev-parse','HEAD'],{cwd:root,encoding:'utf8'}).trim(),startedAt:new Date().toISOString(),viewport:{width:1536,height:960},cpuSlowdown:4,network:'loopback_no_emulated_delay',samples:[],assets:[]};
+const report={scope:'loopback_production_assets_controlled_api_not_user_speed_or_ai_quality',label,...sourceProvenance(root),startedAt:new Date().toISOString(),viewport:{width:1536,height:960},cpuSlowdown:4,network:'loopback_no_emulated_delay',samples:[],assets:[]};
 for(const name of await readdir(join(dist,'assets'))){if(name.endsWith('.js')){const data=await readFile(join(dist,'assets',name));report.assets.push({name,bytes:data.length,gzipBytes:gzipSync(data).length,sha256:createHash('sha256').update(data).digest('hex')});}}
 const mime={'.js':'text/javascript','.css':'text/css','.html':'text/html','.svg':'image/svg+xml','.png':'image/png','.woff2':'font/woff2','.json':'application/json'};
 const server=createServer(async(request,response)=>{

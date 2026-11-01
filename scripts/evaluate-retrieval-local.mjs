@@ -2,13 +2,13 @@ import {createRequire} from 'node:module';
 import {createHash,randomUUID,randomBytes} from 'node:crypto';
 import {mkdir,readFile,writeFile} from 'node:fs/promises';
 import {fileURLToPath} from 'node:url';
-import {execFileSync} from 'node:child_process';
 import assert from 'node:assert/strict';
 import {PgProjectStore} from '../apps/api/dist/project-store.js';
 import {registerProjectRoutes} from '../apps/api/dist/project-routes.js';
 import {loadConfig} from '../apps/api/dist/config.js';
 import {loadEmbeddingConfig,savePages,indexDocument,retrieveKnowledge} from '../apps/api/dist/rag/service.js';
 import {validateRetrievalDataset,summarizeRetrieval,summarizeQueryStudy} from '../evaluation/retrieval.mjs';
+import {sourceProvenance} from '../evaluation/source-provenance.mjs';
 
 // Only the existing local services and new synthetic accounts are used. Never
 // print configuration, identities, credentials, API responses or existing data.
@@ -46,10 +46,8 @@ const report={scope:'real_local_pgvector_and_embedding_original_synthetic_corpus
  'Local timing includes actual service wait and is not a throughput benchmark.'
  ]};
 if(study)report.queryStudy={version:study.version,sha256:hash(studyBytes),source:study.source,variants,controls:study.controls,additionalQueries:study.additionalQueries.map(q=>({id:q.id,sha256:hash(q.question)})),results:[],limitations:study.limitations};
-try{
- report.source.commit=execFileSync('git',['rev-parse','HEAD'],{cwd:fileURLToPath(new URL('../',import.meta.url)),encoding:'utf8'}).trim();
- report.source.modified=Boolean(execFileSync('git',['status','--porcelain'],{cwd:fileURLToPath(new URL('../',import.meta.url)),encoding:'utf8'}).trim());
-}catch{report.source.commit=null;report.source.modified=null;}
+const provenance=sourceProvenance(new URL('../',import.meta.url));
+Object.assign(report.source,{commit:provenance.commit,modified:provenance.workingTreeClean===null?null:!provenance.workingTreeClean,gitStatus:provenance.gitStatus});
 for(const name of ['apps/api/src/rag/service.ts','apps/api/src/rag/search.ts','apps/api/src/rag/embeddings.ts','apps/embedding/model-manifest.json','scripts/evaluate-retrieval-local.mjs','evaluation/retrieval.mjs'])
  report.source[name]=hash(await readFile(new URL('../'+name,import.meta.url)));
 const {Pool}=require('pg'),Fastify=require('fastify');

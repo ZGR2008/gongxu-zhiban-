@@ -1,7 +1,7 @@
 // Local synthetic workflow recording. No production accounts or remote model calls.
 import {createRequire} from 'node:module';
 import {randomUUID,randomBytes,createHash} from 'node:crypto';
-import {execFileSync} from 'node:child_process';
+import {sourceProvenance} from '../evaluation/source-provenance.mjs';
 import {mkdir,readFile,writeFile,copyFile} from 'node:fs/promises';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
@@ -67,9 +67,8 @@ app.get('/health',async()=>({status:'ok',service:'gongxu-api'}));
 app.get('/ready',async()=>({status:'ready'}));
 app.get('/ai/status',async()=>({configured:true,model:ai.model}));
 const story=JSON.parse(await readFile(path.join(root,'docs/demo-v3/storyboard.json'),'utf8'));
-let sourceCommit=null,sourceModified=null;
-try{sourceCommit=execFileSync('git',['rev-parse','HEAD'],{cwd:root,encoding:'utf8',stdio:['ignore','pipe','ignore']}).trim();sourceModified=Boolean(execFileSync('git',['status','--porcelain'],{cwd:root,encoding:'utf8',stdio:['ignore','pipe','ignore']}).trim());}catch{/* A source ZIP may not contain Git metadata. */}
-const report={scope:story.scope,voice:story.voice,quick,startedAt:new Date().toISOString(),sourceCommit,sourceModified,model:'controlled_fixture_no_remote_calls',narrationDirectory:path.relative(root,narration),scenes:[],pageErrors:0};
+const provenance=sourceProvenance(root),sourceCommit=provenance.commit,sourceModified=provenance.workingTreeClean===null?null:!provenance.workingTreeClean;
+const report={scope:story.scope,voice:story.voice,quick,startedAt:new Date().toISOString(),sourceCommit,sourceModified,gitStatus:provenance.gitStatus,model:'controlled_fixture_no_remote_calls',narrationDirectory:path.relative(root,narration),scenes:[],pageErrors:0};
 let auth={},browser,context,page,stage='setup',videoPath,started;
 const call=(method,url,payload)=>app.inject({method,url,headers:auth,...(payload===undefined?{}:{payload})});
 const requirement='审批必须保留申请人、审批状态与操作记录。\n学生只能查看自己的借用申请，不得读取其他同学的材料。\n库存不足时必须拒绝借用，库存不得出现负数。\n保存失败必须回滚，不得产生重复审批记录。';

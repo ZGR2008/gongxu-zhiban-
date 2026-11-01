@@ -32,6 +32,7 @@
     "eval:prepare": "pnpm --filter @gongxu/api build && node scripts/evaluate-prepare.mjs",
     "eval:prepare-historical": "node scripts/prepare-historical-prompts.mjs",
     "test:historical-source": "node --test scripts/historical-source.test.mjs",
+    "test:source-provenance": "node --test scripts/source-provenance.test.mjs",
     "eval:report": "node scripts/evaluate-report.mjs",
     "test:eval-report": "node --test scripts/evaluation-report.test.mjs",
     "test:retrieval-evaluation": "node --test scripts/retrieval-evaluation.test.mjs",

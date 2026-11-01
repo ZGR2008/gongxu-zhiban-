@@ -30,6 +30,7 @@ API `/health`只证明进程在响应；`/ready`会核对数据库、迁移和pg
 | `pnpm test:ui-models`、`pnpm test:workbench` | 需求差异、概览和交付规则 | 纯规则测试 |
 | `pnpm test:evidence`、`pnpm test:eval-report` | 依据过期与评测记录完整性/可比性 | 合成规则数据，不代表模型语义判断 |
 | `pnpm test:review-package` | 没有.git的源码副本也能检查模板 | 合成临时目录，不读真实.env |
+| `pnpm test:source-provenance` | 无Git、父仓库、自己的未提交修改和历史捕获拒绝 | 独立临时合成仓库，无全局Git配置修改、无上传；未知版本保持null |
 | `pnpm typecheck`、`pnpm build` | 类型与生产构建 | 不代表视觉或真实AI验收 |
 | `pnpm verify:reliability-ui` | 乱序、失败、编辑保护、历史、焦点、取消、动效 | 浏览器受控响应，外部网络被阻止 |
 | `pnpm verify:web-entry` | 冻结本机生产构建，测首屏脚本资源且首页不加载排版库 | 临时回环静态服务及受控API，不读环境/DB/模型；先构建web |

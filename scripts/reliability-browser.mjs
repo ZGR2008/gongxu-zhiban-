@@ -6,6 +6,7 @@ import assert from 'node:assert/strict';
 import {execFileSync} from 'node:child_process';
 import {createRequire} from 'node:module';
 import {fileURLToPath} from 'node:url';
+import {sourceProvenance} from '../evaluation/source-provenance.mjs';
 
 // Optional read-only reproduction of a known local historical Knowledge module.
 // Only this browser sees it; no checkout, source overwrite, DB or external calls.
@@ -17,6 +18,7 @@ const baselineSource=workspaceBaseline?'App.tsx':creationBaseline?'components/Pr
 const baselineFolder=creationBaseline?'components/':'';
 let baselineModule;
 if(baselineCommit){
+ if(!sourceProvenance(new URL('../',import.meta.url)).commit)throw Error('Historical browser reproduction requires this project Git history');
  if([knowledgeBaseline,workspaceBaseline,creationBaseline].filter(Boolean).length!==1||!/^[a-f0-9]{7,40}$/.test(baselineCommit)||!process.argv.some(arg=>arg.startsWith(workspaceBaseline?'--case=session_':creationBaseline?'--case=project_creat':'--case=knowledge_')))throw Error('Historical reproduction requires a commit hash and matching case filter');
  const ts=createRequire(new URL('../apps/web/package.json',import.meta.url))('typescript');
  const source=execFileSync('git',['show',`${baselineCommit}:apps/web/src/${baselineSource}`],{cwd:new URL('../',import.meta.url),encoding:'utf8'});
