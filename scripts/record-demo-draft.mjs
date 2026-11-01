@@ -12,6 +12,7 @@ import {registerProjectRoutes} from '../apps/api/dist/project-routes.js';
 import {registerAgentRoutes} from '../apps/api/dist/agent/routes.js';
 import {registerPracticeRoutes} from '../apps/api/dist/practice/routes.js';
 import {registerTraceRoutes} from '../apps/api/dist/trace/routes.js';
+import {registerSegmentRoutes} from '../apps/api/dist/trace/segment-routes.js';
 import {registerDocumentRoutes} from '../apps/api/dist/documents/routes.js';
 import {PgDocumentStore} from '../apps/api/dist/documents/store.js';
 import {registerGrowthRoutes} from '../apps/api/dist/growth/routes.js';
@@ -21,13 +22,14 @@ import {loadEmbeddingConfig,saveText,indexDocument} from '../apps/api/dist/rag/s
 
 const root=fileURLToPath(new URL('../',import.meta.url));
 const quick=process.argv.includes('--quick');
+const edition=process.argv.find(a=>a.startsWith('--edition='))?.slice(10)??'v3';assert.ok(['v3','v4'].includes(edition));
 const ffmpeg=process.argv.find(a=>a.startsWith('--ffmpeg='))?.slice(9);
 const narration=path.resolve(root,process.argv.find(a=>a.startsWith('--narration='))?.slice(12)??'.runtime/demo-v3-narration');
 const narrationRelative=path.relative(path.join(root,'.runtime'),narration);
 assert.ok(narrationRelative&&narrationRelative!=='..'&&!narrationRelative.startsWith('..'+path.sep)&&!path.isAbsolute(narrationRelative),'Narration must be in project .runtime.');
 const narrationManifest=JSON.parse((await readFile(path.join(narration,'manifest.json'),'utf8')).replace(/^\uFEFF/,''));
 assert.ok(ffmpeg&&path.isAbsolute(ffmpeg),'Supply a trusted local --ffmpeg=absolute-path executable.');
-assert.ok(process.argv.slice(2).every(a=>a==='--quick'||a.startsWith('--ffmpeg=')||a.startsWith('--narration=')),'Unknown argument.');
+assert.ok(process.argv.slice(2).every(a=>a==='--quick'||a.startsWith('--ffmpeg=')||a.startsWith('--narration=')||a.startsWith('--edition=')),'Unknown argument.');
 const require=createRequire(new URL('../apps/api/package.json',import.meta.url));
 require('dotenv').config(); // Normal app loader; values are never reported.
 const settings=loadConfig(),embedding=loadEmbeddingConfig();
@@ -43,7 +45,7 @@ const projectRequire=createRequire(new URL('../package.json',import.meta.url));
 const pwRequire=createRequire(projectRequire.resolve('playwright/package.json'));
 const core=path.dirname(pwRequire.resolve('playwright-core/package.json'));
 const descriptor=JSON.parse(await readFile(path.join(core,'browsers.json'),'utf8')).browsers.find(b=>b.name==='ffmpeg');
-const cache=path.join(root,'.runtime','demo-tools'),encoderDir=path.join(cache,`ffmpeg-${descriptor.revision}`);
+const cache=path.join(directory,'tools'),encoderDir=path.join(cache,`ffmpeg-${descriptor.revision}`);
 await mkdir(encoderDir,{recursive:true});
 await copyFile(ffmpeg,path.join(encoderDir,process.platform==='win32'?'ffmpeg-win64.exe':'ffmpeg-linux'));
 process.env.PLAYWRIGHT_BROWSERS_PATH=cache;
@@ -54,6 +56,7 @@ const store=new PgProjectStore(pool),app=Fastify({logger:false});
 const ai={baseUrl:'https://example.invalid',apiKey:'test-only-placeholder',model:'DEMO-FIXTURE-NOT-REAL-AI',timeoutMs:1000};
 await registerProjectRoutes(app,store);
 await registerTraceRoutes(app,store,pool);
+await registerSegmentRoutes(app,store,pool);
 await registerGrowthRoutes(app,store,pool);
 await registerKnowledgeRoutes(app,store,pool,embedding,undefined);
 await registerAgentRoutes(app,store,pool,ai,embedding,{complete:async(_config,messages)=>{
@@ -66,13 +69,13 @@ await registerDocumentRoutes(app,store,new PgDocumentStore(pool),ai,async()=> '#
 app.get('/health',async()=>({status:'ok',service:'gongxu-api'}));
 app.get('/ready',async()=>({status:'ready'}));
 app.get('/ai/status',async()=>({configured:true,model:ai.model}));
-const story=JSON.parse(await readFile(path.join(root,'docs/demo-v3/storyboard.json'),'utf8'));
+const story=JSON.parse(await readFile(path.join(root,`docs/demo-${edition}/storyboard.json`),'utf8'));
 const provenance=sourceProvenance(root),sourceCommit=provenance.commit,sourceModified=provenance.workingTreeClean===null?null:!provenance.workingTreeClean;
-const report={scope:story.scope,voice:story.voice,quick,startedAt:new Date().toISOString(),sourceCommit,sourceModified,gitStatus:provenance.gitStatus,model:'controlled_fixture_no_remote_calls',narrationDirectory:path.relative(root,narration),scenes:[],pageErrors:0};
+const report={edition,scope:story.scope,voice:story.voice,quick,startedAt:new Date().toISOString(),sourceCommit,sourceModified,gitStatus:provenance.gitStatus,model:'controlled_fixture_no_remote_calls',narrationDirectory:path.relative(root,narration),scenes:[],pageErrors:0};
 let auth={},browser,context,page,stage='setup',videoPath,started;
 const call=(method,url,payload)=>app.inject({method,url,headers:auth,...(payload===undefined?{}:{payload})});
 const requirement='审批必须保留申请人、审批状态与操作记录。\n学生只能查看自己的借用申请，不得读取其他同学的材料。\n库存不足时必须拒绝借用，库存不得出现负数。\n保存失败必须回滚，不得产生重复审批记录。';
-const pause=ms=>delay(quick?100:ms);
+const pause=ms=>delay(quick?100:edition==='v4'?Math.round(ms*.6):ms);
 function wavSeconds(buffer){let rate,bytes;for(let p=12;p+8<=buffer.length;){const kind=buffer.toString('ascii',p,p+4),length=buffer.readUInt32LE(p+4);if(kind==='fmt ')rate=buffer.readUInt32LE(p+16);if(kind==='data')bytes=length;p+=8+length+(length%2);}assert.ok(rate&&bytes);return bytes/rate;}
 async function scene(id,action){
   stage=id;const spec=story.scenes.find(s=>s.id===id),start=performance.now();console.log(`SCENE ${id}`);
@@ -80,13 +83,19 @@ async function scene(id,action){
   const audioSha256=createHash('sha256').update(audio).digest('hex'),narrationSha256=createHash('sha256').update(spec.narration).digest('hex');
   const manifest=narrationManifest.scenes.find(row=>row.id===id);
   assert.equal(manifest?.textSha256,narrationSha256,'Narration must match this scene text. Regenerate into a new directory.');assert.equal(manifest.audioSha256,audioSha256,'Narration audio changed after generation.');
-  const audioSeconds=wavSeconds(audio),target=quick?0:Math.max(audioSeconds+2,spec.minimumSeconds);
+  const audioSeconds=wavSeconds(audio),target=quick?0:Math.max(audioSeconds+(edition==='v4'?1:2),spec.minimumSeconds);
   await action();
   await page.screenshot({path:path.join(directory,id+'.png')});
+  const actionSeconds=(performance.now()-start)/1000;
   const remaining=target*1000-(performance.now()-start);if(remaining>0)await delay(remaining);
-  report.scenes.push({...spec,startSeconds:(start-started)/1000,durationSeconds:(performance.now()-start)/1000,audioSeconds,audioSha256,narrationSha256});
+  report.scenes.push({...spec,startSeconds:(start-started)/1000,durationSeconds:(performance.now()-start)/1000,actionSeconds,audioSeconds,audioSha256,narrationSha256});
 }
 try{
+  if(!quick){
+    const durations=await Promise.all(story.scenes.map(async s=>Math.max(wavSeconds(await readFile(path.join(narration,s.id+'.wav')))+(edition==='v4'?1:2),s.minimumSeconds)));
+    report.plannedSeconds=durations.reduce((sum,n)=>sum+n,0);
+    assert.ok(report.plannedSeconds>=300&&report.plannedSeconds<=480,'Narration and scene timing exceed the screenshot video duration range; adjust before recording.');
+  }
   const registration=await call('POST','/auth/register',{name:'工程演示 · 合成账号',email:`demo-${randomUUID()}@example.test`,password:randomBytes(24).toString('base64url')});assert.equal(registration.statusCode,201);
   const account=registration.json();auth={authorization:`Bearer ${account.token}`};
   const projectResponse=await call('POST','/projects',{name:'设备借用实训 · 合成演示',description:'仅演示工程流程，不代表真实学生成果；聊天模型为明确替身。'});assert.equal(projectResponse.statusCode,201);const projectId=projectResponse.json().project.id,base=`/projects/${projectId}`;
@@ -98,17 +107,27 @@ try{
   await context.addInitScript(token=>localStorage.setItem('gongxu_token',token),account.token);
   page=await context.newPage();page.setDefaultTimeout(15000);page.on('pageerror',()=>report.pageErrors++);
   const origin='http://127.0.0.1:5173';
-  await page.route('**/*',async route=>{const url=new URL(route.request().url());if(url.origin!==origin)return route.abort();if(!url.pathname.startsWith('/api/'))return route.continue();const response=await route.fetch({url:apiAddress+url.pathname.slice(4)+url.search});await route.fulfill({response});});
+  await context.route('**/*',async route=>{const url=new URL(route.request().url());if(url.origin!==origin)return route.abort();if(!url.pathname.startsWith('/api/'))return route.continue();const response=await route.fetch({url:apiAddress+url.pathname.slice(4)+url.search});await route.fulfill({response});});
   const go=async suffix=>{await page.goto(origin+(suffix.startsWith('/')?suffix:base+'/'+suffix));await page.waitForLoadState('domcontentloaded');};
   started=performance.now();
-  await scene('intro',async()=>{await go(base);await page.getByRole('heading',{name:'项目实训路径',exact:true}).waitFor();});
+  await scene('intro',async()=>{await go(base);await page.getByRole('heading',{name:'项目实训路径',exact:true}).waitFor();await page.getByText('正在准备视图…',{exact:true}).waitFor({state:'hidden'});});
   await scene('requirements',async()=>{
     await go('requirements');await page.locator('#requirement').fill(requirement);
     await pause(6000);await page.getByRole('button',{name:/保存需求草稿/}).click();await pause(5000);await page.getByRole('button',{name:/确认最新版本/}).click();
     await page.getByRole('region',{name:'需求到验证证据追踪'}).getByText('原文与版本来源',{exact:true}).waitFor();
   });
   const first=(await call('GET',base)).json().requirements.find(row=>row.status==='confirmed');assert.ok(first);
+  if(edition==='v4')await scene('segments',async()=>{
+    const p=(await call('POST','/projects',{name:'长需求边界 · 合成演示',description:'保留尾部条件，分段审阅不代表生成完成'})).json().project;
+    const content='原始实训说明与审批上下文。\n'.repeat(1600)+'末尾验收：必须禁止学生批准自己的申请。';
+    const v=(await call('POST',`/projects/${p.id}/requirements`,{content})).json().requirement;
+    assert.equal((await call('POST',`/projects/${p.id}/requirements/${v.id}/confirm`,{expectedContent:content})).statusCode,200);
+    await go(`/projects/${p.id}/requirements`);await page.getByRole('button',{name:'分段审阅完整原文 →'}).click();const panel=page.getByRole('region',{name:'原文分段审阅'});await panel.getByLabel('分段审核说明').waitFor();await panel.getByRole('navigation',{name:'选择原文分段'}).getByRole('button').last().click();
+    assert.match(await panel.getByLabel('完整分段原文').innerText(),/禁止学生批准自己的申请/);await panel.getByLabel('完整分段原文').evaluate(el=>el.scrollTop=el.scrollHeight);await panel.scrollIntoViewIfNeeded();await pause(9000);
+    await panel.getByLabel('分段审核说明').fill('末尾权限约束需与前段审批流程一并核对，不应单独生成结论。');await panel.getByRole('button',{name:'保存分段审核'}).click();await panel.getByText(/分段审核已保存/).waitFor();await pause(5000);
+  });
   await scene('guard',async()=>{
+    if(edition==='v4')await go('requirements');
     await page.locator('#requirement').fill(requirement+'\n未保存演示片段：先保留再核对。');
     const leave=page.getByRole('link',{name:'知识库',exact:true}).first();await leave.click();
     const dialog=page.getByRole('dialog',{name:'保留未保存的编辑'});await dialog.waitFor();await pause(16000);await page.keyboard.press('Escape');
@@ -142,6 +161,10 @@ try{
     await card.getByLabel('人工执行结果',{exact:true}).selectOption('blocked');await card.getByLabel('执行说明 / 证据',{exact:true}).fill('合成演示：设备借用应用尚未部署和执行，因此登记阻塞；不代表自动化测试通过。');
     await pause(7000);
     await card.getByRole('button',{name:'保存执行结果',exact:true}).click();await card.getByText(/正常 · 阻塞/).waitFor();await card.scrollIntoViewIfNeeded();
+    if(edition==='v4'){
+      const other=await context.newPage();await other.goto(origin+base+'/tests');const otherCard=other.locator('.case-item').filter({hasText:'审批记录保留与归属'});await otherCard.getByLabel('执行说明 / 证据',{exact:true}).fill('第二窗口重新核对：尚未部署，继续保持阻塞。');await otherCard.getByRole('button',{name:'保存执行结果',exact:true}).click();await otherCard.getByText('人工执行记录已保存。',{exact:true}).waitFor();await other.close();
+      await card.getByLabel('执行说明 / 证据',{exact:true}).fill('第一窗口的旧快照输入必须保留供比较。');await card.getByRole('button',{name:'保存执行结果',exact:true}).click();await card.getByRole('region',{name:'执行记录冲突比较'}).waitFor();await card.getByRole('button',{name:'读取最新记录以比较'}).click();await card.getByText('服务端最新记录',{exact:true}).waitFor();await card.getByRole('region',{name:'执行记录冲突比较'}).scrollIntoViewIfNeeded();await page.screenshot({path:path.join(directory,'execution-conflict.png')});await pause(11000);await card.getByRole('button',{name:'放弃本地输入，采用最新记录'}).click();
+    }
   });
   await scene('trace',async()=>{
     const trace=page.getByRole('region',{name:'需求到验证证据追踪'});await trace.getByText('原文与版本来源',{exact:true}).waitFor();
@@ -151,8 +174,9 @@ try{
       await pause(6000);
       const [response]=await Promise.all([page.waitForResponse(r=>r.url().endsWith('/trace/links')&&r.request().method()==='POST'),trace.getByRole('button',{name:'确认关联',exact:true}).click()]);assert.equal(response.status(),200);await trace.getByText('审核已保存。关联确认不等于需求已验证。',{exact:true}).waitFor();
     }
-    const chain=trace.getByRole('region',{name:'任务与测试验证链'});await chain.getByLabel('验证链开发任务').selectOption(task.id);await chain.getByLabel('验证链测试用例').selectOption(test.id);await chain.getByLabel('任务验证依据').fill('此用例用于检查该任务的审批留痕产物，仍需实施后实际执行。');
+    const chain=trace.getByRole('region',{name:'任务与测试验证链'});await chain.locator('.trace-advanced summary').click();await chain.getByLabel('验证链开发任务').selectOption(task.id);await chain.getByLabel('验证链测试用例').selectOption(test.id);await chain.getByLabel('任务验证依据').fill('此用例用于检查该任务的审批留痕产物，仍需实施后实际执行。');
     await pause(6000);const [response]=await Promise.all([page.waitForResponse(r=>r.url().endsWith('/trace/task-tests')&&r.request().method()==='POST'),chain.getByRole('button',{name:'确认任务与用例配对'}).click()]);assert.equal(response.status(),200);await chain.getByText(/人工登记阻塞/).waitFor();await chain.getByText('核对人工审核与执行说明',{exact:true}).click();await chain.scrollIntoViewIfNeeded();
+    if(edition==='v4'){await pause(5000);await chain.locator('.trace-advanced summary').click();await trace.evaluate(el=>window.scrollTo({top:window.scrollY+el.getBoundingClientRect().top-110,behavior:'instant'}));}
   });
   await scene('documents',async()=>{
     await go('documents');await page.getByRole('button',{name:/生成草稿/}).click();await page.locator('#doc-content').waitFor();await page.getByText('已生成草稿，请核实并编辑。',{exact:true}).waitFor();

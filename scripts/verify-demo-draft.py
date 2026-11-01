@@ -13,7 +13,7 @@ assert 'Video: h264' in metadata and '1920x1080' in metadata and 'Audio: aac' in
 m=re.search(r'Duration: (\d+):(\d+):(\d+\.\d+)',metadata);assert m
 seconds=int(m[1])*3600+int(m[2])*60+float(m[3]);assert 300<=seconds<=480 and abs(seconds-manifest['seconds'])<.2
 subprocess.run([encoder,'-v','error','-i',str(video),'-f','null','-'],check=True,capture_output=True)
-folder=ROOT/'tmp/video/v3';folder.mkdir(parents=True,exist_ok=True)
+folder=ROOT/'tmp/video'/video.stem;folder.mkdir(parents=True,exist_ok=True)
 frames=[]
 for scene in manifest['scenes']:
  sample=scene['startSeconds']+min(scene['durationSeconds']-3,15)

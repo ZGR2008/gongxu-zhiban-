@@ -18,7 +18,9 @@ pnpm verify --suite=database        # 明确选择：现有本地数据库/向�
 
 Python3及`pypdf`用于打包回归；找不到时可加`--python=<已安装Python绝对路径>`，不自动下载安装。浏览器层需本地Web服务及已安装浏览器；数据库层需先应用迁移，缺少运行条件必须记录未执行。每次统一验证在`.runtime/verification-v4-<id>/report.json`保存分层命令、结果和日志，不能把不同层次数加成全系统通过率。
 
-[v4进度与恢复](docs/CONTINUATION-V4.md)记录本轮实际通过、失败与修复；[真实AI评测准备](docs/EVALUATION-V4.md)记录固定合成输入及费用审批范围。真实模型评测独立于`verify`，没有明确批准不会发起收费调用。公开案例核验和原创实现见[参考说明](docs/REFERENCE-REVIEW-V4.md)。本轮材料和独立源码包将在最终报告列出；下方v3结果只作历史记录，不能充当v4结果。
+[v4进度与恢复](docs/CONTINUATION-V4.md)记录本轮实际通过、失败与修复；[真实AI评测准备](docs/EVALUATION-V4.md)记录固定合成输入及费用审批范围。真实模型评测独立于`verify`，没有明确批准不会发起收费调用。公开案例核验和原创实现见[参考说明](docs/REFERENCE-REVIEW-V4.md)。本轮材料、实际修改、分层验证与剩余事项见[v4交付报告](docs/FINAL-REVIEW-V4.md)和[验证索引](docs/verification/review-v4.json)，比赛要求见[截图矩阵](docs/CONTEST-ACCEPTANCE-2026-11.md)。下方v3结果只作历史记录，不能充当v4结果。
+
+本轮离线15步通过，API125、Embedding4、根JS74、Python打包7分别通过；受控Edge96组、Firefox/WebKit本轮相关各10组、真实本地数据库统一17步和实际服务8组通过，不能跨层相加为全系统通过率。技术评审稿29页、答辩稿12页，视频更新为[十二场景v4工程草稿](docs/demo-v4/README.md)。材料明确合成数据与聊天替身，真实模型评测0次、师生试用未执行。
 
 ## v3 既有能力与历史验证（保留供对照）
 

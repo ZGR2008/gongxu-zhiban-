@@ -1,11 +1,11 @@
-param([Parameter(Mandatory=$true)][string]$OutputDirectory)
+param([Parameter(Mandatory=$true)][string]$OutputDirectory,[ValidateSet('v3','v4')][string]$Edition='v3')
 $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path -Parent $PSScriptRoot
 $resolvedOutput = [System.IO.Path]::GetFullPath($OutputDirectory)
 $allowedRoot = [System.IO.Path]::GetFullPath((Join-Path $projectRoot '.runtime')) + [System.IO.Path]::DirectorySeparatorChar
 if (-not $resolvedOutput.StartsWith($allowedRoot,[System.StringComparison]::OrdinalIgnoreCase)) { throw 'Narration output must be inside project .runtime.' }
 New-Item -ItemType Directory -Path $resolvedOutput -Force | Out-Null
-$story = Get-Content -LiteralPath (Join-Path $projectRoot 'docs/demo-v3/storyboard.json') -Raw -Encoding UTF8 | ConvertFrom-Json
+$story = Get-Content -LiteralPath (Join-Path $projectRoot ("docs/demo-" + $Edition + '/storyboard.json')) -Raw -Encoding UTF8 | ConvertFrom-Json
 Add-Type -AssemblyName System.Speech
 $speaker = New-Object System.Speech.Synthesis.SpeechSynthesizer
 $entries = @()

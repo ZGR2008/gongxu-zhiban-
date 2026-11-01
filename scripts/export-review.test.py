@@ -64,6 +64,25 @@ class ExportTests(unittest.TestCase):
             with zipfile.ZipFile(second['archive']) as bundle:
                 self.assertIn('gongxu-zhiban/docs/CONTINUATION-2026-11-01.md',bundle.namelist());self.assertIn('gongxu-zhiban/evaluation/record-template.json',bundle.namelist())
 
+    def test_v4_package_keeps_current_evidence_material_instructions_and_migrations(self):
+        with tempfile.TemporaryDirectory(prefix='gongxu-export-fixture-') as base:
+            root=self.fixture(base)
+            required={
+                'docs/CONTINUATION-V4.md':'Synthetic v4 progress',
+                'docs/LONG-REQUIREMENTS-V4.md':'Synthetic boundaries',
+                'docs/FINAL-REVIEW-V4.md':'Synthetic review',
+                'docs/demo-v4/README.md':'Synthetic recording scope',
+                'docs/demo-v4/storyboard.json':'{"scope":"synthetic"}',
+                'docs/verification/review-v4.json':'{"paidModelCalls":0}',
+                'apps/api/migrations/021_requirement_segment_reviews.sql':'-- synthetic schema fixture',
+            }
+            for relative,text in required.items():
+                target=root/relative;target.parent.mkdir(parents=True,exist_ok=True);target.write_text(text,encoding='utf-8')
+            result=self.export(root)
+            self.assertEqual(Path(result['archive']).name,'gongxu-zhiban-review-v4.zip')
+            with zipfile.ZipFile(result['archive']) as bundle:
+                self.assertTrue(all('gongxu-zhiban/'+relative in bundle.namelist() for relative in required))
+
     def test_directory_resolving_outside_source_is_pruned_without_reading(self):
         with tempfile.TemporaryDirectory(prefix='gongxu-export-fixture-') as base:
             root=self.fixture(base);link=root/'apps/api/linked';link.mkdir();hidden=link/'outside.ts';hidden.write_text('synthetic-private-marker',encoding='utf-8')

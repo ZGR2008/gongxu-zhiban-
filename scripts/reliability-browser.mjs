@@ -289,7 +289,9 @@ try{
   let release;state.projectListGate=new Promise(resolve=>{release=resolve;});
   try{await page.goto(`${origin.origin}/projects/${A}/requirements`);await page.getByLabel('需求内容',{exact:true}).waitFor();await page.keyboard.press('Control+k');await waitFor(()=>state.projectListReads===1);
    state.projectList=[];state.projectListGate=null;
+   const previousEditor=await page.getByLabel('需求内容',{exact:true}).elementHandle();
    await page.evaluate(()=>{const previous=localStorage.getItem('gongxu_token');localStorage.setItem('gongxu_token','controlled-browser-next-session');window.dispatchEvent(new StorageEvent('storage',{key:'gongxu_token',oldValue:previous,newValue:'controlled-browser-next-session',storageArea:localStorage}));});
+   await waitFor(()=>previousEditor.evaluate(node=>!node.isConnected));
    await page.getByLabel('需求内容',{exact:true}).waitFor();await page.keyboard.press('Control+k');const dialog=page.getByRole('dialog',{name:'搜索页面、项目与操作'});await dialog.getByText('当前账号还没有项目。',{exact:true}).waitFor();
    release();await page.waitForTimeout(180);await dialog.getByLabel('搜索页面、项目与操作',{exact:true}).fill('受控项目 B');assert.equal(await dialog.getByRole('button',{name:/受控项目 B/}).count(),0);assert.equal(state.projectListReads,2);
   }finally{release();}

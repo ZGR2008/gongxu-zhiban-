@@ -7,8 +7,8 @@ ROOT=Path(__file__).resolve().parents[1]
 parser=argparse.ArgumentParser()
 parser.add_argument('--confirm-visual-review',action='store_true',help='Use only after inspecting every rendered page; this flag does not perform visual review.')
 args=parser.parse_args()
-PDF=ROOT/'output/pdf/gongxu-zhiban-technical-v3.pdf'
-TMP=ROOT/'tmp/pdfs/v3'
+PDF=ROOT/'output/pdf/gongxu-zhiban-technical-v4.pdf'
+TMP=ROOT/'tmp/pdfs/v4'
 reports=[]
 with pdfplumber.open(PDF) as pdf:
  assert 1<=len(pdf.pages)<=30
@@ -28,7 +28,7 @@ for start in range(0,len(pages),4):
  sheet.save(TMP/f'sheet-{start//4+1}.png')
 (TMP/'layout-check.json').write_text(json.dumps(reports,indent=2),encoding='utf-8')
 if args.confirm_visual_review:
- manifest_path=PDF.parent/'technical-pdf-manifest.json'
+ manifest_path=PDF.parent/'technical-pdf-v4-manifest.json'
  manifest=json.loads(manifest_path.read_text(encoding='utf-8'))
  manifest.update({'visualReview':'all_rendered_pages_inspected','sha256':hashlib.sha256(PDF.read_bytes()).hexdigest(),'layoutBounds':reports,'renderResolutionDpi':90})
  manifest_path.write_text(json.dumps(manifest,ensure_ascii=False,indent=2),encoding='utf-8')

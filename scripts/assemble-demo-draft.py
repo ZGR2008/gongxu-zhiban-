@@ -24,7 +24,8 @@ assert 300<=duration<=480, 'This planned draft should fit the screenshot video d
 audio_dir=(ROOT/report.get('narrationDirectory','.runtime/demo-v3-narration')).resolve()
 assert audio_dir.is_relative_to((ROOT/'.runtime').resolve())
 output=ROOT/'output/video';output.mkdir(parents=True,exist_ok=True)
-name='gongxu-zhiban-demo-v3-draft'
+edition=report.get('edition','v3');assert edition in ('v3','v4')
+name='gongxu-zhiban-demo-'+edition+'-draft'
 if (output/(name+'.mp4')).exists():name+='-'+datetime.now().strftime('%Y%m%d-%H%M%S')
 dest=output/(name+'.mp4')
 work=recording/'assembly';work.mkdir(exist_ok=True)
