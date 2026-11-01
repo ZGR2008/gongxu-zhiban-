@@ -3,7 +3,7 @@ import { useEditGuard } from './EditGuard';
 
 function WorkspaceLoadFailure() {
   const { protect } = useEditGuard();
-  return <section className="state-block" role="alert">
+  return <section className="state-block workspace-load-failure" role="alert">
     <h3>此工作区暂时无法加载</h3>
     <p>请检查连接后重新加载页面，也可以先通过导航使用其他工作区。</p>
     <p>重新加载前会询问如何处理未保存的编辑；保存失败将留在此页。</p>
