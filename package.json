@@ -30,6 +30,8 @@
     "verify:local": "pnpm --filter @gongxu/api build && cd apps/api && node ../../scripts/reliability-local.mjs",
     "eval:offline": "pnpm --filter @gongxu/api build && node scripts/evaluate-offline.mjs",
     "eval:prepare": "pnpm --filter @gongxu/api build && node scripts/evaluate-prepare.mjs",
+    "eval:prepare-historical": "node scripts/prepare-historical-prompts.mjs",
+    "test:historical-source": "node --test scripts/historical-source.test.mjs",
     "eval:report": "node scripts/evaluate-report.mjs",
     "test:eval-report": "node --test scripts/evaluation-report.test.mjs",
     "test:retrieval-evaluation": "node --test scripts/retrieval-evaluation.test.mjs",

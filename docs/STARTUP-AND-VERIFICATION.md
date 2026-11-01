@@ -36,6 +36,7 @@ API `/health`只证明进程在响应；`/ready`会核对数据库、迁移和pg
 | `pnpm verify:local -- --browser` | 真实本地DB、版本证据、权限、桌面HTTP与可选本地Embedding | 新建合成账号/项目，真实模型回复使用替身；不操作已有用户项目 |
 | `pnpm eval:offline` | 8个版本化案例的实现协议检查 | 阻止网络调用；语义效果未评估 |
 | `pnpm eval:prepare`、`pnpm eval:report` | 捕获合成输入与核对明确提供的评测记录 | 不读取.env；不执行模型；缺少真实结果时保持待执行 |
+| `pnpm eval:prepare-historical`、`pnpm test:historical-source` | 固定本地Git提交的原始提示词组织及同输入配对检查 | 仅必要源码、合成存储与检索替身；拒绝网络，无历史数据库/模型执行；无Git副本不可重做历史捕获 |
 | `pnpm verify:agent-recovery` | 过期运行、取消、重复请求与人工审核 | 真实本地DB、模型替身；保留合成运行记录 |
 | `pnpm verify:review-context` | 审查来源、换版、隔离、取消、桌面原文显示 | 真实本地DB/向量/浏览器；聊天替身；禁止外部网络，不执行输入代码 |
 | `pnpm verify:document-context` | 完整说明末尾、51条/30000字符阻止、账号和桌面恢复 | 真实本地DB/HTTP/浏览器，1次聊天替身；不截断、无收费 |

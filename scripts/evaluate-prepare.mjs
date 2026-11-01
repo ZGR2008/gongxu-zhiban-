@@ -1,13 +1,25 @@
-import {readFile,writeFile,mkdir} from 'node:fs/promises';
+import {readFile,writeFile,mkdir,realpath,stat} from 'node:fs/promises';
+import {fileURLToPath} from 'node:url';
+import path from 'node:path';
 import {createRequire} from 'node:module';
 import {createHash,randomUUID} from 'node:crypto';
 import {execFileSync} from 'node:child_process';
 import assert from 'node:assert/strict';
 import {registerAgentRoutes} from '../apps/api/dist/agent/routes.js';
 import {registerKnowledgeRoutes} from '../apps/api/dist/rag/routes.js';
+import {historicalInput} from '../evaluation/historical-records.mjs';
 
 // Preparation only. No dotenv, credentials, external requests or real-model outputs.
-if(process.argv.length>2)throw Error('Preparation accepts no live/model flags');
+const args=process.argv.slice(2);
+if(args.length>1||args.some(value=>!value.startsWith('--historical-prompts=')))throw Error('Preparation accepts only an explicit local --historical-prompts= file; no live/model flags');
+let historical=null;
+if(args.length){
+ const root=fileURLToPath(new URL('../',import.meta.url));
+ const candidate=await realpath(path.resolve(root,args[0].slice('--historical-prompts='.length)));
+ const relative=path.relative(root,candidate).replaceAll('\\','/');
+ if(!/^\.runtime\/historical-prompts-[0-9a-f-]+\/prepared-inputs\.json$/.test(relative)||(await stat(candidate)).size>1_000_000)throw Error('Only a bounded local historical preparation report may be read');
+ historical=JSON.parse(await readFile(candidate,'utf8'));
+}
 globalThis.fetch=async()=>{throw Error('Network is prohibited during evaluation preparation');};
 const require=createRequire(new URL('../apps/api/package.json',import.meta.url));const Fastify=require('fastify');
 const dataset=JSON.parse(await readFile(new URL('../evaluation/cases.v1.json',import.meta.url),'utf8'));
@@ -28,7 +40,7 @@ for(const sample of dataset.cases){
  const input={requirement,documents:sample.documents??[]};
  const knowledgeHash=hash(input.documents);
  frames.push({...common,pipeline:'plain_chat',status:'prepared_not_executed',inputHash:hash(input),knowledgeHash,messages:[{role:'system',content:'你是软件工程实训助手。请根据用户给出的需求或问题及资料回答；不确定时说明。'},{role:'user',content:JSON.stringify(input)}]});
- frames.push({...common,pipeline:'pre_optimization',status:'not_executed',baselineCommit:'5740ec3',inputHash:hash(input),knowledgeHash,reason:'Safe isolated full-workflow baseline has not been reproduced. Do not substitute a reconstructed prompt or current workflow.'});
+ frames.push(historical?{...common,...historicalInput(historical,sample,input,dataset.version),reason:'Original historical prompt assembly captured with current local libraries and synthetic stores; full historical workflow and real model not executed.'}:{...common,pipeline:'pre_optimization',status:'not_executed',baselineCommit:'5740ec3',inputHash:hash(input),knowledgeHash,reason:'No historical prompt capture supplied. Use eval:prepare-historical explicitly; full historical workflow remains not reproduced.'});
  const hits=input.documents.map((content,i)=>({id:`00000000-0000-4000-8000-${String(i+1).padStart(12,'0')}`,document_id:version,document_name:`版本化合成资料${i+1}`,page:1,content,distance:.1}));
  const app=Fastify({logger:false});let captured=null;
  const complete=async(_config,messages)=>{captured=structuredClone(messages);throw Error('intentional_capture_only_stop');};
@@ -51,10 +63,10 @@ for(const sample of dataset.cases){
  }finally{await app.close();}
  console.log(`PREPARED ${sample.id}`);
 }
-const manifest={createdAt:new Date().toISOString(),datasetVersion:dataset.version,commit,workingTreeClean,sourceHashes,scope:'production_route_prompt_capture_with_fixed_synthetic_retrieval',externalCalls:0,paidCalls:0,comparisonResults:'not_executed',frames};
+const manifest={createdAt:new Date().toISOString(),datasetVersion:dataset.version,commit,workingTreeClean,sourceHashes,scope:'production_route_prompt_capture_with_fixed_synthetic_retrieval',historicalRouteInputsPrepared:Boolean(historical),historicalSource:historical?.historicalSource??null,fullHistoricalWorkflow:'not_reproduced',externalCalls:0,paidCalls:0,comparisonResults:'not_executed',frames};
 const review={status:'not_executed',instructions:'No outputs exist yet. After authorized identical-model runs, blind reviewers mark coverage, omissions and citation support using actual output excerpts.',cases:dataset.cases.map(sample=>({caseId:sample.id,criteria:sample.acceptance.map((text,i)=>({id:`${sample.id}:${i+1}`,text,judgment:'unjudged',outputEvidence:null,note:null,reviewerCodes:[]})),citationJudgments:[],humanEdits:null,humanMinutes:null,reviewerCodes:[]}))};
 const template=JSON.parse(await readFile(new URL('../evaluation/record-template.json',import.meta.url),'utf8'));
-const records=frames.filter(frame=>frame.pipeline).map(frame=>({...structuredClone(template),caseId:frame.caseId,pipeline:frame.pipeline,datasetVersion:dataset.version,commit:frame.pipeline==='pre_optimization'?null:commit,
+const records=frames.filter(frame=>frame.pipeline).map(frame=>({...structuredClone(template),caseId:frame.caseId,pipeline:frame.pipeline,datasetVersion:dataset.version,commit:frame.pipeline==='pre_optimization'?(historical?frame.commit:null):commit,
  status:frame.status==='model_not_invoked_by_policy'?'policy_blocked':'not_executed',reason:frame.policy??frame.reason??'prepared_inputs_without_model_execution',inputHash:frame.inputHash,knowledgeHash:frame.knowledgeHash,
  settings:{...template.settings,temperature:.3,maxOutputTokens:4096},conditionJudgments:structuredClone(review.cases.find(sample=>sample.caseId===frame.caseId).criteria)}));
 await writeFile(new URL('prepared-inputs.json',output),JSON.stringify(manifest,null,2));await writeFile(new URL('review-sheet.json',output),JSON.stringify(review,null,2));
