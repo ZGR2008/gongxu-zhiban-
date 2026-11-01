@@ -46,8 +46,9 @@ const directory = new URL(`../.runtime/reliability-ui-${randomUUID()}/`,import.m
 await mkdir(directory,{recursive:true});
 const engine=process.argv.find(arg=>arg.startsWith('--engine='))?.slice(9)??'chromium';
 const accessibilityOnly=process.argv.includes('--accessibility');
+const moduleRequest=name=>new RegExp(`/${name}(?:\\.tsx|-[^/?]+\\.js)(?:\\?|$)`);
 if(!['chromium','firefox','webkit'].includes(engine))throw Error('Unsupported browser engine');
-const report={scope:'controlled_browser_responses',browserEngine:engine,historicalKnowledgeModule:knowledgeBaseline??null,historicalWorkspaceModule:workspaceBaseline??null,historicalProjectCreationModule:creationBaseline??null,realDatabase:false,realModel:false,checks:[],startedAt:new Date().toISOString()};
+const report={scope:'controlled_browser_responses',assetMode:process.argv.includes('--production-assets')?'production':'development',browserEngine:engine,historicalKnowledgeModule:knowledgeBaseline??null,historicalWorkspaceModule:workspaceBaseline??null,historicalProjectCreationModule:creationBaseline??null,realDatabase:false,realModel:false,checks:[],startedAt:new Date().toISOString()};
 let browser;
 try{
  browser=await ({chromium,firefox,webkit}[engine]).launch({headless:true,timeout:30000,...(engine==='chromium'?{channel:process.env.SMOKE_BROWSER_CHANNEL || (process.platform==='win32'?'msedge':undefined)}:{})});report.browserVersion=browser.version();
@@ -153,8 +154,8 @@ async function scenario(name,work){
   else if(/\/agent\/runs\/[^/]+\/cancel$/.test(path)&&method==='POST'){
    state.writes.push({path});state.runs=state.runs.map(run=>path.endsWith('/'+run.id+'/cancel')?{...run,status:'failed',errorCode:'agent_cancelled'}:run);body={status:'cancelled'};
   }
-  else if(path.endsWith('/agent/runs')){state.runListReads=(state.runListReads??0)+1;if(state.runListGate)await state.runListGate;status=state.runListStatus??200;body=status===200?{runs:state.runs}:{error:'database_unavailable'};}
-  else if(/\/agent\/runs\/[^/]+$/.test(path)){const id=path.split('/').at(-1);state.runCounts[id]=(state.runCounts[id]||0)+1;if(state.runDetailGate)await state.runDetailGate;await new Promise(r=>setTimeout(r,state.runDelay(id)));body={run:state.runs.find(r=>r.id===id),steps:[{id:'s',stage:'plan_1',status:'succeeded',outputSummary:id===RA?'运行A输出':'运行B输出',tools:[]}]};}
+  else if(path.endsWith('/agent/runs')){state.pollingTimes?.push({phase:'list_request',ms:Date.now()-state.pollStarted});state.runListReads=(state.runListReads??0)+1;if(state.runListGate)await state.runListGate;status=state.runListStatus??200;body=status===200?{runs:state.runs}:{error:'database_unavailable'};}
+  else if(/\/agent\/runs\/[^/]+$/.test(path)){state.pollingTimes?.push({phase:'detail_request',ms:Date.now()-state.pollStarted});const id=path.split('/').at(-1);state.runCounts[id]=(state.runCounts[id]||0)+1;if(state.runDetailGate)await state.runDetailGate;await new Promise(r=>setTimeout(r,state.runDelay(id)));body={run:state.runs.find(r=>r.id===id),steps:[{id:'s',stage:'plan_1',status:'succeeded',outputSummary:id===RA?'运行A输出':'运行B输出',tools:[]}]};}
   else if(path.endsWith('/trace')){state.traceReads=(state.traceReads??0)+1;status=state.traceStatus??200;body=structuredClone(status===200?(state.traceData??{version:null,items:[],links:[],tasks:[],cases:[],previousItems:[],impact:null}):{error:'trace_refresh_required'});await new Promise(r=>setTimeout(r,state.traceDelay??0));}
   else if(/\/trace\/(links|task-tests)$/.test(path)&&method==='POST'){const input=route.request().postDataJSON();state.writes.push({path,body:input});if(path.endsWith('/links')&&state.traceData){state.traceData.links=state.traceData.links.map(link=>(input.targetKind==='case'?link.caseId:link.taskId)===input.targetId?{...link,status:input.decision,reviewNote:input.note}:link);}body={status:'confirmed'};}
   else if(path==='/knowledge'){
@@ -171,7 +172,7 @@ async function scenario(name,work){
    if(state.failIndex){status=503;body={error:'embedding_unavailable'};}else{const id=path.split('/')[2];state.knowledgeDocuments=state.knowledgeDocuments.map(doc=>doc.id===id?{...doc,indexCompatibility:'current',currentChunks:doc.chunkCount}:doc);body={id,status:'ready'};}
   }
   else if(path==='/knowledge/search'){state.searches++;await new Promise(r=>setTimeout(r,state.searchDelay));body={hits:[{id:RA,document_name:'取消后重试资料',content:'成功检索的合成片段',page:1,distance:0.1}]};}
-  else if(path==='/knowledge/answer'){state.answers=(state.answers??0)+1;state.answerQueries??=[];state.answerQueries.push(route.request().postDataJSON().query);await new Promise(r=>setTimeout(r,state.answerDelay??0));body={answer:'合成回答内容，不是真实模型结果',sources:[{id:RA,document_name:'合成回答来源',content:'回答实际提供的原文',page:1,distance:0.1}]};}
+  else if(path==='/knowledge/answer'){state.answers=(state.answers??0)+1;state.answerQueries??=[];state.answerQueries.push(route.request().postDataJSON().query);await new Promise(r=>setTimeout(r,state.answerDelay??0));body=state.answerResponse??{answer:'合成回答内容，不是真实模型结果',sources:[{id:RA,document_name:'合成回答来源',content:'回答实际提供的原文',page:1,distance:0.1}]};}
   else if(/\/tasks\/[^/]+$/.test(path)&&method==='PATCH'){
    const input=route.request().postDataJSON();state.writes.push({path,body:input});
    if(state.taskUpdateConflict){status=409;body={error:'task_requirement_outdated'};}else{state.tasks=state.tasks.map(task=>path.endsWith('/'+task.id)?{...task,status:input.status}:task);body={task:state.tasks.find(task=>path.endsWith('/'+task.id))};}
@@ -191,7 +192,7 @@ async function scenario(name,work){
   if(method==='GET'&&/^\/projects\/[^/]+$/.test(path)){state.detailResponses??={};const id=path.split('/')[2];state.detailResponses[id]=(state.detailResponses[id]??0)+1;}
  });
  try{await work(page,state);assert.equal(state.errors.length,0);report.checks.push({name,status:'passed'});console.log(`PASS ${name}`);}
- catch(error){report.checks.push({name,status:'failed',errorType:error.constructor.name});console.log(`FAIL ${name}`);if(name.startsWith('workspace_motion'))console.log(await page.evaluate(()=>({hidden:document.hidden,reduced:matchMedia('(prefers-reduced-motion: reduce)').matches,label:document.querySelector('.workspace-motion-toggle')?.textContent,motion:document.querySelector('.workspace-visual')?.getAttribute('data-motion')})));console.log((error.stack??'').split('\n').filter(line=>line.includes('reliability-browser.mjs')).slice(0,2).join('\n'));await page.screenshot({path:new URL(`${name}.png`,directory).pathname.replace(/^\/([A-Za-z]:)/,'$1')}).catch(()=>{});process.exitCode=1;}
+ catch(error){report.checks.push({name,status:'failed',errorType:error.constructor.name});console.log(`FAIL ${name}`);if(name.startsWith('run_history_auto_')){const counts={actual:typeof error.actual==='number'?error.actual:null,expected:typeof error.expected==='number'?error.expected:null,listReads:state.runListReads,detailReads:Object.values(state.runCounts).reduce((sum,count)=>sum+count,0),visible:await page.evaluate(()=>document.visibilityState==='visible')};report.checks.at(-1).pollingCounts=counts;report.checks.at(-1).pollingTimes=state.pollingTimes;console.log(JSON.stringify({counts,times:state.pollingTimes}));}if(name.startsWith('workspace_motion'))console.log(await page.evaluate(()=>({hidden:document.hidden,reduced:matchMedia('(prefers-reduced-motion: reduce)').matches,label:document.querySelector('.workspace-motion-toggle')?.textContent,motion:document.querySelector('.workspace-visual')?.getAttribute('data-motion')})));console.log((error.stack??'').split('\n').filter(line=>line.includes('reliability-browser.mjs')).slice(0,2).join('\n'));await page.screenshot({path:new URL(`${name}.png`,directory).pathname.replace(/^\/([A-Za-z]:)/,'$1')}).catch(()=>{});process.exitCode=1;}
  finally{await context.close();}
 }
 async function routeTo(page,id){await page.evaluate(path=>{history.pushState({},'',path);dispatchEvent(new PopStateEvent('popstate'));},`/projects/${id}/requirements`);}
@@ -238,8 +239,12 @@ try{
   traceFixture(state);state.traceData.tasks=[];state.traceData.cases=[];state.traceData.links=[];state.traceData.items[0].coverage={suggested:0,confirmedTasks:0,confirmedCases:0,stale:0,manualEvidence:0};
   await page.goto(`${origin.origin}/projects/${A}/requirements`);await page.getByRole('group',{name:'关联准备'}).waitFor();await auditAccessibility(page,'accessibility_trace_preparation');
  });
+ await scenario('accessibility_rag_insufficient_candidates',async(page,state)=>{
+  state.answerResponse={answer:'合成缺口：请补充对应版本的资料。',reason:'insufficient_evidence',sources:[],candidates:[{id:RA,document_name:'合成候选资料',content:'这只是供核对的候选内容。',page:1,distance:0.1}]};
+  await page.goto(`${origin.origin}/knowledge`);await page.getByLabel('检索问题').fill('合成资料外的问题');await page.getByRole('button',{name:/知识增强回答/}).click();await page.getByText('资料不足（模型判断）',{exact:true}).waitFor();await auditAccessibility(page,'accessibility_rag_insufficient_candidates');
+ });
  await scenario('accessibility_workspace_load_failure',async(page)=>{
-  await page.route(/\/Modules\.tsx(?:\?|$)/,route=>route.abort('failed'));
+  await page.route(moduleRequest('Modules'),route=>route.abort('failed'));
   await page.goto(`${origin.origin}/knowledge`);await page.getByRole('alert').filter({hasText:'此工作区暂时无法加载'}).waitFor();
   await auditAccessibility(page,'accessibility_workspace_load_failure');
  });
@@ -839,6 +844,7 @@ try{
   await page.keyboard.press('Escape');assert.equal(await dialog.isVisible(),false);assert.ok(await link.evaluate(el=>el===document.activeElement));assert.equal(await page.locator('#requirement').inputValue(),'键盘保护草稿');
  });
  for(const pending of ['list','detail'])await scenario(`run_history_auto_refresh_waits_for_slow_${pending}_and_recovers`,async(page,state)=>{
+  state.pollStarted=Date.now();state.pollingTimes=[];
   state.runs=[{id:RA,requirementVersionId:RA,status:'confirmed',plan:null,errorCode:null,createdAt:now,finishedAt:now,modelName:'controlled-fixture'}];
   let release,initialReads,initialDetails;const gate=new Promise(resolve=>{release=resolve;});state[pending==='list'?'runListGate':'runDetailGate']=gate;
   try{
@@ -849,8 +855,9 @@ try{
    await page.waitForTimeout(10400);assert.equal(state.runListReads,initialReads,'automatic polling must not cancel a legitimate slow read');
    if(pending==='detail')assert.equal(state.runCounts[RA],initialDetails,'pending detail must not restart');
    assert.ok(await page.getByRole('button',{name:'刷新记录',exact:true}).isDisabled());
-  }finally{release();state.runListGate=null;state.runDetailGate=null;}
+  }finally{release();state.runListGate=null;state.runDetailGate=null;state.pollingTimes.push({phase:'gate_released',ms:Date.now()-state.pollStarted});}
   await page.locator('.run-step-evidence').first().waitFor();
+  state.pollingTimes.push({phase:'detail_visible',ms:Date.now()-state.pollStarted});
   await page.waitForTimeout(10400);assert.equal(state.runListReads,initialReads+1,'automatic polling resumes once after the slow response settles');
   await page.getByRole('checkbox',{name:'每 10 秒刷新',exact:true}).uncheck();
   state.runListStatus=503;await page.getByRole('button',{name:'刷新记录',exact:true}).click();await page.getByRole('alert').filter({hasText:'数据服务暂不可用'}).waitFor();
@@ -858,7 +865,7 @@ try{
   assert.equal(state.runListReads,initialReads+3);assert.equal(await page.getByRole('alert').count(),0);
  });
  for(const [routeName,moduleName] of [['knowledge','Modules'],['runs','RunHistory']])await scenario(`workspace_load_${routeName}_failure_keeps_navigation`,async(page)=>{
-  await page.route(new RegExp(`/${moduleName}\\.tsx(?:\\?|$)`),route=>route.abort('failed'));
+  await page.route(moduleRequest(moduleName),route=>route.abort('failed'));
   await page.goto(`${origin.origin}/${routeName}`);
   const failure=page.getByRole('alert').filter({hasText:'此工作区暂时无法加载'});await failure.waitFor();
   const reload=failure.getByRole('button',{name:'重新加载页面',exact:true});await reload.focus();assert.ok(await reload.evaluate(node=>node===document.activeElement));
@@ -868,7 +875,7 @@ try{
  });
  await scenario('workspace_load_failure_reload_respects_unsaved_edit_and_save_failure',async(page,state)=>{
   let release;const gate=new Promise(resolve=>{release=resolve;});let failModule=true;
-  await page.route(/\/RequirementHistory\.tsx(?:\?|$)/,async route=>{if(failModule){await gate;return route.abort('failed');}return route.continue();});
+  await page.route(moduleRequest('RequirementHistory'),async route=>{if(failModule){await gate;return route.abort('failed');}return route.continue();});
   try{
    await page.goto(`${origin.origin}/projects/${A}/requirements`);await page.waitForFunction(()=>document.querySelector('#requirement')?.value==='项目 A 的需求正文');
    const draft='侧栏下载失败时，末尾验收条件也不能丢失。';await page.locator('#requirement').fill(draft);release();
@@ -915,6 +922,14 @@ try{
   await page.getByRole('button',{name:'取消检索或索引',exact:true}).click();await page.waitForTimeout(550);assert.equal(await page.getByText('成功检索的合成片段',{exact:true}).count(),0);
   state.searchDelay=0;await page.getByRole('button',{name:/检索知识/}).click();await page.getByText('成功检索的合成片段',{exact:true}).waitFor();
  });
+ await scenario('knowledge_answer_insufficient_candidates_are_not_presented_as_supporting_citations',async(page,state)=>{
+  state.answerResponse={answer:'合成缺口说明：资料未给出退款期限，请补充适用版本。',reason:'insufficient_evidence',sources:[],candidates:[{id:RA,document_name:'仅供核对的候选',content:'资料只介绍订单创建，没有退款期限。',page:1,distance:0.1}]};
+  await page.goto(`${origin.origin}/knowledge`);await page.getByLabel('文档内容',{exact:true}).fill('未提交的上传草稿仍需保留');await page.getByLabel('检索问题').fill('候选资料没有说明的退款期限');await page.getByRole('button',{name:/知识增强回答/}).click();
+  await page.getByText('资料不足（模型判断）',{exact:true}).waitFor();await page.getByRole('heading',{name:'待核对的候选资料',exact:true}).waitFor();await page.getByText('仅供核对的候选',{exact:true}).waitFor();assert.equal(await page.getByRole('heading',{name:'检索来源',exact:true}).count(),0);
+  await page.screenshot({path:fileURLToPath(new URL('rag-insufficient-candidates.png',directory)),fullPage:true});
+  state.answerResponse=undefined;await page.getByLabel('检索问题').fill('第二个有来源的问题');await page.getByRole('button',{name:/知识增强回答/}).click();await page.getByText('合成回答内容，不是真实模型结果',{exact:true}).waitFor();assert.equal(await page.getByText('资料不足（模型判断）',{exact:true}).count(),0);await page.getByRole('heading',{name:'检索来源',exact:true}).waitFor();
+  state.answerResponse={answer:null,reason:'no_evidence',sources:[]};await page.getByLabel('检索问题').fill('没有召回的问题');await page.getByRole('button',{name:/知识增强回答/}).click();await page.getByText('未检索到相关资料',{exact:true}).waitFor();assert.equal(await page.getByRole('heading',{name:'待核对的候选资料',exact:true}).count(),0);assert.equal(await page.getByText('合成回答内容，不是真实模型结果',{exact:true}).count(),0);assert.equal(await page.getByLabel('文档内容',{exact:true}).inputValue(),'未提交的上传草稿仍需保留');assert.equal(state.answers,3);
+ });
  await scenario('knowledge_answer_cancel_and_retry_keep_response_question_identity',async(page,state)=>{
   state.answerDelay=400;await page.goto(`${origin.origin}/knowledge`);await page.getByLabel('检索问题').fill('第一次回答的问题');
   await page.getByRole('button',{name:/知识增强回答/}).click();await waitFor(()=>state.answers===1);
@@ -960,4 +975,4 @@ try{
   await page.getByText('成功检索的合成片段',{exact:true}).waitFor();await page.getByText('本次检索问题：已发出的检索问题',{exact:true}).waitFor();
   assert.equal(await page.getByLabel('检索问题').inputValue(),'尚未检索的新输入');
  });
-}finally{await browser.close();report.finishedAt=new Date().toISOString();await writeFile(new URL('report.json',directory),JSON.stringify(report,null,2));}
+}finally{await browser.close();report.finishedAt=new Date().toISOString();await writeFile(new URL('report.json',directory),JSON.stringify(report,null,2));console.log(`Report: ${fileURLToPath(new URL('report.json',directory))}`);}

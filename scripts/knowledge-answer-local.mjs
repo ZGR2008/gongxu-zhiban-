@@ -42,6 +42,7 @@ await registerKnowledgeRoutes(app,store,pool,embedding,{baseUrl:'https://example
  complete:async(_config,_messages,_fetcher,options)=>{
   calls++;modelSignal=options?.signal;const sources=[...retainedHits];
   if(mode==='hold_model')await held(); // Deliberately ignores abort; route must still finish.
+  if(mode==='insufficient')return JSON.stringify({status:'insufficient_evidence',answer:'合成模型判断：已召回的审批资料没有给出另一个版本的规则，需补充资料。',citations:[]});
   return JSON.stringify({answer:'合成模型回答：提交前由教师确认验收，不代表真实模型效果。',citations:sources.length?[sources[0].id]:[]});
  },
 });
@@ -82,6 +83,11 @@ try{
   const recovered=await answer();assert.equal(recovered.status,200);assert.equal(recovered.body.sources[0].document_id,saved.id);assert.ok(recovered.body.sources[0].content.includes(query));
   const before=calls,isolated=await answer(foreign);assert.equal(isolated.status,200);assert.equal(isolated.body.reason,'no_evidence');assert.equal(isolated.body.answer,null);assert.equal(calls,before);
   const rows=await pool.query('SELECT status FROM knowledge_documents WHERE id=$1 AND owner_id=$2',[saved.id,owner.id]);assert.equal(rows.rows[0].status,'ready');
+ });
+ await check('real_retrieval_can_return_uncited_insufficiency_without_losing_candidate_provenance',async()=>{
+  mode='insufficient';const before=calls,result=await answer();assert.equal(result.status,200);assert.equal(calls,before+1);
+  assert.equal(result.body.reason,'insufficient_evidence');assert.deepEqual(result.body.sources,[]);assert.ok(result.body.candidates.length>0);assert.ok(result.body.candidates.every(hit=>hit.document_id===saved.id));assert.ok(result.body.candidates[0].content.includes(query));
+  mode='normal';const normal=await answer();assert.equal(normal.status,200);assert.equal(normal.body.reason,null);assert.equal(normal.body.candidates,undefined);assert.equal(normal.body.sources[0].document_id,saved.id);
  });
  report.status='passed';
 }catch(error){report.status='failed';report.failedStage=stage;report.errorType=error.constructor.name;process.exitCode=1;console.log(`FAIL ${stage} (${error.constructor.name})`);}

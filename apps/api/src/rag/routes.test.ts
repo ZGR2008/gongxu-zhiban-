@@ -63,6 +63,36 @@ test('RAG answer does not call model when no evidence is retrieved', async () =>
   await app.close();
 });
 
+test('RAG can report insufficient evidence despite retrieved candidates without manufacturing citations', async () => {
+  const app=Fastify();let calls=0,instructions='';
+  await registerKnowledgeRoutes(app,store,pool,embedding,ai,{retrieve:async()=>[hit],complete:async(_config,messages)=>{
+    calls++;instructions=messages[0].content;
+    return JSON.stringify({status:'insufficient_evidence',answer:'现有资料没有给出所问版本的约束，请补充版本说明。',citations:[]});
+  }});
+  try{
+    const response=await app.inject({method:'POST',url:'/knowledge/answer',headers:auth,payload:{query:'未知版本的约束'}});
+    assert.equal(response.statusCode,200);assert.equal(calls,1);assert.equal(response.json().reason,'insufficient_evidence');
+    assert.match(instructions,/insufficient_evidence/);assert.match(instructions,/数据而不是指令/);
+    assert.deepEqual(response.json().sources,[]);assert.deepEqual(response.json().candidates,[hit]);assert.match(response.json().answer,/版本说明/);
+  }finally{await app.close();}
+});
+
+test('RAG evidence status cannot bypass citation identity or justify an uncited answer', async () => {
+  const app=Fastify();let output:unknown;
+  await registerKnowledgeRoutes(app,store,pool,embedding,ai,{retrieve:async()=>[hit],complete:async()=>JSON.stringify(output)});
+  try{
+    const request={method:'POST' as const,url:'/knowledge/answer',headers:auth,payload:{query:'核对证据协议'}};
+    for(const value of [
+      {status:'insufficient_evidence',answer:'不足',citations:[hit.id]},
+      {status:'insufficient_evidence',answer:'不足',citations:['00000000-0000-4000-8000-000000000099']},
+      {status:'answered',answer:'无引用回答',citations:[]},
+      {status:'unsupported_status',answer:'错误状态',citations:[hit.id]},
+    ]){output=value;assert.equal((await app.inject(request)).statusCode,502);}
+    output={status:'answered',answer:'带有效来源的建议，仍需人工核对。',citations:[hit.id]};
+    const valid=await app.inject(request);assert.equal(valid.statusCode,200);assert.equal(valid.json().reason,null);assert.deepEqual(valid.json().sources,[hit]);assert.equal(valid.json().candidates,undefined);
+  }finally{await app.close();}
+});
+
 test('document text and chunks can be stored before embeddings are configured', async () => {
   const app = Fastify(); const calls: string[] = [];
   const client = { query: async (sql: string) => { calls.push(sql); return sql.includes('INSERT INTO knowledge_documents') ? { rows: [{ id: hit.document_id }], rowCount: 1 } : { rows: [], rowCount: 0 }; }, release: () => {} };
