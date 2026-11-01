@@ -31,5 +31,5 @@ export function plan(suite,rootTests){
  ];
  if(suite==='browser')return [node('controlled-browser',['scripts/reliability-browser.mjs']),node('production-build',['node_modules/vite/bin/vite.js','build'],'apps/web'),node('production-recovery',['scripts/verify-production-recovery.mjs'],'.',['production-build']),node('entry-performance',['scripts/measure-web-entry.mjs','--assert-deferred'],'.',['production-build'])];
  if(suite==='accessibility')return [node('desktop-accessibility',['scripts/reliability-browser.mjs','--accessibility'])];
- return [compile('api'),...['execution-concurrency','segment-review','reliability','requirement-preconditions','trace-concurrency','test-list','fresh-database','review-context','document-context','knowledge-answer','document-list','knowledge-list','index-compatibility','embedding-mixed','growth-scope','agent-recovery'].map(name=>node(name,['../../scripts/'+name+'-local.mjs'],'apps/api',['api-build']))];
+ return [compile('api'),...['execution-concurrency','segment-review','long-plan','reliability','requirement-preconditions','trace-concurrency','test-list','fresh-database','review-context','document-context','knowledge-answer','document-list','knowledge-list','index-compatibility','embedding-mixed','growth-scope','agent-recovery'].map(name=>node(name,['../../scripts/'+name+'-local.mjs'],'apps/api',['api-build']))];
 }

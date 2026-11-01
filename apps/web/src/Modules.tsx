@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
 import { RichContent, CopyButton, ModuleGuide } from './components/ContentView';
 import { AgentProgress, TaskBoard, SourceCollection } from './components/EvidenceViews';
 import { RequirementTrace } from './components/RequirementTrace';
+import { LongRequirementPlanning } from './components/LongRequirementPlanning';
 import { PlanReview } from './components/PlanReview';
 import { PlanMap } from './components/PlanMap';
 import { FileDropZone } from './components/FileDropZone';
@@ -94,7 +95,7 @@ export function Knowledge({ request }: { request: Api }) {
   </section>;
 }
 
-type Requirement = { id:string; version:number; status:string };
+type Requirement = { id:string; version:number; status:string; content?:unknown };
 type TaskPlan = {key:string;stage:string;title:string;description:string;deliverable:string;dependsOn:string[];citations:string[]};
 type Run = {id:string;requirementVersionId:string;status:string;plan:{tasks:TaskPlan[]} | null;errorCode:string|null;createdAt:string;heartbeatAt?:string|null;deadlineAt?:string|null;requestKey?:string|null;humanReview?:{reviewedAt:string;note:string;warningCount:number;scope:string}|null};
 type Tool = {id:string;toolName:string;status:string;inputSummary:string;outputSummary:string};
@@ -172,6 +173,7 @@ export function Agent({ request, projectId, requirements, onRefreshProject }: {r
     {error && <div className="alert error" role="alert">{error}<button type="button" onClick={() => void refresh()}>刷新记录</button></div>}
     {taskOutdated&&<div className="alert error" role="alert">已确认需求发生变化，这次任务状态没有保存。旧看板已暂停编辑，请重新读取项目需求再核对。<button type="button" onClick={onRefreshProject}>重新读取项目需求</button></div>}
     {notice && <div className="alert success" role="status">{notice}</div>}
+    {latestConfirmed&&<LongRequirementPlanning key={latestConfirmed.id} request={request} projectId={projectId} versionId={latestConfirmed.id} versionNumber={latestConfirmed.version} sourceLength={typeof latestConfirmed.content==='string'?latestConfirmed.content.length:0} onAdopt={()=>void refresh()}/>}
     {!loading && selected && <AgentProgress run={selected.run} steps={selected.steps}/>}
     {loading ? <div className="state-block">正在读取运行记录…</div> : <>
       <div className="agent-audit-grid">

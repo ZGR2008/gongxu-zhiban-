@@ -24,7 +24,7 @@ export function RequirementSegments({projectId,versionId,request}:{projectId:str
     {segment&&<div className="segment-content"><code>{segment.key}</code><p>原文位置 [{segment.start}, {segment.end})，UTF-16，末端不包含在范围内。</p><pre tabIndex={0} aria-label="完整分段原文">{segment.content}</pre><p className="muted-text">涉及条目：{segment.itemKeys.join('、')||'仅空白分隔符'}</p>{segment.crossBoundaryKeys.length>0&&<p className="wb-warning">{segment.crossBoundaryKeys.length} 个条目跨越分段边界，必须结合相邻段核对；接受本段不代表这些条件独立成立。</p>}
      <form onSubmit={e=>{e.preventDefault();void save();}}><label>边界判断<select aria-label="分段边界判断" value={decision} disabled={busy||loading||readFailed||!pack.current} onChange={e=>setDecision(e.target.value as Review['decision'])}><option value="accepted">已人工核对，可作为分段处理输入</option><option value="needs_changes">需调整边界或补充跨段约束</option></select></label><label>边界与依赖说明<textarea aria-label="分段审核说明" value={note} onChange={e=>setNote(e.target.value)} disabled={busy||loading||readFailed||!pack.current} rows={3} minLength={3} maxLength={2000} required placeholder="说明与前后段的依赖、冲突或必须一并检查的条件。"/></label><button className="button primary" disabled={busy||loading||readFailed||!pack.current}>{busy?'正在保存审核…':'保存分段审核'}</button>{review&&<p className="muted-text">审核修订 {review.revision} · {new Date(review.reviewedAt).toLocaleString('zh-CN')}</p>}</form>
     </div>}
-   </div><p className="muted-text">分段模型生成、跨段语义合并与最终计划审核尚未接入生产流程。超过 20000 字符的自动生成继续明确阻止，不需删除原始证据。</p>
+   </div><p className="muted-text">此处保留原有原文审阅记录，不触发生成。可在 Agent 页的“完整原文 · 分段规划”调整方案、逐段生成并人工合并采纳；原单次生成仍限制 20000 字符，不需删除原始证据。</p>
   </>}
  </section>;
 }

@@ -3,6 +3,7 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import {existsSync} from 'node:fs';
 import { randomUUID } from 'node:crypto';
 import assert from 'node:assert/strict';
+import {longPlanningFixture} from './long-plan-browser-fixture.mjs';
 import {execFileSync} from 'node:child_process';
 import {createRequire} from 'node:module';
 import {fileURLToPath} from 'node:url';
@@ -88,6 +89,10 @@ async function scenario(name,work){
   if(baselineModule&&url.pathname===`/src/${baselineSource}`)return route.fulfill({contentType:'application/javascript',body:baselineModule});
   if(!url.pathname.startsWith('/api/')) return route.continue();
   const path=url.pathname.slice(4),method=route.request().method();
+  if(state.longPlanning&&(/\/planning-scheme(?:\/review)?$/.test(path)||/\/long-plans(?:\/.*)?$/.test(path))){
+   const response=await state.longPlanning(path,method,method==='GET'?null:route.request().postDataJSON());
+   return route.fulfill({status:response.status??200,contentType:'application/json',body:JSON.stringify(response.body)});
+  }
   let status=200,body={};
   if(path==='/health')body={status:'ok',service:'gongxu-api'};
   else if(path==='/ready')body={status:'ready'};
@@ -233,6 +238,34 @@ try{
   ['agent',`/projects/${A}/agent`,'.confirmed-task-panel'],['reviews',`/projects/${A}/reviews`,'#code-input'],
   ['tests',`/projects/${A}/tests`,'.case-item'],['documents',`/projects/${A}/documents`,'#doc-content'],
  ];
+ await scenario('v5_long_plan_draft_conflict_and_navigation_protection',async(page,state)=>{
+  longPlanningFixture(state,A,RA);await page.goto(`${origin.origin}/projects/${A}/agent`);await page.getByRole('button',{name:'展开分段规划',exact:true}).click();
+  await page.locator('.long-condition summary').first().click();await page.getByLabel('条件1分类',{exact:true}).selectOption('acceptance');
+  await page.getByRole('link',{name:'知识库',exact:true}).first().click();const guard=page.getByRole('dialog',{name:'保留未保存的编辑'});await guard.getByRole('button',{name:'留在此页'}).click();assert.equal(await page.getByLabel('条件1分类',{exact:true}).inputValue(),'acceptance');
+  state.longConflict=true;await page.getByRole('button',{name:'保存拆分草稿',exact:true}).click();await page.getByRole('alert').filter({hasText:'拆分方案已变化'}).waitFor();assert.equal(await page.getByLabel('条件1分类',{exact:true}).inputValue(),'acceptance');
+  state.longConflict=false;await page.getByRole('button',{name:'保存拆分草稿',exact:true}).click();await page.getByText('拆分草稿已保存，旧审核已失效。请检查原文覆盖和跨段条件。',{exact:true}).waitFor();assert.equal(state.writes.length,2);
+  await page.getByRole('link',{name:'知识库',exact:true}).first().click();await page.waitForURL('**/knowledge');
+ });
+ await scenario('v5_long_plan_explicit_review_and_charge_consent_gate',async(page,state)=>{
+  const {pack}=longPlanningFixture(state,A,RA);await page.goto(`${origin.origin}/projects/${A}/agent`);await page.getByRole('button',{name:'展开分段规划',exact:true}).click();
+  const launch=page.getByRole('button',{name:'启动分段规划',exact:true});await launch.waitFor();assert.equal(await launch.isDisabled(),true);
+  for(let i=0;i<3;i++){await page.locator('.long-condition > summary').nth(i).click();await page.getByLabel(`条件${i+1}分类`,{exact:true}).selectOption('acceptance');}
+  await page.getByRole('button',{name:'保存拆分草稿',exact:true}).click();await page.getByText('拆分草稿已保存，旧审核已失效。请检查原文覆盖和跨段条件。',{exact:true}).waitFor();
+  await page.getByLabel('拆分审核说明',{exact:true}).fill('逐条核对原文、角色和尾部权限；这是受控浏览器合成数据。');await page.getByRole('button',{name:'确认拆分方案',exact:true}).click();await page.getByText('拆分审核已记录；尚未调用模型。',{exact:true}).waitFor();assert.equal(await launch.isDisabled(),true);
+  await page.getByLabel(/我理解启动或恢复/).check();await launch.click();await page.getByText('作业已入队，请查看真实片段状态。',{exact:true}).waitFor();assert.equal(state.writes.filter(w=>w.path.endsWith('/long-plans')).length,1);assert.equal(pack.reviewed_revision,pack.revision);
+ });
+ await scenario('v5_long_plan_uncertain_result_requires_explicit_recovery_and_desktop_layout',async(page,state)=>{
+  longPlanningFixture(state,A,RA,{job:true});await page.goto(`${origin.origin}/projects/${A}/agent`);await page.getByRole('button',{name:'展开分段规划',exact:true}).click();await page.getByText('结果未知，可能已计费',{exact:true}).waitFor();const resume=page.getByRole('button',{name:'恢复未完成片段',exact:true});assert.equal(await resume.isDisabled(),true);
+  await page.getByLabel(/我理解启动或恢复/).check();assert.equal(await resume.isDisabled(),true);await page.getByText('片段恢复：人工修正或准备重试',{exact:true}).click();await page.getByLabel('处理原因',{exact:true}).fill('已经核对未知结果，明确接受再次请求可能重复计费。');await page.getByLabel(/我已核对未知结果/).check();await page.getByRole('button',{name:'将此段准备为重试',exact:true}).click();await page.getByText('重试已准备，尚未发送模型请求；主动恢复后才会调用。',{exact:true}).waitFor();assert.equal(state.writes.length,1);assert.equal(state.writes[0].path.endsWith('/retry-part'),true);
+  for(const [width,height] of [[1366,768],[1920,1080],[1000,750]]){await page.setViewportSize({width,height});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+2),false);}
+  await page.getByRole('button',{name:'刷新方案与作业',exact:true}).focus();assert.equal(await page.evaluate(()=>document.activeElement.textContent),'刷新方案与作业');
+  await page.screenshot({path:new URL('v5-long-planning-desktop.png',directory).pathname.replace(/^\/([A-Za-z]:)/,'$1'),fullPage:true});
+ });
+ await scenario('accessibility_v5_long_planning',async(page,state)=>{longPlanningFixture(state,A,RA,{job:true});await page.goto(`${origin.origin}/projects/${A}/agent`);await page.getByRole('button',{name:'展开分段规划',exact:true}).click();await page.getByText('结果未知，可能已计费',{exact:true}).waitFor();await auditAccessibility(page,'accessibility_v5_long_planning');});
+ await scenario('v5_long_plan_invalid_editable_merge_keeps_editor_instead_of_crashing',async(page,state)=>{
+  const {detail}=longPlanningFixture(state,A,RA,{job:true});detail.job.status='awaiting_review';detail.job.merge_draft={tasks:[{key:'T1',title:{invalid:true},description:null,conditionIds:[{}]}]};detail.audit={errors:[{key:'bad',code:'merge_schema',message:'合并草案结构不完整',conditionIds:[],taskKeys:[]}],warnings:[]};
+  await page.goto(`${origin.origin}/projects/${A}/agent`);await page.getByRole('button',{name:'展开分段规划',exact:true}).click();await page.getByText('合并草案结构不完整',{exact:true}).waitFor();await page.getByText('高级编辑：合并任务、依赖与条件关联',{exact:true}).click();assert.ok((await page.getByLabel('合并计划JSON',{exact:true}).inputValue()).includes('invalid'));assert.equal(state.errors.length,0);
+ });
  await scenario('v4_execution_conflict_keeps_input_and_requires_explicit_snapshot_review',async(page,state)=>{
   state.makeDetail=id=>({...detail(id),requirements:[{...detail(id).requirements[0],status:'confirmed'}]});
   state.cases=[{id:RB,requirementVersionId:RA,category:'normal',title:'并发登记合成用例',revision:1,executionRevision:0,preconditions:'',steps:'独立核对',expected:'记录准确',result:'not_run',executionNote:'',executedAt:null}];state.enforceExecutionRevision=true;

@@ -1,6 +1,6 @@
 import {withAbort} from './abortable.js';
 export type AiConfig = { baseUrl: string; apiKey: string; model: string; timeoutMs: number; maxOutputTokens?: number; reasoningEffort?: 'none' | 'low' | 'high' | 'max' };
-export type CompletionOptions={signal?:AbortSignal};
+export type CompletionOptions={signal?:AbortSignal;captureIncomplete?:boolean};
 export type ProviderUsage={inputTokens:number|null;outputTokens:number|null;totalTokens:number|null;cacheHitTokens:number|null;cacheMissTokens:number|null;reasoningTokens:number|null};
 export type ChatCompletion={content:string;usage:ProviderUsage;finishReason:string|null;durationMs:number};
 export type AiMessage = { role: 'system' | 'user' | 'assistant'; content: string };
@@ -86,7 +86,7 @@ export async function completeChatWithMetadata(config: AiConfig | undefined, mes
     for (const chunk of chunks) { bytes.set(chunk, offset); offset += chunk.byteLength; }
     const data: unknown = JSON.parse(new TextDecoder().decode(bytes));
     const choice = (data as { choices?: { finish_reason?: string; message?: { content?: unknown } }[] })?.choices?.[0];
-    if (choice?.finish_reason === 'length') throw new AiError('ai_output_truncated');
+    if (choice?.finish_reason === 'length' && !options.captureIncomplete) throw new AiError('ai_output_truncated');
     const content = choice?.message?.content;
     if (typeof content !== 'string' || !content.trim() || content.length > 45_000) throw new AiError('ai_provider_error');
     const rawReason=choice?.finish_reason;
