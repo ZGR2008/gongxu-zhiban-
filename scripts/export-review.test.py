@@ -8,6 +8,20 @@ import ast,hashlib,json,runpy,sys,tempfile,unittest,zipfile
 SCRIPT=Path(__file__).with_name('export-review.py')
 
 class ExportTests(unittest.TestCase):
+    def test_v9_keeps_team_tasks_but_never_reads_actual_contribution_data(self):
+        with tempfile.TemporaryDirectory(prefix='gongxu-export-fixture-') as base:
+            root=self.fixture(base)
+            expected=['docs/TEAM-EXECUTION-V9.md','docs/CONTRIBUTION-RECORD-V9.md','docs/PENDING-INFORMATION-V9.md','docs/COMPLIANCE-CHECKLIST-V9.md','docs/COMPLIANCE-SOURCES-V9.md','docs/COMMITTEE-QUESTIONS-V9.md','docs/DEMO-SCRIPT-V9.md','docs/DEMO-OPERATIONS-V9.md','docs/VIDEO-ACCEPTANCE-V9.md','docs/REVIEWER-ACCESS-V9.md','docs/CONTINUATION-V9.md','docs/FINAL-REVIEW-V9.md','docs/verification/review-v9.json']
+            expected += ['docs/verification/history-v9.json','docs/verification/licenses-v9.json']
+            for relative in expected:
+                path=root/relative;path.parent.mkdir(parents=True,exist_ok=True);path.write_text('{}' if path.suffix=='.json' else 'Synthetic task template without actual personal contributions',encoding='utf-8')
+            private=root/'output/team-v9/actual-contributions.json';private.parent.mkdir(parents=True);private.write_text('synthetic-personal-marker',encoding='utf-8')
+            result=self.export(root,[private.resolve()],version='v9')
+            with zipfile.ZipFile(result['archive']) as bundle:
+                for relative in expected:self.assertIn('gongxu-zhiban/'+relative,bundle.namelist())
+                self.assertFalse(any('actual-contributions' in name for name in bundle.namelist()))
+                self.assertIsNone(bundle.testzip())
+
     def test_v8_keeps_compliance_evidence_and_never_reads_private_registration(self):
         with tempfile.TemporaryDirectory(prefix='gongxu-export-fixture-') as base:
             root=self.fixture(base)

@@ -1,0 +1,641 @@
+{
+  "schemaVersion": 1,
+  "checkedAt": "2026-11-02T05:43:37.910498+00:00",
+  "scope": "Local metadata and selected upstream primary sources; no legal or contest clearance",
+  "secretsOrBusinessDataRead": false,
+  "networkCallsByScript": 0,
+  "paidModelCalls": 0,
+  "lockfileSha256": "fb245ef19a747854da237ee7ffe43979a083c8b23b538aae010dccf8e68d9380",
+  "directDeclarationCount": 30,
+  "uniqueDirectPackages": 24,
+  "directLicenseCounts": {
+    "MPL-2.0": 1,
+    "Apache-2.0": 6,
+    "MIT": 21,
+    "BSD-2-Clause": 2
+  },
+  "directDependencies": [
+    {
+      "workspace": "gongxu-zhiban",
+      "kind": "devDependencies",
+      "package": "axe-core",
+      "declared": "4.14.0",
+      "installedVersion": "4.14.0",
+      "licenseExpression": "MPL-2.0",
+      "installedNoticeFiles": [
+        {
+          "file": "LICENSE",
+          "sha256": "af175b9d96ee93c21a036152e1b905b0b95304d4ae8c2c921c7609100ba8df7e"
+        },
+        {
+          "file": "LICENSE-3RD-PARTY.txt",
+          "sha256": "4f8563870d0fca38bbc3e00b6f670cb7fa9f380ba9f26a7f7d1184a6b18b1653"
+        }
+      ],
+      "manifest": "package.json"
+    },
+    {
+      "workspace": "gongxu-zhiban",
+      "kind": "devDependencies",
+      "package": "playwright",
+      "declared": "1.64.1",
+      "installedVersion": "1.64.1",
+      "licenseExpression": "Apache-2.0",
+      "installedNoticeFiles": [
+        {
+          "file": "LICENSE",
+          "sha256": "45873d00a0dd243596deb4aa23b2493b3d1f0671921bf2538ea431d7380220eb"
+        },
+        {
+          "file": "NOTICE",
+          "sha256": "6d602191187b35b9b01d2cffa01c8469c2c8d9de8a96f1bf868e0f264f51c81d"
+        },
+        {
+          "file": "ThirdPartyNotices.txt",
+          "sha256": "b17ac0bd6f4b8207e440639cc8e0ba1bf1d9eaf9b12236764ab93b346c7abd8e"
+        }
+      ],
+      "manifest": "package.json"
+    },
+    {
+      "workspace": "@gongxu/api",
+      "kind": "dependencies",
+      "package": "@fastify/cors",
+      "declared": "^10.0.1",
+      "installedVersion": "10.1.0",
+      "licenseExpression": "MIT",
+      "installedNoticeFiles": [
+        {
+          "file": "LICENSE",
+          "sha256": "2ea8c792510e3a013fad1f5810e2f904ec2349d04df8e7a82ee3d74b13f720a2"
+        }
+      ],
+      "manifest": "apps/api/package.json"
+    },
+    {
+      "workspace": "@gongxu/api",
+      "kind": "dependencies",
+      "package": "dotenv",
+      "declared": "^16.4.7",
+      "installedVersion": "16.6.1",
+      "licenseExpression": "BSD-2-Clause",
+      "installedNoticeFiles": [
+        {
+          "file": "LICENSE",
+          "sha256": "74b629b24865e1e83c5277ee84590b7937644d6fd959d0c7bdce758676cd2ced"
+        }
+      ],
+      "manifest": "apps/api/package.json"
+    },
+    {
+      "workspace": "@gongxu/api",
+      "kind": "dependencies",
+      "package": "fastify",
+      "declared": "^5.2.1",
+      "installedVersion": "5.12.7",
+      "licenseExpression": "MIT",
+      "installedNoticeFiles": [
+        {
+          "file": "LICENSE",
+          "sha256": "23c91863859171455a536380991b4160fee4e19e2d8dc353ecf7143cc4e53ca2"
+        }
+      ],
+      "manifest": "apps/api/package.json"
+    },
+    {
+      "workspace": "@gongxu/api",
+      "kind": "dependencies",
+      "package": "pdfjs-dist",
+      "declared": "5.6.205",
+      "installedVersion": "5.6.205",
+      "licenseExpression": "Apache-2.0",
+      "installedNoticeFiles": [
+        {
+          "file": "LICENSE",
+          "sha256": "0d542e0c8804e39aa7f37eb00da5a762149dc682d7829451287e11b938e94594"
+        }
+      ],
+      "manifest": "apps/api/package.json"
+    },
+    {
+      "workspace": "@gongxu/api",
+      "kind": "dependencies",
+      "package": "pg",
+      "declared": "^8.13.3",
+      "installedVersion": "8.23.1",
+      "licenseExpression": "MIT",
+      "installedNoticeFiles": [
+        {
+          "file": "LICENSE",
+          "sha256": "192b8f5c96900f04a1271dec39688655d7416c1c6ea84a508e18b50d2b6751f3"
+        }
+      ],
+      "manifest": "apps/api/package.json"
+    },
+    {
+      "workspace": "@gongxu/api",
+      "kind": "dependencies",
+      "package": "typescript",
+      "declared": "^5.7.3",
+      "installedVersion": "5.9.3",
+      "licenseExpression": "Apache-2.0",
+      "installedNoticeFiles": [
+        {
+          "file": "LICENSE.txt",
+          "sha256": "a7d00bfd54525bc694b6e32f64c7ebcf5e6b7ae3657be5cc12767bce74654a47"
+        },
+        {
+          "file": "ThirdPartyNoticeText.txt",
+          "sha256": "1af3c68039c57e539422da82a4faada506ce6d0ea6f90e0b699d02dbcdb7a90c"
+        }
+      ],
+      "manifest": "apps/api/package.json"
+    },
+    {
+      "workspace": "@gongxu/api",
+      "kind": "dependencies",
+      "package": "zod",
+      "declared": "^3.24.2",
+      "installedVersion": "3.25.76",
+      "licenseExpression": "MIT",
+      "installedNoticeFiles": [
+        {
+          "file": "LICENSE",
+          "sha256": "3f1189b28e3866e0d979968d466b78f813f76827cfdca1fbb124cc0a5c8841f8"
+        }
+      ],
+      "manifest": "apps/api/package.json"
+    },
+    {
+      "workspace": "@gongxu/api",
+      "kind": "devDependencies",
+      "package": "@types/node",
+      "declared": "^22.13.4",
+      "installedVersion": "22.20.5",
+      "licenseExpression": "MIT",
+      "installedNoticeFiles": [
+        {
+          "file": "LICENSE",
+          "sha256": "c2cfccb812fe482101a8f04597dfc5a9991a6b2748266c47ac91b6a5aae15383"
+        }
+      ],
+      "manifest": "apps/api/package.json"
+    },
+    {
+      "workspace": "@gongxu/api",
+      "kind": "devDependencies",
+      "package": "@types/pg",
+      "declared": "^8.11.11",
+      "installedVersion": "8.23.1",
+      "licenseExpression": "MIT",
+      "installedNoticeFiles": [
+        {
+          "file": "LICENSE",
+          "sha256": "c2cfccb812fe482101a8f04597dfc5a9991a6b2748266c47ac91b6a5aae15383"
+        }
+      ],
+      "manifest": "apps/api/package.json"
+    },
+    {
+      "workspace": "@gongxu/api",
+      "kind": "devDependencies",
+      "package": "tsx",
+      "declared": "^4.19.3",
+      "installedVersion": "4.23.15",
+      "licenseExpression": "MIT",
+      "installedNoticeFiles": [
+        {
+          "file": "LICENSE",
+          "sha256": "8dded67841a9261a622c739fb61c81785e93765de852828ceeb9403d20a74581"
+        }
+      ],
+      "manifest": "apps/api/package.json"
+    },
+    {
+      "workspace": "@gongxu/embedding",
+      "kind": "dependencies",
+      "package": "@huggingface/transformers",
+      "declared": "3.8.1",
+      "installedVersion": "3.8.1",
+      "licenseExpression": "Apache-2.0",
+      "installedNoticeFiles": [
+        {
+          "file": "LICENSE",
+          "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+        }
+      ],
+      "manifest": "apps/embedding/package.json"
+    },
+    {
+      "workspace": "@gongxu/embedding",
+      "kind": "dependencies",
+      "package": "dotenv",
+      "declared": "^16.4.7",
+      "installedVersion": "16.6.1",
+      "licenseExpression": "BSD-2-Clause",
+      "installedNoticeFiles": [
+        {
+          "file": "LICENSE",
+          "sha256": "74b629b24865e1e83c5277ee84590b7937644d6fd959d0c7bdce758676cd2ced"
+        }
+      ],
+      "manifest": "apps/embedding/package.json"
+    },
+    {
+      "workspace": "@gongxu/embedding",
+      "kind": "dependencies",
+      "package": "fastify",
+      "declared": "^5.2.1",
+      "installedVersion": "5.12.7",
+      "licenseExpression": "MIT",
+      "installedNoticeFiles": [
+        {
+          "file": "LICENSE",
+          "sha256": "23c91863859171455a536380991b4160fee4e19e2d8dc353ecf7143cc4e53ca2"
+        }
+      ],
+      "manifest": "apps/embedding/package.json"
+    },
+    {
+      "workspace": "@gongxu/embedding",
+      "kind": "dependencies",
+      "package": "zod",
+      "declared": "^3.24.2",
+      "installedVersion": "3.25.76",
+      "licenseExpression": "MIT",
+      "installedNoticeFiles": [
+        {
+          "file": "LICENSE",
+          "sha256": "3f1189b28e3866e0d979968d466b78f813f76827cfdca1fbb124cc0a5c8841f8"
+        }
+      ],
+      "manifest": "apps/embedding/package.json"
+    },
+    {
+      "workspace": "@gongxu/embedding",
+      "kind": "devDependencies",
+      "package": "@types/node",
+      "declared": "^22.13.4",
+      "installedVersion": "22.20.5",
+      "licenseExpression": "MIT",
+      "installedNoticeFiles": [
+        {
+          "file": "LICENSE",
+          "sha256": "c2cfccb812fe482101a8f04597dfc5a9991a6b2748266c47ac91b6a5aae15383"
+        }
+      ],
+      "manifest": "apps/embedding/package.json"
+    },
+    {
+      "workspace": "@gongxu/embedding",
+      "kind": "devDependencies",
+      "package": "typescript",
+      "declared": "^5.7.3",
+      "installedVersion": "5.9.3",
+      "licenseExpression": "Apache-2.0",
+      "installedNoticeFiles": [
+        {
+          "file": "LICENSE.txt",
+          "sha256": "a7d00bfd54525bc694b6e32f64c7ebcf5e6b7ae3657be5cc12767bce74654a47"
+        },
+        {
+          "file": "ThirdPartyNoticeText.txt",
+          "sha256": "1af3c68039c57e539422da82a4faada506ce6d0ea6f90e0b699d02dbcdb7a90c"
+        }
+      ],
+      "manifest": "apps/embedding/package.json"
+    },
+    {
+      "workspace": "@gongxu/web",
+      "kind": "dependencies",
+      "package": "react",
+      "declared": "^19.0.0",
+      "installedVersion": "19.3.1",
+      "licenseExpression": "MIT",
+      "installedNoticeFiles": [
+        {
+          "file": "LICENSE",
+          "sha256": "da6d3703ed11cbe42bd212c725957c98da23cbff1998c05fa4b3d976d1a58e93"
+        }
+      ],
+      "manifest": "apps/web/package.json"
+    },
+    {
+      "workspace": "@gongxu/web",
+      "kind": "dependencies",
+      "package": "react-dom",
+      "declared": "^19.0.0",
+      "installedVersion": "19.3.1",
+      "licenseExpression": "MIT",
+      "installedNoticeFiles": [
+        {
+          "file": "LICENSE",
+          "sha256": "da6d3703ed11cbe42bd212c725957c98da23cbff1998c05fa4b3d976d1a58e93"
+        }
+      ],
+      "manifest": "apps/web/package.json"
+    },
+    {
+      "workspace": "@gongxu/web",
+      "kind": "dependencies",
+      "package": "react-markdown",
+      "declared": "10.1.0",
+      "installedVersion": "10.1.0",
+      "licenseExpression": "MIT",
+      "installedNoticeFiles": [
+        {
+          "file": "license",
+          "sha256": "f6196c64e144f9a6fa9154c3a80bc8b89615a9567934b83a8951879f06ba2aef"
+        }
+      ],
+      "manifest": "apps/web/package.json"
+    },
+    {
+      "workspace": "@gongxu/web",
+      "kind": "dependencies",
+      "package": "remark-gfm",
+      "declared": "4.0.1",
+      "installedVersion": "4.0.1",
+      "licenseExpression": "MIT",
+      "installedNoticeFiles": [
+        {
+          "file": "license",
+          "sha256": "dd1081884a92952802f4803110a6bb543acea9a814c786d58605b4c1219b5ebb"
+        }
+      ],
+      "manifest": "apps/web/package.json"
+    },
+    {
+      "workspace": "@gongxu/web",
+      "kind": "devDependencies",
+      "package": "@types/react",
+      "declared": "^19.0.0",
+      "installedVersion": "19.3.0",
+      "licenseExpression": "MIT",
+      "installedNoticeFiles": [
+        {
+          "file": "LICENSE",
+          "sha256": "c2cfccb812fe482101a8f04597dfc5a9991a6b2748266c47ac91b6a5aae15383"
+        }
+      ],
+      "manifest": "apps/web/package.json"
+    },
+    {
+      "workspace": "@gongxu/web",
+      "kind": "devDependencies",
+      "package": "@types/react-dom",
+      "declared": "^19.0.0",
+      "installedVersion": "19.3.0",
+      "licenseExpression": "MIT",
+      "installedNoticeFiles": [
+        {
+          "file": "LICENSE",
+          "sha256": "c2cfccb812fe482101a8f04597dfc5a9991a6b2748266c47ac91b6a5aae15383"
+        }
+      ],
+      "manifest": "apps/web/package.json"
+    },
+    {
+      "workspace": "@gongxu/web",
+      "kind": "devDependencies",
+      "package": "@vitejs/plugin-react",
+      "declared": "^4.3.4",
+      "installedVersion": "4.7.0",
+      "licenseExpression": "MIT",
+      "installedNoticeFiles": [
+        {
+          "file": "LICENSE",
+          "sha256": "29b68325fe026047d13e187b44c33b2acacf7dc647dec4583702e59f235e13b5"
+        }
+      ],
+      "manifest": "apps/web/package.json"
+    },
+    {
+      "workspace": "@gongxu/web",
+      "kind": "devDependencies",
+      "package": "autoprefixer",
+      "declared": "^10.4.20",
+      "installedVersion": "10.6.2",
+      "licenseExpression": "MIT",
+      "installedNoticeFiles": [
+        {
+          "file": "LICENSE",
+          "sha256": "5be1f3465bba68a626777f984878814aaf35e7ef8e9fd314d469bcf887050fb8"
+        }
+      ],
+      "manifest": "apps/web/package.json"
+    },
+    {
+      "workspace": "@gongxu/web",
+      "kind": "devDependencies",
+      "package": "postcss",
+      "declared": "^8.5.1",
+      "installedVersion": "8.5.32",
+      "licenseExpression": "MIT",
+      "installedNoticeFiles": [
+        {
+          "file": "LICENSE",
+          "sha256": "5be1f3465bba68a626777f984878814aaf35e7ef8e9fd314d469bcf887050fb8"
+        }
+      ],
+      "manifest": "apps/web/package.json"
+    },
+    {
+      "workspace": "@gongxu/web",
+      "kind": "devDependencies",
+      "package": "tailwindcss",
+      "declared": "^3.4.17",
+      "installedVersion": "3.4.19",
+      "licenseExpression": "MIT",
+      "installedNoticeFiles": [
+        {
+          "file": "LICENSE",
+          "sha256": "60e0b68c0f35c078eef3a5d29419d0b03ff84ec1df9c3f9d6e39a519a5ae7985"
+        }
+      ],
+      "manifest": "apps/web/package.json"
+    },
+    {
+      "workspace": "@gongxu/web",
+      "kind": "devDependencies",
+      "package": "typescript",
+      "declared": "^5.7.3",
+      "installedVersion": "5.9.3",
+      "licenseExpression": "Apache-2.0",
+      "installedNoticeFiles": [
+        {
+          "file": "LICENSE.txt",
+          "sha256": "a7d00bfd54525bc694b6e32f64c7ebcf5e6b7ae3657be5cc12767bce74654a47"
+        },
+        {
+          "file": "ThirdPartyNoticeText.txt",
+          "sha256": "1af3c68039c57e539422da82a4faada506ce6d0ea6f90e0b699d02dbcdb7a90c"
+        }
+      ],
+      "manifest": "apps/web/package.json"
+    },
+    {
+      "workspace": "@gongxu/web",
+      "kind": "devDependencies",
+      "package": "vite",
+      "declared": "^6.0.7",
+      "installedVersion": "6.4.5",
+      "licenseExpression": "MIT",
+      "installedNoticeFiles": [
+        {
+          "file": "LICENSE.md",
+          "sha256": "008938a3441801ca3960f8e3ccb4c0738e7996442a53063141d57d3769a7344d"
+        }
+      ],
+      "manifest": "apps/web/package.json"
+    }
+  ],
+  "vendorManifestChecks": [
+    {
+      "file": "three/three.module.min.js",
+      "expectedSha256": "ccf5fbb596958fef03e81d631b3316730d9146d0d1cb6a4e99b1fd2388cef573",
+      "actualSha256": "ccf5fbb596958fef03e81d631b3316730d9146d0d1cb6a4e99b1fd2388cef573",
+      "matches": true
+    },
+    {
+      "file": "three/LICENSE",
+      "expectedSha256": "8b378ebe60e2fe500158cb0ac71cb5e8b7d92953c2abcc63a0eb90499653b5bc",
+      "actualSha256": "8b378ebe60e2fe500158cb0ac71cb5e8b7d92953c2abcc63a0eb90499653b5bc",
+      "matches": true
+    },
+    {
+      "file": "saturn-webgl/original-orbit.vert.glsl",
+      "expectedSha256": "ca40e9ad7a2cc7b991d0a80cafe7b2b37cf5ece5e4296a1e59eb33152167de93",
+      "actualSha256": "ca40e9ad7a2cc7b991d0a80cafe7b2b37cf5ece5e4296a1e59eb33152167de93",
+      "matches": true
+    },
+    {
+      "file": "saturn-webgl/particle-ring.js",
+      "expectedSha256": "f4d6ae46d421f4fe84d71d55576a7ef83d853607300203d9fd6abc18ef4471e2",
+      "actualSha256": "f4d6ae46d421f4fe84d71d55576a7ef83d853607300203d9fd6abc18ef4471e2",
+      "matches": true
+    },
+    {
+      "file": "saturn-webgl/LICENSE",
+      "expectedSha256": "4e263b9700aae7d03ae1fe890faae62840536a64084025c063befb256f0b81d9",
+      "actualSha256": "4e263b9700aae7d03ae1fe890faae62840536a64084025c063befb256f0b81d9",
+      "matches": true
+    }
+  ],
+  "assets": [
+    {
+      "file": "apps/web/src/components/art/nebula-cache.png",
+      "bytes": 25506,
+      "sha256": "224a5753251b18fc43883679b9d3ed4b7a1d31257c261035b0c08282909bfcd5"
+    },
+    {
+      "file": "apps/web/src/components/art/nebula.svg",
+      "bytes": 584,
+      "sha256": "6f188e779d18370c7638fa3e47fd2910bfd77575f7f8e194638318a0773d7fa2"
+    },
+    {
+      "file": "apps/web/src/components/art/planet.svg",
+      "bytes": 1731,
+      "sha256": "8b8e853a57e12a2d3e77bade63468422150f8f3816bb89efb46d9d448da3d7b9"
+    }
+  ],
+  "existingNotices": [
+    {
+      "file": "apps/web/public/THIRD-PARTY-LICENSES.txt",
+      "sha256": "7af9305908b0111245b0daf424e12925d1c95a466f02378c2db984d51f322524"
+    },
+    {
+      "file": "apps/web/public/previews/vendor/NOTICE.txt",
+      "sha256": "83506659af47a0e208957ae8a06f52d94e8334670167badad80a1b5a3cae7af9"
+    },
+    {
+      "file": "apps/embedding/THIRD_PARTY_NOTICES.md",
+      "sha256": "da694ed778d7b7706b3eea5ff7103a4ec8d21096a02248917572b6b7f7dea0e2"
+    }
+  ],
+  "documentFont": {
+    "name": "msyh.ttc",
+    "rawFontRedistributed": false,
+    "flags": [
+      {
+        "fontIndex": 0,
+        "fsType": 8,
+        "editableEmbeddingFlag": true,
+        "restrictedFlag": false,
+        "noSubsettingFlag": false,
+        "bitmapOnlyFlag": false
+      },
+      {
+        "fontIndex": 1,
+        "fsType": 8,
+        "editableEmbeddingFlag": true,
+        "restrictedFlag": false,
+        "noSubsettingFlag": false,
+        "bitmapOnlyFlag": false
+      }
+    ],
+    "limitation": "Flags do not prove OS acquisition license or contest eligibility"
+  },
+  "pdfs": [
+    {
+      "file": "gongxu-zhiban-technical-v9-20261102-134119-276764.pdf",
+      "sha256": "f2d3633d3cab1fa2d620ac89c019ac98cf611cf786654e5c17742af16a0f3a22",
+      "pages": 20,
+      "embeddedTrueTypeSubsets": {
+        "/AAAAAA+MicrosoftYaHei-0": {
+          "bytes": 113240,
+          "fsType": 8
+        },
+        "/AAAAAB+MicrosoftYaHei-0": {
+          "bytes": 159596,
+          "fsType": 8
+        },
+        "/AAAAAC+MicrosoftYaHei-0": {
+          "bytes": 167940,
+          "fsType": 8
+        },
+        "/AAAAAD+MicrosoftYaHei-0": {
+          "bytes": 22240,
+          "fsType": 8
+        }
+      }
+    }
+  ],
+  "upstreamSources": [
+    {
+      "url": "https://www.boxuegu.com/matchTrack/detail/?id=10037",
+      "observed": "AI coding tools allowed with clear explanation of all code; team edition linkage still needs registration evidence",
+      "localEvidence": ".runtime/compliance-v8-official/track-10037.txt",
+      "evidenceSha256": "d1e49e586ddc1729607cb273a2d5832f0a1deaa93f3660aedcb46762996babfd",
+      "line": 456,
+      "publishedDate": null
+    },
+    {
+      "url": "https://github.com/adelmassimo/SaturnWebGL",
+      "observed": "MIT repository; local full notice retained"
+    },
+    {
+      "url": "https://huggingface.co/BAAI/bge-small-zh-v1.5",
+      "observed": "base model card declares MIT"
+    },
+    {
+      "url": "https://huggingface.co/Xenova/bge-small-zh-v1.5",
+      "observed": "ONNX conversion links to BAAI; fixed revision card not retrieved"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/typography/fonts/font-faq",
+      "observed": "document embedding subject to font flags; raw font redistribution separate"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/typography/opentype/spec/os2#fstype",
+      "observed": "fsType embedding definitions"
+    }
+  ],
+  "unresolved": [
+    "Current official page allows AI coding tools with code explanation requirement; team edition linkage, actual ability and specific disclosure still require evidence",
+    "Independent student contribution records and teacher review not established by AI agent changes or Git authors",
+    "Fixed ONNX conversion repository license evidence incomplete; do not redistribute model weights in source ZIP",
+    "Full transitive binary/image distribution license assessment not performed; dependency directories excluded",
+    "Copyright and originality of generated assets/text cannot be certified solely by local hashes"
+  ]
+}

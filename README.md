@@ -1,5 +1,15 @@
 # 工序智伴
 
+## 当前材料候选 v9（2026-11-02）
+
+参赛者已明确确认第九届传智杯、AI WEB 网页开发挑战赛；实际报名组别、阶段和逐人资格仍待后台核验。旧章节中省赛、C组和旧分工只代表当时准备记录。v9保持v7业务代码，更新报名事实、后续职责与材料，不代表新增模型验证或已提交。
+
+[比赛逐条清单](docs/COMPLIANCE-CHECKLIST-V9.md)、[官方来源](docs/COMPLIANCE-SOURCES-V9.md)、[三人待执行任务](docs/TEAM-EXECUTION-V9.md)、[空白实际贡献记录](docs/CONTRIBUTION-RECORD-V9.md)区分AI生成、人工修改、人工测试及人工审核。成员按既有名单顺序暂关联责任，需团队核对；不把AI成果登记为学生已完成工作。
+
+[约七分钟逐字稿](docs/DEMO-SCRIPT-V9.md)、[操作提纲](docs/DEMO-OPERATIONS-V9.md)不授权收费调用，不代表已制作视频。[集中待补清单](docs/PENDING-INFORMATION-V9.md)、[组委会咨询稿](docs/COMMITTEE-QUESTIONS-V9.md)和[评审仓库步骤](docs/REVIEWER-ACCESS-V9.md)保留缺口；视频、访问和官网回执尚未取得。长需求第9段失败、后4段未调用与独立人审未完成仍如实披露。
+
+本地检查、提交条件、已实际提交分别判断。最新验证见[本次报告](docs/FINAL-REVIEW-V9.md)与`output/delivery-v9-*.json`；下方v8及以前保留历史时间范围，不作为本次新结果。
+
 ## 当前参赛候选与合规边界（v8，2026-11-02）
 
 v8是基于v7业务代码的材料与打包候选编号，不是新增业务能力或再次真实AI评测。已知参赛方向是传智杯AI WEB网页开发挑战赛、省赛、高职专科；实际报名届次与组别回执仍缺证据；已取得当前官网完整细则，但与本队报名的对应及条款冲突待确认。**本地核查不等于具备全部提交条件，更不等于已提交。** [逐条合规清单](docs/COMPLIANCE-CHECKLIST-V8.md)使用六种状态并保留官方待确认项，[官方来源记录](docs/COMPLIANCE-SOURCES-V8.md)不以往届或高校通知补齐本届规则。

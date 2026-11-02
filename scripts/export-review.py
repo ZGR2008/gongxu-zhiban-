@@ -19,7 +19,7 @@ import argparse
 
 parser=argparse.ArgumentParser(description='Create a local sanitized source review copy, never an external upload.')
 parser.add_argument('--source',type=Path,default=Path(__file__).resolve().parents[1],help='Source root; optional for isolated export regression fixtures.')
-parser.add_argument('--version',choices=['v4','v5','v6','v7','v8'],default='v4',help='Explicit edition; old export commands keep their version.')
+parser.add_argument('--version',choices=['v4','v5','v6','v7','v8','v9'],default='v4',help='Explicit edition; old export commands keep their version.')
 args=parser.parse_args()
 ROOT = args.source.resolve()
 STAMP = datetime.now().strftime('%Y%m%d-%H%M%S-%f')
@@ -37,6 +37,7 @@ DOCS.update({'CONTINUATION-V5.md','LONG-REQUIREMENTS-V5.md','AI-REVIEW-PACK-V5.m
 DOCS.update({'CONTINUATION-V6.md','TEACHING-AND-PERMISSIONS-V6.md','KNOWLEDGE-CURRICULUM-V6.md','REFERENCE-REVIEW-V6.md','AI-REVIEW-PACK-V6.md','DEMO-SCRIPT-V6.md','DEMO-OPERATIONS-V6.md','FINAL-REVIEW-V6.md'})
 DOCS.update({'CONTINUATION-V7.md','TEACHING-VERSIONS-V7.md','AI-REVIEW-PACK-V7.md','DEMO-SCRIPT-V7.md','DEMO-OPERATIONS-V7.md','FINAL-REVIEW-V7.md','CURRICULUM-REVIEW-V7.md'})
 DOCS.update({'CONTINUATION-V8.md','COMPLIANCE-CHECKLIST-V8.md','COMPLIANCE-SOURCES-V8.md','ORIGINALITY-AND-LICENSE-V8.md','COMMITTEE-QUESTIONS-V8.md','DEMO-SCRIPT-V8.md','DEMO-OPERATIONS-V8.md','VIDEO-ACCEPTANCE-V8.md','REVIEWER-ACCESS-V8.md','FINAL-REVIEW-V8.md'})
+DOCS.update({'CONTINUATION-V9.md','COMPLIANCE-CHECKLIST-V9.md','COMPLIANCE-SOURCES-V9.md','COMMITTEE-QUESTIONS-V9.md','DEMO-SCRIPT-V9.md','DEMO-OPERATIONS-V9.md','VIDEO-ACCEPTANCE-V9.md','REVIEWER-ACCESS-V9.md','FINAL-REVIEW-V9.md','TEAM-EXECUTION-V9.md','CONTRIBUTION-RECORD-V9.md','PENDING-INFORMATION-V9.md'})
 CURATED_SCREENSHOTS={'docs/screenshots/review-v2/trace-desktop.png','docs/screenshots/review-v3/task-test-chain-desktop.png','docs/screenshots/review-v3/documents-desktop.png','docs/screenshots/review-v3/review-source-desktop.png','docs/screenshots/review-v3/growth-current-desktop.png','docs/screenshots/review-v3/workspace-desktop.png'}
 CURATED_SCREENSHOTS.update('docs/screenshots/review-v4/'+name+'.png' for name in ['task-test-chain-desktop','documents-desktop','review-source-desktop','growth-current-desktop','workspace-desktop','requirement-segments-desktop','execution-conflict-desktop'])
 CURATED_SCREENSHOTS.add('docs/screenshots/review-v5/adopted-desktop.png')
@@ -51,6 +52,7 @@ CURATED_SCREENSHOTS.update('docs/screenshots/review-v6/'+name+'.png' for name in
 CURATED_SCREENSHOTS.update('docs/screenshots/review-v7/'+name+'.png' for name in ['02-assignment-change','04-stale-document','05-teacher-feedback','06-student-revision','07-reviewed-acceptance','public-catalogue','public-original-source'])
 JSON_FILES.update({'docs/verification/review-v7.json','docs/verification/ai-review-pack-v7.json'})
 JSON_FILES.update({'docs/verification/review-v8.json','docs/verification/licenses-v8.json'})
+JSON_FILES.update({'docs/verification/review-v9.json','docs/verification/history-v9.json','docs/verification/licenses-v9.json'})
 FORBIDDEN = {'.log','.tsbuildinfo','.pem','.key','.p12','.pfx','.jks','.keystore','.sqlite','.sqlite3','.db','.dump','.backup','.bak','.zip','.7z','.mp4','.webm','.onnx','.bin'}
 excluded = []
 redactions = []
@@ -144,6 +146,7 @@ def candidate(relative):
     if parts[0] not in {'apps','scripts','docs','evaluation','packages','knowledge'}:return False
     if parts[0]=='knowledge':return len(parts)==3 and parts[1]=='teaching-v6' and Path(relative).suffix=='.mjs'
     if parts[0]=='docs':
+        if relative in {'docs/verification/review-v9.json','docs/verification/history-v9.json','docs/verification/licenses-v9.json'}:return True
         if relative in {'docs/verification/review-v8.json','docs/verification/licenses-v8.json'}:return True
         if relative in {'docs/verification/review-v7.json','docs/verification/ai-review-pack-v7.json','docs/verification/review-v5.json','docs/verification/review-v6.json','docs/verification/knowledge-v6.json'}:return True
         return (len(parts)==2 and parts[1] in DOCS) or relative in CURATED_SCREENSHOTS or relative in {'docs/verification/review-v2.json','docs/verification/review-v3.json','docs/verification/review-v4.json','docs/verification/ai-evaluation-v4.json','docs/demo-v3/README.md','docs/demo-v3/storyboard.json','docs/demo-v4/README.md','docs/demo-v4/storyboard.json'}
