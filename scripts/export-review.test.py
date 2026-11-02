@@ -8,6 +8,19 @@ import ast,hashlib,json,runpy,sys,tempfile,unittest,zipfile
 SCRIPT=Path(__file__).with_name('export-review.py')
 
 class ExportTests(unittest.TestCase):
+    def test_v8_keeps_compliance_evidence_and_never_reads_private_registration(self):
+        with tempfile.TemporaryDirectory(prefix='gongxu-export-fixture-') as base:
+            root=self.fixture(base)
+            expected=['docs/COMPLIANCE-CHECKLIST-V8.md','docs/COMPLIANCE-SOURCES-V8.md','docs/ORIGINALITY-AND-LICENSE-V8.md','docs/DEMO-SCRIPT-V8.md','docs/DEMO-OPERATIONS-V8.md','docs/VIDEO-ACCEPTANCE-V8.md','docs/REVIEWER-ACCESS-V8.md','docs/COMMITTEE-QUESTIONS-V8.md','docs/CONTINUATION-V8.md','docs/FINAL-REVIEW-V8.md','docs/verification/review-v8.json','docs/verification/licenses-v8.json']
+            for relative in expected:
+                path=root/relative;path.parent.mkdir(parents=True,exist_ok=True);path.write_text('{}' if path.suffix=='.json' else 'Synthetic compliance evidence',encoding='utf-8')
+            private=root/'output/registration/private-confirmation.json';private.parent.mkdir(parents=True);private.write_text('synthetic-personal-marker',encoding='utf-8')
+            result=self.export(root,[private.resolve()],version='v8')
+            with zipfile.ZipFile(result['archive']) as bundle:
+                for relative in expected:self.assertIn('gongxu-zhiban/'+relative,bundle.namelist())
+                self.assertFalse(any('registration/' in name for name in bundle.namelist()))
+                self.assertIsNone(bundle.testzip())
+
     def export(self,root,forbidden=(),version=None):
         read_text,read_bytes=Path.read_text,Path.read_bytes
         def guarded_text(path,*args,**kwargs):

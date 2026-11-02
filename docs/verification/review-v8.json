@@ -1,0 +1,590 @@
+{
+  "version": "v8",
+  "checkedAt": "2026-11-02T05:12:50.590618+00:00",
+  "businessBaselineCommit": "2defd8b1e7c8a4f5225915a4599f0767173475a9",
+  "businessSourceChanged": [],
+  "changedFiles": [
+    "README.md",
+    "docs/COMMITTEE-QUESTIONS-V8.md",
+    "docs/COMPLIANCE-CHECKLIST-V8.md",
+    "docs/COMPLIANCE-SOURCES-V8.md",
+    "docs/CONTEST-ACCEPTANCE-2026-11.md",
+    "docs/CONTINUATION-V8.md",
+    "docs/DEMO-OPERATIONS-V8.md",
+    "docs/DEMO-SCRIPT-V8.md",
+    "docs/FINAL-REVIEW-V8.md",
+    "docs/ORIGINALITY-AND-LICENSE-V8.md",
+    "docs/REVIEWER-ACCESS-V8.md",
+    "docs/TECHNICAL-MATERIAL.md",
+    "docs/VIDEO-ACCEPTANCE-V8.md",
+    "docs/verification/licenses-v8.json",
+    "docs/verification/review-v8.json",
+    "scripts/audit-licenses-v8.py",
+    "scripts/export-review.py",
+    "scripts/export-review.test.py",
+    "scripts/render-technical-v8.py",
+    "scripts/verify-candidate-v8.py"
+  ],
+  "offline": {
+    "command": "pnpm verify",
+    "path": ".runtime/verification-v4-02252a07-1589-45b1-b918-6e0d051a8de5/report.json",
+    "sha256": "3df94ff0a45d6aff349b01ea802b4b53297f010f416023727d734a6ec155620b",
+    "status": "passed",
+    "startedAt": "2026-11-02T05:08:00.561Z",
+    "finishedAt": "2026-11-02T05:08:40.897Z",
+    "steps": [
+      {
+        "id": "environment-templates",
+        "command": [
+          "node",
+          "scripts/check-env-templates.mjs"
+        ],
+        "cwd": ".",
+        "status": "passed",
+        "startedAt": "2026-11-02T05:08:00.677Z",
+        "exitCode": 0,
+        "elapsedMs": 83,
+        "log": "environment-templates.log"
+      },
+      {
+        "id": "api-types",
+        "command": [
+          "node",
+          "node_modules/typescript/bin/tsc",
+          "--noEmit",
+          "-p",
+          "tsconfig.json"
+        ],
+        "cwd": "apps/api",
+        "status": "passed",
+        "startedAt": "2026-11-02T05:08:00.763Z",
+        "exitCode": 0,
+        "elapsedMs": 3390,
+        "log": "api-types.log"
+      },
+      {
+        "id": "embedding-types",
+        "command": [
+          "node",
+          "node_modules/typescript/bin/tsc",
+          "--noEmit",
+          "-p",
+          "tsconfig.json"
+        ],
+        "cwd": "apps/embedding",
+        "status": "passed",
+        "startedAt": "2026-11-02T05:08:04.154Z",
+        "exitCode": 0,
+        "elapsedMs": 1510,
+        "log": "embedding-types.log"
+      },
+      {
+        "id": "web-types",
+        "command": [
+          "node",
+          "node_modules/typescript/bin/tsc",
+          "--noEmit",
+          "-p",
+          "tsconfig.json"
+        ],
+        "cwd": "apps/web",
+        "status": "passed",
+        "startedAt": "2026-11-02T05:08:05.665Z",
+        "exitCode": 0,
+        "elapsedMs": 3599,
+        "log": "web-types.log"
+      },
+      {
+        "id": "api-build",
+        "command": [
+          "node",
+          "node_modules/typescript/bin/tsc",
+          "-p",
+          "tsconfig.json"
+        ],
+        "cwd": "apps/api",
+        "status": "passed",
+        "startedAt": "2026-11-02T05:08:09.265Z",
+        "exitCode": 0,
+        "elapsedMs": 1814,
+        "log": "api-build.log"
+      },
+      {
+        "id": "embedding-build",
+        "command": [
+          "node",
+          "node_modules/typescript/bin/tsc",
+          "-p",
+          "tsconfig.json"
+        ],
+        "cwd": "apps/embedding",
+        "status": "passed",
+        "startedAt": "2026-11-02T05:08:11.079Z",
+        "exitCode": 0,
+        "elapsedMs": 1078,
+        "log": "embedding-build.log"
+      },
+      {
+        "id": "web-build",
+        "command": [
+          "node",
+          "node_modules/vite/bin/vite.js",
+          "build"
+        ],
+        "cwd": "apps/web",
+        "status": "passed",
+        "startedAt": "2026-11-02T05:08:12.159Z",
+        "exitCode": 0,
+        "elapsedMs": 6702,
+        "log": "web-build.log"
+      },
+      {
+        "id": "api-test-build",
+        "command": [
+          "node",
+          "node_modules/typescript/bin/tsc",
+          "-p",
+          "tsconfig.test.json"
+        ],
+        "cwd": "apps/api",
+        "status": "passed",
+        "startedAt": "2026-11-02T05:08:18.862Z",
+        "exitCode": 0,
+        "elapsedMs": 2175,
+        "log": "api-test-build.log"
+      },
+      {
+        "id": "embedding-test-build",
+        "command": [
+          "node",
+          "node_modules/typescript/bin/tsc",
+          "-p",
+          "tsconfig.test.json"
+        ],
+        "cwd": "apps/embedding",
+        "status": "passed",
+        "startedAt": "2026-11-02T05:08:21.038Z",
+        "exitCode": 0,
+        "elapsedMs": 1091,
+        "log": "embedding-test-build.log"
+      },
+      {
+        "id": "api-unit",
+        "command": [
+          "node",
+          "--test",
+          "dist/**/*.test.js"
+        ],
+        "cwd": "apps/api",
+        "status": "passed",
+        "startedAt": "2026-11-02T05:08:22.130Z",
+        "exitCode": 0,
+        "elapsedMs": 3830,
+        "log": "api-unit.log"
+      },
+      {
+        "id": "embedding-unit",
+        "command": [
+          "node",
+          "--test",
+          "dist/**/*.test.js"
+        ],
+        "cwd": "apps/embedding",
+        "status": "passed",
+        "startedAt": "2026-11-02T05:08:25.960Z",
+        "exitCode": 0,
+        "elapsedMs": 395,
+        "log": "embedding-unit.log"
+      },
+      {
+        "id": "root-script-unit",
+        "command": [
+          "node",
+          "--test",
+          "scripts/evaluation-report.test.mjs",
+          "scripts/evidence-state.test.mjs",
+          "scripts/historical-source.test.mjs",
+          "scripts/human-review-pack.test.mjs",
+          "scripts/live-evaluation.test.mjs",
+          "scripts/live-evidence.test.mjs",
+          "scripts/long-business-cases.test.mjs",
+          "scripts/quality-budget.test.mjs",
+          "scripts/request-transport.test.mjs",
+          "scripts/retrieval-evaluation.test.mjs",
+          "scripts/review-package.test.mjs",
+          "scripts/source-provenance.test.mjs",
+          "scripts/startup-readiness.test.mjs",
+          "scripts/teaching-curriculum.test.mjs",
+          "scripts/teaching-quality.test.mjs",
+          "scripts/trace-next-action.test.mjs",
+          "scripts/ui-models.test.mjs",
+          "scripts/verify.test.mjs",
+          "scripts/workbench-models.test.mjs"
+        ],
+        "cwd": ".",
+        "status": "passed",
+        "startedAt": "2026-11-02T05:08:26.357Z",
+        "exitCode": 0,
+        "elapsedMs": 12563,
+        "log": "root-script-unit.log"
+      },
+      {
+        "id": "python-package-regression",
+        "command": [
+          "python",
+          "scripts/export-review.test.py"
+        ],
+        "cwd": ".",
+        "status": "passed",
+        "startedAt": "2026-11-02T05:08:38.921Z",
+        "exitCode": 0,
+        "elapsedMs": 663,
+        "log": "python-package-regression.log"
+      },
+      {
+        "id": "offline-evaluation",
+        "command": [
+          "node",
+          "scripts/evaluate-offline.mjs"
+        ],
+        "cwd": ".",
+        "status": "passed",
+        "startedAt": "2026-11-02T05:08:39.584Z",
+        "exitCode": 0,
+        "elapsedMs": 833,
+        "log": "offline-evaluation.log"
+      },
+      {
+        "id": "evaluation-preparation",
+        "command": [
+          "node",
+          "scripts/evaluate-prepare.mjs"
+        ],
+        "cwd": ".",
+        "status": "passed",
+        "startedAt": "2026-11-02T05:08:40.418Z",
+        "exitCode": 0,
+        "elapsedMs": 478,
+        "log": "evaluation-preparation.log"
+      }
+    ],
+    "countsByLayer": {
+      "api-unit": 139,
+      "embedding-unit": 4,
+      "root-script-unit": 94,
+      "python-package-regression": 11
+    },
+    "paidModelCalls": 0
+  },
+  "regression": {
+    "red": {
+      "path": ".runtime/compliance-v8-export-red.log",
+      "sha256": "8e1aa4436266ca13e446b23a48de84301f2ac97d3dcba5261b2b99c99804a4e8",
+      "result": "10 passed; new v8 export regression failed because version unsupported"
+    },
+    "green": {
+      "path": ".runtime/compliance-v8-export-green.log",
+      "sha256": "d69229ee75fc3e5057cdcfbad7f22dd4005f9aa3f8d6913bbfb3fe4f7cebdd16",
+      "result": "11 passed; private registration fixture never read"
+    }
+  },
+  "rulesEvidence": {
+    "checkedAt": "2026-11-02T04:54:52.360Z",
+    "method": "Fresh non-authenticated Edge browser context; normal public GET/navigation; no cookies or browser state exported",
+    "pages": [
+      {
+        "id": "track-10037",
+        "url": "https://www.boxuegu.com/matchTrack/detail/?id=10037",
+        "title": "传智杯大赛-赛道详情",
+        "checkedAt": "2026-11-02T04:55:15.900Z",
+        "sha256": "d1e49e586ddc1729607cb273a2d5832f0a1deaa93f3660aedcb46762996babfd",
+        "characters": 10317,
+        "textPath": ".runtime/compliance-v8-official/track-10037.txt",
+        "imagePath": ".runtime/compliance-v8-official/track-10037.png"
+      },
+      {
+        "id": "notice-10085",
+        "url": "https://www.boxuegu.com/matchNotice/detail/?id=10085",
+        "title": "传智杯大赛-大赛通知详情",
+        "checkedAt": "2026-11-02T04:55:26.529Z",
+        "sha256": "db523fb9d42a3008da2560aa8762a9665f62a620bf825b5404d12fc82e4bcda9",
+        "characters": 1432,
+        "textPath": ".runtime/compliance-v8-official/notice-10085.txt",
+        "imagePath": ".runtime/compliance-v8-official/notice-10085.png"
+      },
+      {
+        "id": "notices",
+        "url": "https://www.boxuegu.com/matchNotice/",
+        "title": "传智杯大赛-大赛通知",
+        "checkedAt": "2026-11-02T04:55:37.119Z",
+        "sha256": "f1aeeaadc33714b35ee942e7be3f13157b5a100f5c623e56079a9514dc65335d",
+        "characters": 6479,
+        "textPath": ".runtime/compliance-v8-official/notices.txt",
+        "imagePath": ".runtime/compliance-v8-official/notices.png"
+      },
+      {
+        "id": "preguidance",
+        "url": "https://www.boxuegu.com/matchNotice/detail/?id=10091",
+        "title": "传智杯大赛-大赛通知详情",
+        "checkedAt": "2026-11-02T04:55:42.232Z",
+        "sha256": "b6a37412a88c06125ae5546148353e6d94b7b08fdcc059055a2016bd7e0a7ca0",
+        "characters": 1258,
+        "textPath": ".runtime/compliance-v8-official/preguidance.txt",
+        "imagePath": ".runtime/compliance-v8-official/preguidance.png"
+      }
+    ]
+  },
+  "licenses": {
+    "path": "docs/verification/licenses-v8.json",
+    "sha256": "15195f02f420a3b76e1dcb0475f2b8598d19de58dcba48a15cff6496fb5f75c1",
+    "directDeclarations": 30,
+    "vendorHashChecks": 5,
+    "assets": 3,
+    "pdfEmbeddingChecked": [
+      {
+        "file": "gongxu-zhiban-technical-v7-20261102-113909-250524.pdf",
+        "subsets": 4
+      },
+      {
+        "file": "gongxu-zhiban-technical-v8-20261102-130941-955332.pdf",
+        "subsets": 4
+      }
+    ]
+  },
+  "pdf": {
+    "edition": "v8",
+    "pdf": "output/pdf/gongxu-zhiban-technical-v8-20261102-130941-955332.pdf",
+    "pages": 20,
+    "chapters": [
+      "工序智伴",
+      "真实问题与目标用户",
+      "方案与核心价值",
+      "需求范围与产品结构",
+      "系统架构与技术选择",
+      "Agent与人机协同",
+      "RAG与可核对来源",
+      "身份、权限与数据边界",
+      "数据设计与版本一致性",
+      "长需求生产规划",
+      "代码审查、测试与文档",
+      "教师任务编辑与发布",
+      "完整案例：七日改成三日",
+      "从依据失效到反馈复核",
+      "公共课程与引用证据",
+      "真实AI验证与人工审核",
+      "分层测试与实际证据",
+      "电脑交互、性能与原创边界",
+      "部署、提交与比赛核验",
+      "总结、分工与下一步"
+    ],
+    "bytes": 630543,
+    "sha256": "b8f98b862bee01b21108a514e2393eef5d53618cd1f5bff45ced659f40c8e90c",
+    "visualReview": "all_rendered_pages_inspected",
+    "evidenceIndex": "docs/verification/review-v7.json",
+    "realModelCallsThisRound": 0,
+    "previousV7RealModelCalls": 13,
+    "businessBaselineCommit": "2defd8b1e7c8a4f5225915a4599f0767173475a9",
+    "complianceChecklist": "docs/COMPLIANCE-CHECKLIST-V8.md",
+    "historicalRealModelCalls": 12,
+    "independentHumanReviews": 0,
+    "teamInfo": "registered_fields_eligibility_unverified_future_responsibilities_not_past_contributions",
+    "submitted": false,
+    "layoutBounds": [
+      {
+        "page": 1,
+        "textCharacters": 396,
+        "outsideSafeBounds": 0,
+        "imagesOutsideSafeBounds": 0
+      },
+      {
+        "page": 2,
+        "textCharacters": 459,
+        "outsideSafeBounds": 0,
+        "imagesOutsideSafeBounds": 0
+      },
+      {
+        "page": 3,
+        "textCharacters": 396,
+        "outsideSafeBounds": 0,
+        "imagesOutsideSafeBounds": 0
+      },
+      {
+        "page": 4,
+        "textCharacters": 435,
+        "outsideSafeBounds": 0,
+        "imagesOutsideSafeBounds": 0
+      },
+      {
+        "page": 5,
+        "textCharacters": 496,
+        "outsideSafeBounds": 0,
+        "imagesOutsideSafeBounds": 0
+      },
+      {
+        "page": 6,
+        "textCharacters": 468,
+        "outsideSafeBounds": 0,
+        "imagesOutsideSafeBounds": 0
+      },
+      {
+        "page": 7,
+        "textCharacters": 412,
+        "outsideSafeBounds": 0,
+        "imagesOutsideSafeBounds": 0
+      },
+      {
+        "page": 8,
+        "textCharacters": 392,
+        "outsideSafeBounds": 0,
+        "imagesOutsideSafeBounds": 0
+      },
+      {
+        "page": 9,
+        "textCharacters": 421,
+        "outsideSafeBounds": 0,
+        "imagesOutsideSafeBounds": 0
+      },
+      {
+        "page": 10,
+        "textCharacters": 431,
+        "outsideSafeBounds": 0,
+        "imagesOutsideSafeBounds": 0
+      },
+      {
+        "page": 11,
+        "textCharacters": 399,
+        "outsideSafeBounds": 0,
+        "imagesOutsideSafeBounds": 0
+      },
+      {
+        "page": 12,
+        "textCharacters": 366,
+        "outsideSafeBounds": 0,
+        "imagesOutsideSafeBounds": 0
+      },
+      {
+        "page": 13,
+        "textCharacters": 387,
+        "outsideSafeBounds": 0,
+        "imagesOutsideSafeBounds": 0
+      },
+      {
+        "page": 14,
+        "textCharacters": 268,
+        "outsideSafeBounds": 0,
+        "imagesOutsideSafeBounds": 0
+      },
+      {
+        "page": 15,
+        "textCharacters": 287,
+        "outsideSafeBounds": 0,
+        "imagesOutsideSafeBounds": 0
+      },
+      {
+        "page": 16,
+        "textCharacters": 542,
+        "outsideSafeBounds": 0,
+        "imagesOutsideSafeBounds": 0
+      },
+      {
+        "page": 17,
+        "textCharacters": 664,
+        "outsideSafeBounds": 0,
+        "imagesOutsideSafeBounds": 0
+      },
+      {
+        "page": 18,
+        "textCharacters": 647,
+        "outsideSafeBounds": 0,
+        "imagesOutsideSafeBounds": 0
+      },
+      {
+        "page": 19,
+        "textCharacters": 541,
+        "outsideSafeBounds": 0,
+        "imagesOutsideSafeBounds": 0
+      },
+      {
+        "page": 20,
+        "textCharacters": 646,
+        "outsideSafeBounds": 0,
+        "imagesOutsideSafeBounds": 0
+      }
+    ],
+    "renderResolutionDpi": 90
+  },
+  "preservedV7": {
+    "v7SourceZip": {
+      "sha256": "e74740c3d75509cfcf52709cae4bed5f1f33f4b3c9942c9ed978d963986848c7",
+      "unchanged": true
+    },
+    "v7TechnicalPdf": {
+      "sha256": "652c591b2421679726dc5cf8866e0bcd932aa75afbf850d74cdb5c5b843cb3c6",
+      "unchanged": true
+    },
+    "v7ModelReport": {
+      "sha256": "689096fee5d07ba899fed5e825aa48d1884b8b226119f74c65f9e05827bc0f84",
+      "unchanged": true
+    }
+  },
+  "git": {
+    "remoteNames": [],
+    "fsckConnectivity": "passed",
+    "historyIncludedInSourceZip": false,
+    "historySecretContentScan": "not_performed; must check sharing history separately before granting access"
+  },
+  "models": {
+    "newCallsV8": 0,
+    "historicalV4Calls": 12,
+    "historicalV7Calls": 13,
+    "v7LongPlanCalls": 9,
+    "v7LongPlanFailedSegment": 9,
+    "uncalledSegments": [
+      10,
+      11,
+      12,
+      13
+    ],
+    "teacherDrafts": 4,
+    "independentHumanReviews": 0,
+    "newQualityClaim": false
+  },
+  "notRun": [
+    {
+      "item": "database/browser integration",
+      "reason": "No business source changes; retain v7 timestamped evidence, no new claim"
+    },
+    {
+      "item": "new machine installation",
+      "reason": "Not performed; existing local runtime and dependencies used"
+    },
+    {
+      "item": "real model calls",
+      "reason": "Not authorized for this round; historical outputs only"
+    },
+    {
+      "item": "human semantic/teacher review",
+      "reason": "Requires real participants and records"
+    },
+    {
+      "item": "final video file inspection",
+      "reason": "No final video provided; script and checklist only"
+    },
+    {
+      "item": "non-owner remote repository access",
+      "reason": "No confirmed target URL/access; no remote configured in current checkout"
+    }
+  ],
+  "status": {
+    "localChecks": "completed_for_listed_scope; final archive independently recorded in output delivery manifest",
+    "submissionReadiness": "not_confirmed",
+    "platformSubmission": "not_performed_by_this_run; no platform receipt"
+  },
+  "limitations": [
+    "Official page applicability requires actual registration record",
+    "Official timeline wording conflicts remain unresolved",
+    "Backend teaching/persistence scope needs official interpretation",
+    "AI-assisted code explanation and actual student contribution lack independent evidence",
+    "Candidate scanning cannot prove every unknown secret absent"
+  ]
+}
