@@ -28,8 +28,8 @@ export async function ownClass(db:Db,userId:string,id:string){
  if(!row)throw new TeachingError('not_found',404);return row;
 }
 export async function ownClaim(db:Db,userId:string,id:string){
- const row=(await db.query(`SELECT c.*,a.class_id,a.title,a.brief,a.rubric,a.revision AS assignment_revision FROM teaching_claims c
- JOIN teaching_assignments a ON a.id=c.assignment_id JOIN teaching_members m ON m.class_id=a.class_id AND m.student_id=c.student_id AND m.active
+ const row=(await db.query(`SELECT c.*,a.class_id,v.title,v.brief,v.rubric,v.number AS assignment_revision,v.number AS assignment_version,pv.id AS latest_version_id,pv.applicability FROM teaching_claims c
+ JOIN teaching_assignments a ON a.id=c.assignment_id JOIN teaching_assignment_versions v ON v.id=c.assignment_version_id JOIN teaching_assignment_versions pv ON pv.id=a.published_version_id JOIN teaching_members m ON m.class_id=a.class_id AND m.student_id=c.student_id AND m.active
  WHERE c.id=$1 AND c.student_id=$2 FOR UPDATE OF c`,[id,userId])).rows[0];
  if(!row)throw new TeachingError('not_found',404);return row;
 }
@@ -61,7 +61,7 @@ export async function makeSnapshot(db:Db,claim:Record<string,any>){
  const current=await readEvidenceSnapshot(db,claim.student_id,project.id,requirement.id);
  // A fresh read timestamp is not a source change; do not put it in the submission fingerprint.
  const evidence=current?{requirementVersionId:current.requirementVersionId,taskRevision:current.taskRevision,caseRevision:current.caseRevision,traceRevision:current.traceRevision}:null;
- const snapshot={schema:'teaching-submission-v1',assignment:{id:claim.assignment_id,title:claim.title,brief:claim.brief,rubric:claim.rubric,revision:claim.assignment_revision},project,requirement,tasks,cases,documents,items,links,chains,
+ const snapshot={schema:'teaching-submission-v2',assignment:{id:claim.assignment_id,versionId:claim.assignment_version_id,version:claim.assignment_version,title:claim.title,brief:claim.brief,rubric:claim.rubric,revision:claim.assignment_revision},project,requirement,tasks,cases,documents,items,links,chains,
   evidence,gaps:teachingGaps({tasks,cases,documents,items,links,chains,evidence}),evidenceKind:'人工登记，平台未执行学生代码；教师验收不改变测试结果'};
  if(Buffer.byteLength(JSON.stringify(snapshot))>1_000_000)throw new TeachingError('submission_snapshot_too_large',422);
  return {snapshot,fingerprint:snapshotDigest(snapshot)};

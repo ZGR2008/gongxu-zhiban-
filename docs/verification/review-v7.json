@@ -1,0 +1,1572 @@
+{
+  "edition": "v7",
+  "baselineCommit": "0370e679388c5a077e37bf65d09896d813c9231c",
+  "results": {
+    "offline": {
+      "path": ".runtime/verification-v4-85c354ea-2029-43f3-9f60-d9cddc0a967e/report.json",
+      "sha256": "1dbccb57b6baf2f9ffb9ca8601df9f509ebd59ee2c5f591f26f6cb76bfb83aeb",
+      "status": "passed",
+      "scope": "local_builds_unit_fixtures_and_protocols_no_model_no_database",
+      "steps": [
+        {
+          "id": "environment-templates",
+          "command": [
+            "node",
+            "scripts/check-env-templates.mjs"
+          ],
+          "cwd": ".",
+          "status": "passed",
+          "startedAt": "2026-11-02T03:36:31.883Z",
+          "exitCode": 0,
+          "elapsedMs": 82,
+          "log": "environment-templates.log"
+        },
+        {
+          "id": "api-types",
+          "command": [
+            "node",
+            "node_modules/typescript/bin/tsc",
+            "--noEmit",
+            "-p",
+            "tsconfig.json"
+          ],
+          "cwd": "apps/api",
+          "status": "passed",
+          "startedAt": "2026-11-02T03:36:31.967Z",
+          "exitCode": 0,
+          "elapsedMs": 1646,
+          "log": "api-types.log"
+        },
+        {
+          "id": "embedding-types",
+          "command": [
+            "node",
+            "node_modules/typescript/bin/tsc",
+            "--noEmit",
+            "-p",
+            "tsconfig.json"
+          ],
+          "cwd": "apps/embedding",
+          "status": "passed",
+          "startedAt": "2026-11-02T03:36:33.614Z",
+          "exitCode": 0,
+          "elapsedMs": 1534,
+          "log": "embedding-types.log"
+        },
+        {
+          "id": "web-types",
+          "command": [
+            "node",
+            "node_modules/typescript/bin/tsc",
+            "--noEmit",
+            "-p",
+            "tsconfig.json"
+          ],
+          "cwd": "apps/web",
+          "status": "passed",
+          "startedAt": "2026-11-02T03:36:35.148Z",
+          "exitCode": 0,
+          "elapsedMs": 2776,
+          "log": "web-types.log"
+        },
+        {
+          "id": "api-build",
+          "command": [
+            "node",
+            "node_modules/typescript/bin/tsc",
+            "-p",
+            "tsconfig.json"
+          ],
+          "cwd": "apps/api",
+          "status": "passed",
+          "startedAt": "2026-11-02T03:36:37.926Z",
+          "exitCode": 0,
+          "elapsedMs": 1738,
+          "log": "api-build.log"
+        },
+        {
+          "id": "embedding-build",
+          "command": [
+            "node",
+            "node_modules/typescript/bin/tsc",
+            "-p",
+            "tsconfig.json"
+          ],
+          "cwd": "apps/embedding",
+          "status": "passed",
+          "startedAt": "2026-11-02T03:36:39.665Z",
+          "exitCode": 0,
+          "elapsedMs": 1072,
+          "log": "embedding-build.log"
+        },
+        {
+          "id": "web-build",
+          "command": [
+            "node",
+            "node_modules/vite/bin/vite.js",
+            "build"
+          ],
+          "cwd": "apps/web",
+          "status": "passed",
+          "startedAt": "2026-11-02T03:36:40.737Z",
+          "exitCode": 0,
+          "elapsedMs": 3053,
+          "log": "web-build.log"
+        },
+        {
+          "id": "api-test-build",
+          "command": [
+            "node",
+            "node_modules/typescript/bin/tsc",
+            "-p",
+            "tsconfig.test.json"
+          ],
+          "cwd": "apps/api",
+          "status": "passed",
+          "startedAt": "2026-11-02T03:36:43.791Z",
+          "exitCode": 0,
+          "elapsedMs": 2399,
+          "log": "api-test-build.log"
+        },
+        {
+          "id": "embedding-test-build",
+          "command": [
+            "node",
+            "node_modules/typescript/bin/tsc",
+            "-p",
+            "tsconfig.test.json"
+          ],
+          "cwd": "apps/embedding",
+          "status": "passed",
+          "startedAt": "2026-11-02T03:36:46.191Z",
+          "exitCode": 0,
+          "elapsedMs": 1217,
+          "log": "embedding-test-build.log"
+        },
+        {
+          "id": "api-unit",
+          "command": [
+            "node",
+            "--test",
+            "dist/**/*.test.js"
+          ],
+          "cwd": "apps/api",
+          "status": "passed",
+          "startedAt": "2026-11-02T03:36:47.408Z",
+          "exitCode": 0,
+          "elapsedMs": 2101,
+          "log": "api-unit.log"
+        },
+        {
+          "id": "embedding-unit",
+          "command": [
+            "node",
+            "--test",
+            "dist/**/*.test.js"
+          ],
+          "cwd": "apps/embedding",
+          "status": "passed",
+          "startedAt": "2026-11-02T03:36:49.510Z",
+          "exitCode": 0,
+          "elapsedMs": 393,
+          "log": "embedding-unit.log"
+        },
+        {
+          "id": "root-script-unit",
+          "command": [
+            "node",
+            "--test",
+            "scripts/evaluation-report.test.mjs",
+            "scripts/evidence-state.test.mjs",
+            "scripts/historical-source.test.mjs",
+            "scripts/human-review-pack.test.mjs",
+            "scripts/live-evaluation.test.mjs",
+            "scripts/live-evidence.test.mjs",
+            "scripts/long-business-cases.test.mjs",
+            "scripts/quality-budget.test.mjs",
+            "scripts/request-transport.test.mjs",
+            "scripts/retrieval-evaluation.test.mjs",
+            "scripts/review-package.test.mjs",
+            "scripts/source-provenance.test.mjs",
+            "scripts/startup-readiness.test.mjs",
+            "scripts/teaching-curriculum.test.mjs",
+            "scripts/teaching-quality.test.mjs",
+            "scripts/trace-next-action.test.mjs",
+            "scripts/ui-models.test.mjs",
+            "scripts/verify.test.mjs",
+            "scripts/workbench-models.test.mjs"
+          ],
+          "cwd": ".",
+          "status": "passed",
+          "startedAt": "2026-11-02T03:36:49.904Z",
+          "exitCode": 0,
+          "elapsedMs": 12900,
+          "log": "root-script-unit.log"
+        },
+        {
+          "id": "python-package-regression",
+          "command": [
+            "python",
+            "scripts/export-review.test.py"
+          ],
+          "cwd": ".",
+          "status": "passed",
+          "startedAt": "2026-11-02T03:37:02.805Z",
+          "exitCode": 0,
+          "elapsedMs": 620,
+          "log": "python-package-regression.log"
+        },
+        {
+          "id": "offline-evaluation",
+          "command": [
+            "node",
+            "scripts/evaluate-offline.mjs"
+          ],
+          "cwd": ".",
+          "status": "passed",
+          "startedAt": "2026-11-02T03:37:03.425Z",
+          "exitCode": 0,
+          "elapsedMs": 849,
+          "log": "offline-evaluation.log"
+        },
+        {
+          "id": "evaluation-preparation",
+          "command": [
+            "node",
+            "scripts/evaluate-prepare.mjs"
+          ],
+          "cwd": ".",
+          "status": "passed",
+          "startedAt": "2026-11-02T03:37:04.275Z",
+          "exitCode": 0,
+          "elapsedMs": 494,
+          "log": "evaluation-preparation.log"
+        }
+      ],
+      "paidModelCalls": 0
+    },
+    "database": {
+      "path": ".runtime/verification-v4-a6dbd2fd-e6be-4d7a-be4e-dfb6e0132369/report.json",
+      "sha256": "959ed4d868118995d8238fae357a0659592c88b95274464449765dcaf9398946",
+      "status": "passed",
+      "scope": "explicit_real_local_data_synthetic_accounts_and_model_fixtures",
+      "steps": [
+        {
+          "id": "api-build",
+          "command": [
+            "node",
+            "node_modules/typescript/bin/tsc",
+            "-p",
+            "tsconfig.json"
+          ],
+          "cwd": "apps/api",
+          "status": "passed",
+          "startedAt": "2026-11-01T14:51:48.000Z",
+          "exitCode": 0,
+          "elapsedMs": 1733,
+          "log": "api-build.log"
+        },
+        {
+          "id": "teaching",
+          "command": [
+            "node",
+            "../../scripts/teaching-local.mjs"
+          ],
+          "cwd": "apps/api",
+          "status": "passed",
+          "startedAt": "2026-11-01T14:51:50.466Z",
+          "exitCode": 0,
+          "elapsedMs": 2393,
+          "log": "teaching.log"
+        },
+        {
+          "id": "execution-concurrency",
+          "command": [
+            "node",
+            "../../scripts/execution-concurrency-local.mjs"
+          ],
+          "cwd": "apps/api",
+          "status": "passed",
+          "startedAt": "2026-11-01T14:51:52.860Z",
+          "exitCode": 0,
+          "elapsedMs": 901,
+          "log": "execution-concurrency.log"
+        },
+        {
+          "id": "segment-review",
+          "command": [
+            "node",
+            "../../scripts/segment-review-local.mjs"
+          ],
+          "cwd": "apps/api",
+          "status": "passed",
+          "startedAt": "2026-11-01T14:51:53.762Z",
+          "exitCode": 0,
+          "elapsedMs": 916,
+          "log": "segment-review.log"
+        },
+        {
+          "id": "long-plan",
+          "command": [
+            "node",
+            "../../scripts/long-plan-local.mjs"
+          ],
+          "cwd": "apps/api",
+          "status": "passed",
+          "startedAt": "2026-11-01T14:51:54.679Z",
+          "exitCode": 0,
+          "elapsedMs": 2355,
+          "log": "long-plan.log"
+        },
+        {
+          "id": "reliability",
+          "command": [
+            "node",
+            "../../scripts/reliability-local.mjs"
+          ],
+          "cwd": "apps/api",
+          "status": "passed",
+          "startedAt": "2026-11-01T14:51:57.034Z",
+          "exitCode": 0,
+          "elapsedMs": 4041,
+          "log": "reliability.log"
+        },
+        {
+          "id": "requirement-preconditions",
+          "command": [
+            "node",
+            "../../scripts/requirement-preconditions-local.mjs"
+          ],
+          "cwd": "apps/api",
+          "status": "passed",
+          "startedAt": "2026-11-01T14:52:01.075Z",
+          "exitCode": 0,
+          "elapsedMs": 783,
+          "log": "requirement-preconditions.log"
+        },
+        {
+          "id": "trace-concurrency",
+          "command": [
+            "node",
+            "../../scripts/trace-concurrency-local.mjs"
+          ],
+          "cwd": "apps/api",
+          "status": "passed",
+          "startedAt": "2026-11-01T14:52:01.858Z",
+          "exitCode": 0,
+          "elapsedMs": 1058,
+          "log": "trace-concurrency.log"
+        },
+        {
+          "id": "test-list",
+          "command": [
+            "node",
+            "../../scripts/test-list-local.mjs"
+          ],
+          "cwd": "apps/api",
+          "status": "passed",
+          "startedAt": "2026-11-01T14:52:02.917Z",
+          "exitCode": 0,
+          "elapsedMs": 5161,
+          "log": "test-list.log"
+        },
+        {
+          "id": "fresh-database",
+          "command": [
+            "node",
+            "../../scripts/fresh-database-local.mjs"
+          ],
+          "cwd": "apps/api",
+          "status": "passed",
+          "startedAt": "2026-11-01T14:52:08.078Z",
+          "exitCode": 0,
+          "elapsedMs": 1575,
+          "log": "fresh-database.log"
+        },
+        {
+          "id": "review-context",
+          "command": [
+            "node",
+            "../../scripts/review-context-local.mjs"
+          ],
+          "cwd": "apps/api",
+          "status": "passed",
+          "startedAt": "2026-11-01T14:52:09.653Z",
+          "exitCode": 0,
+          "elapsedMs": 4029,
+          "log": "review-context.log"
+        },
+        {
+          "id": "document-context",
+          "command": [
+            "node",
+            "../../scripts/document-context-local.mjs"
+          ],
+          "cwd": "apps/api",
+          "status": "passed",
+          "startedAt": "2026-11-01T14:52:13.683Z",
+          "exitCode": 0,
+          "elapsedMs": 2666,
+          "log": "document-context.log"
+        },
+        {
+          "id": "knowledge-answer",
+          "command": [
+            "node",
+            "../../scripts/knowledge-answer-local.mjs"
+          ],
+          "cwd": "apps/api",
+          "status": "passed",
+          "startedAt": "2026-11-01T14:52:16.349Z",
+          "exitCode": 0,
+          "elapsedMs": 677,
+          "log": "knowledge-answer.log"
+        },
+        {
+          "id": "document-list",
+          "command": [
+            "node",
+            "../../scripts/document-list-local.mjs"
+          ],
+          "cwd": "apps/api",
+          "status": "passed",
+          "startedAt": "2026-11-01T14:52:17.027Z",
+          "exitCode": 0,
+          "elapsedMs": 4701,
+          "log": "document-list.log"
+        },
+        {
+          "id": "knowledge-list",
+          "command": [
+            "node",
+            "../../scripts/knowledge-list-local.mjs"
+          ],
+          "cwd": "apps/api",
+          "status": "passed",
+          "startedAt": "2026-11-01T14:52:21.729Z",
+          "exitCode": 0,
+          "elapsedMs": 3319,
+          "log": "knowledge-list.log"
+        },
+        {
+          "id": "index-compatibility",
+          "command": [
+            "node",
+            "../../scripts/index-compatibility-local.mjs"
+          ],
+          "cwd": "apps/api",
+          "status": "passed",
+          "startedAt": "2026-11-01T14:52:25.048Z",
+          "exitCode": 0,
+          "elapsedMs": 3183,
+          "log": "index-compatibility.log"
+        },
+        {
+          "id": "embedding-mixed",
+          "command": [
+            "node",
+            "../../scripts/embedding-mixed-local.mjs"
+          ],
+          "cwd": "apps/api",
+          "status": "passed",
+          "startedAt": "2026-11-01T14:52:28.232Z",
+          "exitCode": 0,
+          "elapsedMs": 2349,
+          "log": "embedding-mixed.log"
+        },
+        {
+          "id": "growth-scope",
+          "command": [
+            "node",
+            "../../scripts/growth-scope-local.mjs"
+          ],
+          "cwd": "apps/api",
+          "status": "passed",
+          "startedAt": "2026-11-01T14:52:30.581Z",
+          "exitCode": 0,
+          "elapsedMs": 2196,
+          "log": "growth-scope.log"
+        },
+        {
+          "id": "agent-recovery",
+          "command": [
+            "node",
+            "../../scripts/agent-recovery-local.mjs"
+          ],
+          "cwd": "apps/api",
+          "status": "passed",
+          "startedAt": "2026-11-01T14:52:32.779Z",
+          "exitCode": 0,
+          "elapsedMs": 673,
+          "log": "agent-recovery.log"
+        }
+      ],
+      "paidModelCalls": 0
+    },
+    "browser": {
+      "path": ".runtime/verification-v4-99e1c58d-7ad5-47ec-b29c-8b9b7649e148/report.json",
+      "sha256": "ceea1242a9bdd8795a583673fd05c833e77922a746a71ae04a2776b026aa8ca7",
+      "status": "passed",
+      "scope": "controlled_browser_no_real_model",
+      "steps": [
+        {
+          "id": "controlled-browser",
+          "command": [
+            "node",
+            "scripts/reliability-browser.mjs"
+          ],
+          "cwd": ".",
+          "status": "passed",
+          "startedAt": "2026-11-01T14:52:19.850Z",
+          "exitCode": 0,
+          "elapsedMs": 183828,
+          "log": "controlled-browser.log"
+        },
+        {
+          "id": "api-build",
+          "command": [
+            "node",
+            "node_modules/typescript/bin/tsc",
+            "-p",
+            "tsconfig.json"
+          ],
+          "cwd": "apps/api",
+          "status": "passed",
+          "startedAt": "2026-11-01T14:55:23.680Z",
+          "exitCode": 0,
+          "elapsedMs": 1813,
+          "log": "api-build.log"
+        },
+        {
+          "id": "teaching-isolated-browser",
+          "command": [
+            "node",
+            "scripts/teaching-local.mjs",
+            "--browser"
+          ],
+          "cwd": ".",
+          "status": "passed",
+          "startedAt": "2026-11-01T14:55:25.494Z",
+          "exitCode": 0,
+          "elapsedMs": 8129,
+          "log": "teaching-isolated-browser.log"
+        },
+        {
+          "id": "teaching-complete-ui",
+          "command": [
+            "node",
+            "scripts/teaching-full-ui-v7.mjs"
+          ],
+          "cwd": ".",
+          "status": "passed",
+          "startedAt": "2026-11-01T14:55:33.623Z",
+          "exitCode": 0,
+          "elapsedMs": 13538,
+          "log": "teaching-complete-ui.log"
+        },
+        {
+          "id": "production-build",
+          "command": [
+            "node",
+            "node_modules/vite/bin/vite.js",
+            "build"
+          ],
+          "cwd": "apps/web",
+          "status": "passed",
+          "startedAt": "2026-11-01T14:55:47.162Z",
+          "exitCode": 0,
+          "elapsedMs": 2469,
+          "log": "production-build.log"
+        },
+        {
+          "id": "production-recovery",
+          "command": [
+            "node",
+            "scripts/verify-production-recovery.mjs"
+          ],
+          "cwd": ".",
+          "status": "passed",
+          "startedAt": "2026-11-01T14:55:49.631Z",
+          "exitCode": 0,
+          "elapsedMs": 3647,
+          "log": "production-recovery.log"
+        },
+        {
+          "id": "entry-performance",
+          "command": [
+            "node",
+            "scripts/measure-web-entry.mjs",
+            "--assert-deferred"
+          ],
+          "cwd": ".",
+          "status": "passed",
+          "startedAt": "2026-11-01T14:55:53.278Z",
+          "exitCode": 0,
+          "elapsedMs": 5518,
+          "log": "entry-performance.log"
+        }
+      ],
+      "paidModelCalls": 0
+    },
+    "accessibility": {
+      "path": ".runtime/verification-v4-6f20c4e4-c1fc-4043-8959-4922e9d9b15d/report.json",
+      "sha256": "b86d491c28cd58fd4fb2d48fc123c8766baa6c6b6f08cf22e33dba958d398b9d",
+      "status": "passed",
+      "scope": "controlled_browser_no_real_model",
+      "steps": [
+        {
+          "id": "desktop-accessibility",
+          "command": [
+            "node",
+            "scripts/reliability-browser.mjs",
+            "--accessibility"
+          ],
+          "cwd": ".",
+          "status": "passed",
+          "startedAt": "2026-11-01T14:58:46.747Z",
+          "exitCode": 0,
+          "elapsedMs": 31202,
+          "log": "desktop-accessibility.log"
+        }
+      ],
+      "paidModelCalls": 0
+    },
+    "longRegression": {
+      "path": ".runtime/long-plan-local-2f2e0530-9680-4e11-8867-d1ed74418364/report.json",
+      "sha256": "548c7583164da9b0bbafa51980d3d0c612de18ce232dbb26d49385463afc472a",
+      "status": "passed",
+      "scope": "isolated_real_postgresql_actual_http_model_protocol_fixtures",
+      "checks": [
+        {
+          "name": "scheme_full_source_hash_review_conflict_and_history",
+          "status": "passed"
+        },
+        {
+          "name": "double_click_creates_one_job_and_actual_fragment_outputs_not_only_ids",
+          "status": "passed"
+        },
+        {
+          "name": "cross_account_and_unreviewed_adoption_are_rejected",
+          "status": "passed"
+        },
+        {
+          "name": "merge_omission_blocks_review_and_revision_keeps_prior_draft",
+          "status": "passed"
+        },
+        {
+          "name": "human_review_and_concurrent_adoption_create_tasks_once_without_verification",
+          "status": "passed"
+        },
+        {
+          "name": "scheme_edit_invalidates_review_and_old_job_cannot_be_adopted",
+          "status": "passed"
+        },
+        {
+          "name": "requirement_replacement_blocks_old_job_adoption",
+          "status": "passed"
+        },
+        {
+          "name": "fragment_mismatch_has_actionable_code_and_raw_answer_is_retained",
+          "status": "passed"
+        },
+        {
+          "name": "timeout_retains_uncertain_attempt_and_never_auto_retries",
+          "status": "passed"
+        },
+        {
+          "name": "retry_requires_charge_ack_and_bounded_backoff_then_preserves_completed_parts",
+          "status": "passed"
+        },
+        {
+          "name": "invalid_output_raw_preserved_and_human_correction_has_distinct_provenance",
+          "status": "passed"
+        },
+        {
+          "name": "cancel_inflight_keeps_unknown_charge_and_is_not_resubmitted",
+          "status": "passed"
+        },
+        {
+          "name": "service_restart_recovers_durable_dispatch_without_automatic_charge",
+          "status": "passed"
+        },
+        {
+          "name": "known_429_is_rejected_not_success_and_attempt_limit_blocks_fourth_charge",
+          "status": "passed"
+        },
+        {
+          "name": "multi_chapter_long_business_source_preserves_all_ranges_and_tail_through_durable_outputs",
+          "status": "passed"
+        },
+        {
+          "name": "bounded_queue_and_separate_workers_do_not_dispatch_duplicate_requests",
+          "status": "passed"
+        },
+        {
+          "name": "actual_desktop_browser_to_isolated_database_generates_reviews_adopts_and_shows_unverified_trace",
+          "status": "passed"
+        }
+      ],
+      "paidModelCalls": 0
+    },
+    "teachingUI": {
+      "path": ".runtime/teaching-full-ui-v7-f6c99aad-df50-4316-a502-3edf9073e678/report.json",
+      "sha256": "f0a42436a79035ba447f67da64fe4ccb88ee9578e223c0dbf7b1e7e251ccf8e3",
+      "status": "passed",
+      "scope": "isolated_real_http_sql_full_business_ui_model_fixture",
+      "checks": [
+        {
+          "name": "draft_second_window_409_comparison_and_failed_save_preserve_input",
+          "status": "passed",
+          "channel": "browser_ui_one_injected_503"
+        },
+        {
+          "name": "teacher_creates_class_and_updates_same_draft_in_ui",
+          "status": "passed",
+          "channel": "browser_ui"
+        },
+        {
+          "name": "student_joins_claims_confirms_requirement_and_builds_evidence_in_ui",
+          "status": "passed",
+          "channel": "browser_ui"
+        },
+        {
+          "name": "teacher_publishes_revision_student_compares_and_old_evidence_becomes_historical",
+          "status": "passed",
+          "channel": "browser_ui"
+        },
+        {
+          "name": "teacher_feedback_return_student_revise_resubmit_and_accept_entirely_in_ui",
+          "status": "passed",
+          "channel": "browser_ui"
+        },
+        {
+          "name": "assignment_initial_read_failure_cannot_create_another_task",
+          "status": "passed",
+          "channel": "browser_ui"
+        },
+        {
+          "name": "assignment_committed_create_response_lost_changed_retry_preserves_unsaved_input",
+          "status": "passed",
+          "channel": "browser_ui"
+        }
+      ],
+      "paidModelCalls": 0,
+      "modelFixtureCalls": [
+        {
+          "kind": "plan",
+          "model": "local-protocol-fixture-v7"
+        },
+        {
+          "kind": "cases",
+          "model": "local-protocol-fixture-v7"
+        },
+        {
+          "kind": "document",
+          "model": "local-protocol-fixture-v7"
+        },
+        {
+          "kind": "plan",
+          "model": "local-protocol-fixture-v7"
+        },
+        {
+          "kind": "cases",
+          "model": "local-protocol-fixture-v7"
+        },
+        {
+          "kind": "document",
+          "model": "local-protocol-fixture-v7"
+        }
+      ]
+    },
+    "publicEvidence": {
+      "path": ".runtime/public-evidence-v7-bf4fd33e-b31f-408e-b6eb-34ebc9adc9c0/report.json",
+      "sha256": "9e45b2faa393f692ac992e70abb222a125bbde2773a1e735a83891d1ee1b0d7c",
+      "status": "passed",
+      "scope": "public_only_primary_read_synthetic_database_ui"
+    },
+    "activation": {
+      "path": ".runtime/teaching-activation-v7-31e5c7d8-47ce-48e5-889b-1230641fff8d/report.json",
+      "sha256": "4c5aeab4847a5702763a7803a6d0765298fb4a190322afc0297d6c1b2aa6603c",
+      "status": "passed",
+      "scope": "authorized_local_additive_migrations"
+    },
+    "savedReview": {
+      "path": ".runtime/saved-review-v6-114cc78e-5eaa-46a6-82a8-f5d55e47fd8a/report.json",
+      "sha256": "7d16802de9171b9120923af37610a742c1cb79ec4a96485618e8b0b8a5060633",
+      "status": "passed",
+      "scope": null
+    },
+    "reviewMaterials": {
+      "path": "docs/verification/ai-review-pack-v7.json",
+      "sha256": "42f214238cc7a9ff01850fd2369b117c508f638df42ba9edd353c8612d900ab8",
+      "status": "passed",
+      "scope": "offline_original_synthetic_response_and_archive_checks",
+      "newPaidCalls": 0
+    },
+    "previousOffline": {
+      "path": ".runtime/verification-v4-ef36d108-d9e0-4c15-a59a-1fadbd259886/report.json",
+      "sha256": "d78522546af245aa9ffb62a59f958932f2366abcd638d1c1b80c1fc1fdf3e40f",
+      "status": "passed",
+      "scope": "local_builds_unit_fixtures_and_protocols_no_model_no_database",
+      "steps": [
+        {
+          "id": "environment-templates",
+          "command": [
+            "node",
+            "scripts/check-env-templates.mjs"
+          ],
+          "cwd": ".",
+          "status": "passed",
+          "startedAt": "2026-11-01T15:03:54.166Z",
+          "exitCode": 0,
+          "elapsedMs": 71,
+          "log": "environment-templates.log"
+        },
+        {
+          "id": "api-types",
+          "command": [
+            "node",
+            "node_modules/typescript/bin/tsc",
+            "--noEmit",
+            "-p",
+            "tsconfig.json"
+          ],
+          "cwd": "apps/api",
+          "status": "passed",
+          "startedAt": "2026-11-01T15:03:54.239Z",
+          "exitCode": 0,
+          "elapsedMs": 1644,
+          "log": "api-types.log"
+        },
+        {
+          "id": "embedding-types",
+          "command": [
+            "node",
+            "node_modules/typescript/bin/tsc",
+            "--noEmit",
+            "-p",
+            "tsconfig.json"
+          ],
+          "cwd": "apps/embedding",
+          "status": "passed",
+          "startedAt": "2026-11-01T15:03:55.884Z",
+          "exitCode": 0,
+          "elapsedMs": 1049,
+          "log": "embedding-types.log"
+        },
+        {
+          "id": "web-types",
+          "command": [
+            "node",
+            "node_modules/typescript/bin/tsc",
+            "--noEmit",
+            "-p",
+            "tsconfig.json"
+          ],
+          "cwd": "apps/web",
+          "status": "passed",
+          "startedAt": "2026-11-01T15:03:56.933Z",
+          "exitCode": 0,
+          "elapsedMs": 2737,
+          "log": "web-types.log"
+        },
+        {
+          "id": "api-build",
+          "command": [
+            "node",
+            "node_modules/typescript/bin/tsc",
+            "-p",
+            "tsconfig.json"
+          ],
+          "cwd": "apps/api",
+          "status": "passed",
+          "startedAt": "2026-11-01T15:03:59.672Z",
+          "exitCode": 0,
+          "elapsedMs": 1753,
+          "log": "api-build.log"
+        },
+        {
+          "id": "embedding-build",
+          "command": [
+            "node",
+            "node_modules/typescript/bin/tsc",
+            "-p",
+            "tsconfig.json"
+          ],
+          "cwd": "apps/embedding",
+          "status": "passed",
+          "startedAt": "2026-11-01T15:04:01.427Z",
+          "exitCode": 0,
+          "elapsedMs": 1107,
+          "log": "embedding-build.log"
+        },
+        {
+          "id": "web-build",
+          "command": [
+            "node",
+            "node_modules/vite/bin/vite.js",
+            "build"
+          ],
+          "cwd": "apps/web",
+          "status": "passed",
+          "startedAt": "2026-11-01T15:04:02.535Z",
+          "exitCode": 0,
+          "elapsedMs": 2431,
+          "log": "web-build.log"
+        },
+        {
+          "id": "api-test-build",
+          "command": [
+            "node",
+            "node_modules/typescript/bin/tsc",
+            "-p",
+            "tsconfig.test.json"
+          ],
+          "cwd": "apps/api",
+          "status": "passed",
+          "startedAt": "2026-11-01T15:04:04.967Z",
+          "exitCode": 0,
+          "elapsedMs": 1972,
+          "log": "api-test-build.log"
+        },
+        {
+          "id": "embedding-test-build",
+          "command": [
+            "node",
+            "node_modules/typescript/bin/tsc",
+            "-p",
+            "tsconfig.test.json"
+          ],
+          "cwd": "apps/embedding",
+          "status": "passed",
+          "startedAt": "2026-11-01T15:04:06.941Z",
+          "exitCode": 0,
+          "elapsedMs": 1085,
+          "log": "embedding-test-build.log"
+        },
+        {
+          "id": "api-unit",
+          "command": [
+            "node",
+            "--test",
+            "dist/**/*.test.js"
+          ],
+          "cwd": "apps/api",
+          "status": "passed",
+          "startedAt": "2026-11-01T15:04:08.027Z",
+          "exitCode": 0,
+          "elapsedMs": 1537,
+          "log": "api-unit.log"
+        },
+        {
+          "id": "embedding-unit",
+          "command": [
+            "node",
+            "--test",
+            "dist/**/*.test.js"
+          ],
+          "cwd": "apps/embedding",
+          "status": "passed",
+          "startedAt": "2026-11-01T15:04:09.564Z",
+          "exitCode": 0,
+          "elapsedMs": 387,
+          "log": "embedding-unit.log"
+        },
+        {
+          "id": "root-script-unit",
+          "command": [
+            "node",
+            "--test",
+            "scripts/evaluation-report.test.mjs",
+            "scripts/evidence-state.test.mjs",
+            "scripts/historical-source.test.mjs",
+            "scripts/human-review-pack.test.mjs",
+            "scripts/live-evaluation.test.mjs",
+            "scripts/live-evidence.test.mjs",
+            "scripts/long-business-cases.test.mjs",
+            "scripts/quality-budget.test.mjs",
+            "scripts/request-transport.test.mjs",
+            "scripts/retrieval-evaluation.test.mjs",
+            "scripts/review-package.test.mjs",
+            "scripts/source-provenance.test.mjs",
+            "scripts/teaching-curriculum.test.mjs",
+            "scripts/teaching-quality.test.mjs",
+            "scripts/trace-next-action.test.mjs",
+            "scripts/ui-models.test.mjs",
+            "scripts/verify.test.mjs",
+            "scripts/workbench-models.test.mjs"
+          ],
+          "cwd": ".",
+          "status": "passed",
+          "startedAt": "2026-11-01T15:04:09.952Z",
+          "exitCode": 0,
+          "elapsedMs": 1397,
+          "log": "root-script-unit.log"
+        },
+        {
+          "id": "python-package-regression",
+          "command": [
+            "python",
+            "scripts/export-review.test.py"
+          ],
+          "cwd": ".",
+          "status": "passed",
+          "startedAt": "2026-11-01T15:04:11.349Z",
+          "exitCode": 0,
+          "elapsedMs": 600,
+          "log": "python-package-regression.log"
+        },
+        {
+          "id": "offline-evaluation",
+          "command": [
+            "node",
+            "scripts/evaluate-offline.mjs"
+          ],
+          "cwd": ".",
+          "status": "passed",
+          "startedAt": "2026-11-01T15:04:11.950Z",
+          "exitCode": 0,
+          "elapsedMs": 832,
+          "log": "offline-evaluation.log"
+        },
+        {
+          "id": "evaluation-preparation",
+          "command": [
+            "node",
+            "scripts/evaluate-prepare.mjs"
+          ],
+          "cwd": ".",
+          "status": "passed",
+          "startedAt": "2026-11-01T15:04:12.783Z",
+          "exitCode": 0,
+          "elapsedMs": 473,
+          "log": "evaluation-preparation.log"
+        }
+      ],
+      "paidModelCalls": 0
+    },
+    "teachingScreenshotCapture": {
+      "path": ".runtime/teaching-full-ui-v7-5f1d3fc6-e766-42f1-b3b9-4e60b846f402/report.json",
+      "sha256": "09fd48ccef831c628b00a8534b9eeae7f39996721ae166c2980094874ca0ea98",
+      "status": "passed",
+      "scope": "isolated_real_http_sql_full_business_ui_model_fixture",
+      "checks": [
+        {
+          "name": "draft_second_window_409_comparison_and_failed_save_preserve_input",
+          "status": "passed",
+          "channel": "browser_ui_one_injected_503"
+        },
+        {
+          "name": "teacher_creates_class_and_updates_same_draft_in_ui",
+          "status": "passed",
+          "channel": "browser_ui"
+        },
+        {
+          "name": "student_joins_claims_confirms_requirement_and_builds_evidence_in_ui",
+          "status": "passed",
+          "channel": "browser_ui"
+        },
+        {
+          "name": "teacher_publishes_revision_student_compares_and_old_evidence_becomes_historical",
+          "status": "passed",
+          "channel": "browser_ui"
+        },
+        {
+          "name": "teacher_feedback_return_student_revise_resubmit_and_accept_entirely_in_ui",
+          "status": "passed",
+          "channel": "browser_ui"
+        }
+      ],
+      "paidModelCalls": 0,
+      "modelFixtureCalls": [
+        {
+          "kind": "plan",
+          "model": "local-protocol-fixture-v7"
+        },
+        {
+          "kind": "cases",
+          "model": "local-protocol-fixture-v7"
+        },
+        {
+          "kind": "document",
+          "model": "local-protocol-fixture-v7"
+        },
+        {
+          "kind": "plan",
+          "model": "local-protocol-fixture-v7"
+        },
+        {
+          "kind": "cases",
+          "model": "local-protocol-fixture-v7"
+        },
+        {
+          "kind": "document",
+          "model": "local-protocol-fixture-v7"
+        }
+      ]
+    }
+  },
+  "realModels": {
+    "historicalV4Calls": 12,
+    "newV7Calls": 13,
+    "longCalls": 9,
+    "teacherCalls": 4,
+    "longParts": {
+      "structureAccepted": 8,
+      "needsAttention": 1,
+      "notCalled": 4
+    },
+    "independentHumanReviews": 0,
+    "estimatedPeakUSD": 0.0493767,
+    "reservedUSD": 0.2300346,
+    "qualityImprovementPercent": null,
+    "rawReportSha256": "689096fee5d07ba899fed5e825aa48d1884b8b226119f74c65f9e05827bc0f84"
+  },
+  "newRuntimeDependencies": 0,
+  "videoProduced": false,
+  "publicCurriculum": {
+    "documents": 51,
+    "indexedChunks": 53,
+    "independentTeacherReview": "pending"
+  },
+  "teamInfo": "User supplied school/team/three students/one teacher; planned work allocation, not retrospective contributions; provincial stage and vocational-college education confirmed; edition/registration receipt unverified",
+  "offlineCounts": {
+    "api-unit": 139,
+    "embedding-unit": 4,
+    "root-script-unit": 94
+  },
+  "cleanInstall": {
+    "performedAt": "2026-11-02",
+    "sourceCopy": "../.review-export/v7-20261102-111901-299621/gongxu-zhiban",
+    "install": {
+      "command": "pnpm install --frozen-lockfile --store-dir ../fresh-store --ignore-scripts",
+      "status": "passed",
+      "downloaded": 355,
+      "reused": 0,
+      "added": 355,
+      "exitCode": 0,
+      "pnpm": "11.25.0",
+      "networkWarnings": "Several registry requests retried by package manager; install completed; no safety settings changed"
+    },
+    "offline": {
+      "path": "../.review-export/v7-20261102-111901-299621/gongxu-zhiban/.runtime/verification-v4-e03ab2f4-ebda-4770-acb5-46f33413b70f/report.json",
+      "sha256": "d5a16e115270f229df7cd81afce9aa7b63e49b0ab53486c3b6c605d1d54d85e9",
+      "status": "passed",
+      "steps": 15
+    },
+    "database": {
+      "path": ".runtime/clean-install-v6-1fd34eff-c08a-4ae4-a7c8-addf0c6f8e8b/report.json",
+      "sha256": "cd3e564fb003fb6a06a7d5c57963034893f27844cc6f7dded1e819bee1a50813",
+      "status": "passed",
+      "checks": [
+        "empty database",
+        "001-025 actual CLI migrations",
+        "repeat migration stability",
+        "ready endpoint and manual persistence without AI"
+      ]
+    },
+    "scope": "new_dependencies_existing_host_runtimes_isolated_real_database",
+    "realEnvironmentCopied": false,
+    "paidModelCalls": 0,
+    "limitations": [
+      "Not a fresh machine",
+      "Install scripts skipped",
+      "Local embedding weights not re-downloaded into source copy"
+    ],
+    "offlineBeforeFinalSourceRefresh": {
+      "path": "../.review-export/v7-20261102-111901-299621/gongxu-zhiban/.runtime/verification-v4-3f01ae3b-8228-4b68-9e0f-e989b7ad7f89/report.json",
+      "sha256": "3d6680c32758834aa1e92e36385419470ddfc68f21b242912b49e0f2bef2ac80",
+      "status": "passed",
+      "steps": 15
+    },
+    "finalSourceRefresh": {
+      "note": "Seven source files refreshed after final recovery fixes; dependencies and lockfile unchanged, no environment copied; offline suite rerun",
+      "files": [
+        "apps/web/src/pages/AssignmentEditor.tsx",
+        "scripts/teaching-full-ui-v7.mjs",
+        "scripts/start-local.ps1",
+        "scripts/startup-readiness.test.mjs",
+        "scripts/export-review.py",
+        "scripts/export-review.test.py",
+        "scripts/verify-ai-review-pack-v7.mjs"
+      ]
+    }
+  },
+  "verifiedEvidenceHashes": true,
+  "updatedAt": "2026-11-02T03:41:26.729Z",
+  "localReadiness": {
+    "checkedAt": "2026-11-02T03:39:08.828Z",
+    "services": [
+      {
+        "service": "web",
+        "status": 200,
+        "ready": true
+      },
+      {
+        "service": "api",
+        "status": 200,
+        "ready": true
+      },
+      {
+        "service": "embedding",
+        "status": 200,
+        "ready": true
+      }
+    ],
+    "launcherCommand": "powershell -NoProfile -File scripts/start-local.ps1 -Database external",
+    "launcherExitCode": 0,
+    "existingListenersReused": true,
+    "newPaidCalls": 0
+  },
+  "localReadinessHistory": [
+    {
+      "checkedAt": "2026-11-02T03:28:59.185Z",
+      "services": [
+        {
+          "service": "web",
+          "ready": false
+        },
+        {
+          "service": "api",
+          "ready": false
+        },
+        {
+          "service": "embedding",
+          "ready": false
+        }
+      ],
+      "newPaidCalls": 0
+    },
+    {
+      "checkedAt": "2026-11-02T03:34:58.276Z",
+      "services": [
+        {
+          "service": "web",
+          "status": 200,
+          "ready": true
+        },
+        {
+          "service": "api",
+          "status": 200,
+          "ready": true
+        },
+        {
+          "service": "embedding",
+          "status": 200,
+          "ready": true
+        }
+      ],
+      "newPaidCalls": 0,
+      "note": "Original launcher reported Web cold-start failure before Vite was ready. Subsequent real checks confirm all services; bounded startup wait is being regression-fixed."
+    }
+  ],
+  "lateFixes": [
+    {
+      "issue": "Creation committed but response lost followed by changed retry falsely cleared dirty state",
+      "files": [
+        "apps/web/src/pages/AssignmentEditor.tsx",
+        "scripts/teaching-full-ui-v7.mjs"
+      ],
+      "red": ".runtime/teaching-full-ui-v7-5a76ecb5-fcae-461f-9ea6-92e3ec3ad4b3/report.json",
+      "green": ".runtime/teaching-full-ui-v7-f6c99aad-df50-4316-a502-3edf9073e678/report.json",
+      "status": "passed"
+    },
+    {
+      "issue": "Existing assignment initial GET failure allowed accidental creation",
+      "red": ".runtime/teaching-full-ui-v7-5a76ecb5-fcae-461f-9ea6-92e3ec3ad4b3/report.json",
+      "green": ".runtime/teaching-full-ui-v7-f6c99aad-df50-4316-a502-3edf9073e678/report.json",
+      "status": "passed"
+    },
+    {
+      "issue": "Web cold-start reported failure before delayed frontend readiness",
+      "files": [
+        "scripts/start-local.ps1",
+        "scripts/startup-readiness.test.mjs"
+      ],
+      "red": {
+        "path": ".runtime/startup-readiness-v7-red.log",
+        "sha256": "64645b5769855be736f1bde5d7d9b80d54ee2dcdb029fb48e0e16399abf9805e",
+        "passed": 1,
+        "failed": 7
+      },
+      "green": {
+        "path": ".runtime/startup-readiness-v7-green.log",
+        "sha256": "8209617ae5f4d8dbd80b7fd5b2cbfde8696c52eb1fbc285458db6c257fc7b850",
+        "passed": 8,
+        "failed": 0
+      },
+      "status": "passed",
+      "scope": "actual_powershell_controlled_loopback_http_no_database"
+    }
+  ],
+  "pdf": {
+    "path": "output/pdf/gongxu-zhiban-technical-v7-20261102-113909-250524.pdf",
+    "pages": 20,
+    "bytes": 626750,
+    "sha256": "652c591b2421679726dc5cf8866e0bcd932aa75afbf850d74cdb5c5b843cb3c6",
+    "visualReview": "all_rendered_pages_inspected",
+    "teamInfoIncludedOnlyInLocalMaterial": true
+  },
+  "changedFiles": [
+    {
+      "status": " M",
+      "path": "README.md"
+    },
+    {
+      "status": " M",
+      "path": "apps/api/src/long-plan/worker.ts"
+    },
+    {
+      "status": " M",
+      "path": "apps/api/src/teaching/routes.ts"
+    },
+    {
+      "status": " M",
+      "path": "apps/api/src/teaching/store.ts"
+    },
+    {
+      "status": " M",
+      "path": "apps/web/src/components/LongRequirementPlanning.tsx"
+    },
+    {
+      "status": " M",
+      "path": "apps/web/src/pages/TeachingWorkspace.tsx"
+    },
+    {
+      "status": " M",
+      "path": "apps/web/src/pages/teaching.css"
+    },
+    {
+      "status": " M",
+      "path": "docs/CONTEST-ACCEPTANCE-2026-11.md"
+    },
+    {
+      "status": " M",
+      "path": "docs/STARTUP-AND-VERIFICATION.md"
+    },
+    {
+      "status": " M",
+      "path": "docs/TECHNICAL-MATERIAL.md"
+    },
+    {
+      "status": " M",
+      "path": "scripts/export-review.py"
+    },
+    {
+      "status": " M",
+      "path": "scripts/export-review.test.py"
+    },
+    {
+      "status": " M",
+      "path": "scripts/fresh-database-local.mjs"
+    },
+    {
+      "status": " M",
+      "path": "scripts/long-plan-local.mjs"
+    },
+    {
+      "status": " M",
+      "path": "scripts/start-local.ps1"
+    },
+    {
+      "status": " M",
+      "path": "scripts/teaching-local.mjs"
+    },
+    {
+      "status": " M",
+      "path": "scripts/verification-plan.mjs"
+    },
+    {
+      "status": "??",
+      "path": "apps/api/migrations/025_assignment_versions.sql"
+    },
+    {
+      "status": "??",
+      "path": "apps/api/src/teaching/assignments.ts"
+    },
+    {
+      "status": "??",
+      "path": "apps/web/src/pages/AssignmentEditor.tsx"
+    },
+    {
+      "status": "??",
+      "path": "apps/web/src/pages/AssignmentProgress.tsx"
+    },
+    {
+      "status": "??",
+      "path": "docs/AI-REVIEW-PACK-V7.md"
+    },
+    {
+      "status": "??",
+      "path": "docs/CONTINUATION-V7.md"
+    },
+    {
+      "status": "??",
+      "path": "docs/CURRICULUM-REVIEW-V7.md"
+    },
+    {
+      "status": "??",
+      "path": "docs/DEMO-OPERATIONS-V7.md"
+    },
+    {
+      "status": "??",
+      "path": "docs/DEMO-SCRIPT-V7.md"
+    },
+    {
+      "status": "??",
+      "path": "docs/FINAL-REVIEW-V7.md"
+    },
+    {
+      "status": "??",
+      "path": "docs/TEACHING-VERSIONS-V7.md"
+    },
+    {
+      "status": "??",
+      "path": "docs/screenshots/review-v7/02-assignment-change.png"
+    },
+    {
+      "status": "??",
+      "path": "docs/screenshots/review-v7/04-stale-document.png"
+    },
+    {
+      "status": "??",
+      "path": "docs/screenshots/review-v7/05-teacher-feedback.png"
+    },
+    {
+      "status": "??",
+      "path": "docs/screenshots/review-v7/06-student-revision.png"
+    },
+    {
+      "status": "??",
+      "path": "docs/screenshots/review-v7/07-reviewed-acceptance.png"
+    },
+    {
+      "status": "??",
+      "path": "docs/screenshots/review-v7/public-catalogue.png"
+    },
+    {
+      "status": "??",
+      "path": "docs/screenshots/review-v7/public-original-source.png"
+    },
+    {
+      "status": "??",
+      "path": "docs/verification/ai-review-pack-v7.json"
+    },
+    {
+      "status": "??",
+      "path": "docs/verification/review-v7.json"
+    },
+    {
+      "status": "??",
+      "path": "evaluation/quality-budget-v7.mjs"
+    },
+    {
+      "status": "??",
+      "path": "evaluation/teaching-quality-v7.mjs"
+    },
+    {
+      "status": "??",
+      "path": "scripts/activate-teaching-v7.mjs"
+    },
+    {
+      "status": "??",
+      "path": "scripts/evaluate-quality-live-v7.mjs"
+    },
+    {
+      "status": "??",
+      "path": "scripts/prepare-quality-v7.mjs"
+    },
+    {
+      "status": "??",
+      "path": "scripts/public-evidence-v7.mjs"
+    },
+    {
+      "status": "??",
+      "path": "scripts/quality-budget.test.mjs"
+    },
+    {
+      "status": "??",
+      "path": "scripts/render-technical-v7.py"
+    },
+    {
+      "status": "??",
+      "path": "scripts/review-quality-v7.mjs"
+    },
+    {
+      "status": "??",
+      "path": "scripts/startup-readiness.test.mjs"
+    },
+    {
+      "status": "??",
+      "path": "scripts/teaching-full-ui-v7.mjs"
+    },
+    {
+      "status": "??",
+      "path": "scripts/teaching-quality.test.mjs"
+    },
+    {
+      "status": "??",
+      "path": "scripts/teaching-versions-v7.mjs"
+    },
+    {
+      "status": "??",
+      "path": "scripts/verify-ai-review-pack-v7.mjs"
+    }
+  ],
+  "sourceSnapshot": {
+    "baselineCommit": "0370e679388c5a077e37bf65d09896d813c9231c",
+    "files": [
+      "README.md",
+      "apps/api/src/long-plan/worker.ts",
+      "apps/api/src/teaching/routes.ts",
+      "apps/api/src/teaching/store.ts",
+      "apps/web/src/components/LongRequirementPlanning.tsx",
+      "apps/web/src/pages/TeachingWorkspace.tsx",
+      "apps/web/src/pages/teaching.css",
+      "docs/CONTEST-ACCEPTANCE-2026-11.md",
+      "docs/STARTUP-AND-VERIFICATION.md",
+      "docs/TECHNICAL-MATERIAL.md",
+      "scripts/export-review.py",
+      "scripts/export-review.test.py",
+      "scripts/fresh-database-local.mjs",
+      "scripts/long-plan-local.mjs",
+      "scripts/start-local.ps1",
+      "scripts/teaching-local.mjs",
+      "scripts/verification-plan.mjs",
+      "apps/api/migrations/025_assignment_versions.sql",
+      "apps/api/src/teaching/assignments.ts",
+      "apps/web/src/pages/AssignmentEditor.tsx",
+      "apps/web/src/pages/AssignmentProgress.tsx",
+      "docs/AI-REVIEW-PACK-V7.md",
+      "docs/CONTINUATION-V7.md",
+      "docs/CURRICULUM-REVIEW-V7.md",
+      "docs/DEMO-OPERATIONS-V7.md",
+      "docs/DEMO-SCRIPT-V7.md",
+      "docs/FINAL-REVIEW-V7.md",
+      "docs/TEACHING-VERSIONS-V7.md",
+      "docs/screenshots/review-v7/02-assignment-change.png",
+      "docs/screenshots/review-v7/04-stale-document.png",
+      "docs/screenshots/review-v7/05-teacher-feedback.png",
+      "docs/screenshots/review-v7/06-student-revision.png",
+      "docs/screenshots/review-v7/07-reviewed-acceptance.png",
+      "docs/screenshots/review-v7/public-catalogue.png",
+      "docs/screenshots/review-v7/public-original-source.png",
+      "docs/verification/ai-review-pack-v7.json",
+      "docs/verification/review-v7.json",
+      "evaluation/quality-budget-v7.mjs",
+      "evaluation/teaching-quality-v7.mjs",
+      "scripts/activate-teaching-v7.mjs",
+      "scripts/evaluate-quality-live-v7.mjs",
+      "scripts/prepare-quality-v7.mjs",
+      "scripts/public-evidence-v7.mjs",
+      "scripts/quality-budget.test.mjs",
+      "scripts/render-technical-v7.py",
+      "scripts/review-quality-v7.mjs",
+      "scripts/startup-readiness.test.mjs",
+      "scripts/teaching-full-ui-v7.mjs",
+      "scripts/teaching-quality.test.mjs",
+      "scripts/teaching-versions-v7.mjs",
+      "scripts/verify-ai-review-pack-v7.mjs"
+    ]
+  }
+}

@@ -4,6 +4,7 @@ import type {Pool} from 'pg';
 import {z} from 'zod';
 import {authorizeRequest} from '../project-routes.js';
 import type {ProjectStore} from '../project-store.js';
+import {registerAssignmentRoutes} from './assignments.js';
 import {TeachingError,assertTransition} from './domain.js';
 import {transaction,roles,ownClass,ownClaim,submitted,makeSnapshot,revision,audit,type Db,type Role} from './store.js';
 import {completeChat,AiError,aiErrorStatus,type AiConfig} from '../ai/model.js';
@@ -21,7 +22,7 @@ export async function registerTeachingRoutes(app:FastifyInstance,store?:ProjectS
  app.get('/teaching/me',run('student',async(db,userId)=>({user:(await db.query('SELECT id,name,email FROM users WHERE id=$1',[userId])).rows[0],roles:await roles(db,userId),
   quota:(await db.query(`SELECT a.monthly_call_limit AS limit,COALESCE(b.attempts,0) AS attempts FROM users u LEFT JOIN teaching_accounts a ON a.user_id=u.id
    LEFT JOIN ai_call_budget b ON b.user_id=u.id AND b.month=date_trunc('month',now() AT TIME ZONE 'UTC')::date WHERE u.id=$1`,[userId])).rows[0]})));
- app.get('/teaching/classes',run('student',async(db,userId)=>({classes:(await db.query(`SELECT k.id,k.name,k.revision,k.teacher_id=$1 AS "isTeacher",
+ app.get('/teaching/classes',run('student',async(db,userId)=>({classes:(await db.query(`SELECT k.id,k.name,k.revision,(SELECT revision FROM teaching_members WHERE class_id=k.id AND student_id=$1) AS membership_revision,k.teacher_id=$1 AS "isTeacher",
   CASE WHEN k.teacher_id=$1 AND EXISTS(SELECT 1 FROM teaching_roles WHERE user_id=$1 AND role='teacher' AND active) THEN k.join_code ELSE NULL END AS "joinCode"
   FROM teaching_classes k WHERE (k.teacher_id=$1 AND EXISTS(SELECT 1 FROM teaching_roles WHERE user_id=$1 AND role='teacher' AND active))
    OR EXISTS(SELECT 1 FROM teaching_members m WHERE m.class_id=k.id AND m.student_id=$1 AND m.active) ORDER BY k.created_at DESC`,[userId])).rows})));
@@ -48,34 +49,7 @@ export async function registerTeachingRoutes(app:FastifyInstance,store?:ProjectS
   const row=(await db.query('UPDATE teaching_members SET active=$3,revision=revision+1 WHERE class_id=$1 AND student_id=$2 AND revision=$4 RETURNING revision',[classId,b.studentId,b.active,b.expectedRevision])).rows[0];
   if(!row)throw new TeachingError('teaching_revision_changed');await audit(db,userId,'membership_changed',classId,{studentId:b.studentId,active:b.active});return row;
  }));
- app.get('/teaching/assignments',run('student',async(db,userId)=>({assignments:(await db.query(`SELECT a.*,k.name AS class_name,k.teacher_id=$1 AS "isTeacher",c.id AS claim_id,c.project_id,c.state AS claim_state,c.revision AS claim_revision
-  FROM teaching_assignments a JOIN teaching_classes k ON k.id=a.class_id
-  LEFT JOIN teaching_claims c ON c.assignment_id=a.id AND c.student_id=$1
-  WHERE (k.teacher_id=$1 AND EXISTS(SELECT 1 FROM teaching_roles WHERE user_id=$1 AND role='teacher' AND active))
-  OR (a.state='published' AND EXISTS(SELECT 1 FROM teaching_members m WHERE m.class_id=k.id AND m.student_id=$1 AND m.active)) ORDER BY a.created_at DESC`,[userId])).rows})));
- app.post('/teaching/classes/:id/assignments',run('teacher',async(db,userId,req)=>{
-  const classId=parameter(req);await ownClass(db,userId,classId);
-  const b=parse(z.object({title:z.string().trim().min(1).max(120),brief:z.string().trim().min(10).max(50000),rubric:note}).strict(),req.body);
-  const row=(await db.query('INSERT INTO teaching_assignments(class_id,title,brief,rubric) VALUES($1,$2,$3,$4) RETURNING *',[classId,b.title,b.brief,b.rubric])).rows[0];
-  await audit(db,userId,'assignment_draft_created',row.id);return {assignment:row};
- }));
- app.post('/teaching/assignments/:id/publish',run('teacher',async(db,userId,req)=>{
-  const assignmentId=parameter(req),b=parse(z.object({expectedRevision:rev,confirmed:z.literal(true)}).strict(),req.body);
-  const row=(await db.query('SELECT a.* FROM teaching_assignments a JOIN teaching_classes k ON k.id=a.class_id WHERE a.id=$1 AND k.teacher_id=$2',[assignmentId,userId])).rows[0];
-  if(!row)throw new TeachingError('not_found',404);revision(row.revision,b.expectedRevision);
-  if(row.state!=='draft')throw new TeachingError('teaching_state_changed');
-  await db.query("UPDATE teaching_assignments SET state='published',revision=revision+1,published_at=now() WHERE id=$1",[assignmentId]);
-  await audit(db,userId,'assignment_published',assignmentId);return {ok:true};
- }));
- app.post('/teaching/assignments/:id/claim',run('student',async(db,userId,req)=>{
-  const assignmentId=parameter(req),a=(await db.query(`SELECT a.* FROM teaching_assignments a JOIN teaching_members m ON m.class_id=a.class_id AND m.student_id=$2 AND m.active
-   WHERE a.id=$1 AND a.state='published'`,[assignmentId,userId])).rows[0];if(!a)throw new TeachingError('not_found',404);
-  const old=(await db.query('SELECT * FROM teaching_claims WHERE assignment_id=$1 AND student_id=$2',[a.id,userId])).rows[0];if(old)return {claim:old,reused:true};
-  const project=(await db.query('INSERT INTO projects(owner_id,name,description) VALUES($1,$2,$3) RETURNING id',[userId,a.title,'领取班级实训任务创建的私有项目；提交前教师不可见正文。'])).rows[0];
-  await db.query('INSERT INTO requirement_versions(project_id,version,content) VALUES($1,1,to_jsonb($2::text))',[project.id,a.brief]);
-  const claim=(await db.query('INSERT INTO teaching_claims(assignment_id,student_id,project_id) VALUES($1,$2,$3) RETURNING *',[a.id,userId,project.id])).rows[0];
-  await audit(db,userId,'assignment_claimed',claim.id);return {claim,reused:false};
- }));
+ registerAssignmentRoutes(app,run);
  app.get('/teaching/claims/:id/preview',run('student',async(db,userId,req)=>{
   const claim=await ownClaim(db,userId,parameter(req));return {...await makeSnapshot(db,claim),claimRevision:claim.revision};
  }));
@@ -83,6 +57,7 @@ export async function registerTeachingRoutes(app:FastifyInstance,store?:ProjectS
   const claim=await ownClaim(db,userId,parameter(req)),b=parse(z.object({expectedRevision:rev,fingerprint:z.string().regex(/^[a-f0-9]{64}$/),requestKey:id,note,shareSnapshot:z.literal(true),allowAiReview:z.boolean().default(false)}).strict(),req.body);
   const existing=(await db.query('SELECT id,number FROM teaching_submissions WHERE claim_id=$1 AND request_key=$2',[claim.id,b.requestKey])).rows[0];
   if(existing)return {submission:existing,reused:true};revision(claim.revision,b.expectedRevision);assertTransition(claim.state,'submit');
+  if(claim.assignment_version_id!==claim.latest_version_id&&claim.applicability==='offer_existing'&&claim.acknowledged_version_id!==claim.latest_version_id)throw new TeachingError('assignment_change_review_required');
   const preview=await makeSnapshot(db,claim);if(preview.fingerprint!==b.fingerprint)throw new TeachingError('submission_source_changed');
   const row=(await db.query(`INSERT INTO teaching_submissions(claim_id,number,request_key,requirement_version_id,snapshot,fingerprint,student_note,allow_ai_review)
    SELECT $1,COALESCE(MAX(number),0)+1,$2,$3,$4,$5,$6,$7 FROM teaching_submissions WHERE claim_id=$1 RETURNING id,number`,[claim.id,b.requestKey,preview.snapshot.requirement.id,JSON.stringify(preview.snapshot),preview.fingerprint,b.note,b.allowAiReview])).rows[0];
@@ -103,7 +78,7 @@ export async function registerTeachingRoutes(app:FastifyInstance,store?:ProjectS
   const b=parse(z.object({role:z.enum(['student','teacher']).default('student')}).strict(),req.query);if(!(await roles(db,userId)).includes(b.role))throw new TeachingError('role_not_authorized',403);
   const row=await submitted(db,userId,parameter(req),b.role);
   const feedback=(await db.query(`SELECT id,content,origin,revision,published_at,created_at,generation_state FROM teaching_feedback WHERE submission_id=$1 ${b.role==='student'?'AND published_at IS NOT NULL':''} ORDER BY created_at`,[row.id])).rows;
-  return {submission:row,feedback,decision:(await db.query('SELECT decision,note,created_at FROM teaching_decisions WHERE submission_id=$1',[row.id])).rows[0]??null};
+  return {submission:row,feedback,decision:(await db.query('SELECT decision,note,review_checks,exception_reason,created_at FROM teaching_decisions WHERE submission_id=$1',[row.id])).rows[0]??null};
  }));
  app.post('/teaching/submissions/:id/feedback',run('teacher',async(db,userId,req)=>{
   const row=await submitted(db,userId,parameter(req),'teacher'),b=parse(z.object({content:note}).strict(),req.body);
@@ -152,10 +127,12 @@ export async function registerTeachingRoutes(app:FastifyInstance,store?:ProjectS
   }
  });
  app.post('/teaching/submissions/:id/decision',run('teacher',async(db,userId,req)=>{
-  const row=await submitted(db,userId,parameter(req),'teacher'),b=parse(z.object({expectedRevision:rev,decision:z.enum(['return','accept']),note,reviewedEvidence:z.literal(true)}).strict(),req.body);
+  const row=await submitted(db,userId,parameter(req),'teacher'),b=parse(z.object({expectedRevision:rev,decision:z.enum(['return','accept']),note,reviewedEvidence:z.literal(true),reviewChecks:z.object({requirements:z.boolean(),tests:z.boolean(),versions:z.boolean()}).strict().optional(),exceptionReason:z.string().trim().max(5000).optional()}).strict(),req.body);
   revision(row.claim_revision,b.expectedRevision);assertTransition(row.state,b.decision);
   const last=(await db.query('SELECT id FROM teaching_submissions WHERE claim_id=$1 ORDER BY number DESC LIMIT 1',[row.claim_id])).rows[0];if(last?.id!==row.id)throw new TeachingError('submission_outdated');
-  await db.query('INSERT INTO teaching_decisions(submission_id,teacher_id,decision,note) VALUES($1,$2,$3,$4)',[row.id,userId,b.decision,b.note]);
+  if(b.decision==='accept'&&(!b.reviewChecks||Object.values(b.reviewChecks).some(v=>!v)))throw new TeachingError('review_checklist_required',422);
+  if(b.decision==='accept'&&row.snapshot.gaps.length&&(!b.exceptionReason||b.exceptionReason.length<10))throw new TeachingError('review_exception_reason_required',422);
+  await db.query('INSERT INTO teaching_decisions(submission_id,teacher_id,decision,note,review_checks,exception_reason) VALUES($1,$2,$3,$4,$5,$6)',[row.id,userId,b.decision,b.note,b.reviewChecks?JSON.stringify(b.reviewChecks):null,b.exceptionReason??null]);
   await db.query('UPDATE teaching_claims SET state=$2,revision=revision+1 WHERE id=$1',[row.claim_id,b.decision==='return'?'returned':'accepted']);
   await audit(db,userId,'submission_'+b.decision,row.id);return {ok:true};
  }));

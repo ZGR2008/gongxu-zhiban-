@@ -1,0 +1,77 @@
+{
+  "version": "v7",
+  "checkedAt": "2026-11-02T03:32:12.036Z",
+  "sourceDirectory": "E:/ai/gongxu-zhiban/output/ai-review-v7-6963be28-3a9b-4704-9a46-14bc76df11ca",
+  "paidAuthorizationConsumedMarkerPresent": true,
+  "paidCallsMadeByThisVerification": 0,
+  "actualSavedResponses": 13,
+  "outputHashesVerified": 13,
+  "anonymousIdsUnique": true,
+  "sourceHashes": {
+    "review-packet.json": "ae6077dce2dc9dfaa3537969293f4c61a1f753acfdc429a8551a3022ffca2058",
+    "blank-review-form.json": "25d27e876614645c820e1dd43fe036360349a4f34ea96ce0992370158d88e7dc",
+    "read-responses.html": "7b6912ac0f04926abddb42229a25605586b3524303f92840e57e99d36dab1e5a",
+    "organizer-mapping.json": "2ce131ec4dcfe60f769b7514b2ca651a511de9399985b8d4ffa2e33347d67ea6",
+    "AI-PRELIMINARY-NOT-HUMAN.md": "38ab0e1098b281e5347fec79a5bd4b3ff35be50f9a9984495daae92f600df876"
+  },
+  "canonicalPacketHash": "a4ab0bc2c351b1fa84f74a2fbfae38a7f2278f5fa27f867945724a08131a8de7",
+  "originalLongRequirementUtf16Length": 49781,
+  "uncalledSegments": [
+    10,
+    11,
+    12,
+    13
+  ],
+  "blankHumanReviewRows": 13,
+  "independentHumanReviews": 0,
+  "reviewerOrganizerSeparated": true,
+  "htmlActiveContentAbsent": true,
+  "browser": {
+    "engine": "Chromium (installed Microsoft Edge)",
+    "version": "156.0.4314.58",
+    "offline": true,
+    "viewport": "1440x1000",
+    "articles": 13,
+    "originalInputsExact": 13,
+    "originalOutputsExact": 13,
+    "atomicCriteriaExact": 13,
+    "keyboardExpandCollapse": "passed",
+    "horizontalOverflow": false,
+    "externalRequests": 0,
+    "pageErrors": 0,
+    "videoRecorded": false
+  },
+  "historicalArchive": {
+    "path": "E:/ai/gongxu-zhiban/output/gongxu-zhiban-ai-review-v5-20261101-190101.zip",
+    "bytes": 29966,
+    "sha256": "6b18c86d4f072d07e1c8199413212f2277b40de7aafaa5b450e935a1ac6db072",
+    "crcPassed": true,
+    "savedRealCalls": 12,
+    "samples": 15,
+    "policyBlocked": 3,
+    "outputHashesVerified": 12,
+    "independentHumanReviews": 0,
+    "unchanged": true,
+    "mergedIntoNewExperiment": false
+  },
+  "setupFailureAndResolution": [
+    "First browser attempt could not find bundled Playwright Chromium. No data was changed and no downloads were made; verification then used the already installed Microsoft Edge browser."
+  ],
+  "limitations": [
+    "Independent human review not performed",
+    "Anonymous labels do not guarantee blindness",
+    "Long-plan semantic completeness not verified",
+    "Previous 12 calls remain a separate historical experiment",
+    "No new paid model calls"
+  ],
+  "status": "passed",
+  "archive": {
+    "path": "E:\\ai\\gongxu-zhiban\\output\\gongxu-zhiban-ai-review-v7-20261102T033212Z-e448983e.zip",
+    "bytes": 110325,
+    "sha256": "6c37c1f3b5a1d524a6e18b08c4a234c9677b8ff4885516188e756780d8b98a83",
+    "entries": 7,
+    "crcPassed": true,
+    "extractedBytesMatch": true,
+    "extractionDirectory": "E:\\ai\\gongxu-zhiban\\output\\ai-review-delivery-v7-20261102T033212Z-e448983e-extract-check"
+  }
+}

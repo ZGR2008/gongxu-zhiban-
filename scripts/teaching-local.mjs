@@ -85,8 +85,8 @@ try{
   const next=ok(await call('GET',`/teaching/claims/${claim.id}/preview`));
   const s2=ok(await call('POST',`/teaching/claims/${claim.id}/submit`,{expectedRevision:3,fingerprint:next.fingerprint,requestKey:randomUUID(),note:'按反馈修改后的合成提交，保留未运行的证据状态。',shareSnapshot:true})).submission;
   assert.equal(s2.number,2);assert.deepEqual(ok(await call('GET',`/teaching/submissions/${submission.id}`)).submission.snapshot,original);
-  assert.equal((await call('POST',`/teaching/submissions/${submission.id}/decision`,{expectedRevision:4,decision:'accept',note:'不应验收旧提交',reviewedEvidence:true},teacher)).body.error,'submission_outdated');
-  ok(await call('POST',`/teaching/submissions/${s2.id}/decision`,{expectedRevision:4,decision:'accept',note:'仅验收合成流程；未执行测试的缺口已明确记录，不代表代码质量通过。',reviewedEvidence:true},teacher));
+  assert.equal((await call('POST',`/teaching/submissions/${submission.id}/decision`,{expectedRevision:4,decision:'accept',reviewChecks:{requirements:true,tests:true,versions:true},exceptionReason:'合成流程仅验证教师决策，缺口保留；不声明测试通过。',note:'不应验收旧提交',reviewedEvidence:true},teacher)).body.error,'submission_outdated');
+  ok(await call('POST',`/teaching/submissions/${s2.id}/decision`,{expectedRevision:4,decision:'accept',reviewChecks:{requirements:true,tests:true,versions:true},exceptionReason:'合成流程仅验证教师决策，缺口保留；不声明测试通过。',note:'仅验收合成流程；未执行测试的缺口已明确记录，不代表代码质量通过。',reviewedEvidence:true},teacher));
   assert.equal((await pool.query('SELECT count(*)::int AS n FROM practice_test_cases')).rows[0].n,0);submission=s2;
  });
  await check('role_and_membership_revocation_blocks_existing_session_and_draft_access',async()=>{
@@ -131,6 +131,7 @@ try{
   assert.ok(other.every(h=>h.document_name.startsWith('【平台公共教学示例】')));
   assert.equal((await pool.query('SELECT visibility FROM knowledge_documents WHERE id=$1',[privateDoc.id])).rows[0].visibility,'personal');
  });
+ const {teachingVersions}=await import('./teaching-versions-v7.mjs');await teachingVersions({pool,call,ok,check,student,peer,teacher,teacherB,adminUser});
  const {teachingFaults}=await import('./teaching-faults.mjs');await teachingFaults({pool,student,teacher,teacherB,adminUser,classId,check});
  if(process.argv.includes('--browser')){const {curriculum}=await import('../knowledge/teaching-v6/catalog.mjs');for(const lesson of curriculum)await savePublicLesson(pool,lesson);const {teachingBrowser}=await import('./teaching-browser.mjs');report.browser=await teachingBrowser({origin,student,teacher,adminUser,classId,call,ok,out});}
  report.status='passed';

@@ -101,7 +101,7 @@ export class LongPlanWorker {
    try{
     const result=await aiCaller.run({pool:this.store.pool,userId:job.owner_id},()=>withAbort(signal,()=> (this.deps.complete??completeChatWithMetadata)(this.ai,messages,fetch,{signal,captureIncomplete:true})));
     let output:ReturnType<typeof parseSegmentOutput>|null=null,errorCode:string|null=null;
-    try{if(result.finishReason!=='stop')throw Error('incomplete');output=parseSegmentOutput(result.content,segment,job.scheme_snapshot,sources.map(s=>s.id));}catch{errorCode=result.finishReason!=='stop'?'incomplete_output':'invalid_segment_output';}
+    try{if(result.finishReason!=='stop')throw Error('incomplete');output=parseSegmentOutput(result.content,segment,job.scheme_snapshot,sources.map(s=>s.id));}catch(error){const code=error instanceof Error?error.message:'';const known=['fragment_task_condition_mismatch','fragment_omitted','invalid_fragment_reference','acceptance_without_task_or_issue','invalid_task_reference','invalid_unresolved_reference'];errorCode=result.finishReason!=='stop'?'incomplete_output':known.includes(code)?code:'invalid_segment_output';}
     // Raw response is retained even if cancellation/version change races completion.
     await this.store.pool.query('UPDATE long_plan_attempts SET status=$2,raw_output=$3,usage=$4::jsonb,finish_reason=$5,duration_ms=$6,error_code=$7,finished_at=now() WHERE id=$1',[attempt.id,output?'succeeded':'invalid_output',result.content,JSON.stringify(result.usage),result.finishReason,result.durationMs,errorCode]);
     await this.fence(job,async db=>{

@@ -27,6 +27,18 @@ class ExportTests(unittest.TestCase):
         (root/'apps/api/package.json').write_text('{"name":"synthetic-export"}',encoding='utf-8')
         return root
 
+    def test_v7_keeps_version_migration_and_evidence_excludes_real_team(self):
+        with tempfile.TemporaryDirectory(prefix='gongxu-export-fixture-') as base:
+            root=self.fixture(base)
+            expected=['apps/api/migrations/025_assignment_versions.sql','docs/FINAL-REVIEW-V7.md','docs/TEACHING-VERSIONS-V7.md','docs/verification/review-v7.json','docs/verification/ai-review-pack-v7.json','evaluation/teaching-quality-v7.mjs']
+            for relative in expected:
+                path=root/relative;path.parent.mkdir(parents=True,exist_ok=True);path.write_text('{}' if path.suffix=='.json' else 'synthetic evidence',encoding='utf-8')
+            private=root/'output/team-v7/private-team.md';private.parent.mkdir(parents=True);private.write_text('synthetic-personal-marker',encoding='utf-8')
+            result=self.export(root,[private.resolve()],version='v7')
+            with zipfile.ZipFile(result['archive']) as bundle:
+                for relative in expected:self.assertIn('gongxu-zhiban/'+relative,bundle.namelist())
+                self.assertFalse(any('private-team' in n for n in bundle.namelist()))
+
     def test_sanitizes_quoted_and_short_credentials_only_in_copy(self):
         with tempfile.TemporaryDirectory(prefix='gongxu-export-fixture-') as base:
             root=self.fixture(base)

@@ -87,20 +87,31 @@ try {
     Start-ProjectService 'api' 3001 (Join-Path $projectRoot 'apps\api') 'dist/server.js'
     Start-ProjectService 'web' 5173 (Join-Path $projectRoot 'apps\web') 'node_modules/vite/bin/vite.js --host 127.0.0.1 --port 5173 --strictPort'
 
-    function Wait-Service([string]$Uri, [string]$Expected) {
-        for ($attempt=0; $attempt -lt 20; $attempt++) {
+    function Wait-Service([string]$Uri, [string]$Expected = 'ready', [switch]$HttpOnly, [int]$TimeoutSeconds = 60, [int]$RetryDelayMilliseconds = 300) {
+        if ($TimeoutSeconds -le 0 -or $RetryDelayMilliseconds -le 0) { throw 'Readiness timeout and retry delay must be positive.' }
+        $watch = [System.Diagnostics.Stopwatch]::StartNew()
+        $budgetMilliseconds = $TimeoutSeconds * 1000
+        while ($watch.ElapsedMilliseconds -lt $budgetMilliseconds) {
             try {
-                $response = Invoke-RestMethod -Uri $Uri -TimeoutSec 3
-                if ($response.status -eq $Expected) { return $true }
+                # Bound each read by the remaining deadline (PowerShell uses whole seconds).
+                # This helper only observes readiness; it never starts or restarts a service.
+                $remainingSeconds = ($budgetMilliseconds - $watch.ElapsedMilliseconds) / 1000.0
+                $requestTimeout = [int][math]::Max(1, [math]::Min(3, [math]::Ceiling($remainingSeconds)))
+                $response = Invoke-WebRequest -Uri $Uri -UseBasicParsing -TimeoutSec $requestTimeout
+                if ($response.StatusCode -eq 200 -and $watch.ElapsedMilliseconds -lt $budgetMilliseconds) {
+                    if ($HttpOnly) { return $true }
+                    $body = $response.Content | ConvertFrom-Json
+                    if ($body.status -eq $Expected) { return $true }
+                }
             } catch { }
-            Start-Sleep -Milliseconds 300
+            $remainingMilliseconds = $budgetMilliseconds - $watch.ElapsedMilliseconds
+            if ($remainingMilliseconds -gt 0) { Start-Sleep -Milliseconds ([int][math]::Min($RetryDelayMilliseconds, $remainingMilliseconds)) }
         }
         return $false
     }
     if (-not (Wait-Service 'http://127.0.0.1:3001/ready' 'ready')) { throw 'API/database readiness failed. Check the local service logs.' }
     if (-not (Wait-Service 'http://127.0.0.1:3010/ready' 'ready')) { Write-Warning 'Embedding is not ready. Other project features remain available; knowledge indexing needs the local model.' }
-    $web = Invoke-WebRequest -Uri 'http://127.0.0.1:5173' -UseBasicParsing -TimeoutSec 5
-    if ($web.StatusCode -ne 200) { throw 'Frontend readiness failed.' }
+    if (-not (Wait-Service -Uri 'http://127.0.0.1:5173' -HttpOnly -TimeoutSeconds 20)) { throw 'Frontend readiness failed after waiting up to 20 seconds. Check the local service logs.' }
     Write-Output 'Ready: http://127.0.0.1:5173'
     Write-Output 'Model credentials are read only by the API. This startup check does not make a paid AI request.'
 } finally { Pop-Location }
