@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { TestCaseCollection } from './components/ContentView';
 import { useEditGuard } from './components/EditGuard';
 import {totalsForVersion,type TestCasePage} from './components/test-case-page';
+import {materialSourceLabel,executionRecordLabel} from './components/material-source';
 import './components/test-pagination.css';
 
 type Api = <T>(path:string, options?:RequestInit)=>Promise<T>;
@@ -67,7 +68,7 @@ export function Tests({request,projectId,requirements}:Props){
    {counts&&<p className="muted-text">统计读取于 {fmt(counts.capturedAt)} · {counts.failed} 条失败，{counts.blocked} 条阻塞。记录完整不代表需求覆盖完整或已验收。</p>}
    <fieldset className="test-page-fields" disabled={loading||busy} aria-busy={loading||busy}>
     <legend className="sr-only">当前页测试用例</legend>
-    {sourceId&&data?.summary.requirementVersionId===sourceId&&<TestCaseCollection key={pageKey} items={visible} summary={counts} renderItem={item=><div key={item.id}><p className="muted-text">来源：需求 v{source?.version} · 模型生成用例 · 人工登记结果</p><CaseEditor item={item} base={base} request={request} onSaved={saved}/></div>}/>}
+    {sourceId&&data?.summary.requirementVersionId===sourceId&&<TestCaseCollection key={pageKey} items={visible} summary={counts} renderItem={item=><div key={item.id}><p className="muted-text">来源：需求 v{source?.version} · {materialSourceLabel(item.modelName)} · {executionRecordLabel(item.result)}</p><CaseEditor item={item} base={base} request={request} onSaved={saved}/></div>}/>}
     {!loading&&counts?.total===0&&<p className="muted-text">此需求版本暂无测试用例，其他版本的结果不会自动继承。</p>}
    </fieldset>
   </section>

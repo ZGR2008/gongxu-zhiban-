@@ -1001,7 +1001,7 @@
         "scripts/export-review.test.py"
       ],
       "line": 35,
-      "context": "possible_synthetic_fixture_or_template",
+      "context": "possible_REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b_fixture_or_template",
       "reviewStatus": "pending_human_classification",
       "matchedValueDisclosed": false
     },
@@ -1012,7 +1012,7 @@
         "scripts/export-review.test.py"
       ],
       "line": 37,
-      "context": "possible_synthetic_fixture_or_template",
+      "context": "possible_REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b_fixture_or_template",
       "reviewStatus": "pending_human_classification",
       "matchedValueDisclosed": false
     },
@@ -1045,7 +1045,7 @@
         "apps/api/.env.example"
       ],
       "line": 17,
-      "context": "possible_synthetic_fixture_or_template",
+      "context": "possible_REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b_fixture_or_template",
       "reviewStatus": "pending_human_classification",
       "matchedValueDisclosed": false
     },
@@ -1100,7 +1100,7 @@
         "apps/api/src/ai/model.test.ts"
       ],
       "line": 10,
-      "context": "possible_synthetic_fixture_or_template",
+      "context": "possible_REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b_fixture_or_template",
       "reviewStatus": "pending_human_classification",
       "matchedValueDisclosed": false
     },
@@ -1111,7 +1111,7 @@
         "apps/api/src/ai/model.test.ts"
       ],
       "line": 42,
-      "context": "possible_synthetic_fixture_or_template",
+      "context": "possible_REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b_fixture_or_template",
       "reviewStatus": "pending_human_classification",
       "matchedValueDisclosed": false
     },
@@ -1122,7 +1122,7 @@
         "apps/api/src/ai/model.test.ts"
       ],
       "line": 53,
-      "context": "possible_synthetic_fixture_or_template",
+      "context": "possible_REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b_fixture_or_template",
       "reviewStatus": "pending_human_classification",
       "matchedValueDisclosed": false
     },
@@ -1232,7 +1232,7 @@
         "apps/api/src/ai/model.test.ts"
       ],
       "line": 10,
-      "context": "possible_synthetic_fixture_or_template",
+      "context": "possible_REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b_fixture_or_template",
       "reviewStatus": "pending_human_classification",
       "matchedValueDisclosed": false
     },
@@ -1243,7 +1243,7 @@
         "scripts/export-review.test.py"
       ],
       "line": 35,
-      "context": "possible_synthetic_fixture_or_template",
+      "context": "possible_REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b_fixture_or_template",
       "reviewStatus": "pending_human_classification",
       "matchedValueDisclosed": false
     },
@@ -1254,7 +1254,7 @@
         "scripts/export-review.test.py"
       ],
       "line": 37,
-      "context": "possible_synthetic_fixture_or_template",
+      "context": "possible_REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b_fixture_or_template",
       "reviewStatus": "pending_human_classification",
       "matchedValueDisclosed": false
     },
@@ -1309,7 +1309,7 @@
         "scripts/export-review.test.py"
       ],
       "line": 35,
-      "context": "possible_synthetic_fixture_or_template",
+      "context": "possible_REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b_fixture_or_template",
       "reviewStatus": "pending_human_classification",
       "matchedValueDisclosed": false
     },
@@ -1320,7 +1320,7 @@
         "scripts/export-review.test.py"
       ],
       "line": 37,
-      "context": "possible_synthetic_fixture_or_template",
+      "context": "possible_REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b_fixture_or_template",
       "reviewStatus": "pending_human_classification",
       "matchedValueDisclosed": false
     },
@@ -1364,7 +1364,7 @@
         "apps/api/src/long-plan/worker.test.ts"
       ],
       "line": 20,
-      "context": "possible_synthetic_fixture_or_template",
+      "context": "possible_REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b_fixture_or_template",
       "reviewStatus": "pending_human_classification",
       "matchedValueDisclosed": false
     },
@@ -1430,7 +1430,7 @@
         "scripts/evaluate-prepare.mjs"
       ],
       "line": 35,
-      "context": "possible_synthetic_fixture_or_template",
+      "context": "possible_REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b_fixture_or_template",
       "reviewStatus": "pending_human_classification",
       "matchedValueDisclosed": false
     },
@@ -1518,7 +1518,7 @@
         "scripts/live-evaluation.test.mjs"
       ],
       "line": 12,
-      "context": "possible_synthetic_fixture_or_template",
+      "context": "possible_REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b_fixture_or_template",
       "reviewStatus": "pending_human_classification",
       "matchedValueDisclosed": false
     },
@@ -1529,7 +1529,7 @@
         "scripts/live-evaluation.test.mjs"
       ],
       "line": 16,
-      "context": "possible_synthetic_fixture_or_template",
+      "context": "possible_REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b_fixture_or_template",
       "reviewStatus": "pending_human_classification",
       "matchedValueDisclosed": false
     },
@@ -1540,7 +1540,7 @@
         "apps/api/src/projects.test.ts"
       ],
       "line": 29,
-      "context": "possible_synthetic_fixture_or_template",
+      "context": "possible_REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b_fixture_or_template",
       "reviewStatus": "pending_human_classification",
       "matchedValueDisclosed": false
     },
@@ -1551,7 +1551,7 @@
         "apps/api/src/projects.test.ts"
       ],
       "line": 32,
-      "context": "possible_synthetic_fixture_or_template",
+      "context": "possible_REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b_fixture_or_template",
       "reviewStatus": "pending_human_classification",
       "matchedValueDisclosed": false
     },
@@ -1562,7 +1562,7 @@
         "apps/api/src/projects.test.ts"
       ],
       "line": 33,
-      "context": "possible_synthetic_fixture_or_template",
+      "context": "possible_REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b_fixture_or_template",
       "reviewStatus": "pending_human_classification",
       "matchedValueDisclosed": false
     },
@@ -1573,7 +1573,7 @@
         "apps/api/src/rag/rag.test.ts"
       ],
       "line": 9,
-      "context": "possible_synthetic_fixture_or_template",
+      "context": "possible_REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b_fixture_or_template",
       "reviewStatus": "pending_human_classification",
       "matchedValueDisclosed": false
     },
@@ -1606,7 +1606,7 @@
         "apps/api/src/practice/context.test.ts"
       ],
       "line": 12,
-      "context": "possible_synthetic_fixture_or_template",
+      "context": "possible_REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b_fixture_or_template",
       "reviewStatus": "pending_human_classification",
       "matchedValueDisclosed": false
     },
@@ -1672,7 +1672,7 @@
         "scripts/evaluate-prepare.mjs"
       ],
       "line": 47,
-      "context": "possible_synthetic_fixture_or_template",
+      "context": "possible_REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b_fixture_or_template",
       "reviewStatus": "pending_human_classification",
       "matchedValueDisclosed": false
     },
@@ -1705,7 +1705,7 @@
         "scripts/evaluate-live-audit.mjs"
       ],
       "line": 69,
-      "context": "possible_synthetic_fixture_or_template",
+      "context": "possible_REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b_fixture_or_template",
       "reviewStatus": "pending_human_classification",
       "matchedValueDisclosed": false
     },
@@ -1749,7 +1749,7 @@
         "apps/api/src/requirements-boundary.test.ts"
       ],
       "line": 12,
-      "context": "possible_synthetic_fixture_or_template",
+      "context": "possible_REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b_fixture_or_template",
       "reviewStatus": "pending_human_classification",
       "matchedValueDisclosed": false
     },
@@ -1760,7 +1760,7 @@
         "scripts/export-review.test.py"
       ],
       "line": 48,
-      "context": "possible_synthetic_fixture_or_template",
+      "context": "possible_REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b_fixture_or_template",
       "reviewStatus": "pending_human_classification",
       "matchedValueDisclosed": false
     },
@@ -1771,7 +1771,7 @@
         "scripts/export-review.test.py"
       ],
       "line": 50,
-      "context": "possible_synthetic_fixture_or_template",
+      "context": "possible_REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b_fixture_or_template",
       "reviewStatus": "pending_human_classification",
       "matchedValueDisclosed": false
     },
@@ -1826,7 +1826,7 @@
         "apps/api/.env.example"
       ],
       "line": 17,
-      "context": "possible_synthetic_fixture_or_template",
+      "context": "possible_REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b_fixture_or_template",
       "reviewStatus": "pending_human_classification",
       "matchedValueDisclosed": false
     },
@@ -1914,7 +1914,7 @@
         "apps/api/src/projects.test.ts"
       ],
       "line": 29,
-      "context": "possible_synthetic_fixture_or_template",
+      "context": "possible_REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b_fixture_or_template",
       "reviewStatus": "pending_human_classification",
       "matchedValueDisclosed": false
     },
@@ -1925,7 +1925,7 @@
         "apps/api/src/projects.test.ts"
       ],
       "line": 32,
-      "context": "possible_synthetic_fixture_or_template",
+      "context": "possible_REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b_fixture_or_template",
       "reviewStatus": "pending_human_classification",
       "matchedValueDisclosed": false
     },
@@ -1936,7 +1936,7 @@
         "apps/api/src/projects.test.ts"
       ],
       "line": 33,
-      "context": "possible_synthetic_fixture_or_template",
+      "context": "possible_REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b_fixture_or_template",
       "reviewStatus": "pending_human_classification",
       "matchedValueDisclosed": false
     },
@@ -1980,7 +1980,7 @@
         "scripts/review-package.test.mjs"
       ],
       "line": 14,
-      "context": "possible_synthetic_fixture_or_template",
+      "context": "possible_REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b_fixture_or_template",
       "reviewStatus": "pending_human_classification",
       "matchedValueDisclosed": false
     },
@@ -1991,7 +1991,7 @@
         "scripts/review-package.test.mjs"
       ],
       "line": 15,
-      "context": "possible_synthetic_fixture_or_template",
+      "context": "possible_REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b_fixture_or_template",
       "reviewStatus": "pending_human_classification",
       "matchedValueDisclosed": false
     },
@@ -2002,7 +2002,7 @@
         "scripts/review-package.test.mjs"
       ],
       "line": 17,
-      "context": "possible_synthetic_fixture_or_template",
+      "context": "possible_REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b_fixture_or_template",
       "reviewStatus": "pending_human_classification",
       "matchedValueDisclosed": false
     },
@@ -2035,7 +2035,7 @@
         "scripts/evaluate-quality-live-v7.mjs"
       ],
       "line": 26,
-      "context": "possible_synthetic_fixture_or_template",
+      "context": "possible_REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b_fixture_or_template",
       "reviewStatus": "pending_human_classification",
       "matchedValueDisclosed": false
     },
@@ -2090,7 +2090,7 @@
         "scripts/export-review.test.py"
       ],
       "line": 61,
-      "context": "possible_synthetic_fixture_or_template",
+      "context": "possible_REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b_fixture_or_template",
       "reviewStatus": "pending_human_classification",
       "matchedValueDisclosed": false
     },
@@ -2101,7 +2101,7 @@
         "scripts/export-review.test.py"
       ],
       "line": 63,
-      "context": "possible_synthetic_fixture_or_template",
+      "context": "possible_REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b_fixture_or_template",
       "reviewStatus": "pending_human_classification",
       "matchedValueDisclosed": false
     },
@@ -2134,7 +2134,7 @@
         "apps/api/src/long-plan/worker.test.ts"
       ],
       "line": 20,
-      "context": "possible_synthetic_fixture_or_template",
+      "context": "possible_REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b_fixture_or_template",
       "reviewStatus": "pending_human_classification",
       "matchedValueDisclosed": false
     },
@@ -2156,7 +2156,7 @@
         "apps/api/src/ai/usage.test.ts"
       ],
       "line": 11,
-      "context": "possible_synthetic_fixture_or_template",
+      "context": "possible_REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b_fixture_or_template",
       "reviewStatus": "pending_human_classification",
       "matchedValueDisclosed": false
     },
@@ -2178,7 +2178,7 @@
         "apps/api/src/ai/model.test.ts"
       ],
       "line": 10,
-      "context": "possible_synthetic_fixture_or_template",
+      "context": "possible_REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b_fixture_or_template",
       "reviewStatus": "pending_human_classification",
       "matchedValueDisclosed": false
     },
@@ -2189,7 +2189,7 @@
         "apps/api/src/ai/cancellation.test.ts"
       ],
       "line": 4,
-      "context": "possible_synthetic_fixture_or_template",
+      "context": "possible_REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b_fixture_or_template",
       "reviewStatus": "pending_human_classification",
       "matchedValueDisclosed": false
     },
@@ -2222,7 +2222,7 @@
         "scripts/evaluate-prepare.mjs"
       ],
       "line": 47,
-      "context": "possible_synthetic_fixture_or_template",
+      "context": "possible_REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b_fixture_or_template",
       "reviewStatus": "pending_human_classification",
       "matchedValueDisclosed": false
     },
@@ -2233,7 +2233,7 @@
         "scripts/export-review.test.py"
       ],
       "line": 35,
-      "context": "possible_synthetic_fixture_or_template",
+      "context": "possible_REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b_fixture_or_template",
       "reviewStatus": "pending_human_classification",
       "matchedValueDisclosed": false
     },
@@ -2244,7 +2244,7 @@
         "scripts/export-review.test.py"
       ],
       "line": 37,
-      "context": "possible_synthetic_fixture_or_template",
+      "context": "possible_REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b_fixture_or_template",
       "reviewStatus": "pending_human_classification",
       "matchedValueDisclosed": false
     },
@@ -2365,7 +2365,7 @@
         "scripts/evaluate-prepare.mjs"
       ],
       "line": 34,
-      "context": "possible_synthetic_fixture_or_template",
+      "context": "possible_REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b_fixture_or_template",
       "reviewStatus": "pending_human_classification",
       "matchedValueDisclosed": false
     },
@@ -2376,7 +2376,7 @@
         "scripts/export-review.test.py"
       ],
       "line": 36,
-      "context": "possible_synthetic_fixture_or_template",
+      "context": "possible_REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b_fixture_or_template",
       "reviewStatus": "pending_human_classification",
       "matchedValueDisclosed": false
     },
@@ -2387,7 +2387,7 @@
         "scripts/export-review.test.py"
       ],
       "line": 38,
-      "context": "possible_synthetic_fixture_or_template",
+      "context": "possible_REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b_fixture_or_template",
       "reviewStatus": "pending_human_classification",
       "matchedValueDisclosed": false
     },
@@ -2442,7 +2442,7 @@
         "scripts/export-review.test.py"
       ],
       "line": 36,
-      "context": "possible_synthetic_fixture_or_template",
+      "context": "possible_REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b_fixture_or_template",
       "reviewStatus": "pending_human_classification",
       "matchedValueDisclosed": false
     },
@@ -2453,7 +2453,7 @@
         "scripts/export-review.test.py"
       ],
       "line": 38,
-      "context": "possible_synthetic_fixture_or_template",
+      "context": "possible_REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b_fixture_or_template",
       "reviewStatus": "pending_human_classification",
       "matchedValueDisclosed": false
     },

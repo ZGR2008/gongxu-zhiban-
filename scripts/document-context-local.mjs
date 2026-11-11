@@ -22,7 +22,7 @@ await registerProjectRoutes(app,projects);
 await registerDocumentRoutes(app,projects,documents,{baseUrl:'https://example.invalid',apiKey:'fixture-only',model:'controlled-fixture',timeoutMs:1000},async(_config,messages)=>{calls++;captured=messages[1].content;return '# 合成资料报告\n只用于完整性验证，尚未验证真实模型效果。';});
 app.get('/health',async()=>({status:'ok',service:'gongxu-api'}));app.get('/ready',async()=>({status:'ready'}));app.get('/ai/status',async()=>({configured:false}));
 const directory=new URL(`../.runtime/document-context-local-${randomUUID()}/`,import.meta.url);await mkdir(directory,{recursive:true});
-const report={scope:'real_local_database_http_browser_with_document_chat_fixture',realModel:false,syntheticRecords:true,startedAt:new Date().toISOString(),checks:[]};
+const report={scope:'real_local_database_http_browser_with_document_chat_fixture',realModel:false,REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3bRecords:true,startedAt:new Date().toISOString(),checks:[]};
 const call=(method,url,payload,identity=owner)=>app.inject({method,url,headers:{authorization:`Bearer ${identity.token}`},...(payload===undefined?{}:{payload})});
 async function check(name,run){stage=name;await run();report.checks.push({name,status:'passed'});console.log(`PASS ${name}`);}
 async function project(){

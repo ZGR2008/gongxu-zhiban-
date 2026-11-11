@@ -8,14 +8,14 @@ import {registerProjectRoutes} from '../apps/api/dist/project-routes.js';
 import {registerAgentRoutes} from '../apps/api/dist/agent/routes.js';
 import {createRuntimeDatabase} from '../apps/api/dist/database.js';
 
-// Existing dotenv configuration is consumed by the program only. Only synthetic
+// Existing dotenv configuration is consumed by the program only. Only REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b
 // records are created; no credentials, response bodies or business data are logged.
 const require=createRequire(new URL('../apps/api/package.json',import.meta.url));require('dotenv').config();
 const config=loadConfig();if(!config.DATABASE_URL||!['127.0.0.1','localhost','[::1]'].includes(new URL(config.DATABASE_URL).hostname))throw Error('Loopback database required');
 const Fastify=require('fastify'),pool=createRuntimeDatabase(config.DATABASE_URL);
 const app=Fastify({logger:false}),store=new PgProjectStore(pool);
 const directory=new URL(`../.runtime/agent-recovery-${randomUUID()}/`,import.meta.url);await mkdir(directory,{recursive:true});
-const report={scope:'real_local_postgresql_controlled_model_no_remote_calls',syntheticRecords:true,checks:[],startedAt:new Date().toISOString()};
+const report={scope:'real_local_postgresql_controlled_model_no_remote_calls',REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3bRecords:true,checks:[],startedAt:new Date().toISOString()};
 let auth={},foreign={},project,requirement,stage='setup',calls=0,release,started,mode='normal';
 const plan=JSON.stringify({tasks:[{key:'t1',stage:'开发',title:'合成任务',description:'用于恢复回归',deliverable:'可核对的合成产物',dependsOn:[],citations:[]}]});
 await registerProjectRoutes(app,store);
@@ -30,7 +30,7 @@ try{
    await assert.rejects(client.query('SELECT pg_sleep(1)'),error=>error.code==='57014');await client.query('ROLLBACK');assert.equal((await client.query('SELECT 1 AS ready')).rows[0].ready,1);
   }finally{client.release();}
  });
- await check('isolated_synthetic_accounts_project_and_confirmed_requirement',async()=>{
+ await check('isolated_REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b_accounts_project_and_confirmed_requirement',async()=>{
   for(const isForeign of [false,true]){const r=await call('POST','/auth/register',{name:'中断恢复 · 合成账号',email:`recovery-${randomUUID()}@example.test`,password:randomBytes(24).toString('base64url')},{});assert.equal(r.statusCode,201);if(isForeign)foreign={authorization:`Bearer ${r.json().token}`};else auth={authorization:`Bearer ${r.json().token}`};}
   let r=await call('POST','/projects',{name:'运行恢复 · 合成项目',description:'仅验证实际数据库状态恢复，不是真实学生数据'});assert.equal(r.statusCode,201);project=r.json().project.id;
   r=await call('POST',`/projects/${project}/requirements`,{content:'保存任务并验证中断不会伪装成功。'});assert.equal(r.statusCode,201);requirement=r.json().requirement.id;assert.equal((await call('POST',`/projects/${project}/requirements/${requirement}/confirm`,{expectedContent:r.json().requirement.content})).statusCode,200);

@@ -19,6 +19,7 @@ export function longPlanningFixture(state,project,version,{job=false}={}){
   if(path.endsWith('/long-plans')&&method==='GET')return {body:{jobs:job?[summary]:[],model:'browser-fixture'}};
   if(path.endsWith('/long-plans')&&method==='POST'){job=true;detail.job.status='queued';summary.status='queued';return {status:202,body:{job:summary,created:true}};}
   if(path.endsWith('/retry-part')){detail.parts[0].status='pending';detail.job.revision++;return {body:structuredClone(detail)};}
+  if(path.endsWith('/correct-part')&&state.longCorrectionError)return {status:422,body:{error:state.longCorrectionError}};
   if(path.endsWith('/resume')){detail.job.status='running';detail.job.revision++;return {body:structuredClone(detail)};}
   return {body:structuredClone(detail)};
  };

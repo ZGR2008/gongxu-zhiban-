@@ -11,7 +11,7 @@ function fixture() {
     status: 'prepared_not_executed', messages: [{role: 'user', content: '合成：必须回滚'}],
     inputHash: digest('input'), knowledgeHash: digest([])};
   const manifest = {datasetVersion: '1.0.0', paidCalls: 0, externalCalls: 0,
-    scope: 'production_route_prompt_capture_with_fixed_synthetic_retrieval', frames: [frame]};
+    scope: 'production_route_prompt_capture_with_fixed_REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b_retrieval', frames: [frame]};
   const prepared = prepareLive(manifest), output = '合成响应，仅用于离线测试。';
   const record = {...prepared.calls[0], model: prepared.policy.model, modelVersion: prepared.policy.model,
     settings: {temperature: .3, maxOutputTokens: 4096, thinking: 'disabled'},
@@ -42,7 +42,7 @@ test('changed inputs, outputs, settings, count and duplicate responses cannot bi
     assert.throws(() => bindLiveEvidence(data.manifest, data.live, template, dataset));
   }
 });
-test('policy block, unattempted calls and incomplete output stay distinct; no synthetic success', () => {
+test('policy block, unattempted calls and incomplete output stay distinct; no REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b success', () => {
   const {manifest, live} = fixture();
   manifest.frames.push({...manifest.frames[0], pipeline: 'pre_optimization', messages: null,
     status: 'model_not_invoked_by_policy', policy: 'no_source_no_answer'});

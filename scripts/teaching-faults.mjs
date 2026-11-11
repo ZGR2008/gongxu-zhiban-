@@ -10,10 +10,10 @@ const require=createRequire(new URL('../apps/api/package.json',import.meta.url))
 const deferred=()=>{let resolve;const promise=new Promise(r=>resolve=r);return{promise,resolve};};
 export async function teachingFaults({pool,student,teacher,teacherB,adminUser,classId,check}){
  const provider=require('fastify')();let mode='ok',gate,entered,chatCalls=0;
- provider.post('/chat/completions',async(_req,reply)=>{chatCalls++;if(mode==='hold'){entered.resolve();await gate.promise;}if(mode==='fail')return reply.code(503).send({error:'synthetic'});return{choices:[{finish_reason:'stop',message:{content:'协议测试替身：缺少自审批被拒绝的执行证据，请教师核对后修改。'}}],usage:{prompt_tokens:20,completion_tokens:10,total_tokens:30}};});
+ provider.post('/chat/completions',async(_req,reply)=>{chatCalls++;if(mode==='hold'){entered.resolve();await gate.promise;}if(mode==='fail')return reply.code(503).send({error:'REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b'});return{choices:[{finish_reason:'stop',message:{content:'协议测试替身：缺少自审批被拒绝的执行证据，请教师核对后修改。'}}],usage:{prompt_tokens:20,completion_tokens:10,total_tokens:30}};});
  provider.post('/embeddings',async req=>{if(mode==='hold-index'){entered.resolve();await gate.promise;}return{data:req.body.input.map((_,index)=>({index,embedding:[1,0]}))};});
  const origin=await provider.listen({host:'127.0.0.1',port:0});
- const app=await createApp({pool,projectStore:new PgProjectStore(pool),aiConfig:{baseUrl:origin,model:'synthetic-local-protocol',apiKey:'fixture-not-a-credential',timeoutMs:2000},embeddingConfig:{baseUrl:origin,model:'synthetic-local-protocol',apiKey:''},corsOrigin:'http://127.0.0.1:5173'});
+ const app=await createApp({pool,projectStore:new PgProjectStore(pool),aiConfig:{baseUrl:origin,model:'REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b-local-protocol',apiKey:'fixture-not-a-credential',timeoutMs:2000},embeddingConfig:{baseUrl:origin,model:'REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b-local-protocol',apiKey:''},corsOrigin:'http://127.0.0.1:5173'});
  async function req(method,url,payload,who=student){const r=await app.inject({method,url,payload,headers:{authorization:'Bearer '+who.token}});return{status:r.statusCode,body:r.json()};}
  const ok=r=>{assert.equal(r.status,200,JSON.stringify(r.body));return r.body;};
  let submission;
@@ -54,7 +54,7 @@ export async function teachingFaults({pool,student,teacher,teacherB,adminUser,cl
   });
   await check('public_version_is_append_only_and_publication_rolls_back_with_audit_transaction',async()=>{
    const lesson={lessonId:'GX-PROTOCOL-02',version:'1.0.0',title:'事务回滚合成协议',category:'安全权限',sources:[],text:'公共发布与审计应为同一事务；这只是协议夹具。\n'.repeat(24)};
-   await assert.rejects(transaction(pool,adminUser.user.id,'admin',async db=>{await savePublicLesson(pool,lesson,db);throw Error('synthetic_audit_failure');}),/synthetic_audit_failure/);
+   await assert.rejects(transaction(pool,adminUser.user.id,'admin',async db=>{await savePublicLesson(pool,lesson,db);throw Error('REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b_audit_failure');}),/REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b_audit_failure/);
    assert.equal((await pool.query("SELECT count(*)::int AS n FROM knowledge_documents WHERE source_metadata->>'lessonId'=$1",[lesson.lessonId])).rows[0].n,0);
    ok(await req('POST','/knowledge/public',lesson,adminUser));assert.equal((await req('POST','/knowledge/public',{...lesson,text:lesson.text+'内容修改必须换版本。'},adminUser)).body.error,'public_version_already_exists');
   });

@@ -26,7 +26,7 @@ test('draft reads and writes reject foreign projects before issuing a query',asy
  const app=Fastify();await registerPracticeRoutes(app,{...store,getProject:async()=>null} as ProjectStore,pool);t.after(()=>app.close());
  assert.equal((await app.inject({method:'GET',url})).statusCode,401);
  assert.equal((await app.inject({method:'GET',url,headers})).statusCode,404);
- assert.equal((await app.inject({method:'PUT',url,headers,payload:{language:'javascript',code:'synthetic',expectedRevision:0}})).statusCode,404);assert.equal(queries,0);
+ assert.equal((await app.inject({method:'PUT',url,headers,payload:{language:'javascript',code:'REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b',expectedRevision:0}})).statusCode,404);assert.equal(queries,0);
 });
 
 test('a saved code draft needs no model configuration and never executes the code',async t=>{

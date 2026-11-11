@@ -17,7 +17,7 @@ const pool=new Pool({connectionString:config.DATABASE_URL,connectionTimeoutMilli
 const store=new PgProjectStore(pool),app=Fastify({logger:false});await registerProjectRoutes(app,store);await registerKnowledgeRoutes(app,store,pool,embedding);
 app.get('/health',async()=>({status:'ok',service:'gongxu-api'}));app.get('/ready',async()=>({status:'ready'}));app.get('/ai/status',async()=>({configured:false}));
 const directory=new URL(`../.runtime/knowledge-list-local-${randomUUID()}/`,import.meta.url);await mkdir(directory,{recursive:true});
-const report={scope:'real_local_database_embedding_http_browser_knowledge_pagination',realChatModel:false,syntheticRecords:true,checks:[],startedAt:new Date().toISOString()};
+const report={scope:'real_local_database_embedding_http_browser_knowledge_pagination',realChatModel:false,REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3bRecords:true,checks:[],startedAt:new Date().toISOString()};
 let owner,foreign,browser,page,stage='setup',first,last;
 const call=(method,url,payload,identity=owner)=>app.inject({method,url,headers:{authorization:`Bearer ${identity.token}`},...(payload===undefined?{}:{payload})});
 async function check(name,run){stage=name;await run();report.checks.push({name,status:'passed'});console.log(`PASS ${name}`);}

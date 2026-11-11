@@ -37,7 +37,7 @@ export function bindLiveEvidence(manifest, live, template, dataset) {
       inputHash: frame.inputHash, knowledgeHash: frame.knowledgeHash,
       conditionJudgments: sample.acceptance.map((text, i) => ({id: `${sample.id}:${i + 1}`, text,
         judgment: 'unjudged', outputEvidence: null, note: null, reviewerCodes: []})),
-      limitations: ['Human semantic review is not supplied.', 'Fixed synthetic retrieval, not end-to-end retrieval evaluation.',
+      limitations: ['Human semantic review is not supplied.', 'Fixed REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b retrieval, not end-to-end retrieval evaluation.',
         'Historical prompt assembly only; full historical workflow is not reproduced.']};
     if (result) Object.assign(row, {provenance: 'real_model', model: result.model, modelVersion: result.modelVersion,
       modelVersionScope: 'provider_returned_alias_not_immutable_snapshot', outputHash: result.outputHash,

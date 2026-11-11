@@ -4,7 +4,7 @@ import { randomBytes, randomUUID } from "node:crypto";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 
-// Isolated synthetic account; existing production APIs. Only --with-ai spends model quota.
+// Isolated REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b account; existing production APIs. Only --with-ai spends model quota.
 const withAi = process.argv.includes("--with-ai"),
   useWebkit = process.argv.includes("--webkit");
 if (
@@ -29,7 +29,7 @@ const report = {
   startedAt: new Date().toISOString(),
   browser: useWebkit ? "Windows WebKit" : "Chromium",
   realServices: true,
-  syntheticInput: true,
+  REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3bInput: true,
   remoteAiRequested: withAi,
   controlledResponseChecks: true,
   status: "running",

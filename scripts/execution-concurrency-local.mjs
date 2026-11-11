@@ -8,7 +8,7 @@ import {PgProjectStore} from '../apps/api/dist/project-store.js';
 import {loadConfig} from '../apps/api/dist/config.js';
 import {sourceProvenance} from '../evaluation/source-provenance.mjs';
 
-// Local database only, synthetic records retained, no chat/embedding configuration.
+// Local database only, REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b records retained, no chat/embedding configuration.
 const require=createRequire(new URL('../apps/api/package.json',import.meta.url));
 require('dotenv').config({path:fileURLToPath(new URL('../apps/api/.env',import.meta.url))});
 const config=loadConfig();
@@ -17,7 +17,7 @@ const {Pool}=require('pg'),pool=new Pool({connectionString:config.DATABASE_URL,m
 const app=await createApp({projectStore:new PgProjectStore(pool),pool,corsOrigin:'http://127.0.0.1:5173'});
 const origin=await app.listen({host:'127.0.0.1',port:0});
 const directory=new URL(`../.runtime/execution-concurrency-local-${randomUUID()}/`,import.meta.url);await mkdir(directory,{recursive:true});
-const report={scope:'real_local_database_http_synthetic_execution_concurrency_no_models',...sourceProvenance(new URL('../',import.meta.url)),startedAt:new Date().toISOString(),checks:[],paidModelCalls:0};
+const report={scope:'real_local_database_http_REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b_execution_concurrency_no_models',...sourceProvenance(new URL('../',import.meta.url)),startedAt:new Date().toISOString(),checks:[],paidModelCalls:0};
 let owner,foreign,project,version;
 async function call(method,path,payload,user=owner){const r=await fetch(new URL(path,origin),{method,headers:{...(user?{authorization:'Bearer '+user.token}:{}),...(payload===undefined?{}:{'content-type':'application/json'})},body:payload===undefined?undefined:JSON.stringify(payload),signal:AbortSignal.timeout(15000),redirect:'error'});return {status:r.status,body:await r.json()};}
 async function check(name,run){try{await run();report.checks.push({name,status:'passed'});console.log('PASS '+name);}catch(e){report.checks.push({name,status:'failed',errorType:e.constructor.name});process.exitCode=1;console.log('FAIL '+name);}}

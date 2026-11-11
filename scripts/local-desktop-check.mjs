@@ -2,7 +2,7 @@ import {chromium} from 'playwright';
 import {fileURLToPath} from 'node:url';
 import assert from 'node:assert/strict';
 
-/** Runs only against the caller's synthetic account and ephemeral local API.
+/** Runs only against the caller's REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b account and ephemeral local API.
  * Browser -> real HTTP -> real local DB. Model replies in that API are explicit fixtures.
  * No token is written to disk, included in screenshots or reported.
  */
@@ -64,7 +64,7 @@ export async function checkLocalDesktop({apiAddress,authorization,projectId,dire
     const reviewList=await page.request.get(`${apiAddress}/projects/${projectId}/code-reviews`,{headers:{authorization}});assert.equal((await reviewList.json()).reviews.length,0);
     await page.screenshot({path:fileURLToPath(new URL('code-draft-desktop.png',directory))});
     assert.equal(errors.length,0);
-    return {scope:'real_local_http_and_database_synthetic_account_model_fixture',screenshots:9,layouts:['1366x768','1536x864 CSS zoom 125%','1920x1080 CSS zoom 150%'],nativeBrowserMenuZoom:'not_executed',keyboardAndTraceSave:'passed',taskTestPairing:'passed',documentSaveAndHistory:'passed',codeDraftSaveAndReturnWithoutAi:'passed'};
+    return {scope:'real_local_http_and_database_REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b_account_model_fixture',screenshots:9,layouts:['1366x768','1536x864 CSS zoom 125%','1920x1080 CSS zoom 150%'],nativeBrowserMenuZoom:'not_executed',keyboardAndTraceSave:'passed',taskTestPairing:'passed',documentSaveAndHistory:'passed',codeDraftSaveAndReturnWithoutAi:'passed'};
   }catch(error){console.log(`Desktop failure at ${stage}`);console.log((error.stack??'').split('\n').filter(line=>line.includes('local-desktop-check.mjs')).slice(0,2).join('\n'));await page.screenshot({path:fileURLToPath(new URL('desktop-failed.png',directory))});throw error;}
   finally{await context.close();await browser.close();}
 }

@@ -22,15 +22,15 @@ const growthPool={query:(...args)=>pool.query(...args),connect:async()=>{
 const store=new PgProjectStore(pool),app=Fastify({logger:false});await registerProjectRoutes(app,store);await registerGrowthRoutes(app,store,growthPool);
 app.get('/health',async()=>({status:'ok',service:'gongxu-api'}));app.get('/ready',async()=>({status:'ready'}));app.get('/ai/status',async()=>({configured:false}));
 const output=new URL(`../.runtime/growth-scope-local-${randomUUID()}/`,import.meta.url);await mkdir(output,{recursive:true});
-const report={scope:'real_local_database_synthetic_records_no_model',checks:[],startedAt:new Date().toISOString()};let stage='setup',owner,foreign,browser;
+const report={scope:'real_local_database_REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b_records_no_model',checks:[],startedAt:new Date().toISOString()};let stage='setup',owner,foreign,browser;
 const call=(method,url,payload,identity=owner)=>app.inject({method,url,headers:{authorization:`Bearer ${identity.token}`},...(payload===undefined?{}:{payload})});
 async function check(name,work){stage=name;await work();report.checks.push({name,status:'passed'});console.log(`PASS ${name}`);}
 async function project(identity,name){const response=await call('POST','/projects',{name,description:'仅合成统计回归，不代表学生成果'},identity);assert.equal(response.statusCode,201);return response.json().project.id;}
 async function version(identity,id,content){const response=await call('POST',`/projects/${id}/requirements`,{content},identity);assert.equal(response.statusCode,201);const result=response.json().requirement.id;assert.equal((await call('POST',`/projects/${id}/requirements/${result}/confirm`,{expectedContent:response.json().requirement.content},identity)).statusCode,200);return result;}
 async function seed(identity,projectId,requirementId,status,result){
- const run=await pool.query("INSERT INTO agent_runs(project_id,requirement_version_id,model_name,status,finished_at) VALUES($1,$2,'synthetic-fixture','confirmed',now()) RETURNING id",[projectId,requirementId]);
+ const run=await pool.query("INSERT INTO agent_runs(project_id,requirement_version_id,model_name,status,finished_at) VALUES($1,$2,'REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b-fixture','confirmed',now()) RETURNING id",[projectId,requirementId]);
  await pool.query("INSERT INTO tasks(project_id,requirement_version_id,agent_run_id,plan_key,title,stage,description,deliverable,status) VALUES($1,$2,$3,'fixture','合成统计任务','开发','统计测试专用','仅合成记录',$4)",[projectId,requirementId,run.rows[0].id,status]);
- await pool.query("INSERT INTO practice_test_cases(project_id,requirement_version_id,category,title,preconditions,steps,expected,model_name,result,execution_note,executor_id,executed_at) VALUES($1,$2,'normal','合成统计用例','仅本地测试','检查聚合','不混用历史','synthetic-fixture',$3,'仅合成统计夹具',$4,CASE WHEN $3='not_run' THEN NULL ELSE now() END)",[projectId,requirementId,result,result==='not_run'?null:identity.id]);
+ await pool.query("INSERT INTO practice_test_cases(project_id,requirement_version_id,category,title,preconditions,steps,expected,model_name,result,execution_note,executor_id,executed_at) VALUES($1,$2,'normal','合成统计用例','仅本地测试','检查聚合','不混用历史','REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b-fixture',$3,'仅合成统计夹具',$4,CASE WHEN $3='not_run' THEN NULL ELSE now() END)",[projectId,requirementId,result,result==='not_run'?null:identity.id]);
 }
 try{
  for(const other of [false,true]){const response=await app.inject({method:'POST',url:'/auth/register',payload:{name:'成长统计 · 合成',email:`growth-scope-${randomUUID()}@example.test`,password:randomBytes(24).toString('base64url')}});assert.equal(response.statusCode,201);const data=response.json(),identity={id:data.user.id,token:data.token};if(other)foreign=identity;else owner=identity;}
@@ -77,7 +77,7 @@ try{
    await lock.query('BEGIN');open=true;await lock.query('SELECT id FROM projects WHERE id=$1 FOR UPDATE',[a]);
    const requested=new Promise((resolve,reject)=>{onTaskProjectLock=resolve;timer=setTimeout(()=>reject(Error('Project lock request not observed')),5000);});
    pending=call('PATCH',`/projects/${a}/tasks/${fresh.id}`,{status:'done'});await requested;clearTimeout(timer);
-   // Only this new synthetic requirement is changed. The real write is waiting
+   // Only this new REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b requirement is changed. The real write is waiting
    // behind the same project lock used by the application's confirm transaction.
    await lock.query("UPDATE requirement_versions SET status='confirmed',confirmed_at=now() WHERE id=$1 AND project_id=$2 AND status='draft'",[next,a]);
    await lock.query('COMMIT');open=false;const response=await pending;assert.equal(response.statusCode,409);assert.equal(response.json().error,'task_requirement_outdated');

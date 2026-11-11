@@ -2,12 +2,12 @@ import {createHash} from 'node:crypto';
 export const policy=Object.freeze({provider:'DeepSeek',endpoint:'https://api.deepseek.com/chat/completions',model:'deepseek-flash',temperature:0.3,thinking:'disabled',maxOutputTokens:4096,maxCalls:15,maxCostUSD:0.50,timeoutMs:90000,maxRetries:0,inputUSDPerMillion:0.30,outputUSDPerMillion:1.20,priceCheckedAt:'2026-11-01',priceSource:'https://api-docs.deepseek.com/quick_start/pricing/'});
 export const digest=value=>createHash('sha256').update(JSON.stringify(value)).digest('hex');
 export function prepareLive(manifest){
- if(manifest.datasetVersion!=='1.0.0'||manifest.paidCalls!==0||manifest.externalCalls!==0||manifest.scope!=='production_route_prompt_capture_with_fixed_synthetic_retrieval')throw Error('Only reviewed synthetic preparation is accepted');
+ if(manifest.datasetVersion!=='1.0.0'||manifest.paidCalls!==0||manifest.externalCalls!==0||manifest.scope!=='production_route_prompt_capture_with_fixed_REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b_retrieval')throw Error('Only reviewed REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b preparation is accepted');
  const known=new Set(['normal','tail-condition','conflicting-material','no-answer','malicious-material']);
  const frames=manifest.frames.filter(frame=>frame.pipeline),seen=new Set();
  const calls=[];
  for(const frame of frames){
-  if(!known.has(frame.caseId)||!['plain_chat','pre_optimization','current_workflow'].includes(frame.pipeline))throw Error('Unknown synthetic frame');
+  if(!known.has(frame.caseId)||!['plain_chat','pre_optimization','current_workflow'].includes(frame.pipeline))throw Error('Unknown REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b frame');
   const key=frame.caseId+':'+frame.pipeline;if(seen.has(key))throw Error('Duplicate frame');seen.add(key);
   if(!frame.messages)continue;
   if(frame.status!=='prepared_not_executed'||!Array.isArray(frame.messages)||!frame.messages.length||frame.messages.some(m=>!['system','user'].includes(m.role)||typeof m.content!=='string'))throw Error('Invalid prepared messages');

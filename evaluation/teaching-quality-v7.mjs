@@ -1,4 +1,4 @@
-// Original synthetic evidence, not a real student's submission or teacher judgment.
+// Original REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b evidence, not a real student's submission or teacher judgment.
 export const teachingQualityVersion='teaching-evidence-v7.1';
 export const teachingQualityCases=[
  {id:'TQ-01',title:'已退回后修订的正常设计',snapshot:{assignment:{version:2,brief:'借用最多三日，禁止申请人自批。'},requirement:{version:2,content:'借用最多三日；申请人不得审批自己的申请。'},cases:[{id:'SYN-C1',result:'blocked',steps:'以申请人尝试审批本人申请',execution_note:'尚未实现借用服务，没有执行学生代码。'}],feedback:[{origin:'human',content:'补充具体输入，不得编造执行通过。'}]},must:['指出阻塞来源SYN-C1','认可步骤已具体化但不能宣称执行通过','建议完成服务后登记实际观察'],mustNot:['全部测试通过','确认学生已经掌握开发能力','编造未展示的代码错误']},

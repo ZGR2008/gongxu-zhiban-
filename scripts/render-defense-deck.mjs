@@ -71,7 +71,7 @@ rows(s,[['已有可复核成果','源码、增量迁移、测试、29 页技术�
 
 const candidate=path.join(build,'candidate.pptx');await (await PresentationFile.exportPptx(presentation)).save(candidate);
 for(const [i,slide] of presentation.slides.items.entries()){const png=await presentation.export({slide,format:'png',scale:1});await fs.writeFile(path.join(build,`slide-${String(i+1).padStart(2,'0')}.png`),new Uint8Array(await png.arrayBuffer()));}
-await fs.writeFile(path.join(build,'authoring-manifest.json'),JSON.stringify({sourceCommit,slides:pages.length,scope:'editable_defence_draft_not_official_acceptance',font,screenshots:'synthetic_local_accounts_real_db_chat_fixture'},null,2));
+await fs.writeFile(path.join(build,'authoring-manifest.json'),JSON.stringify({sourceCommit,slides:pages.length,scope:'editable_defence_draft_not_official_acceptance',font,screenshots:'REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b_local_accounts_real_db_chat_fixture'},null,2));
 await fs.writeFile(path.join(root,'docs/DEFENSE-SPEAKER-NOTES-V3.md'),'# 工序智伴答辩讲稿草稿\n\n12页本地演示稿，建议口述约7分钟，需参赛者实际试讲计时。团队信息未填写，不能将替身演示标识移除后冒充真实模型。\n\n'+pages.map((p,i)=>`## ${i+1}. ${p.title}\n\n${p.notes}\n`).join('\n'));
 const finalPath=path.join(output,`gongxu-zhiban-defense-v3-${stamp}.pptx`);
 const {finalizePresentation}=await import(pathToFileURL(path.join(skill,'container_tools/artifact_tool_utils.mjs')).href);

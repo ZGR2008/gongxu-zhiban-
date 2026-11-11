@@ -1,4 +1,4 @@
-// Real local PostgreSQL, synthetic records retained. No models or remote fetch.
+// Real local PostgreSQL, REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b records retained. No models or remote fetch.
 import {createRequire} from 'node:module';import {randomUUID,randomBytes} from 'node:crypto';import {mkdir,writeFile} from 'node:fs/promises';import {fileURLToPath} from 'node:url';import assert from 'node:assert/strict';
 import {createApp} from '../apps/api/dist/app.js';import {PgProjectStore} from '../apps/api/dist/project-store.js';import {loadConfig} from '../apps/api/dist/config.js';import {sourceProvenance} from '../evaluation/source-provenance.mjs';
 const require=createRequire(new URL('../apps/api/package.json',import.meta.url));require('dotenv').config({path:fileURLToPath(new URL('../apps/api/.env',import.meta.url))});const config=loadConfig();
@@ -6,7 +6,7 @@ if(!config.DATABASE_URL||!['localhost','127.0.0.1','[::1]'].includes(new URL(con
 const {Pool}=require('pg'),pool=new Pool({connectionString:config.DATABASE_URL,max:5,connectionTimeoutMillis:3000,statement_timeout:10000});
 const app=await createApp({projectStore:new PgProjectStore(pool),pool,corsOrigin:'http://127.0.0.1:5173'});const origin=await app.listen({host:'127.0.0.1',port:0});
 const out=new URL(`../.runtime/segment-review-local-${randomUUID()}/`,import.meta.url);await mkdir(out,{recursive:true});
-const report={scope:'real_local_database_http_synthetic_segment_review_no_models',...sourceProvenance(new URL('../',import.meta.url)),startedAt:new Date().toISOString(),checks:[],paidModelCalls:0};let user,other,project,version,pack;
+const report={scope:'real_local_database_http_REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b_segment_review_no_models',...sourceProvenance(new URL('../',import.meta.url)),startedAt:new Date().toISOString(),checks:[],paidModelCalls:0};let user,other,project,version,pack;
 async function call(method,path,data,identity=user){const r=await fetch(new URL(path,origin),{method,redirect:'error',headers:{...(identity?{authorization:'Bearer '+identity.token}:{}),...(data?{'content-type':'application/json'}:{})},body:data?JSON.stringify(data):undefined,signal:AbortSignal.timeout(10000)});return {status:r.status,body:await r.json()};}
 async function check(name,run){try{await run();report.checks.push({name,status:'passed'});console.log('PASS '+name);}catch(e){report.checks.push({name,status:'failed',errorType:e.name});process.exitCode=1;console.log('FAIL '+name);}}
 const source='背景材料😀\n'.repeat(3100)+'末尾必须禁止学生批准自己的申请。';let base;

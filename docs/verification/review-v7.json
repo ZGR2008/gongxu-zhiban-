@@ -249,7 +249,7 @@
       "path": ".runtime/verification-v4-a6dbd2fd-e6be-4d7a-be4e-dfb6e0132369/report.json",
       "sha256": "959ed4d868118995d8238fae357a0659592c88b95274464449765dcaf9398946",
       "status": "passed",
-      "scope": "explicit_real_local_data_synthetic_accounts_and_model_fixtures",
+      "scope": "explicit_real_local_data_REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b_accounts_and_model_fixtures",
       "steps": [
         {
           "id": "api-build",
@@ -782,7 +782,7 @@
       "path": ".runtime/public-evidence-v7-bf4fd33e-b31f-408e-b6eb-34ebc9adc9c0/report.json",
       "sha256": "9e45b2faa393f692ac992e70abb222a125bbde2773a1e735a83891d1ee1b0d7c",
       "status": "passed",
-      "scope": "public_only_primary_read_synthetic_database_ui"
+      "scope": "public_only_primary_read_REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b_database_ui"
     },
     "activation": {
       "path": ".runtime/teaching-activation-v7-31e5c7d8-47ce-48e5-889b-1230641fff8d/report.json",
@@ -800,7 +800,7 @@
       "path": "docs/verification/ai-review-pack-v7.json",
       "sha256": "42f214238cc7a9ff01850fd2369b117c508f638df42ba9edd353c8612d900ab8",
       "status": "passed",
-      "scope": "offline_original_synthetic_response_and_archive_checks",
+      "scope": "offline_original_REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b_response_and_archive_checks",
       "newPaidCalls": 0
     },
     "previousOffline": {

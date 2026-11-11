@@ -25,7 +25,7 @@ try{
  assert.equal((await pool.query('SELECT 1 FROM users WHERE id=$1',[publicReader])).rowCount,0,'Public-only verification identity collision');
  const before=(await pool.query("SELECT visibility,count(*)::int AS documents FROM knowledge_documents GROUP BY visibility ORDER BY visibility")).rows;report.beforeCounts=before;
  for(const lesson of curriculum){if(stop)break;publicLesson.parse(lesson);const hash=createHash('sha256').update(lesson.text).digest('hex');
-  await writeFile(new URL(lesson.lessonId+'.md',materialOut),lesson.text); // Public synthetic artifacts, never credentials or business rows.
+  await writeFile(new URL(lesson.lessonId+'.md',materialOut),lesson.text); // Public REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b artifacts, never credentials or business rows.
   const saved=await savePublicLesson(pool,lesson),entry={lessonId:lesson.lessonId,version:lesson.version,id:saved.id,hash,reused:saved.reused,status:'saved',chunks:null};report.documents.push(entry);
   try{
    if(!args.includes('--skip-index')){

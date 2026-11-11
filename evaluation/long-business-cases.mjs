@@ -1,4 +1,4 @@
-// Original synthetic specification, built from distinct business transitions and
+// Original REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b specification, built from distinct business transitions and
 // examples. No student data, production source or repeated-character padding.
 export const longCaseVersion='campus-practice-v5.1';
 const modules=[
@@ -35,7 +35,7 @@ export function longBusinessCase(){
  paragraphs.push('【跨段单条最终条件】以下约束同时引用第二章双人审批、第六章任务协作和第七章测试证据：当需求由“只需教师初审”变为“高价值设备还需另一名教师复核”时，旧审批任务和测试结果必须显示来源已过期；保留历史通过记录，但不能显示当前需求已验证。复核流程不能自动确认建议关系。');
  paragraphs.push('【全文末尾原子安全验收】即使用户同时拥有学生和课程助理角色，也绝不允许审批自己提交的设备申请。服务端必须比较申请人与审批人身份，拒绝自审批并保留失败原因，库存不得变化。此末尾条件与第二章有关，任何分段、合并、人工采纳或交付材料都不能省略。😀');
  const source=paragraphs.join('\n');
- return {version:longCaseVersion,id:'campus-practice-long',synthetic:true,source,paragraphs:paragraphs.length,utf16Length:source.length,
+ return {version:longCaseVersion,id:'campus-practice-long',REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b:true,source,paragraphs:paragraphs.length,utf16Length:source.length,
   expected:{tail:'拒绝自审批并保留失败原因，库存不得变化',conflict:['最长7天','最长14天','尚未批准'],crossDependencies:['双人审批','任务协作','测试证据'],mustNotClaim:['自动确认建议关系','当前需求已验证'],independentReview:'pending'},
   change:{before:'高价值设备必须由第二名教师复核',after:'高价值设备必须由两名不同教师分别复核，且均不是申请人'},
   scope:'原创多章节合成业务；用于协议/人工审核及后续获批模型验证，不代表真实学校试用'};

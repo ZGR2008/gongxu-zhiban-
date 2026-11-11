@@ -6,7 +6,7 @@ import type {ProjectStore} from '../project-store.js';
 import type {AiConfig} from '../ai/model.js';
 import type {EmbeddingConfig} from '../rag/embeddings.js';
 import {schemeSchema,inspectScheme,inspectMerge,parseSegmentOutput,hash} from './domain.js';
-import {LongPlanStore,PlanningError,event,transaction,lockProject,modelSnapshot,modelFingerprint,type Job,type Part,type Attempt} from './store.js';
+import {LongPlanStore,PlanningError,event,transaction,lockProject,modelSnapshot,modelFingerprint,assertCompletedParts,type Job,type Part,type Attempt} from './store.js';
 import {LongPlanWorker,type WorkerDeps} from './worker.js';
 const uuid=z.string().uuid(),rev=z.number().int().positive(),note=z.string().trim().min(8).max(3000);
 const scope=z.object({projectId:uuid,versionId:uuid.optional(),jobId:uuid.optional()}).strict();
@@ -57,6 +57,7 @@ export async function registerLongPlanRoutes(app:FastifyInstance,projectStore?:P
    if((await db.query('SELECT revision FROM long_plan_schemes WHERE id=$1',[j.scheme_id])).rows[0].revision!==j.scheme_revision)throw new PlanningError('scheme_revision_changed');
    if(modelFingerprint(j.model_snapshot)!==modelFingerprint(modelSnapshot(ai)))throw new PlanningError('model_configuration_changed');
    const parts=(await db.query<Part>('SELECT * FROM long_plan_parts WHERE job_id=$1',[j.id])).rows;if(parts.some(p=>!['pending','succeeded'].includes(p.status)))throw new PlanningError('part_requires_review');
+   assertCompletedParts(j,parts,(await db.query<Attempt>('SELECT * FROM long_plan_attempts WHERE job_id=$1',[j.id])).rows);
    if(parts.every(p=>p.status==='succeeded')){await store!.assemble(db,j);return;}
    const counts=(await db.query("SELECT count(*)::int AS total,count(*) FILTER(WHERE owner_id=$1)::int AS mine FROM long_plan_jobs WHERE status IN ('queued','running')",[a.owner])).rows[0];if(counts.total>=8||counts.mine>=2)throw new PlanningError('planning_queue_full',429);
    await db.query("UPDATE long_plan_jobs SET status='queued',dispatcher_id=$2,revision=revision+1,error_code=NULL,updated_at=now() WHERE id=$1",[j.id,worker!.dispatcher]);await event(db,j.id,'explicit_resume',a.owner,{acknowledgedExternalCall:true});
@@ -84,7 +85,16 @@ export async function registerLongPlanRoutes(app:FastifyInstance,projectStore?:P
    await db.query("UPDATE long_plan_parts SET status='succeeded',result=$3::jsonb,result_origin='human_correction',error_code=NULL WHERE job_id=$1 AND segment_key=$2",[j.id,b.segmentKey,JSON.stringify(output)]);
    await event(db,j.id,'human_corrected_part',a.owner,{segmentKey:b.segmentKey,previousResult:prior.result,result:output,note:b.note});
    const incomplete=(await db.query("SELECT 1 FROM long_plan_parts WHERE job_id=$1 AND status<>'succeeded'",[j.id])).rowCount;
-   if(!incomplete)await store!.assemble(db,j);else await db.query("UPDATE long_plan_jobs SET status='paused',merge_draft=NULL,merge_review=NULL,revision=revision+1,updated_at=now() WHERE id=$1",[j.id]);
+   let remainingInvalid=false;
+   if(!incomplete){
+    try{await store!.assemble(db,j);}catch(error){
+     // A valid human correction must survive another legacy part's failure.
+     // Do not roll it back, change the remaining answer, or dispatch a request.
+     if(!(error instanceof PlanningError)||error.code!=='part_result_invalid')throw error;
+     remainingInvalid=true;await event(db,j.id,'merge_blocked_by_prior_part',a.owner,{correctedSegment:b.segmentKey,reason:'part_result_invalid'});
+    }
+   }
+   if(incomplete||remainingInvalid)await db.query("UPDATE long_plan_jobs SET status='paused',merge_draft=NULL,merge_review=NULL,error_code=$2,revision=revision+1,updated_at=now() WHERE id=$1",[j.id,remainingInvalid?'part_result_invalid':null]);
   });return store!.details(a.owner,a.project,a.job!);
  }));
  app.put(job+'/merge',endpoint(async(a,req)=>{

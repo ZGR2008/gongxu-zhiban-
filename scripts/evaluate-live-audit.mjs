@@ -23,7 +23,7 @@ async function load(name, pattern) {
   const arg = args.find(a => a.startsWith('--' + name + '='));
   const file = await realpath(resolve(root, arg.slice(name.length + 3)));
   const rel = relative(root, file).replaceAll('\\', '/');
-  if (!pattern.test(rel) || (await stat(file)).size > 2_000_000) throw Error('Only bounded local synthetic reports accepted');
+  if (!pattern.test(rel) || (await stat(file)).size > 2_000_000) throw Error('Only bounded local REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b reports accepted');
   const bytes = await readFile(file);
   return {data: JSON.parse(bytes.toString('utf8')), path: rel, sha256: createHash('sha256').update(bytes).digest('hex')};
 }
@@ -92,7 +92,7 @@ const report = {createdAt: new Date().toISOString(), scope: 'offline_saved_real_
   promptComparison, sourceComparison, contractChecks,
   humanReview: {reviewers: [], reviewedComparableCases: accounting.comparisons.filter(c => c.status === 'comparable_reviewed_records').length,
     omissionRate: null, citationSupportRate: null, humanEdits: null, humanMinutes: null},
-  limitations: ['Saved-output replay uses synthetic storage/retrieval; it is not live database or live vector evaluation.',
+  limitations: ['Saved-output replay uses REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b storage/retrieval; it is not live database or live vector evaluation.',
     'The provider returned a model alias, not a verified immutable release.',
     'Input/output token counts were returned; cache breakdown, original total and actual charges were not retained.',
     'No aggregate model quality claim or improvement percentage is inferred.']};

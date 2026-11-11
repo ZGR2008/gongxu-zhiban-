@@ -1,4 +1,4 @@
-// Re-check the existing synthetic 12-call review package. Never contacts a model.
+// Re-check the existing REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b 12-call review package. Never contacts a model.
 import {readFile,writeFile,mkdir} from 'node:fs/promises';import {fileURLToPath} from 'node:url';
 import {createHash,randomUUID} from 'node:crypto';import assert from 'node:assert/strict';import {chromium} from 'playwright';
 const dir=new URL('../output/human-review-v5-7bfe323d-482f-4b14-9ec7-7b4e0409de8f/',import.meta.url),out=new URL(`../.runtime/saved-review-v6-${randomUUID()}/`,import.meta.url);await mkdir(out,{recursive:true});

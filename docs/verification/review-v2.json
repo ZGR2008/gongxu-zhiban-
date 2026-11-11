@@ -526,7 +526,7 @@
   },
   "desktop": {
     "screenshots": "docs/screenshots/review-v2",
-    "syntheticOnly": true,
+    "REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3bOnly": true,
     "layouts": [
       "1366x768",
       "1536x864 CSS zoom 125%",

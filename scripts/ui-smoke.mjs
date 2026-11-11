@@ -4,7 +4,7 @@ import { randomBytes, randomUUID } from 'node:crypto';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 
-// UI regression suite. Real local services, isolated synthetic account, no saved credentials.
+// UI regression suite. Real local services, isolated REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b account, no saved credentials.
 const withAi = process.argv.includes('--with-ai');
 if (process.argv.slice(2).some((arg) => arg !== '--with-ai'))
   throw new Error('Usage: pnpm smoke:ui [--with-ai]');
@@ -26,7 +26,7 @@ const report = {
   id,
   startedAt: new Date().toISOString(),
   realServices: true,
-  syntheticInput: true,
+  REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3bInput: true,
   remoteAiRequested: withAi,
   checks: [],
   status: 'running',

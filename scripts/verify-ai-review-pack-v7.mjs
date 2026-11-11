@@ -1,4 +1,4 @@
-// Offline-only review delivery: approved synthetic data, no model or application calls.
+// Offline-only review delivery: approved REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b data, no model or application calls.
 import assert from 'node:assert/strict';
 import { createHash, randomUUID } from 'node:crypto';
 import { readFile, writeFile, mkdir, copyFile, access } from 'node:fs/promises';
@@ -30,7 +30,7 @@ for (const sample of packet.samples) {
   assert.ok(sample.input.length > 0 && sample.atomicConditions && sample.sourceExcerpts);
 }
 assert.equal(packet.independentHumanReviews, 0);
-assert.equal(packet.longOriginal.synthetic, true);
+assert.equal(packet.longOriginal.REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b, true);
 assert.equal(packet.longOriginal.source.length, 49781);
 assert.equal(packet.longOriginal.utf16Length, 49781);
 assert.deepEqual(packet.unprocessedSegments.map(s => s.part), [10, 11, 12, 13]);

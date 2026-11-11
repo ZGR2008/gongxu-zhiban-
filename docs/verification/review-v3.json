@@ -2609,7 +2609,7 @@
           "status": "passed"
         },
         {
-          "name": "isolated_synthetic_accounts_project_and_confirmed_requirement",
+          "name": "isolated_REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b_accounts_project_and_confirmed_requirement",
           "status": "passed"
         },
         {
@@ -2682,7 +2682,7 @@
     {
       "id": "document_catalogue",
       "command": "pnpm verify:document-list",
-      "scope": "real_local_postgres_http_browser_synthetic_records",
+      "scope": "real_local_postgres_http_browser_REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b_records",
       "file": ".runtime/document-list-local-d104b018-ea3f-4dd3-904d-955436883779/report.json",
       "sha256": "e3883b6cc76fa6b08d6c9148495510b1d6b663ae3b091a915a9bd103e009c100",
       "reportedScope": "real_local_database_http_browser_document_catalogue",
@@ -2723,7 +2723,7 @@
     {
       "id": "test_catalogue",
       "command": "pnpm verify:test-list",
-      "scope": "real_local_postgres_http_browser_synthetic_records",
+      "scope": "real_local_postgres_http_browser_REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b_records",
       "file": ".runtime/test-list-local-517fed2a-4b02-4d9b-8793-b80fddd3b611/report.json",
       "sha256": "fa958babe4d8404c88434a2f18cadb74cec996160355bd2c04e9f01afc057c20",
       "reportedScope": "real_local_database_http_browser_test_pagination",
@@ -2764,7 +2764,7 @@
     {
       "id": "knowledge_catalogue",
       "command": "pnpm verify:knowledge-list",
-      "scope": "real_local_postgres_embedding_http_browser_synthetic_records",
+      "scope": "real_local_postgres_embedding_http_browser_REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b_records",
       "file": ".runtime/knowledge-list-local-15858cd6-c70d-41ed-9097-5503d2d75556/report.json",
       "sha256": "17488f2ffe4bb618f65a6ea0e7f1b4663b1402d6a4fb4dcf17ccae70bbe51431",
       "reportedScope": "real_local_database_embedding_http_browser_knowledge_pagination",
@@ -2801,10 +2801,10 @@
     {
       "id": "growth_and_task_scope",
       "command": "pnpm verify:growth-scope",
-      "scope": "real_local_postgres_http_browser_synthetic_records",
+      "scope": "real_local_postgres_http_browser_REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b_records",
       "file": ".runtime/growth-scope-local-dd8a3fac-a69d-4b0a-8164-c84660809408/report.json",
       "sha256": "950b90691e5e91c3b3de1c07ef16a863ed234aeffa5c0b38edbbda4edd0c5c86",
-      "reportedScope": "real_local_database_synthetic_records_no_model",
+      "reportedScope": "real_local_database_REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b_records_no_model",
       "startedAt": "2026-11-01T00:43:36.118Z",
       "finishedAt": "2026-11-01T00:43:38.745Z",
       "browserEngine": null,
@@ -2883,10 +2883,10 @@
     {
       "id": "mixed_embedding",
       "command": "pnpm verify:embedding-mixed",
-      "scope": "real_local_embedding_four_synthetic_accounts_chat_fixture_not_classroom_capacity",
+      "scope": "real_local_embedding_four_REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b_accounts_chat_fixture_not_classroom_capacity",
       "file": ".runtime/embedding-mixed-local-ed0a52bf-d651-46ed-9300-d60663eb468e/report.json",
       "sha256": "e483c680b6943b4d6d26accdb78fd42a8566811954f9e5b05bd9b4c9dbc67930",
-      "reportedScope": "real_loopback_http_postgresql_embeddings_four_synthetic_accounts",
+      "reportedScope": "real_loopback_http_postgresql_embeddings_four_REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b_accounts",
       "startedAt": "2026-11-01T00:47:20.247Z",
       "finishedAt": "2026-11-01T00:47:22.370Z",
       "browserEngine": null,
@@ -2912,7 +2912,7 @@
     {
       "id": "index_compatibility",
       "command": "pnpm verify:index-compatibility",
-      "scope": "real_local_postgres_embedding_http_synthetic_records",
+      "scope": "real_local_postgres_embedding_http_REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b_records",
       "file": ".runtime/index-compatibility-local-84370d51-4d05-4606-a910-c19c4a222287/report.json",
       "sha256": "2382b788d1b59cf9faa4e9a46e533972460afdce8a042ede0e5032f201f25f9b",
       "reportedScope": "real_local_embedding_database_http_browser_with_controlled_old_identity_and_transport_failure",
@@ -2981,7 +2981,7 @@
       "scope": "real_local_postgres_http_browser_one_failed_save_injected",
       "file": ".runtime/requirement-preconditions-local-775fed62-cc1d-4f69-a61d-4ac3d7e1fb90/report.json",
       "sha256": "d452f2849c370a5a179f624264053e463af81e9de29cb11959ab617fc898b851",
-      "reportedScope": "real_local_database_and_http_new_synthetic_accounts",
+      "reportedScope": "real_local_database_and_http_new_REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b_accounts",
       "startedAt": "2026-11-01T00:39:01.626Z",
       "finishedAt": "2026-11-01T00:39:04.107Z",
       "browserEngine": null,
@@ -3023,7 +3023,7 @@
     {
       "id": "trace_initialization",
       "command": "pnpm verify:trace-concurrency",
-      "scope": "real_local_postgres_12_coordinated_sql_requests_synthetic_records",
+      "scope": "real_local_postgres_12_coordinated_sql_requests_REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b_records",
       "file": ".runtime/trace-concurrency-local-6e730132-672b-462c-80ce-c705dea63667/report.json",
       "sha256": "a7a1f1d0a6f103c4375e598208e93109685706bfcb8fbdc0b128e06b492f8a2a",
       "reportedScope": "real_local_http_and_database_concurrent_trace_initialization",
@@ -3089,7 +3089,7 @@
     {
       "id": "real_ui",
       "command": "pnpm smoke:ui",
-      "scope": "real_local_services_browser_synthetic_account_no_paid_model",
+      "scope": "real_local_services_browser_REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b_account_no_paid_model",
       "file": ".runtime/ui-6867ca26-bd43-4882-a4b9-a9ac02b4e5ad/report.json",
       "sha256": "cb78f268187b6b96233555b2a0982c1d171cce6bcac9c878cd573164f4f1ab76",
       "reportedScope": null,
@@ -3138,7 +3138,7 @@
     {
       "id": "project_controls",
       "command": "pnpm smoke:project-controls",
-      "scope": "real_local_services_browser_synthetic_account_no_paid_model",
+      "scope": "real_local_services_browser_REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b_account_no_paid_model",
       "file": ".runtime/project-controls-d5f81c33-6473-438b-9ab8-b564c9d3ff60/report.json",
       "sha256": "409ee55a487d59828a18507560431389773bbb74e11d4f6d63b135350489b543",
       "reportedScope": null,
@@ -3187,7 +3187,7 @@
     {
       "id": "workbench",
       "command": "pnpm smoke:workbench",
-      "scope": "real_local_services_browser_synthetic_account_no_paid_model",
+      "scope": "real_local_services_browser_REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b_account_no_paid_model",
       "file": ".runtime/workbench-e9811f69-3052-4d34-ac58-7951e3c24f05/report.json",
       "sha256": "e17e53ece09e05949dc4d67359d19150120336e7f38d0e5a2f723d7ffff2dece",
       "reportedScope": null,
@@ -3417,13 +3417,13 @@
       "manifest": "output/video/gongxu-zhiban-demo-v3-draft-20261101-073052.json",
       "manifestSha256": "c3d0e72b65a093fc0cee82c723982fc8ceae704fde9e183d3295975571c2e562",
       "pages": null,
-      "scope": "earlier_version_synthetic_db_embedding_chat_fixture_tts_draft_not_final_submission"
+      "scope": "earlier_version_REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b_db_embedding_chat_fixture_tts_draft_not_final_submission"
     }
   ],
   "notRun": [
     {
       "name": "paid_chat_quality_comparison",
-      "reason": "No scoped model/call/cost and synthetic transfer authorization"
+      "reason": "No scoped model/call/cost and REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b transfer authorization"
     },
     {
       "name": "real_classroom_capacity_or_student_teacher_study",

@@ -245,7 +245,7 @@
       "path": ".runtime/verification-v4-f981d8e2-71df-4b28-8bf9-f5c089786161/report.json",
       "sha256": "8db4de1150b6279449e7e64581b5d313fcf599d7014ecd450fc7f519acf48ffc",
       "status": "passed",
-      "scope": "explicit_real_local_data_synthetic_accounts_and_model_fixtures",
+      "scope": "explicit_real_local_data_REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b_accounts_and_model_fixtures",
       "steps": [
         {
           "id": "api-build",
@@ -497,7 +497,7 @@
           "log": "agent-recovery.log"
         }
       ],
-      "isolation": "separate freshly created synthetic database; primary not used as fallback"
+      "isolation": "separate freshly created REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b database; primary not used as fallback"
     },
     "browser": {
       "path": ".runtime/verification-v4-35acd5be-cf9e-4965-a76a-75f863630ac8/report.json",
@@ -616,7 +616,7 @@
       "path": ".runtime/teaching-local-7171c363-4366-4ca6-b51d-79f3afec2ea7/report.json",
       "sha256": "471028363a346165890f0d854198a9409e6a835021070456d76de68dc2cc2599",
       "status": "passed",
-      "scope": "isolated_real_database_real_http_synthetic_accounts",
+      "scope": "isolated_real_database_real_http_REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b_accounts",
       "steps": [
         {
           "name": "registration_cannot_self_elevate_and_roles_are_rechecked",
@@ -710,7 +710,7 @@
       "path": ".runtime/saved-review-v6-9a89e770-d167-49ca-85fd-8e978a64cfc3/report.json",
       "sha256": "7d16802de9171b9120923af37610a742c1cb79ec4a96485618e8b0b8a5060633",
       "status": "passed",
-      "scope": "saved_synthetic_real_responses_hash_and_offline_browser_no_new_calls",
+      "scope": "saved_REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b_real_responses_hash_and_offline_browser_no_new_calls",
       "steps": []
     }
   },

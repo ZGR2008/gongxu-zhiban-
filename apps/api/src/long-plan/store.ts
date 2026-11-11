@@ -1,5 +1,5 @@
 import type {Pool,PoolClient} from 'pg';
-import {defaultScheme,hash,inspectScheme,inspectMerge,buildMerge,type Scheme,type Merge,type SegmentOutput,PROMPT_VERSION} from './domain.js';
+import {defaultScheme,hash,inspectScheme,inspectMerge,buildMerge,parseSegmentOutput,type Scheme,type Merge,type SegmentOutput,PROMPT_VERSION} from './domain.js';
 import type {AiConfig} from '../ai/model.js';
 import {requirementItems} from '../trace/domain.js';
 export class PlanningError extends Error {constructor(public code:string,public status=409){super(code);}}
@@ -10,6 +10,18 @@ export type Job={id:string;owner_id:string;project_id:string;requirement_version
 export type Part={job_id:string;segment_key:string;position:number;start_offset:number;end_offset:number;source_hash:string;status:string;attempts:number;result:SegmentOutput|null;result_origin:string|null;error_code:string|null};
 export type Attempt={id:string;segment_key:string;attempt_no:number;status:string;request_snapshot:{messages:unknown[];sources:Source[];retrieval:string};raw_output:string|null;usage:unknown;finish_reason:string|null;error_code:string|null};
 export type Source={id:string;documentId:string;documentName:string;page:number|null;content:string};
+/** Old persisted successes are data, not a waiver of the current validator.
+ * Fail without changing them; correction must use the audited human endpoint. */
+export function assertCompletedParts(job:Job,parts:Part[],attempts:Attempt[]){
+ const segments=inspectScheme(job.project_id,job.source_content,job.scheme_snapshot).segments;
+ for(const part of parts.filter(p=>p.status==='succeeded')){
+  const segment=segments.find(s=>s.key===part.segment_key);
+  try{
+   if(!segment||!part.result)throw Error('missing_result');
+   parseSegmentOutput(JSON.stringify(part.result),segment,job.scheme_snapshot,attempts.filter(a=>a.segment_key===part.segment_key).flatMap(a=>a.request_snapshot.sources.map(s=>s.id)));
+  }catch{throw new PlanningError('part_result_invalid',422);}
+ }
+}
 export async function transaction<T>(pool:Pool,work:(db:PoolClient)=>Promise<T>){const db=await pool.connect();try{await db.query('BEGIN');const result=await work(db);await db.query('COMMIT');return result;}catch(e){await db.query('ROLLBACK');throw e;}finally{db.release();}}
 export async function lockProject(db:PoolClient,owner:string,project:string,version?:string){
  if(!(await db.query('SELECT id FROM projects WHERE id=$1 AND owner_id=$2 FOR UPDATE',[project,owner])).rowCount)throw new PlanningError('not_found',404);
@@ -75,6 +87,7 @@ export class LongPlanStore {
  async assemble(db:PoolClient,job:Job){
   const parts=(await db.query<Part>('SELECT * FROM long_plan_parts WHERE job_id=$1 ORDER BY position',[job.id])).rows;
   if(parts.some(p=>p.status!=='succeeded'||!p.result))throw new PlanningError('parts_not_complete');
+  assertCompletedParts(job,parts,(await db.query<Attempt>('SELECT * FROM long_plan_attempts WHERE job_id=$1',[job.id])).rows);
   const merge=buildMerge(parts.map(p=>({segmentKey:p.segment_key,output:p.result!})));
   await db.query("UPDATE long_plan_jobs SET status='awaiting_review',merge_draft=$2::jsonb,merge_review=NULL,revision=revision+1,error_code=NULL,lease_token=NULL,lease_expires_at=NULL,updated_at=now() WHERE id=$1",[job.id,JSON.stringify(merge)]);
   await event(db,job.id,'merge_assembled',null,{draft:merge,scope:'candidate_only_not_semantic_verification'});
@@ -91,6 +104,7 @@ export class LongPlanStore {
   if(job.status!=='awaiting_review'||!job.merge_draft||review?.revision!==revision||review.draftHash!==hash(JSON.stringify(job.merge_draft)))throw new PlanningError('merge_review_required');
   const parts=(await db.query<Part>('SELECT * FROM long_plan_parts WHERE job_id=$1 ORDER BY position',[id])).rows;
   const attempts=(await db.query<Attempt>('SELECT * FROM long_plan_attempts WHERE job_id=$1',[id])).rows;
+  assertCompletedParts(job,parts,attempts);
   const audit=inspectMerge(job.scheme_snapshot,job.merge_draft,attempts.flatMap(a=>a.request_snapshot.sources.map(s=>s.id)),parts.flatMap(p=>p.result?.unresolved??[]));
   if(!parts.length||parts.some(p=>p.status!=='succeeded')||audit.errors.length||audit.warnings.some(w=>!review.resolutions?.some(r=>r.key===w.key&&r.note.trim().length>=8)))throw new PlanningError('merge_review_required');
   const itemList=requirementItems(project,job.requirement_version_id,job.source_content),byCondition=new Map(job.scheme_snapshot.conditions.map(c=>[c.key,c]));

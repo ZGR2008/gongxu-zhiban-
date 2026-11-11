@@ -19,7 +19,7 @@ import argparse
 
 parser=argparse.ArgumentParser(description='Create a local sanitized source review copy, never an external upload.')
 parser.add_argument('--source',type=Path,default=Path(__file__).resolve().parents[1],help='Source root; optional for isolated export regression fixtures.')
-parser.add_argument('--version',choices=['v4','v5','v6','v7','v8','v9'],default='v4',help='Explicit edition; old export commands keep their version.')
+parser.add_argument('--version',choices=['v4','v5','v6','v7','v8','v9','v10'],default='v4',help='Explicit edition; old export commands keep their version.')
 args=parser.parse_args()
 ROOT = args.source.resolve()
 STAMP = datetime.now().strftime('%Y%m%d-%H%M%S-%f')
@@ -38,6 +38,11 @@ DOCS.update({'CONTINUATION-V6.md','TEACHING-AND-PERMISSIONS-V6.md','KNOWLEDGE-CU
 DOCS.update({'CONTINUATION-V7.md','TEACHING-VERSIONS-V7.md','AI-REVIEW-PACK-V7.md','DEMO-SCRIPT-V7.md','DEMO-OPERATIONS-V7.md','FINAL-REVIEW-V7.md','CURRICULUM-REVIEW-V7.md'})
 DOCS.update({'CONTINUATION-V8.md','COMPLIANCE-CHECKLIST-V8.md','COMPLIANCE-SOURCES-V8.md','ORIGINALITY-AND-LICENSE-V8.md','COMMITTEE-QUESTIONS-V8.md','DEMO-SCRIPT-V8.md','DEMO-OPERATIONS-V8.md','VIDEO-ACCEPTANCE-V8.md','REVIEWER-ACCESS-V8.md','FINAL-REVIEW-V8.md'})
 DOCS.update({'CONTINUATION-V9.md','COMPLIANCE-CHECKLIST-V9.md','COMPLIANCE-SOURCES-V9.md','COMMITTEE-QUESTIONS-V9.md','DEMO-SCRIPT-V9.md','DEMO-OPERATIONS-V9.md','VIDEO-ACCEPTANCE-V9.md','REVIEWER-ACCESS-V9.md','FINAL-REVIEW-V9.md','TEAM-EXECUTION-V9.md','CONTRIBUTION-RECORD-V9.md','PENDING-INFORMATION-V9.md'})
+DOCS.update({'CONTINUATION-V10.md','COMPLIANCE-CHECKLIST-V10.md','BACKEND-SCOPE-QUESTION-V10.md','DEMO-SCRIPT-V10.md','DEMO-OPERATIONS-V10.md','VIDEO-ACCEPTANCE-V10.md','FINAL-REVIEW-V10.md','TEAM-WALKTHROUGH-V10.md','CONTRIBUTION-RECORD-V10.md','OFFLINE-QUALITY-REVIEW-V10.md','LONG-PLAN-DIAGNOSIS-V10.md','HISTORY-SECURITY-V10.md'})
+DOCS.add('AI-LONG-PLAN-V10.md')
+DOCS.add('AI-QUALITY-PRELIMINARY-V10.md')
+DOCS.add('PENDING-INFORMATION-V10.md')
+DOCS.add('STARTUP-REPAIR-2026-11-03.md')
 CURATED_SCREENSHOTS={'docs/screenshots/review-v2/trace-desktop.png','docs/screenshots/review-v3/task-test-chain-desktop.png','docs/screenshots/review-v3/documents-desktop.png','docs/screenshots/review-v3/review-source-desktop.png','docs/screenshots/review-v3/growth-current-desktop.png','docs/screenshots/review-v3/workspace-desktop.png'}
 CURATED_SCREENSHOTS.update('docs/screenshots/review-v4/'+name+'.png' for name in ['task-test-chain-desktop','documents-desktop','review-source-desktop','growth-current-desktop','workspace-desktop','requirement-segments-desktop','execution-conflict-desktop'])
 CURATED_SCREENSHOTS.add('docs/screenshots/review-v5/adopted-desktop.png')
@@ -53,6 +58,9 @@ CURATED_SCREENSHOTS.update('docs/screenshots/review-v7/'+name+'.png' for name in
 JSON_FILES.update({'docs/verification/review-v7.json','docs/verification/ai-review-pack-v7.json'})
 JSON_FILES.update({'docs/verification/review-v8.json','docs/verification/licenses-v8.json'})
 JSON_FILES.update({'docs/verification/review-v9.json','docs/verification/history-v9.json','docs/verification/licenses-v9.json'})
+JSON_FILES.update({'docs/verification/review-v10.json','docs/verification/history-v10.json','evaluation/fixtures/long-plan-v7-saved-responses.json'})
+JSON_FILES.add('docs/verification/ai-long-plan-v10.json')
+JSON_FILES.add('evaluation/fixtures/long-plan-v10-merge-candidate.json')
 FORBIDDEN = {'.log','.tsbuildinfo','.pem','.key','.p12','.pfx','.jks','.keystore','.sqlite','.sqlite3','.db','.dump','.backup','.bak','.zip','.7z','.mp4','.webm','.onnx','.bin'}
 excluded = []
 redactions = []
@@ -64,7 +72,7 @@ credential_name=r'[A-Za-z_]*(?:api[_-]?key|access[_-]?token|refresh[_-]?token|to
 # inside a string such as 'AI_API_KEY=' + value + '\n'.
 credential_field=f"""(?:"{credential_name}"|'{credential_name}'|(?<!["']){credential_name})"""
 literal=re.compile(r'''(?i)((?<![\w-])'''+credential_field+r'''\s*[:=]\s*)(["'])([^"'\r\n]+)(\2)''')
-safe_fixture = re.compile(r'(?i)^(?:test(?:ing)?(?:[-_ ].*)?|fixture(?:[-_ ].*)?|synthetic[-_].*|controlled[-_].*|review[-_].*|<[^>]+>|change_me.*|your[-_].*|not[-_]a[-_]real.*|example.*)$')
+safe_fixture = re.compile(r'(?i)^(?:test(?:ing)?(?:[-_ ].*)?|fixture(?:[-_ ].*)?|REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b[-_].*|controlled[-_].*|review[-_].*|<[^>]+>|change_me.*|your[-_].*|not[-_]a[-_]real.*|example.*)$')
 db_url = re.compile(r'postgres(?:ql)?://[^\s\"\'`<>]+')
 private_block = re.compile(r'-----BEGIN [A-Z ]*PRIVATE KEY-----[\s\S]+?-----END [A-Z ]*PRIVATE KEY-----')
 local_user_path = re.compile(r'(?i)[A-Z]:[\\/]+Users[\\/]+[^\\/\s\"\'`<>]+')
@@ -143,9 +151,11 @@ def clean_pdf_fixture(data):
 def candidate(relative):
     parts=Path(relative).parts
     if len(parts)==1:return relative in ROOT_FILES
-    if parts[0] not in {'apps','scripts','docs','evaluation','packages','knowledge'}:return False
+    if parts[0] not in {'apps','scripts','docs','evaluation','packages','knowledge','demo'}:return False
+    if parts[0]=='demo':return relative in {'demo/recording-kit-v1.mjs'}
     if parts[0]=='knowledge':return len(parts)==3 and parts[1]=='teaching-v6' and Path(relative).suffix=='.mjs'
     if parts[0]=='docs':
+        if relative in {'docs/verification/review-v10.json','docs/verification/history-v10.json','docs/verification/ai-long-plan-v10.json'}:return True
         if relative in {'docs/verification/review-v9.json','docs/verification/history-v9.json','docs/verification/licenses-v9.json'}:return True
         if relative in {'docs/verification/review-v8.json','docs/verification/licenses-v8.json'}:return True
         if relative in {'docs/verification/review-v7.json','docs/verification/ai-review-pack-v7.json','docs/verification/review-v5.json','docs/verification/review-v6.json','docs/verification/knowledge-v6.json'}:return True
@@ -157,7 +167,7 @@ for current, directories, names in os.walk(ROOT,followlinks=False):
     parent=Path(current)
     for name in list(directories):
         path=parent/name;relative=path.relative_to(ROOT).as_posix()
-        if name in SKIP_DIRS or path.is_symlink() or not path.resolve().is_relative_to(ROOT) or (parent==ROOT and name not in {'apps','scripts','docs','evaluation','packages','knowledge'}):
+        if name in SKIP_DIRS or path.is_symlink() or not path.resolve().is_relative_to(ROOT) or (parent==ROOT and name not in {'apps','scripts','docs','evaluation','packages','knowledge','demo'}):
             directories.remove(name);skip(relative+'/', 'dependencies_generated_data_or_unreviewed_directory')
     for name in sorted(names):
         source=parent/name;relative=source.relative_to(ROOT).as_posix()
@@ -178,7 +188,8 @@ for current, directories, names in os.walk(ROOT,followlinks=False):
             # Ordinary source is scanned, not executed. Public third-party notices keep attribution.
             if source.suffix=='.md' and 'THIRD' not in name.upper() and 'LICENSE' not in name.upper() and re.search(r'[\w.+-]+@(?!example\.(?:test|com|org|invalid)\b)[\w.-]+\.[A-Za-z]{2,}',text):
                 skip(relative,'unclassified_email_in_document');continue
-            destination.write_text(text,encoding='utf-8',newline='\n')
+            preserve_bom = source.suffix.lower()=='.ps1' and source.read_bytes().startswith(b'\xef\xbb\xbf')
+            destination.write_text(text,encoding='utf-8-sig' if preserve_bom else 'utf-8',newline='\n')
         elif relative=='apps/api/test-data/minimal.pdf':
             destination.write_bytes(clean_pdf_fixture(source.read_bytes()));redactions.append({'path':relative,'rules':{'pdf_metadata_removed':1}})
         elif source.suffix.lower()=='.png' and (relative=='apps/web/src/components/art/nebula-cache.png' or relative in CURATED_SCREENSHOTS):
@@ -225,7 +236,7 @@ for entry in files:
         text=path.read_text(encoding='utf-8')
         if provider.search(text) or private_block.search(text):raise RuntimeError('Sensitive pattern remains in sanitized copy; no value printed')
 
-manifest={'createdAt':datetime.now(timezone.utc).isoformat(),'scope':'sanitized_source_review_not_contest_submission','originalProjectModified':False,'realEnvironmentRead':False,'files':files,'excluded':excluded,'redactions':redactions,'limitations':['Pattern scanning cannot prove absence of every unknown secret.','Historical screenshots and reports were excluded unless explicitly generated from this round synthetic data.','Runtime models and dependencies must be installed separately.','Compose credentials are review-only local placeholders.']}
+manifest={'createdAt':datetime.now(timezone.utc).isoformat(),'scope':'sanitized_source_review_not_contest_submission','originalProjectModified':False,'realEnvironmentRead':False,'files':files,'excluded':excluded,'redactions':redactions,'limitations':['Pattern scanning cannot prove absence of every unknown secret.','Historical screenshots and reports were excluded unless explicitly generated from this round REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b data.','Runtime models and dependencies must be installed separately.','Compose credentials are review-only local placeholders.']}
 (STAGE/'SOURCE-PACKAGE-MANIFEST.json').write_text(json.dumps(manifest,ensure_ascii=False,indent=2),encoding='utf-8')
 archive=EXPORT/('gongxu-zhiban-review-'+args.version+'.zip')
 with zipfile.ZipFile(archive,'x',zipfile.ZIP_DEFLATED,compresslevel=9) as bundle:

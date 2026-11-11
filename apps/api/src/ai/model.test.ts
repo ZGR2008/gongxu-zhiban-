@@ -14,8 +14,8 @@ const auth = { authorization: `Bearer ${'a'.repeat(64)}` };
 test('AI config is explicit and validates complete configuration', () => {
   assert.equal(loadAiConfig({}), undefined);
   assert.throws(() => loadAiConfig({ AI_MODEL: 'x' }), /configured together/);
-  assert.throws(() => loadAiConfig({ AI_MODEL: 'x', AI_API_KEY: 'x', AI_BASE_URL: 'file:///etc' }), /HTTP/);
-  assert.equal(loadAiConfig({ AI_MODEL: 'm', AI_API_KEY: 'k', AI_BASE_URL: 'https://example.test/v1/' })?.baseUrl, 'https://example.test/v1');
+  assert.throws(() => loadAiConfig({ AI_MODEL: 'x', AI_API_KEY: 'X', AI_BASE_URL: 'file:///etc' }), /HTTP/);
+  assert.equal(loadAiConfig({ AI_MODEL: 'm', AI_API_KEY: 'X', AI_BASE_URL: 'https://example.test/v1/' })?.baseUrl, 'https://example.test/v1');
 });
 
 test('chat sends configured model and accepts only a genuine valid response', async () => {

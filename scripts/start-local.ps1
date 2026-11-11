@@ -10,6 +10,11 @@ $workspaceRoot = Split-Path $projectRoot -Parent
 $runtimeRoot = Join-Path $projectRoot '.runtime\services'
 New-Item -ItemType Directory -Path $runtimeRoot -Force | Out-Null
 
+function Write-StartupStage([string]$Stage) {
+    # Stage names are fixed by this script; no child output or configuration is copied.
+    Add-Content -LiteralPath (Join-Path $runtimeRoot 'startup-status.log') -Value "$([DateTime]::UtcNow.ToString('o')) $Stage" -Encoding UTF8
+}
+
 $nodeCommand = Get-Command node -ErrorAction SilentlyContinue
 $pnpmCommand = Get-Command pnpm -ErrorAction SilentlyContinue
 if (-not $nodeCommand -or -not $pnpmCommand) {
@@ -27,6 +32,7 @@ if ($Database -eq 'auto') { $Database = if (Test-Path -LiteralPath $nativeBootst
 
 Push-Location $projectRoot
 try {
+    Write-StartupStage 'checking_database'
     if ($Database -eq 'native') {
         if (-not (Test-Path -LiteralPath $nativeBootstrap)) { throw 'Native PostgreSQL bootstrap is not installed in this workspace. Use Docker or an external PostgreSQL server.' }
         & $nodeCommand.Source $nativeBootstrap
@@ -38,9 +44,11 @@ try {
         & $dockerExe compose up -d
         if ($LASTEXITCODE -ne 0) { throw 'Docker database startup failed. Existing data was preserved.' }
     }
+    Write-StartupStage 'checking_migrations'
     & $pnpmCommand.Source --filter '@gongxu/api' db:migrate
     if ($LASTEXITCODE -ne 0) { throw 'Database migrations failed; application startup stopped.' }
     if ($Build -or -not (Test-Path -LiteralPath (Join-Path $projectRoot 'apps\embedding\dist\server.js')) -or -not (Test-Path -LiteralPath (Join-Path $projectRoot 'apps\api\dist\server.js'))) {
+        Write-StartupStage 'building'
         & $pnpmCommand.Source build
         if ($LASTEXITCODE -ne 0) { throw 'Build failed; application startup stopped.' }
     }
@@ -83,6 +91,7 @@ try {
         Write-Output "$Name started; readiness has not yet been confirmed."
     }
 
+    Write-StartupStage 'starting_services'
     Start-ProjectService 'embedding' 3010 (Join-Path $projectRoot 'apps\embedding') 'dist/server.js'
     Start-ProjectService 'api' 3001 (Join-Path $projectRoot 'apps\api') 'dist/server.js'
     Start-ProjectService 'web' 5173 (Join-Path $projectRoot 'apps\web') 'node_modules/vite/bin/vite.js --host 127.0.0.1 --port 5173 --strictPort'
@@ -109,9 +118,14 @@ try {
         }
         return $false
     }
+    Write-StartupStage 'waiting_readiness'
     if (-not (Wait-Service 'http://127.0.0.1:3001/ready' 'ready')) { throw 'API/database readiness failed. Check the local service logs.' }
     if (-not (Wait-Service 'http://127.0.0.1:3010/ready' 'ready')) { Write-Warning 'Embedding is not ready. Other project features remain available; knowledge indexing needs the local model.' }
     if (-not (Wait-Service -Uri 'http://127.0.0.1:5173' -HttpOnly -TimeoutSeconds 20)) { throw 'Frontend readiness failed after waiting up to 20 seconds. Check the local service logs.' }
+    Write-StartupStage 'ready'
     Write-Output 'Ready: http://127.0.0.1:5173'
     Write-Output 'Model credentials are read only by the API. This startup check does not make a paid AI request.'
+} catch {
+    Write-StartupStage 'failed'
+    throw
 } finally { Pop-Location }

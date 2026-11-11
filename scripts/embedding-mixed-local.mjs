@@ -1,4 +1,4 @@
-// Four fresh synthetic accounts; real loopback HTTP, PostgreSQL and embeddings.
+// Four fresh REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b accounts; real loopback HTTP, PostgreSQL and embeddings.
 // No existing business records are touched. A fixed chat fixture is used by Agent.
 import {createRequire} from 'node:module';
 import {randomBytes,randomUUID} from 'node:crypto';
@@ -40,7 +40,7 @@ await registerAgentRoutes(app,store,pool,{baseUrl:'https://example.invalid',apiK
  return JSON.stringify({tasks:[{key:'t1',stage:'验证',title:'混合并发合成任务',description:'核对当前账号资料中的完整原文，不执行用户代码。',deliverable:'人工检查权限、完整片段与失败恢复，记录实际结果。',dependsOn:[],citations:evidence.length?[evidence[0].id]:[],requirementIds:keys}]});
 }});
 const directory=new URL(`../.runtime/embedding-mixed-local-${randomUUID()}/`,import.meta.url);await mkdir(directory,{recursive:true});
-const report={scope:'real_loopback_http_postgresql_embeddings_four_synthetic_accounts',realChatModel:false,realStudentUsers:false,productionConfigChanged:false,checks:[],operations:[],observations:{queued:false,queuedCancellation:false,states:[],ownerActivityIsolation:false},startedAt:new Date().toISOString()};
+const report={scope:'real_loopback_http_postgresql_embeddings_four_REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b_accounts',realChatModel:false,realStudentUsers:false,productionConfigChanged:false,checks:[],operations:[],observations:{queued:false,queuedCancellation:false,states:[],ownerActivityIsolation:false},startedAt:new Date().toISOString()};
 let address,stage='setup',polling=false,pollTask,requests=[];
 const observedStates=new Set(),observedIds=identities.map(()=>new Set());
 async function call(identity,method,path,body,signal){
@@ -63,7 +63,7 @@ try{
  }
  for(const [index,identity] of identities.entries()){
   const seed=await saveText(pool,identity.id,'已索引的合成审批规范',text);await indexDocument(pool,identity.id,seed.id,embedding);identity.seedId=seed.id;
-  // About ten bounded chunks; no synthetic delays or provider error injection.
+  // About ten bounded chunks; no REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b delays or provider error injection.
   if(index<3)identity.document=await saveText(pool,identity.id,'待索引的合成并发资料',Array.from({length:120},(_,n)=>`条目${n+1}：${text}`).join('\n'));
  }
  const project=await call(identities[0],'POST','/projects',{name:'并发Agent · 合成验证',description:'仅验证服务排队和来源，不代表学生项目成果'});assert.equal(project.status,201);
@@ -74,7 +74,7 @@ try{
   const mixed=[operation('index_1',identities[0],'POST',`/knowledge/${identities[0].document.id}/index`)];
   // Authentication/database scheduling may reorder HTTP arrivals. Start the
   // competing requests only after observing actual inference in progress;
-  // no provider sleeps or synthetic errors are used to manufacture a queue.
+  // no provider sleeps or REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b errors are used to manufacture a queue.
   let inferenceObserved=false;
   const observationDeadline=performance.now()+5000;
   while(performance.now()<observationDeadline){

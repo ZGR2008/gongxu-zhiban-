@@ -8,7 +8,7 @@ import {sourceProvenance} from '../evaluation/source-provenance.mjs';
 import assert from 'node:assert/strict';
 import {chromium} from 'playwright';
 
-// Local production assets + controlled synthetic API. Never reads config, DB or AI.
+// Local production assets + controlled REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b API. Never reads config, DB or AI.
 const root=fileURLToPath(new URL('../',import.meta.url));
 const label=process.argv.find(arg=>arg.startsWith('--label='))?.slice(8)??'current';
 if(!/^[a-z0-9-]{1,32}$/.test(label))throw Error('Use a short non-sensitive measurement label');

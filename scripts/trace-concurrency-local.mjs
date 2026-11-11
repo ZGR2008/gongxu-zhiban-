@@ -24,7 +24,7 @@ const tracePool={connect:()=>pool.connect(),query:async(sql,values)=>{
 const app=await createApp({projectStore:new PgProjectStore(pool),pool:tracePool,corsOrigin:'http://127.0.0.1:5173'});
 const origin=await app.listen({host:'127.0.0.1',port:0});
 const directory=new URL(`../.runtime/trace-concurrency-local-${randomUUID()}/`,import.meta.url);await mkdir(directory,{recursive:true});
-const report={scope:'real_local_http_and_database_concurrent_trace_initialization',realModel:false,externalCalls:0,syntheticRecords:true,checks:[],startedAt:new Date().toISOString()};
+const report={scope:'real_local_http_and_database_concurrent_trace_initialization',realModel:false,externalCalls:0,REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3bRecords:true,checks:[],startedAt:new Date().toISOString()};
 let stage='setup',owner,foreign,project,first,second,firstTrace;
 async function call(method,path,payload,identity=owner){
  const response=await fetch(new URL(path,origin),{method,headers:{...(identity?{authorization:'Bearer '+identity.token}:{}),...(payload===undefined?{}:{'content-type':'application/json'})},body:payload===undefined?undefined:JSON.stringify(payload),redirect:'error',signal:AbortSignal.timeout(20000)});

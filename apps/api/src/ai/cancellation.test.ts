@@ -1,7 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {completeChat} from './model.js';
-const config={baseUrl:'https://example.invalid',apiKey:'synthetic-fixture',model:'fixture',timeoutMs:15};
+const config={baseUrl:'https://example.invalid',apiKey:'REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b-fixture',model:'fixture',timeoutMs:15};
 
 test('a stalled response body cannot exceed the model deadline',async()=>{
  let stream:ReadableStreamDefaultController<Uint8Array>|undefined;

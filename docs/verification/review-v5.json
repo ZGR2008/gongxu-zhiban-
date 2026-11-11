@@ -598,11 +598,11 @@
       "entries": 7,
       "originalFilesUnchanged": true,
       "sensitivePatternMatches": 0,
-      "scope": "approved_saved_synthetic_model_evidence_only",
+      "scope": "approved_saved_REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b_model_evidence_only",
       "newModelCalls": 0
     },
     "browser": {
-      "scope": "offline_saved_synthetic_responses_browser",
+      "scope": "offline_saved_REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b_responses_browser",
       "samples": 15,
       "expected": 15,
       "pageErrors": 0,

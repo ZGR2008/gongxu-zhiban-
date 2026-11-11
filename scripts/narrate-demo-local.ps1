@@ -26,5 +26,5 @@ try {
     $entries += [pscustomobject]@{ id=$scene.id; textSha256=$textHash; audioSha256=(Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash.ToLowerInvariant() }
     Write-Output ('Narrated: ' + $scene.id)
   }
-  [pscustomobject]@{ scope='local_synthetic_voice_no_cloud'; scenes=$entries } | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath (Join-Path $resolvedOutput 'manifest.json') -Encoding UTF8
+  [pscustomobject]@{ scope='local_REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b_voice_no_cloud'; scenes=$entries } | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath (Join-Path $resolvedOutput 'manifest.json') -Encoding UTF8
 } finally { $speaker.Dispose(); $hasher.Dispose() }

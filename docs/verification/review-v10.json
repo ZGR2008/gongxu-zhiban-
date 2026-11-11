@@ -1,0 +1,772 @@
+{
+  "version": "v10",
+  "checkedAt": "2026-11-02T15:29:33.618534+00:00",
+  "startCommit": "098e581c9c88f7bec260641c5ff453fea462afec",
+  "businessSourceChanged": [
+    "apps/api/src/long-plan/domain.test.ts",
+    "apps/api/src/long-plan/domain.ts",
+    "apps/api/src/long-plan/routes.ts",
+    "apps/api/src/long-plan/store.test.ts",
+    "apps/api/src/long-plan/store.ts",
+    "apps/api/src/long-plan/worker.test.ts",
+    "apps/api/src/long-plan/worker.ts",
+    "apps/web/src/components/LongRequirementPlanning.tsx"
+  ],
+  "changedFiles": [
+    "README.md",
+    "apps/api/src/long-plan/domain.test.ts",
+    "apps/api/src/long-plan/domain.ts",
+    "apps/api/src/long-plan/routes.ts",
+    "apps/api/src/long-plan/store.test.ts",
+    "apps/api/src/long-plan/store.ts",
+    "apps/api/src/long-plan/worker.test.ts",
+    "apps/api/src/long-plan/worker.ts",
+    "apps/web/src/components/LongRequirementPlanning.tsx",
+    "docs/AI-LONG-PLAN-V10.md",
+    "docs/AI-QUALITY-PRELIMINARY-V10.md",
+    "docs/BACKEND-SCOPE-QUESTION-V10.md",
+    "docs/COMPLIANCE-CHECKLIST-V10.md",
+    "docs/CONTEST-ACCEPTANCE-2026-11.md",
+    "docs/CONTINUATION-V10.md",
+    "docs/CONTRIBUTION-RECORD-V10.md",
+    "docs/DEMO-OPERATIONS-V10.md",
+    "docs/DEMO-SCRIPT-V10.md",
+    "docs/FINAL-REVIEW-V10.md",
+    "docs/HISTORY-SECURITY-V10.md",
+    "docs/LONG-PLAN-DIAGNOSIS-V10.md",
+    "docs/OFFLINE-QUALITY-REVIEW-V10.md",
+    "docs/PENDING-INFORMATION-V10.md",
+    "docs/TEAM-WALKTHROUGH-V10.md",
+    "docs/TECHNICAL-MATERIAL.md",
+    "docs/VIDEO-ACCEPTANCE-V10.md",
+    "docs/verification/ai-long-plan-v10.json",
+    "docs/verification/history-v10.json",
+    "docs/verification/review-v10.json",
+    "evaluation/fixtures/long-plan-v10-merge-candidate.json",
+    "evaluation/fixtures/long-plan-v7-saved-responses.json",
+    "evaluation/long-plan-budget-v10.mjs",
+    "scripts/classify-history-v10.py",
+    "scripts/diagnose-long-plan-v10.mjs",
+    "scripts/evaluate-long-plan-live-v10.mjs",
+    "scripts/export-review.py",
+    "scripts/export-review.test.py",
+    "scripts/long-plan-browser-fixture.mjs",
+    "scripts/long-plan-budget-v10.test.mjs",
+    "scripts/long-plan-local.mjs",
+    "scripts/reliability-browser.mjs",
+    "scripts/render-technical-v10.py",
+    "scripts/review-long-plan-v10.mjs",
+    "scripts/verify-candidate-v10.py"
+  ],
+  "verifiedSourceHashes": {
+    "apps/api/src/long-plan/domain.test.ts": "345d667fb49bfe1360160961f893823eccd69cd4901a7dfedef745f84310dc6d",
+    "apps/api/src/long-plan/domain.ts": "ed6d873aaa98fef799e9977a4eff1699b8a1ced6a7fa8634967bcab7aa13f431",
+    "apps/api/src/long-plan/routes.ts": "25c6bf3b06d848bb4c5fa20eceb27db8e56ac011c8d546b746569bd444f5839e",
+    "apps/api/src/long-plan/store.test.ts": "852ddeb5418729467fd32795e1daf86b3e90a716123e76df1e775cb9659eaea8",
+    "apps/api/src/long-plan/store.ts": "72ca0e523e5b4e186b7418152490492ded28fdff7ac410a57a74a95c5b68ec03",
+    "apps/api/src/long-plan/worker.test.ts": "404aa28e80a5236d0338406f4907adaa843a3ccc945e89413780f7886c50b443",
+    "apps/api/src/long-plan/worker.ts": "e2a9ba039bd10ffa94207bc1d445a9af68e50605be4d0189af50175211c007d5",
+    "apps/web/src/components/LongRequirementPlanning.tsx": "6b6067b418d38f4504346375b3b240eefe808b2a70fe46ee5fb3d79f53cdb478",
+    "evaluation/fixtures/long-plan-v10-merge-candidate.json": "d77075a0142f5322c02b3cc4ac923a7d0ab245c352aa9d31eecc64dc88cd82f5",
+    "evaluation/fixtures/long-plan-v7-saved-responses.json": "7530b358f12d20f97a69d10cf8cdb51d62c7087e14b7b9a89a14644bb217b942",
+    "evaluation/long-plan-budget-v10.mjs": "de7c2318e20238b3be5b94373686fefa735dc32af309674c4bdbfdaf5e728290",
+    "scripts/classify-history-v10.py": "c98bd2d5ff82543b89bee7e48d3f04cc19ff2e8e9f97ff9ed94514fa028809ae",
+    "scripts/diagnose-long-plan-v10.mjs": "a62c905aab6f3ee88cc6506f59fcc584df1b08f269826c33a09500aed97620a0",
+    "scripts/evaluate-long-plan-live-v10.mjs": "ea0462b24a8675625b51068a96f5c2865233c8558216acdb61d0d654ccef5a74",
+    "scripts/export-review.py": "c0119d802fb076df2187e13502066cd054781a935a6a72f22715e510c1d35a84",
+    "scripts/export-review.test.py": "70da03535c24c2bac41b82b5803539a43168171117fc1754b482b71cb13f87b3",
+    "scripts/long-plan-browser-fixture.mjs": "e0993af648a4b008e18363b7617d656fd4d2be33b8815bb6039df72b2187b930",
+    "scripts/long-plan-budget-v10.test.mjs": "b64c6822ceb65f3046152a4e435bc4efbcdb76f7e0736b28d11b0930d55839db",
+    "scripts/long-plan-local.mjs": "bf73b3feacf3ff2fa9ebb3b0c1ff4794cf3d6110729f95c64f5a60a05c7f4f20",
+    "scripts/reliability-browser.mjs": "a7d530cd186511aa743ec4383b5f37d3d926cacdebc2b390eb6a20fc5882f4bc",
+    "scripts/review-long-plan-v10.mjs": "6ad13f984794356d6ae4c7f8ee6f01f1ce5d720402ed6c89c4a66f500679a4a6"
+  },
+  "registration": {
+    "edition": "第九届传智杯",
+    "track": "AI WEB 网页开发挑战赛",
+    "group": "pending registration record",
+    "stage": "pending registration record",
+    "receiptVerified": false
+  },
+  "offline": {
+    "command": "pnpm verify",
+    "path": ".runtime/verification-v4-e59fcd70-bdfe-4e3e-b0b8-f7426348ab07/report.json",
+    "sha256": "25076ca37ab81c5df0ba38d96fa0a3e358b26d7f6f9b5b5dcb7cc6d9a8ce0817",
+    "suite": "offline",
+    "startedAt": "2026-11-02T15:10:22.694Z",
+    "commit": "098e581c9c88f7bec260641c5ff453fea462afec",
+    "workingTreeClean": false,
+    "gitStatus": "verified_project_repository",
+    "scope": "local_builds_unit_fixtures_and_protocols_no_model_no_database",
+    "paidModelCalls": 0,
+    "steps": [
+      {
+        "id": "environment-templates",
+        "command": [
+          "node",
+          "scripts/check-env-templates.mjs"
+        ],
+        "cwd": ".",
+        "status": "passed",
+        "startedAt": "2026-11-02T15:10:22.823Z",
+        "exitCode": 0,
+        "elapsedMs": 81,
+        "log": "environment-templates.log"
+      },
+      {
+        "id": "api-types",
+        "command": [
+          "node",
+          "node_modules/typescript/bin/tsc",
+          "--noEmit",
+          "-p",
+          "tsconfig.json"
+        ],
+        "cwd": "apps/api",
+        "status": "passed",
+        "startedAt": "2026-11-02T15:10:22.906Z",
+        "exitCode": 0,
+        "elapsedMs": 1760,
+        "log": "api-types.log"
+      },
+      {
+        "id": "embedding-types",
+        "command": [
+          "node",
+          "node_modules/typescript/bin/tsc",
+          "--noEmit",
+          "-p",
+          "tsconfig.json"
+        ],
+        "cwd": "apps/embedding",
+        "status": "passed",
+        "startedAt": "2026-11-02T15:10:24.667Z",
+        "exitCode": 0,
+        "elapsedMs": 1065,
+        "log": "embedding-types.log"
+      },
+      {
+        "id": "web-types",
+        "command": [
+          "node",
+          "node_modules/typescript/bin/tsc",
+          "--noEmit",
+          "-p",
+          "tsconfig.json"
+        ],
+        "cwd": "apps/web",
+        "status": "passed",
+        "startedAt": "2026-11-02T15:10:25.735Z",
+        "exitCode": 0,
+        "elapsedMs": 2685,
+        "log": "web-types.log"
+      },
+      {
+        "id": "api-build",
+        "command": [
+          "node",
+          "node_modules/typescript/bin/tsc",
+          "-p",
+          "tsconfig.json"
+        ],
+        "cwd": "apps/api",
+        "status": "passed",
+        "startedAt": "2026-11-02T15:10:28.421Z",
+        "exitCode": 0,
+        "elapsedMs": 1716,
+        "log": "api-build.log"
+      },
+      {
+        "id": "embedding-build",
+        "command": [
+          "node",
+          "node_modules/typescript/bin/tsc",
+          "-p",
+          "tsconfig.json"
+        ],
+        "cwd": "apps/embedding",
+        "status": "passed",
+        "startedAt": "2026-11-02T15:10:30.137Z",
+        "exitCode": 0,
+        "elapsedMs": 1068,
+        "log": "embedding-build.log"
+      },
+      {
+        "id": "web-build",
+        "command": [
+          "node",
+          "node_modules/vite/bin/vite.js",
+          "build"
+        ],
+        "cwd": "apps/web",
+        "status": "passed",
+        "startedAt": "2026-11-02T15:10:31.207Z",
+        "exitCode": 0,
+        "elapsedMs": 2469,
+        "log": "web-build.log"
+      },
+      {
+        "id": "api-test-build",
+        "command": [
+          "node",
+          "node_modules/typescript/bin/tsc",
+          "-p",
+          "tsconfig.test.json"
+        ],
+        "cwd": "apps/api",
+        "status": "passed",
+        "startedAt": "2026-11-02T15:10:33.677Z",
+        "exitCode": 0,
+        "elapsedMs": 1989,
+        "log": "api-test-build.log"
+      },
+      {
+        "id": "embedding-test-build",
+        "command": [
+          "node",
+          "node_modules/typescript/bin/tsc",
+          "-p",
+          "tsconfig.test.json"
+        ],
+        "cwd": "apps/embedding",
+        "status": "passed",
+        "startedAt": "2026-11-02T15:10:35.668Z",
+        "exitCode": 0,
+        "elapsedMs": 1075,
+        "log": "embedding-test-build.log"
+      },
+      {
+        "id": "api-unit",
+        "command": [
+          "node",
+          "--test",
+          "dist/**/*.test.js"
+        ],
+        "cwd": "apps/api",
+        "status": "passed",
+        "startedAt": "2026-11-02T15:10:36.743Z",
+        "exitCode": 0,
+        "elapsedMs": 1531,
+        "log": "api-unit.log"
+      },
+      {
+        "id": "embedding-unit",
+        "command": [
+          "node",
+          "--test",
+          "dist/**/*.test.js"
+        ],
+        "cwd": "apps/embedding",
+        "status": "passed",
+        "startedAt": "2026-11-02T15:10:38.276Z",
+        "exitCode": 0,
+        "elapsedMs": 386,
+        "log": "embedding-unit.log"
+      },
+      {
+        "id": "root-script-unit",
+        "command": [
+          "node",
+          "--test",
+          "scripts/evaluation-report.test.mjs",
+          "scripts/evidence-state.test.mjs",
+          "scripts/historical-source.test.mjs",
+          "scripts/human-review-pack.test.mjs",
+          "scripts/live-evaluation.test.mjs",
+          "scripts/live-evidence.test.mjs",
+          "scripts/long-business-cases.test.mjs",
+          "scripts/long-plan-budget-v10.test.mjs",
+          "scripts/quality-budget.test.mjs",
+          "scripts/request-transport.test.mjs",
+          "scripts/retrieval-evaluation.test.mjs",
+          "scripts/review-package.test.mjs",
+          "scripts/source-provenance.test.mjs",
+          "scripts/startup-readiness.test.mjs",
+          "scripts/teaching-curriculum.test.mjs",
+          "scripts/teaching-quality.test.mjs",
+          "scripts/trace-next-action.test.mjs",
+          "scripts/ui-models.test.mjs",
+          "scripts/verify.test.mjs",
+          "scripts/workbench-models.test.mjs"
+        ],
+        "cwd": ".",
+        "status": "passed",
+        "startedAt": "2026-11-02T15:10:38.663Z",
+        "exitCode": 0,
+        "elapsedMs": 12456,
+        "log": "root-script-unit.log"
+      },
+      {
+        "id": "python-package-regression",
+        "command": [
+          "python",
+          "scripts/export-review.test.py"
+        ],
+        "cwd": ".",
+        "status": "passed",
+        "startedAt": "2026-11-02T15:10:51.119Z",
+        "exitCode": 0,
+        "elapsedMs": 825,
+        "log": "python-package-regression.log"
+      },
+      {
+        "id": "offline-evaluation",
+        "command": [
+          "node",
+          "scripts/evaluate-offline.mjs"
+        ],
+        "cwd": ".",
+        "status": "passed",
+        "startedAt": "2026-11-02T15:10:51.945Z",
+        "exitCode": 0,
+        "elapsedMs": 861,
+        "log": "offline-evaluation.log"
+      },
+      {
+        "id": "evaluation-preparation",
+        "command": [
+          "node",
+          "scripts/evaluate-prepare.mjs"
+        ],
+        "cwd": ".",
+        "status": "passed",
+        "startedAt": "2026-11-02T15:10:52.807Z",
+        "exitCode": 0,
+        "elapsedMs": 485,
+        "log": "evaluation-preparation.log"
+      }
+    ],
+    "finishedAt": "2026-11-02T15:10:53.293Z",
+    "status": "passed"
+  },
+  "offlineCounts": {
+    "api-unit": 144,
+    "embedding-unit": 4,
+    "root-script-unit": 97,
+    "python-export": 13
+  },
+  "longPlanIntegration": {
+    "command": "node scripts/long-plan-local.mjs --browser",
+    "path": ".runtime/long-plan-local-e38c0755-e1d9-4f88-9963-f9e13013a5a4/report.json",
+    "sha256": "0b7fcd1c1682cb8105e4bd93f36ebf882e401493f70595884371fac32895ec5e",
+    "summary": "21项通过，含实际浏览器",
+    "status": "passed",
+    "checks": [
+      {
+        "name": "scheme_full_source_hash_review_conflict_and_history",
+        "status": "passed"
+      },
+      {
+        "name": "double_click_creates_one_job_and_actual_fragment_outputs_not_only_ids",
+        "status": "passed"
+      },
+      {
+        "name": "cross_account_and_unreviewed_adoption_are_rejected",
+        "status": "passed"
+      },
+      {
+        "name": "merge_omission_blocks_review_and_revision_keeps_prior_draft",
+        "status": "passed"
+      },
+      {
+        "name": "human_review_and_concurrent_adoption_create_tasks_once_without_verification",
+        "status": "passed"
+      },
+      {
+        "name": "scheme_edit_invalidates_review_and_old_job_cannot_be_adopted",
+        "status": "passed"
+      },
+      {
+        "name": "requirement_replacement_blocks_old_job_adoption",
+        "status": "passed"
+      },
+      {
+        "name": "fragment_mismatch_has_actionable_code_and_raw_answer_is_retained",
+        "status": "passed"
+      },
+      {
+        "name": "reverse_fragment_mismatch_needs_audited_correction_and_stale_edit_is_rejected",
+        "status": "passed"
+      },
+      {
+        "name": "legacy_v1_explicit_resume_keeps_snapshot_prompt_and_does_not_repeat_completed_part",
+        "status": "passed"
+      },
+      {
+        "name": "persisted_success_and_prior_review_cannot_bypass_current_checks_on_resume_or_adopt",
+        "status": "passed"
+      },
+      {
+        "name": "multiple_invalid_legacy_parts_can_be_corrected_one_at_a_time_without_rollback_or_charge",
+        "status": "passed"
+      },
+      {
+        "name": "timeout_retains_uncertain_attempt_and_never_auto_retries",
+        "status": "passed"
+      },
+      {
+        "name": "retry_requires_charge_ack_and_bounded_backoff_then_preserves_completed_parts",
+        "status": "passed"
+      },
+      {
+        "name": "invalid_output_raw_preserved_and_human_correction_has_distinct_provenance",
+        "status": "passed"
+      },
+      {
+        "name": "cancel_inflight_keeps_unknown_charge_and_is_not_resubmitted",
+        "status": "passed"
+      },
+      {
+        "name": "service_restart_recovers_durable_dispatch_without_automatic_charge",
+        "status": "passed"
+      },
+      {
+        "name": "known_429_is_rejected_not_success_and_attempt_limit_blocks_fourth_charge",
+        "status": "passed"
+      },
+      {
+        "name": "multi_chapter_long_business_source_preserves_all_ranges_and_tail_through_durable_outputs",
+        "status": "passed"
+      },
+      {
+        "name": "bounded_queue_and_separate_workers_do_not_dispatch_duplicate_requests",
+        "status": "passed"
+      },
+      {
+        "name": "actual_desktop_browser_to_isolated_database_generates_reviews_adopts_and_shows_unverified_trace",
+        "status": "passed"
+      }
+    ],
+    "browser": {
+      "engine": "Edge Chromium",
+      "version": "156.0.4314.58",
+      "viewport": "1440x1000",
+      "realDatabase": true,
+      "model": "protocol_fixture",
+      "runtimeErrors": []
+    },
+    "paidModelCalls": 0,
+    "protocolFixtureCalls": 37,
+    "databaseScope": "new isolated REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b database; main database not written"
+  },
+  "controlledBrowser": {
+    "command": "node scripts/reliability-browser.mjs --case=v10_long_plan_saved_result_validation_keeps_correction_input",
+    "path": ".runtime/reliability-ui-44c32db4-b6e8-4ebc-a4c0-c3507adc5ebd/report.json",
+    "sha256": "b4ab50aa71a8c8d2512618e9171f57140c082ccb8024193150b1ff85c9a2c518",
+    "scope": "controlled_browser_responses",
+    "assetMode": "development",
+    "browserEngine": "chromium",
+    "historicalKnowledgeModule": null,
+    "historicalWorkspaceModule": null,
+    "historicalProjectCreationModule": null,
+    "realDatabase": false,
+    "realModel": false,
+    "checks": [
+      {
+        "name": "v10_long_plan_saved_result_validation_keeps_correction_input",
+        "status": "passed"
+      }
+    ],
+    "startedAt": "2026-11-02T14:38:57.307Z",
+    "browserVersion": "156.0.4314.58",
+    "finishedAt": "2026-11-02T14:38:59.271Z"
+  },
+  "mergeLimitControlledBrowser": {
+    "command": "node scripts/reliability-browser.mjs --case=v10_long_plan_86_real_candidates_show_limit_and_preserve_editable_original",
+    "path": ".runtime/reliability-ui-f15c75df-47e6-47b7-b66e-79f1337f16f3/report.json",
+    "sha256": "e5ee285e27905e811d4f04bb2b8c70b945080c50829ede0160893eb8c8727f05",
+    "scope": "controlled_browser_responses",
+    "assetMode": "development",
+    "browserEngine": "chromium",
+    "historicalKnowledgeModule": null,
+    "historicalWorkspaceModule": null,
+    "historicalProjectCreationModule": null,
+    "realDatabase": false,
+    "realModel": false,
+    "checks": [
+      {
+        "name": "v10_long_plan_86_real_candidates_show_limit_and_preserve_editable_original",
+        "status": "passed"
+      }
+    ],
+    "startedAt": "2026-11-02T15:02:32.916Z",
+    "browserVersion": "156.0.4314.58",
+    "finishedAt": "2026-11-02T15:02:34.883Z"
+  },
+  "postVerificationPackageRegression": {
+    "command": "python scripts/export-review.test.py",
+    "log": ".runtime/export-v10-final.log",
+    "sha256": "47e83d2683c13de6aafff18bd1bf54b769277ce1334a153ad57dc4bb82f68fb3",
+    "status": "passed",
+    "tests": 13,
+    "reason": "Explicitly retain reviewed REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b 86-task fixture; unknown JSON files still excluded before read",
+    "redEvidence": ".runtime/export-v10-merge-fixture-red.log"
+  },
+  "offlineReplay": {
+    "command": "node scripts/diagnose-long-plan-v10.mjs",
+    "path": ".runtime/long-plan-diagnosis-v10-c183c3c5-9c0e-4b0d-bf43-30858e6ae6d5/report.json",
+    "sha256": "25909eb8074e0a73a5a0f003857eeaf45d91618a1e86125557681e7e8f449fb8",
+    "savedResponses": 9,
+    "firstEight": "structurally_accepted_not_semantically_verified",
+    "ninth": "rejected_two_bidirectional_mismatches",
+    "paidModelCalls": 0
+  },
+  "historyClassification": {
+    "command": "python scripts/classify-history-v10.py --self-test; python scripts/classify-history-v10.py",
+    "path": "docs/verification/history-v10.json",
+    "sha256": "99d102b4b666fc7de3518f4334c2083454f9b21feda076f4a3387e80a0116690",
+    "candidates": 138,
+    "testOrLocalFixtures": 72,
+    "falsePositives": 66,
+    "possibleRealWithinCandidates": 0,
+    "unreadProtectedPaths": 30,
+    "unreadProtectedObjects": 42,
+    "publicReleaseCleared": false,
+    "selfTests": 10,
+    "protectedPathAssertions": 3
+  },
+  "historyToolExportRegression": {
+    "path": ".runtime/classifier-export-v10-7ce79947-7aa2-4b6c-89c0-36739b1d104a/verification.json",
+    "sha256": "398b901b16c6a5097a68e87c976a7618c10e3816f858aeedfdabb693cdd01aca",
+    "originalAndExtractedSelfTestsPassed": true,
+    "sourceAstUnchangedByExport": true,
+    "historyBodyRescanned": false
+  },
+  "officialSources": {
+    "method": "fresh unauthenticated browser; no storage/cookie access or external uploads",
+    "records": [
+      {
+        "id": "track",
+        "url": "https://www.boxuegu.com/matchTrack/detail/?id=10037",
+        "readAt": "2026-11-02T14:27:33.326Z",
+        "characters": 10317,
+        "sha256": "d1e49e586ddc1729607cb273a2d5832f0a1deaa93f3660aedcb46762996babfd",
+        "sameAsV9": true,
+        "status": "read"
+      },
+      {
+        "id": "notice",
+        "url": "https://www.boxuegu.com/matchNotice/detail/?id=10085",
+        "readAt": "2026-11-02T14:27:35.291Z",
+        "characters": 1432,
+        "sha256": "db523fb9d42a3008da2560aa8762a9665f62a620bf825b5404d12fc82e4bcda9",
+        "sameAsV9": true,
+        "status": "read"
+      },
+      {
+        "id": "preguidance",
+        "url": "https://www.boxuegu.com/matchNotice/detail/?id=10091",
+        "readAt": "2026-11-02T14:27:37.358Z",
+        "characters": 1258,
+        "sha256": "b6a37412a88c06125ae5546148353e6d94b7b08fdcc059055a2016bd7e0a7ca0",
+        "sameAsV9": true,
+        "status": "read"
+      }
+    ]
+  },
+  "realModels": {
+    "historicalV4Calls": 12,
+    "historicalV7Calls": 13,
+    "newCallsThisRound": 13,
+    "v2PromptLiveQuality": "13_structurally_accepted_merge_schema_limit_and_semantic_review_pending",
+    "longPlanCompleteRealValidation": false,
+    "independentHumanReviews": 0,
+    "previousConsumedApprovalUnchanged": true,
+    "actualNewReport": ".runtime/quality-live-v10-afd27e86-a3dc-471b-9409-3022e46c8995/report.json",
+    "actualNewReportSha256": "89b53d131efc134cba7816e6fdf290609eeb851e7488ec5af44d379624734aaa",
+    "completeSourceDispatched": true,
+    "tailDispatched": true,
+    "candidateTasks": 86,
+    "maximumMergeTasks": 80,
+    "adoptions": 0,
+    "automaticRetries": 0,
+    "reservedUSD": 0.2677764,
+    "peakEstimateUSDNotInvoice": 0.0647013,
+    "summary": "docs/verification/ai-long-plan-v10.json",
+    "auditPackage": {
+      "path": "output/gongxu-zhiban-ai-review-v10-444998a5.zip",
+      "bytes": 172682,
+      "sha256": "21913cc5fd78733e364180ddc40521497cc36eec1c6889c5998f466d05e457ed",
+      "humanReviews": 0,
+      "containsOnlySyntheticData": true
+    }
+  },
+  "team": {
+    "futureRoleMappingConfirmed": true,
+    "actualContributionsVerified": false,
+    "namesInSourceReport": false
+  },
+  "pdf": {
+    "status": "rendered_and_all_pages_inspected",
+    "path": "output/pdf/gongxu-zhiban-technical-v10-20261102-231343-006529.pdf",
+    "bytes": 568881,
+    "sha256": "1764fede5908e0b200f214ac15b88bde1459d2c3a31307571e30cd78e2ed7357",
+    "pages": 20,
+    "visualReview": "all_rendered_pages_inspected",
+    "layoutBounds": [
+      {
+        "page": 1,
+        "textCharacters": 414,
+        "outsideSafeBounds": 0,
+        "imagesOutsideSafeBounds": 0
+      },
+      {
+        "page": 2,
+        "textCharacters": 460,
+        "outsideSafeBounds": 0,
+        "imagesOutsideSafeBounds": 0
+      },
+      {
+        "page": 3,
+        "textCharacters": 397,
+        "outsideSafeBounds": 0,
+        "imagesOutsideSafeBounds": 0
+      },
+      {
+        "page": 4,
+        "textCharacters": 436,
+        "outsideSafeBounds": 0,
+        "imagesOutsideSafeBounds": 0
+      },
+      {
+        "page": 5,
+        "textCharacters": 497,
+        "outsideSafeBounds": 0,
+        "imagesOutsideSafeBounds": 0
+      },
+      {
+        "page": 6,
+        "textCharacters": 469,
+        "outsideSafeBounds": 0,
+        "imagesOutsideSafeBounds": 0
+      },
+      {
+        "page": 7,
+        "textCharacters": 423,
+        "outsideSafeBounds": 0,
+        "imagesOutsideSafeBounds": 0
+      },
+      {
+        "page": 8,
+        "textCharacters": 393,
+        "outsideSafeBounds": 0,
+        "imagesOutsideSafeBounds": 0
+      },
+      {
+        "page": 9,
+        "textCharacters": 422,
+        "outsideSafeBounds": 0,
+        "imagesOutsideSafeBounds": 0
+      },
+      {
+        "page": 10,
+        "textCharacters": 498,
+        "outsideSafeBounds": 0,
+        "imagesOutsideSafeBounds": 0
+      },
+      {
+        "page": 11,
+        "textCharacters": 396,
+        "outsideSafeBounds": 0,
+        "imagesOutsideSafeBounds": 0
+      },
+      {
+        "page": 12,
+        "textCharacters": 367,
+        "outsideSafeBounds": 0,
+        "imagesOutsideSafeBounds": 0
+      },
+      {
+        "page": 13,
+        "textCharacters": 388,
+        "outsideSafeBounds": 0,
+        "imagesOutsideSafeBounds": 0
+      },
+      {
+        "page": 14,
+        "textCharacters": 284,
+        "outsideSafeBounds": 0,
+        "imagesOutsideSafeBounds": 0
+      },
+      {
+        "page": 15,
+        "textCharacters": 288,
+        "outsideSafeBounds": 0,
+        "imagesOutsideSafeBounds": 0
+      },
+      {
+        "page": 16,
+        "textCharacters": 622,
+        "outsideSafeBounds": 0,
+        "imagesOutsideSafeBounds": 0
+      },
+      {
+        "page": 17,
+        "textCharacters": 595,
+        "outsideSafeBounds": 0,
+        "imagesOutsideSafeBounds": 0
+      },
+      {
+        "page": 18,
+        "textCharacters": 686,
+        "outsideSafeBounds": 0,
+        "imagesOutsideSafeBounds": 0
+      },
+      {
+        "page": 19,
+        "textCharacters": 548,
+        "outsideSafeBounds": 0,
+        "imagesOutsideSafeBounds": 0
+      },
+      {
+        "page": 20,
+        "textCharacters": 695,
+        "outsideSafeBounds": 0,
+        "imagesOutsideSafeBounds": 0
+      }
+    ],
+    "leadingPunctuationIssues": 0,
+    "realModelCallsThisRound": 13,
+    "teamFutureRolesConfirmed": true,
+    "actualContributionsVerified": false
+  },
+  "package": {
+    "status": "see_independent_candidate_verification_and_delivery_record",
+    "reason": "Archive integrity and extracted-copy execution are recorded outside the archive to avoid a self-referential hash. No submission claimed.",
+    "reportLocation": "output/delivery-v10-*.json and export-directory/candidate-verification.json",
+    "historyIncluded": false,
+    "newMachineInstall": false
+  },
+  "notExecuted": [
+    "independent team or teacher quality reviews",
+    "complete long plan semantic/merge approval and adoption",
+    "new full teaching UI test (unchanged modules retain dated v7 evidence)",
+    "new machine dependency install",
+    "remote reviewer access",
+    "formal video acceptance",
+    "official submission"
+  ],
+  "scope": {
+    "mainBusinessDataChanged": false,
+    "permissionChanges": false,
+    "credentialChanges": false,
+    "repositoryPublishingPerformed": false,
+    "explicitlyApprovedExternalModelCalls": 13,
+    "videoCreated": false,
+    "historyRewritten": false,
+    "submitted": false
+  },
+  "redEvidence": [
+    ".runtime/long-plan-v10-red-compiled.log",
+    ".runtime/long-plan-v10-stored-red.log",
+    ".runtime/long-plan-local-b7225143-40fb-4012-98f9-4e4a728273e9/report.json"
+  ],
+  "documentation": {
+    "scriptTimingSeconds": 420,
+    "timingType": "planned_not_measured_video_or_rehearsal",
+    "videoCreated": false,
+    "formalVideoReceived": false,
+    "teamNamesInSourcePackage": false,
+    "independentReviewPending": true
+  }
+}

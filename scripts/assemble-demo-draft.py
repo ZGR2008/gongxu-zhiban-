@@ -1,6 +1,6 @@
 """Assemble an explicitly labelled local engineering draft, without network access.
 
-The recording must come from record-demo-draft.mjs and contain only a synthetic
+The recording must come from record-demo-draft.mjs and contain only a REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b
 account. This tool never opens .env, a database, tokens or uploaded user files.
 Use a trusted local FFmpeg binary; it is a development tool, not redistributed.
 """

@@ -93,7 +93,7 @@ test("untrusted stored fields, invalid statuses and excessive notes are discarde
     items: {
       tests: { status: "passed", note: "自动通过" },
       requirements: { status: "checked", note: "x".repeat(2001) },
-      demo: { status: "blocked", note: "待部署", token: "not-persisted" },
+      demo: { status: "blocked", note: "待部署", token: "REVIEW_PLACEHOLDER_7ac4d14785834db38d90" },
       invented: { status: "checked", note: "" },
     },
   };

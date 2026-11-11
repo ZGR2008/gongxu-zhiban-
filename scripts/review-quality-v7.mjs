@@ -1,4 +1,4 @@
-// Offline review packaging. Only the fixed, approved synthetic response report is read.
+// Offline review packaging. Only the fixed, approved REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b response report is read.
 import {readFile,mkdir,writeFile} from 'node:fs/promises';import {randomUUID,createHash} from 'node:crypto';import {fileURLToPath} from 'node:url';import assert from 'node:assert/strict';
 const source=new URL('../.runtime/quality-live-v7-322da728-f26a-41dd-9527-20ede9e6282c/report.json',import.meta.url),raw=await readFile(source),r=JSON.parse(raw);
 const hash=s=>createHash('sha256').update(s).digest('hex');assert.equal(r.paidCallsAttempted,13);assert.equal(r.records.length,13);assert.ok(r.records.every(a=>hash(a.output)===a.outputHash));

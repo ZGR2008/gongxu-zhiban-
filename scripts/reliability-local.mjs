@@ -22,7 +22,7 @@ const {Pool}=require('pg'),Fastify=require('fastify');
 const pool=new Pool({connectionString:settings.DATABASE_URL,connectionTimeoutMillis:3000});
 const store=new PgProjectStore(pool),app=Fastify({logger:false});
 const directory=new URL(`../.runtime/reliability-local-${randomUUID()}/`,import.meta.url);await mkdir(directory,{recursive:true});
-const report={scope:'real_local_database_and_optional_local_embedding',model:'controlled_fixture_no_remote_calls',syntheticRecords:true,checks:[],startedAt:new Date().toISOString()};
+const report={scope:'real_local_database_and_optional_local_embedding',model:'controlled_fixture_no_remote_calls',REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3bRecords:true,checks:[],startedAt:new Date().toISOString()};
 let stage='setup',auth={},foreign={},user,foreignUser,project,firstVersion,secondVersion,testCase;
 const cases={cases:['normal','boundary','exception'].map(category=>({category,title:`合成${category}用例`,preconditions:'本机隔离回归',steps:'人工检查边界',expected:'保留审批记录'}))};
 await registerProjectRoutes(app,store);

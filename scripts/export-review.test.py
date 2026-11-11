@@ -1,4 +1,4 @@
-"""Privacy regression of the source-copy exporter using synthetic files only."""
+"""Privacy regression of the source-copy exporter using REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b files only."""
 from pathlib import Path
 from contextlib import redirect_stdout
 from io import StringIO
@@ -8,6 +8,23 @@ import ast,hashlib,json,runpy,sys,tempfile,unittest,zipfile
 SCRIPT=Path(__file__).with_name('export-review.py')
 
 class ExportTests(unittest.TestCase):
+    def test_v10_keeps_replay_and_blank_review_material_excludes_local_names_before_read(self):
+        with tempfile.TemporaryDirectory(prefix='gongxu-export-fixture-') as base:
+            root=self.fixture(base)
+            expected=['docs/TEAM-WALKTHROUGH-V10.md','docs/CONTRIBUTION-RECORD-V10.md','docs/OFFLINE-QUALITY-REVIEW-V10.md','docs/LONG-PLAN-DIAGNOSIS-V10.md','docs/HISTORY-SECURITY-V10.md','docs/BACKEND-SCOPE-QUESTION-V10.md','docs/COMPLIANCE-CHECKLIST-V10.md','docs/DEMO-SCRIPT-V10.md','docs/DEMO-OPERATIONS-V10.md','docs/VIDEO-ACCEPTANCE-V10.md','docs/CONTINUATION-V10.md','docs/FINAL-REVIEW-V10.md','docs/verification/review-v10.json','docs/verification/history-v10.json','evaluation/fixtures/long-plan-v7-saved-responses.json']
+            for relative in expected:
+                path=root/relative;path.parent.mkdir(parents=True,exist_ok=True);path.write_text('{}' if path.suffix=='.json' else 'Synthetic scoped review material',encoding='utf-8')
+            expected += ['docs/AI-LONG-PLAN-V10.md','docs/verification/ai-long-plan-v10.json','docs/AI-QUALITY-PRELIMINARY-V10.md','evaluation/fixtures/long-plan-v10-merge-candidate.json','docs/PENDING-INFORMATION-V10.md']
+            for relative in expected[-5:]:
+                path=root/relative;path.parent.mkdir(parents=True,exist_ok=True);path.write_text('{}' if path.suffix=='.json' else 'Synthetic approved evaluation summary',encoding='utf-8')
+            private=root/'.runtime/team-v10-confirmation.json';private.parent.mkdir(parents=True);private.write_text('REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b-personal-marker',encoding='utf-8')
+            other=root/'evaluation/fixtures/unclassified-responses.json';other.write_text('REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b-private-marker',encoding='utf-8')
+            result=self.export(root,[private.resolve(),other.resolve()],version='v10')
+            with zipfile.ZipFile(result['archive']) as bundle:
+                for relative in expected:self.assertIn('gongxu-zhiban/'+relative,bundle.namelist())
+                self.assertFalse(any('team-v10-confirmation' in name or 'unclassified-responses' in name for name in bundle.namelist()))
+                self.assertIsNone(bundle.testzip())
+
     def test_v9_keeps_team_tasks_but_never_reads_actual_contribution_data(self):
         with tempfile.TemporaryDirectory(prefix='gongxu-export-fixture-') as base:
             root=self.fixture(base)
@@ -15,7 +32,7 @@ class ExportTests(unittest.TestCase):
             expected += ['docs/verification/history-v9.json','docs/verification/licenses-v9.json']
             for relative in expected:
                 path=root/relative;path.parent.mkdir(parents=True,exist_ok=True);path.write_text('{}' if path.suffix=='.json' else 'Synthetic task template without actual personal contributions',encoding='utf-8')
-            private=root/'output/team-v9/actual-contributions.json';private.parent.mkdir(parents=True);private.write_text('synthetic-personal-marker',encoding='utf-8')
+            private=root/'output/team-v9/actual-contributions.json';private.parent.mkdir(parents=True);private.write_text('REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b-personal-marker',encoding='utf-8')
             result=self.export(root,[private.resolve()],version='v9')
             with zipfile.ZipFile(result['archive']) as bundle:
                 for relative in expected:self.assertIn('gongxu-zhiban/'+relative,bundle.namelist())
@@ -28,7 +45,7 @@ class ExportTests(unittest.TestCase):
             expected=['docs/COMPLIANCE-CHECKLIST-V8.md','docs/COMPLIANCE-SOURCES-V8.md','docs/ORIGINALITY-AND-LICENSE-V8.md','docs/DEMO-SCRIPT-V8.md','docs/DEMO-OPERATIONS-V8.md','docs/VIDEO-ACCEPTANCE-V8.md','docs/REVIEWER-ACCESS-V8.md','docs/COMMITTEE-QUESTIONS-V8.md','docs/CONTINUATION-V8.md','docs/FINAL-REVIEW-V8.md','docs/verification/review-v8.json','docs/verification/licenses-v8.json']
             for relative in expected:
                 path=root/relative;path.parent.mkdir(parents=True,exist_ok=True);path.write_text('{}' if path.suffix=='.json' else 'Synthetic compliance evidence',encoding='utf-8')
-            private=root/'output/registration/private-confirmation.json';private.parent.mkdir(parents=True);private.write_text('synthetic-personal-marker',encoding='utf-8')
+            private=root/'output/registration/private-confirmation.json';private.parent.mkdir(parents=True);private.write_text('REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b-personal-marker',encoding='utf-8')
             result=self.export(root,[private.resolve()],version='v8')
             with zipfile.ZipFile(result['archive']) as bundle:
                 for relative in expected:self.assertIn('gongxu-zhiban/'+relative,bundle.namelist())
@@ -49,9 +66,25 @@ class ExportTests(unittest.TestCase):
             runpy.run_path(str(SCRIPT),run_name='__main__')
         return json.loads(output.getvalue())
 
+    def test_windows_script_keeps_utf8_bom_and_demo_fixture_is_scoped(self):
+        with tempfile.TemporaryDirectory(prefix='gongxu-export-fixture-') as base:
+            root=self.fixture(base)
+            (root/'scripts').mkdir();(root/'demo').mkdir();(root/'docs').mkdir()
+            source=root/'scripts/launch-local.ps1'
+            source.write_text("Write-Output '校园实训'\n",encoding='utf-8-sig')
+            kit=root/'demo/recording-kit-v1.mjs';kit.write_text('export const synthetic = true;\n',encoding='utf-8')
+            private=root/'demo/unreviewed.mjs';private.write_text('private synthetic marker',encoding='utf-8')
+            (root/'docs/STARTUP-REPAIR-2026-11-03.md').write_text('Synthetic startup guidance',encoding='utf-8')
+            result=self.export(root,(private.resolve(),),version='v10')
+            stage=Path(result['stage'])
+            self.assertTrue((stage/'scripts/launch-local.ps1').read_bytes().startswith(b'\xef\xbb\xbf'))
+            self.assertEqual((stage/'demo/recording-kit-v1.mjs').read_text(encoding='utf-8'),kit.read_text(encoding='utf-8'))
+            self.assertTrue((stage/'docs/STARTUP-REPAIR-2026-11-03.md').is_file())
+            self.assertFalse((stage/'demo/unreviewed.mjs').exists())
+
     def fixture(self,base):
         root=Path(base)/'source';(root/'apps/api/src').mkdir(parents=True)
-        (root/'apps/api/package.json').write_text('{"name":"synthetic-export"}',encoding='utf-8')
+        (root/'apps/api/package.json').write_text('{"name":"REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b-export"}',encoding='utf-8')
         return root
 
     def test_v7_keeps_version_migration_and_evidence_excludes_real_team(self):
@@ -59,8 +92,8 @@ class ExportTests(unittest.TestCase):
             root=self.fixture(base)
             expected=['apps/api/migrations/025_assignment_versions.sql','docs/FINAL-REVIEW-V7.md','docs/TEACHING-VERSIONS-V7.md','docs/verification/review-v7.json','docs/verification/ai-review-pack-v7.json','evaluation/teaching-quality-v7.mjs']
             for relative in expected:
-                path=root/relative;path.parent.mkdir(parents=True,exist_ok=True);path.write_text('{}' if path.suffix=='.json' else 'synthetic evidence',encoding='utf-8')
-            private=root/'output/team-v7/private-team.md';private.parent.mkdir(parents=True);private.write_text('synthetic-personal-marker',encoding='utf-8')
+                path=root/relative;path.parent.mkdir(parents=True,exist_ok=True);path.write_text('{}' if path.suffix=='.json' else 'REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b evidence',encoding='utf-8')
+            private=root/'output/team-v7/private-team.md';private.parent.mkdir(parents=True);private.write_text('REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b-personal-marker',encoding='utf-8')
             result=self.export(root,[private.resolve()],version='v7')
             with zipfile.ZipFile(result['archive']) as bundle:
                 for relative in expected:self.assertIn('gongxu-zhiban/'+relative,bundle.namelist())
@@ -71,10 +104,10 @@ class ExportTests(unittest.TestCase):
             root=self.fixture(base)
             opaque='73be150c-1473-427f-95d2-73e961be4100'
             provider='sk-'+'A'*24
-            original=json.dumps({'apiKey':opaque,'password':'tiny','token':'controlled-fixture'})
+            original=json.dumps({'apiKey':opaque,'password':'XXXX','token':'controlled-fixture'})
             ui="const autoComplete = login ? 'current-password' : 'new-password';"
             source=root/'apps/api/src/config.ts';source.write_text('export const config = '+original+f'; const provider = "{provider}"; const backup = "{opaque}";'+ui,encoding='utf-8')
-            template=root/'apps/api/.env.example';template.write_text('AI_API_KEY='+opaque+'\nDATABASE_URL=postgresql://fixture:fixture@localhost/review\n',encoding='utf-8')
+            template=root/'apps/api/.env.example';template.write_text('AI_API_KEY='+opaque+'\nDATABASE_URL=postgresql://review_user:REVIEW_LOCAL_PASSWORD@127.0.0.1:5432/gongxu_review',encoding='utf-8')
             before={path:hashlib.sha256(path.read_bytes()).hexdigest() for path in [source,template]}
             result=self.export(root);stage=Path(result['stage']);copied=(stage/'apps/api/src/config.ts').read_text(encoding='utf-8')
             self.assertTrue(all(value not in copied for value in [opaque,provider,'tiny']))
@@ -89,7 +122,7 @@ class ExportTests(unittest.TestCase):
         with tempfile.TemporaryDirectory(prefix='gongxu-export-fixture-') as base:
             root=self.fixture(base);forbidden=[]
             for relative in ['apps/api/.env','apps/api/.env.local','apps/api/auth-state.json','apps/api/records.json','apps/api/student-list.txt','apps/api/users.sql','apps/api/customer-data.yaml','docs/screenshots/review-v3/private.png']:
-                path=root/relative;path.parent.mkdir(parents=True,exist_ok=True);path.write_text('synthetic-private-marker',encoding='utf-8');forbidden.append(path.resolve())
+                path=root/relative;path.parent.mkdir(parents=True,exist_ok=True);path.write_text('REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b-private-marker',encoding='utf-8');forbidden.append(path.resolve())
             result=self.export(root,forbidden);manifest=json.loads((Path(result['stage'])/'SOURCE-PACKAGE-MANIFEST.json').read_text(encoding='utf-8'))
             self.assertEqual(len(manifest['files']),1);self.assertFalse(manifest['realEnvironmentRead']);self.assertEqual(len(manifest['excluded']),8)
             with zipfile.ZipFile(result['archive']) as bundle:self.assertFalse(any('private-marker' in bundle.read(item).decode('utf-8') for item in bundle.namelist()))
@@ -112,11 +145,11 @@ class ExportTests(unittest.TestCase):
                 'docs/LONG-REQUIREMENTS-V4.md':'Synthetic boundaries',
                 'docs/FINAL-REVIEW-V4.md':'Synthetic review',
                 'docs/demo-v4/README.md':'Synthetic recording scope',
-                'docs/demo-v4/storyboard.json':'{"scope":"synthetic"}',
+                'docs/demo-v4/storyboard.json':'{"scope":"REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b"}',
                 'docs/verification/review-v4.json':'{"paidModelCalls":0}',
                 'docs/AI-EVALUATION-V4-2026-11-01.md':'Synthetic real evaluation addendum without secrets',
                 'docs/verification/ai-evaluation-v4.json':'{"humanReview":{"reviewers":[]}}',
-                'apps/api/migrations/021_requirement_segment_reviews.sql':'-- synthetic schema fixture',
+                'apps/api/migrations/021_requirement_segment_reviews.sql':'-- REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b schema fixture',
             }
             for relative,text in required.items():
                 target=root/relative;target.parent.mkdir(parents=True,exist_ok=True);target.write_text(text,encoding='utf-8')
@@ -131,7 +164,7 @@ class ExportTests(unittest.TestCase):
             required=['docs/CONTINUATION-V5.md','docs/LONG-REQUIREMENTS-V5.md','docs/AI-REVIEW-PACK-V5.md','docs/DEMO-SCRIPT-V5.md','docs/DEMO-OPERATIONS-V5.md','docs/FINAL-REVIEW-V5.md','docs/verification/review-v5.json','apps/api/migrations/022_long_requirement_planning.sql']
             for relative in required:
                 target=root/relative;target.parent.mkdir(parents=True,exist_ok=True);target.write_text('{}' if relative.endswith('.json') else 'Synthetic reviewed material',encoding='utf-8')
-            private=root/'output/human-review/organizer.json';private.parent.mkdir(parents=True);private.write_text('synthetic-runtime-marker',encoding='utf-8')
+            private=root/'output/human-review/organizer.json';private.parent.mkdir(parents=True);private.write_text('REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b-runtime-marker',encoding='utf-8')
             result=self.export(root,(private.resolve(),),version='v5')
             self.assertEqual(Path(result['archive']).name,'gongxu-zhiban-review-v5.zip')
             with zipfile.ZipFile(result['archive']) as bundle:
@@ -140,7 +173,7 @@ class ExportTests(unittest.TestCase):
 
     def test_directory_resolving_outside_source_is_pruned_without_reading(self):
         with tempfile.TemporaryDirectory(prefix='gongxu-export-fixture-') as base:
-            root=self.fixture(base);link=root/'apps/api/linked';link.mkdir();hidden=link/'outside.ts';hidden.write_text('synthetic-private-marker',encoding='utf-8')
+            root=self.fixture(base);link=root/'apps/api/linked';link.mkdir();hidden=link/'outside.ts';hidden.write_text('REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b-private-marker',encoding='utf-8')
             resolve=Path.resolve;outside=Path(base)/'outside';blocked=hidden.resolve()
             def redirected(path,*args,**kwargs):
                 actual=resolve(path,*args,**kwargs)
@@ -155,7 +188,7 @@ class ExportTests(unittest.TestCase):
             required=['knowledge/teaching-v6/catalog.mjs','docs/TEACHING-AND-PERMISSIONS-V6.md','docs/KNOWLEDGE-CURRICULUM-V6.md','docs/DEMO-SCRIPT-V6.md','docs/DEMO-OPERATIONS-V6.md','docs/FINAL-REVIEW-V6.md','docs/CONTINUATION-V6.md','docs/REFERENCE-REVIEW-V6.md','docs/verification/review-v6.json','docs/verification/knowledge-v6.json','apps/api/migrations/023_teaching_workflow.sql','apps/api/migrations/024_public_teaching_knowledge.sql']
             for relative in required:
                 p=root/relative;p.parent.mkdir(parents=True,exist_ok=True);p.write_text('{}' if relative.endswith('.json') else 'Synthetic reviewed material',encoding='utf-8')
-            private=root/'knowledge/personal/notes.md';private.parent.mkdir(parents=True);private.write_text('synthetic-private-marker',encoding='utf-8')
+            private=root/'knowledge/personal/notes.md';private.parent.mkdir(parents=True);private.write_text('REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b-private-marker',encoding='utf-8')
             result=self.export(root,(private.resolve(),),version='v6')
             self.assertEqual(Path(result['archive']).name,'gongxu-zhiban-review-v6.zip')
             with zipfile.ZipFile(result['archive']) as bundle:
@@ -165,7 +198,7 @@ class ExportTests(unittest.TestCase):
     def test_string_concatenation_and_tool_source_remain_valid_python(self):
         with tempfile.TemporaryDirectory(prefix='gongxu-export-fixture-') as base:
             root=self.fixture(base);(root/'scripts').mkdir()
-            sample="value='synthetic-fixture'\ntext='AI_API_KEY='+value+'\\n'\nui='current-password' if True else 'new-password'\n"
+            sample="value='REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b-fixture'\ntext='AI_API_KEY='+value+'\\n'\nui='current-password' if True else 'new-password'\n"
             (root/'scripts/sample.py').write_text(sample,encoding='utf-8')
             (root/'scripts/export-review.py').write_text(SCRIPT.read_text(encoding='utf-8'),encoding='utf-8')
             result=self.export(root);stage=Path(result['stage'])
@@ -175,8 +208,8 @@ class ExportTests(unittest.TestCase):
     def test_excluded_personal_filenames_are_not_disclosed_in_the_packaged_manifest(self):
         with tempfile.TemporaryDirectory(prefix='gongxu-export-fixture-') as base:
             root=self.fixture(base);(root/'docs').mkdir()
-            private_name='synthetic-student-at-private-school-notes.md'
-            source=root/'docs'/private_name;source.write_text('synthetic-private-content',encoding='utf-8')
+            private_name='REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b-student-at-private-school-notes.md'
+            source=root/'docs'/private_name;source.write_text('REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b-private-content',encoding='utf-8')
             before=hashlib.sha256(source.read_bytes()).hexdigest()
             result=self.export(root,(source.resolve(),))
             with zipfile.ZipFile(result['archive']) as bundle:

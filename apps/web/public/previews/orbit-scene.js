@@ -45,7 +45,9 @@ if (renderer) initialize().catch(() => {
 async function initialize() {
   const canvas = renderer.domElement;
   canvas.tabIndex = 0;
-  canvas.setAttribute('aria-label', '旋转星环。拖动或使用方向键调整视角，使用下方按钮暂停、调整速度。');
+  canvas.setAttribute('aria-label', new URLSearchParams(location.search).has('embed')
+    ? '自动旋转星环。使用方向键调整视角，系统减少动态效果时显示静态画面。'
+    : '旋转星环。拖动或使用方向键调整视角，使用下方按钮暂停、调整速度。');
   canvas.setAttribute('role', 'img');
   stage.prepend(canvas);
   renderer.setClearColor(0x0a0614, 0);

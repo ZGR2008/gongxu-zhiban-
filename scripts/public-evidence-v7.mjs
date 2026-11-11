@@ -1,5 +1,5 @@
 // Read ONLY the authorized public curriculum from the local primary database.
-// Copy matching public texts/vectors into a new synthetic database for screenshots.
+// Copy matching public texts/vectors into a new REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b database for screenshots.
 // No private rows, real identities, paid models, video, or primary writes.
 import {createRequire} from 'node:module';import {randomUUID,randomBytes,createHash} from 'node:crypto';
 import {mkdir,writeFile} from 'node:fs/promises';import {fileURLToPath} from 'node:url';
@@ -13,7 +13,7 @@ assert.ok(local(process.env.DATABASE_URL)&&embedding&&local(embedding.baseUrl));
 const {Pool}=require('pg'),source=new Pool({connectionString:process.env.DATABASE_URL,connectionTimeoutMillis:3000});
 const name='gx_public_ui_v7_'+randomUUID().replaceAll('-',''),target=new URL(process.env.DATABASE_URL);target.pathname='/'+name;
 const out=new URL(`../.runtime/public-evidence-v7-${randomUUID()}/`,import.meta.url);await mkdir(out,{recursive:true});
-const report={scope:'public_only_primary_read_synthetic_database_ui',primaryWrites:0,privateRowsRead:0,paidCalls:0,videoRecorded:false,lessons:[],screenshots:[],retainedDatabase:name};
+const report={scope:'public_only_primary_read_REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b_database_ui',primaryWrites:0,privateRowsRead:0,paidCalls:0,videoRecorded:false,lessons:[],screenshots:[],retainedDatabase:name};
 const originalFetch=globalThis.fetch;globalThis.fetch=(u,o)=>{if(!local(u instanceof Request?u.url:String(u)))throw Error('External requests forbidden');return originalFetch(u,o);};let db,app,browser;
 try{
  const publicRows=(await source.query("SELECT id,name,content_hash,status,source_metadata FROM knowledge_documents WHERE visibility='platform_public' ORDER BY source_metadata->>'lessonId'")).rows;

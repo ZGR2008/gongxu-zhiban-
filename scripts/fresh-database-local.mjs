@@ -1,5 +1,5 @@
 // Real, isolated local database install check. Uses the existing role as-is.
-// No credentials are displayed or written; the synthetic database is retained.
+// No credentials are displayed or written; the REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b database is retained.
 import {createRequire} from 'node:module';
 import {randomUUID,randomBytes,createHash} from 'node:crypto';
 import {mkdir,writeFile,readFile} from 'node:fs/promises';
@@ -23,7 +23,7 @@ const name='gx_review_v4_'+randomUUID().replaceAll('-','');
 assert.match(name,/^gx_review_v4_[a-f0-9]{32}$/);
 const target=new URL(config.DATABASE_URL);assert.notEqual(target.pathname,'/'+name);target.pathname='/'+name;
 const directory=new URL(`../.runtime/fresh-database-local-${randomUUID()}/`,import.meta.url);await mkdir(directory,{recursive:true});
-const report={scope:'real_local_fresh_database_actual_migration_cli_and_loopback_http',originalDatabaseModified:false,credentialsChanged:false,permissionsChanged:false,realModel:false,externalCalls:0,syntheticRecords:true,checks:[],httpChecks:[],startedAt:new Date().toISOString(),retainedSyntheticDatabase:null};
+const report={scope:'real_local_fresh_database_actual_migration_cli_and_loopback_http',originalDatabaseModified:false,credentialsChanged:false,permissionsChanged:false,realModel:false,externalCalls:0,REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3bRecords:true,checks:[],httpChecks:[],startedAt:new Date().toISOString(),retainedSyntheticDatabase:null};
 const originalFetch=globalThis.fetch;
 globalThis.fetch=(input,options)=>{if(!local(input instanceof Request?input.url:String(input)))throw Error('External requests prohibited');return originalFetch(input,{...options,redirect:'error'});};
 let pool,app,origin,identity,stage='permission_check';
@@ -56,7 +56,7 @@ try{
    const v=status('create_requirement',await call('POST',root+'/requirements',{content:'保存与确认需求后，必须可查看准确版本和原文条目。'}),201).requirement;
    status('confirm_requirement',await call('POST',`${root}/requirements/${v.id}/confirm`,{expectedContent:v.content}),200);
    const trace=status('read_trace',await call('GET',root+'/trace'),200);assert.equal(trace.version.id,v.id);assert.equal(trace.items.length,1);
-   status('create_code_draft',await call('PUT',root+'/code-draft',{language:'typescript',code:'const syntheticDraft = 1;',expectedRevision:0}),201);assert.equal(status('read_code_draft',await call('GET',root+'/code-draft'),200).draft.code,'const syntheticDraft = 1;');
+   status('create_code_draft',await call('PUT',root+'/code-draft',{language:'typescript',code:'const REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3bDraft = 1;',expectedRevision:0}),201);assert.equal(status('read_code_draft',await call('GET',root+'/code-draft'),200).draft.code,'const REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3bDraft = 1;');
    assert.equal(status('read_ai_status',await call('GET','/ai/status'),200).configured,false);
   });
   report.status='passed';

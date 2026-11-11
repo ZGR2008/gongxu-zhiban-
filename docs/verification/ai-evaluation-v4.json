@@ -639,7 +639,7 @@
     "humanMinutes": null
   },
   "limitations": [
-    "Saved-output replay uses synthetic storage/retrieval; it is not live database or live vector evaluation.",
+    "Saved-output replay uses REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b storage/retrieval; it is not live database or live vector evaluation.",
     "The provider returned a model alias, not a verified immutable release.",
     "Input/output token counts were returned; cache breakdown, original total and actual charges were not retained.",
     "No aggregate model quality claim or improvement percentage is inferred."
@@ -652,7 +652,7 @@
     "maxCalls": 15,
     "maxCostUSD": 0.5,
     "automaticRetries": 0,
-    "dataScope": "frozen synthetic cases and prompt templates only",
+    "dataScope": "frozen REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b cases and prompt templates only",
     "additionalCallsAfterRun": 0
   },
   "validation": {

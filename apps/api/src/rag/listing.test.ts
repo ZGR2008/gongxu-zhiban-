@@ -9,7 +9,7 @@ const store={userBySession:async()=>({id:owner})} as unknown as ProjectStore;
 test('knowledge directory provides a bounded page and complete owned count',async t=>{
  const rows=Array.from({length:21},(_,i)=>({id:`00000000-0000-4000-8000-${String(i+1).padStart(12,'0')}`,name:'合成资料',status:'awaiting_embedding',chunkCount:1,indexedChunks:0,currentChunks:0,totalDocuments:201}));
  const calls:string[]=[];const query=async(sql:string)=>{calls.push(sql);if(sql.includes('AS total'))return{rows:[{total:201}]};if(sql.startsWith('WITH visible'))return{rows};return{rows:[]};};
- const pool={query,connect:async()=>({query,release:()=>{}})} as unknown as Pool;const app=Fastify();await registerKnowledgeRoutes(app,store,pool,{baseUrl:'http://127.0.0.1:3010/v1',apiKey:'',model:'synthetic-model'});t.after(()=>app.close());
+ const pool={query,connect:async()=>({query,release:()=>{}})} as unknown as Pool;const app=Fastify();await registerKnowledgeRoutes(app,store,pool,{baseUrl:'http://127.0.0.1:3010/v1',apiKey:'',model:'REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b-model'});t.after(()=>app.close());
  const r=await app.inject({url:'/knowledge?limit=20',headers});assert.equal(r.statusCode,200);assert.equal(r.json().page?.total,201);assert.equal(r.json().documents.length,20);assert.ok(r.json().page.nextCursor);assert.equal(r.json().documents[0].indexCompatibility,'awaiting_embedding');assert.equal(calls[0],'BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY');assert.equal(calls.at(-1),'COMMIT');
 });
 test('knowledge directory rejects invalid or foreign cursors before reading database',async t=>{

@@ -22,7 +22,7 @@ const {Pool}=require('pg'),Fastify=require('fastify');
 const pool=new Pool({connectionString:config.DATABASE_URL,connectionTimeoutMillis:3000,statement_timeout:15000,query_timeout:18000});
 const store=new PgProjectStore(pool),app=Fastify({logger:false});
 const directory=new URL(`../.runtime/knowledge-answer-local-${randomUUID()}/`,import.meta.url);await mkdir(directory,{recursive:true});
-const report={scope:'real_local_http_disconnect_database_embedding_chat_fixture',realModel:false,syntheticRecords:true,checks:[],startedAt:new Date().toISOString()};
+const report={scope:'real_local_http_disconnect_database_embedding_chat_fixture',realModel:false,REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3bRecords:true,checks:[],startedAt:new Date().toISOString()};
 let owner,foreign,address,stage='setup',mode='normal',calls=0,retrievalSignal,modelSignal,retainedHits=[],retrievalStarted=false;
 const releases=[],pending=[];
 const held=()=>new Promise(resolve=>releases.push(resolve));

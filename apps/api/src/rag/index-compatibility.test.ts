@@ -8,7 +8,7 @@ import {indexCompatibility} from './index-compatibility.js';
 const user='11111111-1111-4111-8111-111111111111';
 const headers={authorization:`Bearer ${'a'.repeat(64)}`};
 const store={userBySession:async()=>({id:user})} as unknown as ProjectStore;
-const embedding={baseUrl:'http://127.0.0.1:3010/v1',apiKey:'',model:'current-synthetic-model'};
+const embedding={baseUrl:'http://127.0.0.1:3010/v1',apiKey:'',model:'current-REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b-model'};
 test('ready storage status with another model is not reported as currently searchable',async t=>{
  let params:unknown[]=[];
  const pool={query:async(_sql:string,values:unknown[])=>{params=values;return{rows:[{id:user,name:'合成文档',status:'ready',chunkCount:2,indexedChunks:2,currentChunks:0,totalDocuments:201}]};}} as unknown as Pool;

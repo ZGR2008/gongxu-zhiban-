@@ -26,18 +26,18 @@ test('caller cancellation during the response body retains its own reason',async
  });
 });
 test('successful non-object or malformed JSON fails without exposing raw response content',async()=>{
- for(const body of ['<html>synthetic proxy body</html>','null','[]','"synthetic string"','{"incomplete":'])await local((_req,res)=>{res.writeHead(200,{'content-type':'application/json'});res.end(body);},async url=>{
-  await assert.rejects(fetchJsonResponse(url),error=>error.code==='invalid_response'&&!error.message.includes('synthetic')&&!error.message.includes('incomplete'));
+ for(const body of ['<html>REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b proxy body</html>','null','[]','"REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b string"','{"incomplete":'])await local((_req,res)=>{res.writeHead(200,{'content-type':'application/json'});res.end(body);},async url=>{
+  await assert.rejects(fetchJsonResponse(url),error=>error.code==='invalid_response'&&!error.message.includes('REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b')&&!error.message.includes('incomplete'));
  });
 });
 test('non-JSON errors preserve HTTP status with no response-body disclosure',async()=>{
- await local((_req,res)=>{res.writeHead(503,{'content-type':'text/html'});res.end('<h1>synthetic upstream detail</h1>');},async url=>{
+ await local((_req,res)=>{res.writeHead(503,{'content-type':'text/html'});res.end('<h1>REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b upstream detail</h1>');},async url=>{
   const result=await fetchJsonResponse(url);assert.equal(result.response.status,503);assert.deepEqual(result.data,{});
  });
 });
 test('a slow write is not cancelled by the default read policy or retried',async()=>{
  let calls=0,received='';await local((req,res)=>{calls++;req.on('data',data=>{received+=data;});setTimeout(()=>{res.writeHead(201,{'content-type':'application/json'});res.end('{"saved":true}');},200);},async url=>{
-  const result=await fetchJsonResponse(url,{method:'POST',body:'synthetic draft'},20);assert.equal(result.response.status,201);assert.deepEqual(result.data,{saved:true});assert.equal(calls,1);assert.equal(received,'synthetic draft');
+  const result=await fetchJsonResponse(url,{method:'POST',body:'REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b draft'},20);assert.equal(result.response.status,201);assert.deepEqual(result.data,{saved:true});assert.equal(calls,1);assert.equal(received,'REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b draft');
  });
 });
 test('valid object reads preserve complete data and do not cancel a completed response',async()=>{

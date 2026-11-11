@@ -26,11 +26,11 @@ function fakeStore(): ProjectStore {
 
 test('authentication, ownership, requirement editing, versioning, confirmation and logout', async () => {
   const app = await createApp({ corsOrigin:'http://localhost:5173', projectStore:fakeStore() });
-  const register = (email:string) => app.inject({ method:'POST', url:'/auth/register', payload:{email,name:'student',password:'strong-password-123'} });
+  const register = (email:string) => app.inject({ method:'POST', url:'/auth/register', payload:{email,name:'student',password:'REVIEW_PLACEHOLDER_2ab6471c5bcd437e95ab'} });
   const a = await register('a@example.com'); const b = await register('b@example.com'); assert.equal(a.statusCode,201); assert.equal(b.statusCode,201);
   const ha = {authorization:`Bearer ${a.json().token}`}; const hb = {authorization:`Bearer ${b.json().token}`};
-  assert.equal((await app.inject({method:'POST',url:'/auth/login',payload:{email:'a@example.com',password:'wrong-password'}})).statusCode,401);
-  assert.equal((await app.inject({method:'POST',url:'/auth/login',payload:{email:'a@example.com',password:'strong-password-123'}})).statusCode,200);
+  assert.equal((await app.inject({method:'POST',url:'/auth/login',payload:{email:'a@example.com',password:'REVIEW_PLACEHOLDER_24458da0256243ce9d41'}})).statusCode,401);
+  assert.equal((await app.inject({method:'POST',url:'/auth/login',payload:{email:'a@example.com',password:'REVIEW_PLACEHOLDER_2ab6471c5bcd437e95ab'}})).statusCode,200);
   const created = await app.inject({method:'POST',url:'/projects',headers:ha,payload:{name:'项目',description:'说明'}}); assert.equal(created.statusCode,201); const projectId = created.json().project.id;
   assert.equal((await app.inject({method:'GET',url:`/projects/${projectId}`,headers:hb})).statusCode,404);
   assert.equal((await app.inject({method:'POST',url:`/projects/${projectId}/requirements`,headers:hb,payload:{content:'unauthorized'}})).statusCode,404);

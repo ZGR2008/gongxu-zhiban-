@@ -7,10 +7,10 @@ const template = JSON.parse(await readFile(new URL('../evaluation/record-templat
 // Synthetic records ONLY, created to test accounting rules, not model performance.
 function fixture(pipeline = 'plain_chat') {
   return {...structuredClone(template), caseId: 'normal', pipeline, status: 'completed', provenance: 'real_model',
-    commit: 'a'.repeat(40), model: 'synthetic-test-model', modelVersion: 'fixture-1', inputHash: 'a'.repeat(64), knowledgeHash: 'b'.repeat(64), outputHash: 'c'.repeat(64),
+    commit: 'a'.repeat(40), model: 'REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b-test-model', modelVersion: 'fixture-1', inputHash: 'a'.repeat(64), knowledgeHash: 'b'.repeat(64), outputHash: 'c'.repeat(64),
     executedAt: '2026-11-01T00:00:00Z', settings: {temperature: .3, maxOutputTokens: 4096, timeoutMs: 60000, maxRetries: 1},
     reviewers: ['reviewer_A', 'reviewer_B'], citedClaimCount: 0,
-    conditionJudgments: dataset.cases[0].acceptance.map((text, i) => ({id: `normal:${i + 1}`, text, judgment: 'covered', outputEvidence: 'synthetic output excerpt', note: 'synthetic review note', reviewerCodes: ['reviewer_A', 'reviewer_B']}))};
+    conditionJudgments: dataset.cases[0].acceptance.map((text, i) => ({id: `normal:${i + 1}`, text, judgment: 'covered', outputEvidence: 'REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b output excerpt', note: 'REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b review note', reviewerCodes: ['reviewer_A', 'reviewer_B']}))};
 }
 const triple = () => ['plain_chat', 'pre_optimization', 'current_workflow'].map(fixture);
 const normal = report => report.comparisons.find(row => row.caseId === 'normal');
@@ -54,7 +54,7 @@ test('failure and policy blocks keep actual elapsed time and are never scored as
 test('citation presence alone is insufficient; original claim and source judgment are required', () => {
   const records = triple(); records[2].citedClaimCount = 1; records[2].citationJudgments = [{id: 'source-1', judgment: 'supported'}];
   assert.equal(normal(buildEvaluationReport(records, dataset)).status, 'not_comparable');
-  Object.assign(records[2].citationJudgments[0], {claim: 'synthetic claim', sourceExcerpt: 'synthetic source', note: 'synthetic rationale', reviewerCodes: ['reviewer_A', 'reviewer_B']});
+  Object.assign(records[2].citationJudgments[0], {claim: 'REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b claim', sourceExcerpt: 'REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b source', note: 'REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b rationale', reviewerCodes: ['reviewer_A', 'reviewer_B']});
   assert.equal(normal(buildEvaluationReport(records, dataset)).metrics[2].citations.counts.supported, 1);
 });
 test('duplicates and fixture provenance cannot masquerade as comparable real model runs', () => {

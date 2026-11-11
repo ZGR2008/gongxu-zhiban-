@@ -24,7 +24,7 @@ test('chunks retain page and source offsets and overlap without crossing pages',
 
 test('embedding client validates and orders service response', async () => {
   const send: typeof fetch = async () => new Response(JSON.stringify({ data: [{ index: 1, embedding: [2, 3] }, { index: 0, embedding: [1, 2] }] }), { status: 200 });
-  assert.deepEqual(await createEmbeddings(['a', 'b'], { apiKey: 'secret', baseUrl: 'https://example.test/v1', model: 'embed' }, send), [[1, 2], [2, 3]]);
+  assert.deepEqual(await createEmbeddings(['a', 'b'], { apiKey: 'XXXXXX', baseUrl: 'https://example.test/v1', model: 'embed' }, send), [[1, 2], [2, 3]]);
   await assert.rejects(createEmbeddings(['a'], { apiKey: '', baseUrl: '', model: '' }, send), /not configured/);
 });
 

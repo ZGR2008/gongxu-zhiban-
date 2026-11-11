@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { createEmbeddings, EmbeddingError } from './embeddings.js';
 import { EmbeddingQueue } from './embedding-queue.js';
 const result=()=>new Response(JSON.stringify({data:[{index:0,embedding:[1,2]}]}));
-const config=(name:string)=>({baseUrl:`http://127.0.0.1:3010/${name}`,apiKey:'',model:'synthetic-test'});
+const config=(name:string)=>({baseUrl:`http://127.0.0.1:3010/${name}`,apiKey:'',model:'REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b-test'});
 test('concurrent index and search requests share the single provider slot',async()=>{
  let active=0,peak=0;
  const send:typeof fetch=async()=>{active++;peak=Math.max(peak,active);await new Promise(resolve=>setTimeout(resolve,15));active--;return result();};

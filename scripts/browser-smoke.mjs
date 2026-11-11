@@ -11,7 +11,7 @@ if (!['http:', 'https:'].includes(origin.protocol) || !['localhost', '127.0.0.1'
 const id = randomUUID();
 const directory = new URL(`../.runtime/browser-${id}/`, import.meta.url);
 await mkdir(directory, { recursive: true });
-const report = { id, startedAt: new Date().toISOString(), realBrowser: true, realServices: true, syntheticInput: true, remoteAiRequested: withAi, checks: [], status: 'running' };
+const report = { id, startedAt: new Date().toISOString(), realBrowser: true, realServices: true, REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3bInput: true, remoteAiRequested: withAi, checks: [], status: 'running' };
 let browser, context, page, stage = 'launch_browser', pageErrors = 0, authenticated = false;
 class BrowserCheckFailure extends Error {}
 function requireTrue(condition, code) { if (!condition) throw new BrowserCheckFailure(code); }

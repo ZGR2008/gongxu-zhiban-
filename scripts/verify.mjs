@@ -14,7 +14,7 @@ const steps=plan(config.suite,rootTests);
 if(config.list){console.log(JSON.stringify({suite:config.suite,paidCalls:false,steps},null,2));}
 else{
  const out=join(root,'.runtime','verification-v4-'+randomUUID());await mkdir(out,{recursive:true});
- const report={suite:config.suite,startedAt:new Date().toISOString(),...sourceProvenance(root),scope:config.suite==='offline'?'local_builds_unit_fixtures_and_protocols_no_model_no_database':config.suite==='database'?'explicit_real_local_data_synthetic_accounts_and_model_fixtures':'controlled_browser_no_real_model',paidModelCalls:0,steps:[]};
+ const report={suite:config.suite,startedAt:new Date().toISOString(),...sourceProvenance(root),scope:config.suite==='offline'?'local_builds_unit_fixtures_and_protocols_no_model_no_database':config.suite==='database'?'explicit_real_local_data_REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b_accounts_and_model_fixtures':'controlled_browser_no_real_model',paidModelCalls:0,steps:[]};
  let python=config.python??process.env.VERIFY_PYTHON;
  if(!python&&process.platform==='win32'&&process.env.USERPROFILE){const bundled=join(process.env.USERPROFILE,'.cache','codex-runtimes','codex-primary-runtime','dependencies','python','python.exe');try{await access(bundled);python=bundled;}catch{}}
  python??=process.platform==='win32'?'python':'python3';
@@ -38,7 +38,7 @@ else{
   if(entry.status==='passed')succeeded.add(step.id);
   console.log(entry.status.toUpperCase()+' '+step.id);
   if(config.suite==='database'&&step.id==='api-build'&&entry.status==='passed'){
-   try{const {isolatedVerificationDatabase}=await import('./isolated-verification-db.mjs');const isolated=await isolatedVerificationDatabase();isolatedEnv=isolated.env;report.databaseIsolation=isolated.evidence;console.log('READY isolated synthetic database');}
+   try{const {isolatedVerificationDatabase}=await import('./isolated-verification-db.mjs');const isolated=await isolatedVerificationDatabase();isolatedEnv=isolated.env;report.databaseIsolation=isolated.evidence;console.log('READY isolated REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b database');}
    catch{report.databaseIsolation={status:'failed',reason:'local_setup_failed_configuration_suppressed'};console.log('NOT RUN isolated database setup failed; existing database is not used as fallback');}
   }
   await writeFile(join(out,'report.json'),JSON.stringify(report,null,2)+'\n');

@@ -1,9 +1,9 @@
 import {createHash} from 'node:crypto';
 import {historicalCommit} from './historical-source.mjs';
 const hash=value=>createHash('sha256').update(JSON.stringify(value)).digest('hex');
-/** Match immutable synthetic inputs; this does not certify execution or quality. */
+/** Match immutable REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b inputs; this does not certify execution or quality. */
 export function historicalInput(report,sample,input,datasetVersion){
- if(report.scope!=='historical_route_prompt_capture_with_current_local_libraries_and_synthetic_dependencies'||report.historicalSource?.commit!==historicalCommit||report.datasetVersion!==datasetVersion||report.realDatabase!==false||report.externalCalls!==0||report.paidCalls!==0||report.comparisonResults!=='not_executed'||report.fullHistoricalWorkflow!=='not_reproduced')throw Error('Unsupported historical preparation provenance');
+ if(report.scope!=='historical_route_prompt_capture_with_current_local_libraries_and_REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b_dependencies'||report.historicalSource?.commit!==historicalCommit||report.datasetVersion!==datasetVersion||report.realDatabase!==false||report.externalCalls!==0||report.paidCalls!==0||report.comparisonResults!=='not_executed'||report.fullHistoricalWorkflow!=='not_reproduced')throw Error('Unsupported historical preparation provenance');
  const rows=report.frames?.filter(frame=>frame.caseId===sample.id);
  if(rows?.length!==1)throw Error('Historical case missing or duplicated');
  const frame=rows[0];

@@ -29,7 +29,7 @@ test('stale document revision returns conflict without overwriting content',asyn
 
 test('document history is owned, cursor bounded, read only and paginated',async t=>{
  const calls:{sql:string;values:unknown[]}[]=[];
- const docs=new PgDocumentStore({query:async(sql:string,values:unknown[])=>{calls.push({sql,values});return {rows:sql.includes('project_document_history')?Array.from({length:21},(_,i)=>({revision:30-i,content:'synthetic history'})):[{id,revision:31}]};}} as never);
+ const docs=new PgDocumentStore({query:async(sql:string,values:unknown[])=>{calls.push({sql,values});return {rows:sql.includes('project_document_history')?Array.from({length:21},(_,i)=>({revision:30-i,content:'REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b history'})):[{id,revision:31}]};}} as never);
  const app=Fastify();await registerDocumentRoutes(app,projects,docs);t.after(()=>app.close());
  const url=`/projects/${project}/documents/${id}/history`;
  assert.equal((await app.inject({method:'GET',url})).statusCode,401);

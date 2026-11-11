@@ -11,7 +11,7 @@ const hash=value=>createHash('sha256').update(JSON.stringify(value)).digest('hex
 function fixture(){
  const input={requirement:'合成审批条件',documents:[]},messages=[{role:'system',content:'合成系统指令'},{role:'user',content:input.requirement}];
  const frame={caseId:'normal',datasetVersion:'1.0.0',pipeline:'pre_optimization',commit:historicalCommit,realModel:false,rawModelOutput:null,inputHash:hash(input),knowledgeHash:hash(input.documents),status:'prepared_not_executed',messages,promptHash:hash(messages)};
- return {input,report:{scope:'historical_route_prompt_capture_with_current_local_libraries_and_synthetic_dependencies',historicalSource:{commit:historicalCommit},datasetVersion:'1.0.0',realDatabase:false,externalCalls:0,paidCalls:0,comparisonResults:'not_executed',fullHistoricalWorkflow:'not_reproduced',frames:[frame]}};
+ return {input,report:{scope:'historical_route_prompt_capture_with_current_local_libraries_and_REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b_dependencies',historicalSource:{commit:historicalCommit},datasetVersion:'1.0.0',realDatabase:false,externalCalls:0,paidCalls:0,comparisonResults:'not_executed',fullHistoricalWorkflow:'not_reproduced',frames:[frame]}};
 }
 test('paired historical inputs preserve pending status and reject different inputs or duplicate cases',()=>{
  const {input,report}=fixture();assert.equal(historicalInput(report,{id:'normal'},input,'1.0.0').status,'prepared_not_executed');

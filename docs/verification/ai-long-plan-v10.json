@@ -1,0 +1,120 @@
+{
+  "version": "v10-live-long-plan",
+  "status": "all_13_responses_received_merge_blocked_not_full_validation",
+  "sourceReportSha256": "89b53d131efc134cba7816e6fdf290609eeb851e7488ec5af44d379624734aaa",
+  "sourceReport": ".runtime/quality-live-v10-afd27e86-a3dc-471b-9409-3022e46c8995/report.json",
+  "startedAt": "2026-11-02T14:54:57.759Z",
+  "finishedAt": "2026-11-02T14:57:13.268Z",
+  "provider": "DeepSeek",
+  "model": "deepseek-flash",
+  "publishedVersion": "DeepSeek-V4.1-Flash-1017",
+  "actualProviderModels": [
+    "deepseek-flash"
+  ],
+  "observedProviderFingerprints": [
+    "bc19ba97cbe016479903222bb1578db6"
+  ],
+  "providerVersionCaveat": "alias_and_observed_fingerprint_not_immutable_version_lock",
+  "thinking": "disabled",
+  "temperature": 0.3,
+  "maxOutputTokens": 8192,
+  "calls": 13,
+  "maximumCalls": 13,
+  "automaticRetries": 0,
+  "maximumUSD": 0.5,
+  "conservativeReservedUSD": 0.2677764,
+  "estimatedPeakUSD": 0.0647013,
+  "notProviderInvoice": true,
+  "usage": {
+    "inputTokens": 102003,
+    "outputTokens": 28417,
+    "totalTokens": 130420
+  },
+  "originalSourceHash": "8e17195f4d94fa36b47c7cce82c69c6335a771b8d9cfb9d6da8a3a8ab6224c2d",
+  "originalSourceUtf16Length": 49781,
+  "conditionCount": 96,
+  "segments": 13,
+  "receivedSegments": 13,
+  "uncalledSegments": [],
+  "fragmentStructurePassed": 13,
+  "fullSourceDispatched": true,
+  "tailDispatched": true,
+  "mergeCandidateTasks": 86,
+  "mergeMaximumTasks": 80,
+  "productionMergeErrors": [
+    "merge_schema"
+  ],
+  "humanReviewed": 0,
+  "adopted": 0,
+  "externalCitationSources": 0,
+  "mechanicalChecks": {
+    "scope": "offline_mechanical_checks_not_semantic_review",
+    "reportSha256": "89b53d131efc134cba7816e6fdf290609eeb851e7488ec5af44d379624734aaa",
+    "sourceLength": 49781,
+    "segments": 13,
+    "allOriginalSegmentsDispatched": true,
+    "tailDispatched": true,
+    "allSegmentStructuresAccepted": true,
+    "conditionCount": 96,
+    "conditionsWithNoTaskId": [],
+    "taskCount": 86,
+    "productionMerge": {
+      "errors": [
+        {
+          "key": "CHK-f60d4f180b28f704ad8f",
+          "code": "merge_schema",
+          "message": "合并计划需包含1–80个具有实际描述和验收方法的任务。",
+          "conditionIds": [],
+          "taskKeys": []
+        }
+      ],
+      "warnings": [],
+      "semanticCompleteness": "unverified",
+      "readyForAutomaticAdoption": false
+    },
+    "crossBoundaryConditionCount": 12,
+    "explicitConditionDependencyEdges": 0,
+    "crossSegmentTaskDependencyEdges": 0,
+    "duplicateExactTitles": [],
+    "semanticDuplicateReview": "pending",
+    "unresolvedCount": 40,
+    "crossSegmentCompleteness": "unverified_no_explicit_dependency_graph_in_prepared_scheme",
+    "externalCitationSupport": "not_applicable_sources_empty",
+    "tailCandidateKeys": [
+      "s13_T6",
+      "s13_T7"
+    ],
+    "independentHumanReviews": 0,
+    "adopted": false
+  },
+  "priorLocalFailure": {
+    "externalCalls": 0,
+    "reportSha256": "8fcc514e56334a93dd97a46e3970cbf859f412431f4bfa6429c36fd87b94fedc",
+    "reason": "JSONB_key_order_preflight_rejected_before_external_dispatch",
+    "originalSentinelPreserved": true,
+    "continuationScope": "same_authorization_not_new_allowance_or_paid_retry"
+  },
+  "historicalCallsSeparate": {
+    "v4": 12,
+    "v7Long": 9,
+    "v7Teacher": 4
+  },
+  "auditDirectory": "output/ai-review-v10-444998a5-da9b-4796-9825-d2df17741b6e",
+  "auditArchive": "output/gongxu-zhiban-ai-review-v10-444998a5.zip",
+  "auditArchiveBytes": 172682,
+  "auditArchiveSha256": "21913cc5fd78733e364180ddc40521497cc36eec1c6889c5998f466d05e457ed",
+  "auditArchiveValidation": "zip_crc_and_all_manifest_file_hashes_checked",
+  "validation": {
+    "budgetTests": 3,
+    "afterLiveLongPlanUnitTests": 15,
+    "controlledBrowserRed": ".runtime/reliability-ui-4d702c8b-0ed8-46c9-89fe-fe2b9796747c/report.json",
+    "controlledBrowserGreen": ".runtime/reliability-ui-f15c75df-47e6-47b7-b66e-79f1337f16f3/report.json"
+  },
+  "remaining": [
+    "human_semantic_merge_under_existing_limit",
+    "cross_segment_dependency_review",
+    "wrong_refusal_or_ignored_original_context_review",
+    "independent_quality_review"
+  ],
+  "qualityImprovementPercentage": null
+}

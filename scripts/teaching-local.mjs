@@ -1,4 +1,4 @@
-// Local PostgreSQL and real routes; synthetic identities only. No external model or network calls.
+// Local PostgreSQL and real routes; REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b identities only. No external model or network calls.
 import {createRequire} from 'node:module';import {randomUUID,randomBytes} from 'node:crypto';
 import {mkdir,writeFile} from 'node:fs/promises';import {fileURLToPath} from 'node:url';
 import {execFile} from 'node:child_process';import {promisify} from 'node:util';import assert from 'node:assert/strict';
@@ -16,7 +16,7 @@ const {Pool}=require('pg'),Fastify=require('fastify'),admin=new Pool({connection
 const name='gx_teaching_v6_'+randomUUID().replaceAll('-','');assert.match(name,/^gx_teaching_v6_[a-f0-9]{32}$/);
 const dest=new URL(config.DATABASE_URL);dest.pathname='/'+name;
 const out=new URL(`../.runtime/teaching-local-${randomUUID()}/`,import.meta.url);await mkdir(out,{recursive:true});
-const report={scope:'isolated_real_database_real_http_synthetic_accounts',...sourceProvenance(new URL('../',import.meta.url)),startedAt:new Date().toISOString(),paidModelCalls:0,checks:[],retainedSyntheticDatabase:name};
+const report={scope:'isolated_real_database_real_http_REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b_accounts',...sourceProvenance(new URL('../',import.meta.url)),startedAt:new Date().toISOString(),paidModelCalls:0,checks:[],retainedSyntheticDatabase:name};
 const originalFetch=globalThis.fetch;globalThis.fetch=(url,opts)=>{if(!local(url instanceof Request?url.url:String(url)))throw Error('External traffic forbidden');return originalFetch(url,opts);};
 let pool,app,origin,student,teacher,teacherB,peer,adminUser,classId,assignment,claim,submission,preview;
 async function start(){app=Fastify();const store=new PgProjectStore(pool);await registerProjectRoutes(app,store);await registerTeachingRoutes(app,store,pool);await registerPublicKnowledgeRoutes(app,store,pool);app.get('/health',async()=>({status:'ok',service:'gongxu-api'}));app.get('/ready',async()=>({status:'ready'}));app.get('/ai/status',async()=>({configured:false}));origin=await app.listen({host:'127.0.0.1',port:0});}
@@ -124,9 +124,9 @@ try{
   for(const who of [student,teacher,teacherB,adminUser]){const list=ok(await call('GET','/knowledge/public',undefined,who));assert.equal(list.total,1);assert.equal(list.documents[0].id,published.id);assert.equal(list.documents[0].scope,'platform_public');assert.equal((await call('GET',`/knowledge/public/${privateDoc.id}`,undefined,who)).status,404);ok(await call('GET',`/knowledge/public/${published.id}`,undefined,who));}
   for(const who of [student,teacher])assert.equal((await call('POST',`/knowledge/public/${published.id}/index`,{},who)).status,403);
   await pool.query("UPDATE knowledge_documents SET status='ready' WHERE id=ANY($1::uuid[])",[[published.id,privateDoc.id]]);
-  await pool.query("UPDATE knowledge_chunks SET embedding='[1,0]'::vector,embedding_model='synthetic-scope-fixture' WHERE document_id=ANY($1::uuid[])",[[published.id,privateDoc.id]]);
-  const own=await searchKnowledge(pool,student.user.id,'synthetic-scope-fixture',[1,0],20);
-  const other=await searchKnowledge(pool,teacher.user.id,'synthetic-scope-fixture',[1,0],20);
+  await pool.query("UPDATE knowledge_chunks SET embedding='[1,0]'::vector,embedding_model='REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b-scope-fixture' WHERE document_id=ANY($1::uuid[])",[[published.id,privateDoc.id]]);
+  const own=await searchKnowledge(pool,student.user.id,'REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b-scope-fixture',[1,0],20);
+  const other=await searchKnowledge(pool,teacher.user.id,'REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b-scope-fixture',[1,0],20);
   assert.ok(own.some(h=>h.document_id===privateDoc.id));assert.ok(other.length>0);assert.ok(other.every(h=>h.document_id===published.id&&h.scope==='platform_public'));
   assert.ok(other.every(h=>h.document_name.startsWith('【平台公共教学示例】')));
   assert.equal((await pool.query('SELECT visibility FROM knowledge_documents WHERE id=$1',[privateDoc.id])).rows[0].visibility,'personal');

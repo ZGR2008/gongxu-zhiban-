@@ -1,9 +1,9 @@
 import assert from 'node:assert/strict';
 
-/** These labels are authored synthetic cases, never model confidence or teacher scores. */
+/** These labels are authored REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b cases, never model confidence or teacher scores. */
 export function validateRetrievalDataset(data) {
   assert.match(data.version, /^\d+\.\d+\.\d+$/);
-  assert.equal(data.scope, 'original_synthetic_software_engineering_retrieval_not_official_benchmark');
+  assert.equal(data.scope, 'original_REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b_software_engineering_retrieval_not_official_benchmark');
   assert.ok(data.documents.length > 1 && data.queries.length > 1);
   const documents = new Set(), queries = new Set();
   for (const document of data.documents) {

@@ -3,26 +3,25 @@ import { useEffect, useRef, useState } from 'react';
 
 /** Isolated open-source WebGL artwork; it never receives project or account data. */
 export function WorkspacePlanet() {
-  // The workbench starts with a still frame; animation is an explicit preference.
-  const [paused, setPaused] = useState(true);
+  // Start automatically while visible; keep the system's reduced-motion preference.
   const [reduced, setReduced] = useState(() => matchMedia('(prefers-reduced-motion: reduce)').matches);
   const frame = useRef<HTMLIFrameElement>(null);
   const container = useRef<HTMLDivElement>(null);
-  const pausedRef = useRef(paused);
+  const pausedRef = useRef(reduced);
   const visibleRef = useRef(true);
-  pausedRef.current = paused || reduced;
+  pausedRef.current = reduced;
   function sync() {
     frame.current?.contentWindow?.postMessage(
-      { type: 'gongxu:orbit-motion', paused: pausedRef.current || !visibleRef.current },
+      { type: 'gongxu:orbit-motion', paused: pausedRef.current || !visibleRef.current || document.hidden },
       window.location.origin,
     );
   }
   useEffect(() => {
     const preference=matchMedia('(prefers-reduced-motion: reduce)');
-    const changed=()=>setReduced(preference.matches);
+    const changed=()=>{pausedRef.current=preference.matches;setReduced(preference.matches);sync();};
     preference.addEventListener('change',changed);
     // Embedded Chromium can update .matches without emitting the change event.
-    const timer=setInterval(()=>{if(!document.hidden)changed();},1000);
+    const timer=setInterval(()=>{if(!document.hidden&&pausedRef.current!==preference.matches)changed();},1000);
     document.addEventListener('visibilitychange',changed);
     const observer = new IntersectionObserver(
       (entries) => {
@@ -49,12 +48,12 @@ export function WorkspacePlanet() {
       window.removeEventListener('message', onReady);
     };
   }, []);
-  useEffect(sync, [paused,reduced]);
+  useEffect(sync, [reduced]);
   return (
     <div
       ref={container}
       className="hero-visual workspace-visual workspace-visual--webgl"
-      data-motion={paused || reduced ? 'paused' : 'running'}
+      data-motion={reduced ? 'paused' : 'running'}
     >
       <iframe
         ref={frame}
@@ -63,20 +62,6 @@ export function WorkspacePlanet() {
         className="workspace-orbit-frame"
         onLoad={sync}
       />
-      <div className="workspace-visual__caption">
-        <a href="/previews/planet-orbit.html" target="_blank" rel="noopener noreferrer">
-          探索星环 ↗
-        </a>
-      </div>
-      <button
-        type="button"
-        className="workspace-motion-toggle"
-        aria-pressed={paused || reduced}
-        disabled={reduced}
-        onClick={() => setPaused((value) => !value)}
-      >
-        {reduced ? '静态预览' : paused ? '开启动效' : '暂停动效'}
-      </button>
     </div>
   );
 }

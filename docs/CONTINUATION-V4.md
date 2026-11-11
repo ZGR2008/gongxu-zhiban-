@@ -100,6 +100,6 @@
 
 源码和材料快照提交`88f733d`。随后导出320条目（含清单）、3737070字节的独立v4包；实际解压、CRC、全部文件哈希、必需文件及21个迁移通过。仅在解压副本链接现有4个依赖目录，执行同一`verify.mjs`离线15步全部通过，报告位于`.review-export/v4-20261101-131409-841396/extracted-check-20261101-131421-662240/gongxu-zhiban/.runtime/verification-v4-b07acd36-5021-4f10-92ba-0dc9c5a78336/report.json`。不是新机器联网安装验证，未读取/复制真实.env到副本。
 
-桌面：`C:\Users\30791\Desktop\gongxu-zhiban-review-v4.zip`；SHA-256：`ed76cb770e6184965e850cc0172ff057136a9ad662996bb634ef9b023be7bc36`。桌面文件另行打开并校验全部CRC，v3原包SHA-256保持不变。完整回执`verification/source-package-v4.json`在归档后生成，独立于ZIP；本段与最终回执为收尾记录，没有再次修改应用源码。
+桌面：`C:/Users/<LOCAL_USER>\Desktop\gongxu-zhiban-review-v4.zip`；SHA-256：`ed76cb770e6184965e850cc0172ff057136a9ad662996bb634ef9b023be7bc36`。桌面文件另行打开并校验全部CRC，v3原包SHA-256保持不变。完整回执`verification/source-package-v4.json`在归档后生成，独立于ZIP；本段与最终回执为收尾记录，没有再次修改应用源码。
 
 无需额外批准的本轮实现、综合检查、材料草稿和本地包已完成。下次优先处理真实模型范围审批、团队/报名资料与完整规则，再做正式视频真人听审、PPT实机放映、长需求生产语义拆分和真实评测；不得将这些未完成项写成已验收。尚未执行收费模型、推送、部署、比赛提交或参与者联系。没有设置自动恢复/无人值守续跑；若继续，按已保存清单推进，不重复通过的测试凑时间。

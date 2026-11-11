@@ -17,7 +17,7 @@ if (!['http:', 'https:'].includes(base.protocol) || !['localhost', '127.0.0.1', 
 const runId = randomUUID();
 const report = {
   runId, startedAt: new Date().toISOString(), status: 'running',
-  realServices: true, syntheticInput: true, remoteAiRequested: withAi,
+  realServices: true, REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3bInput: true, remoteAiRequested: withAi,
   generatedCodeExecuted: false, checks: [], artifacts: {},
   omitted: [!withRag && 'semantic_retrieval', !withAi && 'cloud_ai_workflow'].filter(Boolean),
 };

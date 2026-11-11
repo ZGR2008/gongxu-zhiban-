@@ -98,7 +98,7 @@ def source(title,url,detail):
  text(detail,'small')
 def screenshot(name,caption):
  path=ROOT/args.screens/name
- if not path.is_file():raise FileNotFoundError(f'Missing reviewed synthetic screenshot: {name}')
+ if not path.is_file():raise FileNotFoundError(f'Missing reviewed REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b screenshot: {name}')
  im=Image(str(path));ratio=im.imageHeight/im.imageWidth;im.drawWidth=499;im.drawHeight=499*ratio
  story.extend([im,Spacer(1,8),p(caption,'small')])
 
@@ -292,6 +292,6 @@ doc.build(story,onFirstPage=footer,onLaterPages=footer)
 reader=PdfReader(str(DEST));count=len(reader.pages)
 if count>30:raise RuntimeError(f'Exceeded 30-page contest limit: {count}')
 if count!=len(chapters):raise RuntimeError(f'Unexpected overflow pages: expected {len(chapters)}, got {count}')
-manifest={'artifact':DEST.name,'pages':count,'chapters':[{'number':n,'title':title} for n,title in chapters],'scope':'technical_review_draft_not_official_acceptance','screenshots':'synthetic_local_account_real_db_model_fixture','visualReview':'pending_render_review'}
+manifest={'artifact':DEST.name,'pages':count,'chapters':[{'number':n,'title':title} for n,title in chapters],'scope':'technical_review_draft_not_official_acceptance','screenshots':'REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b_local_account_real_db_model_fixture','visualReview':'pending_render_review'}
 (OUT/(DEST.stem+'-manifest.json' if LIVE else 'technical-pdf-v4-manifest.json')).write_text(json.dumps(manifest,ensure_ascii=False,indent=2),encoding='utf-8')
 print(f'Created {DEST.name}: {count} pages, {DEST.stat().st_size} bytes; visual review still required.')

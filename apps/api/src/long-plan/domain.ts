@@ -2,7 +2,10 @@ import {createHash} from 'node:crypto';
 import {z} from 'zod';
 import {requirementItems} from '../trace/domain.js';
 import {requirementSegments,REQUIREMENT_STORAGE_LIMIT} from '../requirement-content.js';
-export const PROMPT_VERSION='long-plan-fragment-v1';
+export const PROMPT_VERSION='long-plan-fragment-v2';
+// Existing durable jobs keep their recorded prompt instead of silently changing
+// the request contract on resume. Validation remains strict for both versions.
+export const supportsPromptVersion=(version:string)=>version==='long-plan-fragment-v1'||version===PROMPT_VERSION;
 export const hash=(text:string)=>createHash('sha256').update(text).digest('hex');
 const id=z.string().regex(/^CND-[a-f0-9]{20}$/);
 export const schemeSchema=z.object({boundaries:z.array(z.number().int().min(1).max(50000)).min(1).max(20),conditions:z.array(z.object({
@@ -56,11 +59,12 @@ export function parseSegmentOutput(raw:string,segment:ReturnType<typeof inspectS
  const data=segmentOutputSchema.parse(JSON.parse(raw)),known=new Set(segment.conditionIds),taskKeys=new Set(data.tasks.map(t=>t.key));
  if(taskKeys.size!==data.tasks.length||cyclic(data.tasks))throw Error('invalid_segment_tasks');
  const seen=new Set<string>();
- for(const f of data.fragments){if(!known.has(f.conditionId)||seen.has(f.conditionId)||f.taskKeys.some(k=>!taskKeys.has(k)))throw Error('invalid_fragment_reference');seen.add(f.conditionId);const c=scheme.conditions.find(c=>c.key===f.conditionId)!;if(c.kind==='acceptance'&&!f.taskKeys.length&&!data.unresolved.some(u=>u.conditionIds.includes(c.key)))throw Error('acceptance_without_task_or_issue');}
+ for(const f of data.fragments){if(!known.has(f.conditionId)||seen.has(f.conditionId)||new Set(f.taskKeys).size!==f.taskKeys.length||f.taskKeys.some(k=>!taskKeys.has(k)))throw Error('invalid_fragment_reference');seen.add(f.conditionId);const c=scheme.conditions.find(c=>c.key===f.conditionId)!;if(c.kind==='acceptance'&&!f.taskKeys.length&&!data.unresolved.some(u=>u.conditionIds.includes(c.key)))throw Error('acceptance_without_task_or_issue');}
  if(segment.conditionIds.some(k=>!seen.has(k)))throw Error('fragment_omitted');
  for(const t of data.tasks)if(new Set(t.conditionIds).size!==t.conditionIds.length||new Set(t.dependsOn).size!==t.dependsOn.length||new Set(t.citations).size!==t.citations.length||t.conditionIds.some(k=>!known.has(k))||t.dependsOn.some(k=>!taskKeys.has(k)||k===t.key)||t.citations.some(k=>!citationIds.includes(k)))throw Error('invalid_task_reference');
  for(const u of data.unresolved)if(u.conditionIds.some(k=>!known.has(k)))throw Error('invalid_unresolved_reference');
  for(const f of data.fragments)if(f.taskKeys.some(key=>!data.tasks.find(t=>t.key===key)!.conditionIds.includes(f.conditionId)))throw Error('fragment_task_condition_mismatch');
+ for(const t of data.tasks)if(t.conditionIds.some(key=>!data.fragments.find(f=>f.conditionId===key)!.taskKeys.includes(t.key)))throw Error('fragment_task_condition_mismatch');
  return data;
 }
 export function buildMerge(results:{segmentKey:string;output:SegmentOutput}[]):Merge{

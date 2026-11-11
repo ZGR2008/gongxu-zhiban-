@@ -1216,7 +1216,7 @@
       "command": "pnpm verify --suite=database",
       "report": ".runtime/verification-v4-c1feac8d-331d-4fb5-8e81-a7afd8b7b462/report.json",
       "sha256": "39582ec4373619516fa7192165520ff93c9a4a37113f9364e90684e2a75e895d",
-      "scope": "explicit_real_local_data_synthetic_accounts_and_model_fixtures",
+      "scope": "explicit_real_local_data_REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b_accounts_and_model_fixtures",
       "status": "passed",
       "count": 17,
       "startedAt": "2026-11-01T04:31:29.604Z",
@@ -1909,7 +1909,7 @@
       "command": "node scripts/execution-concurrency-local.mjs",
       "report": ".runtime/execution-concurrency-local-bc7005ad-da66-4190-8d29-c3c406e40e88/report.json",
       "sha256": "f2bce2a3dff714e8e28830453d905e73bce97231abe0bfbf50894d9bb0f526f1",
-      "scope": "real_local_database_http_synthetic_execution_concurrency_no_models",
+      "scope": "real_local_database_http_REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b_execution_concurrency_no_models",
       "status": "passed",
       "count": 5,
       "startedAt": "2026-11-01T04:04:15.543Z",
@@ -1942,7 +1942,7 @@
       "command": "node scripts/segment-review-local.mjs",
       "report": ".runtime/segment-review-local-e6086064-2c9f-4052-98d9-6d69e8cab08d/report.json",
       "sha256": "041a2b738a818e6f3eaadcfabc62d19974b95c861cbf5e84b73a3ec23c115f02",
-      "scope": "real_local_database_http_synthetic_segment_review_no_models",
+      "scope": "real_local_database_http_REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b_segment_review_no_models",
       "status": "passed",
       "count": 5,
       "startedAt": "2026-11-01T04:28:52.638Z",
@@ -2101,7 +2101,7 @@
       "command": "pnpm smoke --with-rag",
       "report": ".runtime/smoke-8dfb3988-a296-495f-b406-bb5e773d221f.json",
       "sha256": "0a964dfa1e54b438f6dbae7b97c2dda3aabb9b6c2ba4a9d43e286298365e7a8d",
-      "scope": "actual_local_services_synthetic_data_no_chat",
+      "scope": "actual_local_services_REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b_data_no_chat",
       "status": "passed",
       "count": 8,
       "startedAt": "2026-11-01T04:49:07.090Z",
@@ -2260,43 +2260,43 @@
       "file": "docs/screenshots/review-v4/documents-desktop.png",
       "sha256": "afa0888868779c26b788d7288934b0f3dbbedfb582cabb865bb4058f7c1bc1e0",
       "source": "actual_ui_from_demo-draft-quick-71e03eb2",
-      "scope": "synthetic_account_local_db_and_embedding_chat_fixture_no_real_person_data"
+      "scope": "REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b_account_local_db_and_embedding_chat_fixture_no_real_person_data"
     },
     {
       "file": "docs/screenshots/review-v4/execution-conflict-desktop.png",
       "sha256": "1c103f32266d34aaea55d75c2f7d57c27a3f0bfd4fc35b44539c1c78c26e811a",
       "source": "actual_ui_from_demo-draft-quick-71e03eb2",
-      "scope": "synthetic_account_local_db_and_embedding_chat_fixture_no_real_person_data"
+      "scope": "REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b_account_local_db_and_embedding_chat_fixture_no_real_person_data"
     },
     {
       "file": "docs/screenshots/review-v4/growth-current-desktop.png",
       "sha256": "ed0f0f9412ab8a539b3f6c572f44de6670030bd5b1d42a3f4f022483a8aaf7c4",
       "source": "actual_ui_from_demo-draft-quick-71e03eb2",
-      "scope": "synthetic_account_local_db_and_embedding_chat_fixture_no_real_person_data"
+      "scope": "REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b_account_local_db_and_embedding_chat_fixture_no_real_person_data"
     },
     {
       "file": "docs/screenshots/review-v4/requirement-segments-desktop.png",
       "sha256": "89c9279bf8a9d935f25d9cd74b27fa8a88c9ceb26b4bea349fbf8080f05fba71",
       "source": "actual_ui_from_demo-draft-quick-71e03eb2",
-      "scope": "synthetic_account_local_db_and_embedding_chat_fixture_no_real_person_data"
+      "scope": "REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b_account_local_db_and_embedding_chat_fixture_no_real_person_data"
     },
     {
       "file": "docs/screenshots/review-v4/review-source-desktop.png",
       "sha256": "6de2baef184ab6f839768ba72692e04dd76b570409ab5170daba75985e84045a",
       "source": "actual_ui_from_demo-draft-quick-71e03eb2",
-      "scope": "synthetic_account_local_db_and_embedding_chat_fixture_no_real_person_data"
+      "scope": "REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b_account_local_db_and_embedding_chat_fixture_no_real_person_data"
     },
     {
       "file": "docs/screenshots/review-v4/task-test-chain-desktop.png",
       "sha256": "eb7c33ef8e299cf9e799bf9b68a6c69a9089ff52ad3df7f5f0e1be2c007edc89",
       "source": "actual_ui_from_demo-draft-quick-71e03eb2",
-      "scope": "synthetic_account_local_db_and_embedding_chat_fixture_no_real_person_data"
+      "scope": "REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b_account_local_db_and_embedding_chat_fixture_no_real_person_data"
     },
     {
       "file": "docs/screenshots/review-v4/workspace-desktop.png",
       "sha256": "f08ac71391a6661fc951962e73b2dfe1e417f478c538fe232f770d3bfb907f6d",
       "source": "actual_recorded_video_at_15s_cropped_only_black_caption_area_from_demo-draft-69c95fb4",
-      "scope": "synthetic_account_local_db_and_embedding_chat_fixture_no_real_person_data"
+      "scope": "REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b_account_local_db_and_embedding_chat_fixture_no_real_person_data"
     }
   ],
   "notExecuted": [

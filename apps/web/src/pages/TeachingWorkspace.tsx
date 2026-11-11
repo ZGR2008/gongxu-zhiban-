@@ -1,6 +1,7 @@
 import {useCallback,useEffect,useRef,useState,type FormEvent} from 'react';
 import {useEditGuard,useUnsavedEdit} from '../components/EditGuard';
 import {RequestScope} from '../components/request-scope';
+import {materialSourceLabel,executionRecordLabel} from '../components/material-source';
 import './teaching.css';
 import {AssignmentEditor} from './AssignmentEditor';
 import {AssignmentChange,ClassProgress,LeaveClass} from './AssignmentProgress';
@@ -70,7 +71,7 @@ export default function TeachingWorkspace({request,role,navigate}:{request:Api;r
  </section>;
 }
 function GapList({gaps}:{gaps:Row[]}){return <div className="teaching-gaps"><h4>当前缺口与下一步</h4>{gaps.length?<ul>{gaps.map(g=><li key={g.code}><strong>{g.count} · {g.message}</strong><span>{g.next}</span></li>)}</ul>:<p>记录中未发现上述结构缺口，仍需人工核对证据是否支持结论。</p>}</div>;}
-function Snapshot({snapshot:s}:{snapshot:Row}){return <details className="teaching-snapshot"><summary>核对原始快照：{s.tasks.length} 项任务 / {s.cases.length} 项测试 / {s.documents.length} 份文档</summary><p>{s.evidenceKind}</p><p>教师核对的是提交时固定快照，原项目后续修改不会改变这里。私人知识资料原文未共享，不能仅凭引用标识推断依据充分。</p><SubmissionTrace snapshot={s}/><h4>需求 v{s.requirement.version}</h4><p className="teaching-pre">{s.requirement.content}</p>{s.tasks.map((t:Row)=><div key={t.id}><h4>{t.title}</h4><p>{t.description}</p><p>验收方法：{t.deliverable}</p></div>)}{s.cases.map((t:Row)=><div key={t.id}><h4>{t.title} · {t.result}（人工登记）</h4><p>{t.steps}</p><p>预期：{t.expected}</p><p>实际说明：{t.execution_note||'未登记'}</p></div>)}{s.documents.map((d:Row)=><details key={d.id}><summary>{d.type} · 修订 {d.revision}</summary><p className="teaching-pre">{d.content}</p></details>)}</details>;}
+function Snapshot({snapshot:s}:{snapshot:Row}){return <details className="teaching-snapshot"><summary>核对原始快照：{s.tasks.length} 项任务 / {s.cases.length} 项测试 / {s.documents.length} 份文档</summary><p>{s.evidenceKind}</p><p>教师核对的是提交时固定快照，原项目后续修改不会改变这里。私人知识资料原文未共享，不能仅凭引用标识推断依据充分。</p><SubmissionTrace snapshot={s}/><h4>需求 v{s.requirement.version}</h4><p className="teaching-pre">{s.requirement.content}</p>{s.tasks.map((t:Row)=><div key={t.id}><h4>{t.title}</h4><p>{t.description}</p><p>验收方法：{t.deliverable}</p></div>)}{s.cases.map((t:Row)=><div key={t.id}><h4>{t.title} · {executionRecordLabel(t.result)}</h4><p className="muted-text">{materialSourceLabel(t.model_name)}</p><p>{t.steps}</p><p>预期：{t.expected}</p><p>实际说明：{t.execution_note||'未登记'}</p></div>)}{s.documents.map((d:Row)=><details key={d.id}><summary>{d.type} · 修订 {d.revision}</summary><p className="teaching-pre">{d.content}</p></details>)}</details>;}
 function Administration({request}:{request:Api}){
  const [rows,setRows]=useState<Row[]>([]),[events,setEvents]=useState<Row[]>([]),[query,setQuery]=useState(''),[error,setError]=useState(''),[busy,setBusy]=useState(false),[selected,setSelected]=useState<Row|null>(null),[reason,setReason]=useState(''),[limit,setLimit]=useState(''),[notice,setNotice]=useState('');
  const scope=useRef(new RequestScope()),pending=useRef(false),alive=useRef(true);const {protect}=useEditGuard();

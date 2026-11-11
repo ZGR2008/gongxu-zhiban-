@@ -16,7 +16,7 @@ async function setup(t:TestContext,{content='审批须留档',embedding=true,den
  const store={userBySession:async()=>({id:'owner'}),getProject:async()=>denied?null:{id:project},listRequirements:async()=>{state.reads++;return [{...requirement}];}} as unknown as ProjectStore;
  const pool={query:async(_sql:string,values:unknown[])=>{state.writes.push(values);return {rows:[{id:hit.id,aiAdvice:values[4],requirementVersionId:values[6]??null,reviewContext:values[7]?JSON.parse(String(values[7])):null}]};}} as unknown as Pool;
  const dependencies={embedding:embedding?{baseUrl:'http://127.0.0.1:3010',apiKey:'',model:'fixture'}:undefined,
-  retrieve:async(_pool:unknown,owner:string,query:string)=>{assert.equal(owner,'owner');state.queries.push(query);if(failure)throw new EmbeddingError('synthetic unavailable','embedding_unavailable');return [hit];},
+  retrieve:async(_pool:unknown,owner:string,query:string)=>{assert.equal(owner,'owner');state.queries.push(query);if(failure)throw new EmbeddingError('REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b unavailable','embedding_unavailable');return [hit];},
   complete:async(_config:unknown,messages:{role:string;content:string}[])=>{state.calls++;state.messages=messages;return '合成未验证建议';}};
  const app=Fastify();await registerPracticeRoutes(app,store,pool,ai,dependencies as unknown as NonNullable<Parameters<typeof registerPracticeRoutes>[4]>);t.after(()=>app.close());
  return {app,state,requirement,url:`/projects/${project}/code-reviews`};

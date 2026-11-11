@@ -2,8 +2,8 @@ import {readFile,mkdir,writeFile,realpath,stat} from 'node:fs/promises';import {
 import {buildHumanReviewPack,reviewHtml} from '../evaluation/human-review-pack.mjs';
 globalThis.fetch=async()=>{throw Error('Network forbidden during offline evidence packaging');};
 const root=fileURLToPath(new URL('../',import.meta.url)),args=process.argv.slice(2);
-if(args.length!==2||!['prepared','report'].every(n=>args.filter(a=>a.startsWith('--'+n+'=')).length===1))throw Error('Use --prepared=<local synthetic preparation> --report=<saved v4 report>');
-async function load(name,pattern){const path=await realpath(resolve(root,args.find(a=>a.startsWith('--'+name+'=')).slice(name.length+3))),rel=relative(root,path).replaceAll('\\','/');if(!pattern.test(rel)||(await stat(path)).size>2000000)throw Error('Only bounded synthetic .runtime evidence accepted');const bytes=await readFile(path);return {data:JSON.parse(bytes.toString('utf8')),sha256:createHash('sha256').update(bytes).digest('hex')};}
+if(args.length!==2||!['prepared','report'].every(n=>args.filter(a=>a.startsWith('--'+n+'=')).length===1))throw Error('Use --prepared=<local REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b preparation> --report=<saved v4 report>');
+async function load(name,pattern){const path=await realpath(resolve(root,args.find(a=>a.startsWith('--'+name+'=')).slice(name.length+3))),rel=relative(root,path).replaceAll('\\','/');if(!pattern.test(rel)||(await stat(path)).size>2000000)throw Error('Only bounded REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b .runtime evidence accepted');const bytes=await readFile(path);return {data:JSON.parse(bytes.toString('utf8')),sha256:createHash('sha256').update(bytes).digest('hex')};}
 const prepared=await load('prepared',/^\.runtime\/evaluation-prepared-[a-f0-9-]+\/prepared-inputs\.json$/),live=await load('report',/^\.runtime\/evaluation-live-v4-[a-f0-9-]+\/report\.json$/);
 const dataset=JSON.parse(await readFile(join(root,'evaluation/cases.v1.json'),'utf8')),template=JSON.parse(await readFile(join(root,'evaluation/record-template.json'),'utf8'));
 const bundle=buildHumanReviewPack(prepared.data,live.data,template,dataset,randomUUID());

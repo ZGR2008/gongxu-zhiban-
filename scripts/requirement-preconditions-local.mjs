@@ -7,7 +7,7 @@ import {createApp} from '../apps/api/dist/app.js';
 import {PgProjectStore} from '../apps/api/dist/project-store.js';
 import {loadConfig} from '../apps/api/dist/config.js';
 
-// Real loopback HTTP/DB, exclusively new synthetic accounts. No model, arbitrary
+// Real loopback HTTP/DB, exclusively new REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b accounts. No model, arbitrary
 // code execution, real-account reads, configuration output or record deletion.
 const require=createRequire(new URL('../apps/api/package.json',import.meta.url));
 if(process.argv.slice(2).some(value=>value!=='--browser'))throw Error('Only --browser is supported');
@@ -19,7 +19,7 @@ const pool=new Pool({connectionString:config.DATABASE_URL,connectionTimeoutMilli
 const app=await createApp({projectStore:new PgProjectStore(pool),pool,database:{query:sql=>pool.query(sql),end:async()=>{}},corsOrigin:'http://127.0.0.1:5173'});
 const origin=await app.listen({host:'127.0.0.1',port:0});
 const directory=new URL(`../.runtime/requirement-preconditions-local-${randomUUID()}/`,import.meta.url);await mkdir(directory,{recursive:true});
-const report={scope:'real_local_database_and_http_new_synthetic_accounts',realModel:false,externalCalls:0,checks:[],startedAt:new Date().toISOString()};
+const report={scope:'real_local_database_and_http_new_REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b_accounts',realModel:false,externalCalls:0,checks:[],startedAt:new Date().toISOString()};
 let stage='setup',owner,foreign,project,first,browser;
 const nativeFetch=globalThis.fetch;
 globalThis.fetch=(input,init)=>{
@@ -115,7 +115,7 @@ try{
    await page.getByRole('group',{name:'当前版本追踪统计',exact:true}).waitFor();assert.equal(traceFailures,0);assert.equal(await page.locator('.trace-panel .alert.error').count(),0);
    await page.screenshot({path:fileURLToPath(new URL('requirement-recovered.png',directory)),fullPage:true});
   });
-  report.browser='Chromium Edge; two synthetic account HTTP actions; only save failure is injected';
+  report.browser='Chromium Edge; two REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b account HTTP actions; only save failure is injected';
  }
  report.status='passed';
 }catch(error){report.status='failed';report.failedStage=stage;report.errorType=error.code??error.constructor.name;console.error(`FAILED ${stage} (${report.errorType})`);process.exitCode=1;}

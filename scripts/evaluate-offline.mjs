@@ -13,7 +13,7 @@ globalThis.fetch=async()=>{throw Error('Network is prohibited in offline evaluat
 const require=createRequire(new URL('../apps/api/package.json',import.meta.url)),Fastify=require('fastify');
 const dataset=JSON.parse(await readFile(new URL('../evaluation/cases.v1.json',import.meta.url),'utf8'));
 const owner='11111111-1111-4111-8111-111111111111',version='22222222-2222-4222-8222-222222222222';
-const auth={authorization:'Bearer '+'f'.repeat(64)}; // Deliberate synthetic token, never accepted by a real server.
+const auth={authorization:'Bearer '+'f'.repeat(64)}; // Deliberate REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b token, never accepted by a real server.
 const report={datasetVersion:dataset.version,scope:'offline_contract_and_fixture_checks',realModel:false,realDatabase:false,semanticQuality:'not_evaluated',comparison:'not_executed',cases:[],startedAt:new Date().toISOString()};
 async function ragFixture(sample){
   const hits=(sample.documents??[]).map((content,i)=>({id:`00000000-0000-4000-8000-${String(i+1).padStart(12,'0')}`,document_id:version,document_name:`合成资料${i+1}`,page:1,content,distance:.1}));

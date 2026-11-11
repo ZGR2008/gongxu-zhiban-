@@ -5,11 +5,11 @@ import {validateRetrievalDataset,summarizeRetrieval,summarizeQueryStudy} from '.
 const data=JSON.parse(await readFile(new URL('../evaluation/retrieval.v1.json',import.meta.url),'utf8'));
 const results=()=>data.queries.map(q=>({id:q.id,status:'completed',hits:q.expectedDocuments.map(documentId=>({documentId}))}));
 const study=JSON.parse(await readFile(new URL('../evaluation/retrieval-query-study.v1.json',import.meta.url),'utf8'));
-test('frozen synthetic dataset covers normal conflict no-answer and untrusted sources',()=>{
+test('frozen REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b dataset covers normal conflict no-answer and untrusted sources',()=>{
  validateRetrievalDataset(data); assert.equal(data.documents.length,15);assert.equal(data.queries.length,16);
  assert.deepEqual([...new Set(data.queries.map(q=>q.kind))],['answerable','conflicting','unanswerable','untrusted_source']);
 });
-test('complete synthetic labels have a denominator of twelve, not all observation cases',()=>{
+test('complete REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b labels have a denominator of twelve, not all observation cases',()=>{
  const score=summarizeRetrieval(data,results());assert.equal(score.answerable.cases,12);assert.equal(score.answerable.hitAt1,12);
  assert.equal(score.conflict[0].expectedFoundAt5,2);assert.equal(score.noAnswerObservations.length,2);assert.equal(score.semanticSupport,'not_evaluated');
 });

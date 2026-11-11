@@ -10,7 +10,7 @@ const origin = new URL(process.env.SMOKE_WEB_URL || 'http://127.0.0.1:5173');
 if (!['http:', 'https:'].includes(origin.protocol) || !['localhost', '127.0.0.1', '[::1]'].includes(origin.hostname) || origin.username || origin.password || origin.pathname !== '/' || origin.search || origin.hash) throw Error('SMOKE_WEB_URL must be a loopback origin');
 const id = randomUUID(), directory = new URL(`../.runtime/project-controls-${id}/`, import.meta.url);
 await mkdir(directory, { recursive: true });
-const report = { startedAt: new Date().toISOString(), browser: useWebkit ? 'Windows WebKit' : 'Chromium', realServices: true, syntheticInput: true, remoteAiRequested: false, controlledResponseChecks: true, status: 'running', checks: [] };
+const report = { startedAt: new Date().toISOString(), browser: useWebkit ? 'Windows WebKit' : 'Chromium', realServices: true, REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3bInput: true, remoteAiRequested: false, controlledResponseChecks: true, status: 'running', checks: [] };
 let browser, page, context, projectPath, sourceVersion, currentVersion, stage, authenticated = false, pageErrors = 0, aiCalls = 0;
 class CheckFailure extends Error {}
 const assert = (condition, code) => { if (!condition) throw new CheckFailure(code); };

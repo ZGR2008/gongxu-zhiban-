@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
 import {defaultScheme, inspectScheme, conditionKey, parseSegmentOutput, buildMerge, inspectMerge, type Scheme} from './domain.js';
 const project='11111111-1111-4111-8111-111111111111';
 const accept=(source:string):Scheme=>{const s=defaultScheme(project,source);s.conditions=s.conditions.map(c=>({...c,kind:'acceptance',crossNote:'必须结合所有涉及片段核对完整原文',statement:'本条完整原文中的行为及边界必须满足'}));return s;};
@@ -50,4 +51,33 @@ test('whitespace-only range can be retained without a fabricated task; duplicate
  assert.equal(parseSegmentOutput('{"tasks":[],"fragments":[],"unresolved":[]}',empty,scheme,[]).tasks.length,0);
  const k=scheme.conditions[0].key,task={key:'a',title:'实现审查',stage:'开发',description:'具体实现审查权限与记录',deliverable:'对照角色执行允许和拒绝输入',conditionIds:[k],citations:[],dependsOn:[]};
  const draft={tasks:[task,{...task,key:'b',dependsOn:['a','a']}]};assert.ok(inspectMerge(scheme,draft,[]).errors.some(e=>e.code==='merge_reference_invalid'));
+});
+
+test('saved v7 original response remains rejected; correcting only its first mismatch is insufficient',()=>{
+ const fixture=JSON.parse(readFileSync(new URL('../../../../evaluation/fixtures/long-plan-v7-saved-responses.json',import.meta.url),'utf8'));
+ const record=fixture.records[8],payload=JSON.parse(record.messages[1].content),original=record.output;
+ assert.throws(()=>parseSegmentOutput(original,payload.segment,fixture.scheme,[]),/fragment_task_condition_mismatch/);
+ const edited=JSON.parse(original);
+ edited.tasks.find((t:{key:string})=>t.key==='T5').conditionIds.push('CND-461defa51e218e1e27a1');
+ // This is an explicit in-memory test mutation, never a correction to the saved answer.
+ assert.throws(()=>parseSegmentOutput(JSON.stringify(edited),payload.segment,fixture.scheme,[]),/fragment_task_condition_mismatch/);
+ assert.equal(record.output,original);
+});
+
+test('task-to-fragment omissions and duplicate fragment task keys cannot claim consistent coverage',()=>{
+ const source='审批失败必须回滚。',scheme=accept(source),segment=inspectScheme(project,source,scheme).segments[0],key=scheme.conditions[0].key;
+ const task={key:'T1',stage:'开发',title:'审批失败回滚',description:'失败后恢复事务并保留可追溯原因',deliverable:'模拟事务失败，库存不改变且原因存在',dependsOn:[],conditionIds:[key],citations:[]};
+ const output={tasks:[task,{...task,key:'T2'}],fragments:[{conditionId:key,taskKeys:['T1'],note:'条件只列出一个任务，另一个反向关联不得静默接受'}],unresolved:[]};
+ assert.throws(()=>parseSegmentOutput(JSON.stringify(output),segment,scheme,[]),/fragment_task_condition_mismatch/);
+ output.fragments[0].taskKeys=['T1','T2','T2'];
+ assert.throws(()=>parseSegmentOutput(JSON.stringify(output),segment,scheme,[]),/invalid_fragment_reference/);
+ output.fragments[0].taskKeys=['T1','T2'];
+ assert.equal(parseSegmentOutput(JSON.stringify(output),segment,scheme,[]).tasks.length,2);
+});
+test('actual saved 86-task candidate remains blocked without truncation or automatic adoption',()=>{
+ const fixture=JSON.parse(readFileSync(new URL('../../../../evaluation/fixtures/long-plan-v10-merge-candidate.json',import.meta.url),'utf8'));
+ const original=JSON.stringify(fixture.draft);assert.equal(fixture.draft.tasks.length,86);
+ const audit=inspectMerge(fixture.scheme,fixture.draft,[]);
+ assert.ok(audit.errors.some(e=>e.code==='merge_schema'));assert.equal(audit.readyForAutomaticAdoption,false);
+ assert.equal(JSON.stringify(fixture.draft),original);assert.equal(fixture.draft.tasks.length,86);
 });

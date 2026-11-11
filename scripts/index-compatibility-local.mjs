@@ -18,7 +18,7 @@ const pool=new Pool({connectionString:config.DATABASE_URL,connectionTimeoutMilli
 const store=new PgProjectStore(pool),app=Fastify({logger:false});await registerProjectRoutes(app,store);await registerKnowledgeRoutes(app,store,pool,embedding);
 app.get('/health',async()=>({status:'ok',service:'gongxu-api'}));app.get('/ready',async()=>({status:'ready'}));app.get('/ai/status',async()=>({configured:false}));
 const directory=new URL(`../.runtime/index-compatibility-local-${randomUUID()}/`,import.meta.url);await mkdir(directory,{recursive:true});
-const report={scope:'real_local_embedding_database_http_browser_with_controlled_old_identity_and_transport_failure',realChatModel:false,syntheticRecords:true,checks:[],startedAt:new Date().toISOString()};
+const report={scope:'real_local_embedding_database_http_browser_with_controlled_old_identity_and_transport_failure',realChatModel:false,REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3bRecords:true,checks:[],startedAt:new Date().toISOString()};
 let owner,foreign,browser,stage='setup',document;
 const call=(method,url,payload,identity=owner)=>app.inject({method,url,headers:{authorization:`Bearer ${identity.token}`},...(payload===undefined?{}:{payload})});
 async function check(name,run){stage=name;await run();report.checks.push({name,status:'passed'});console.log(`PASS ${name}`);}
@@ -32,10 +32,10 @@ try{
   assert.equal((await retrieveKnowledge(pool,owner.id,text,embedding))[0].document_id,document.id);
  });
  await check('controlled_old_identity_stops_current_search_and_is_not_exposed_to_browser',async()=>{
-  // This update affects only the new synthetic fixture, not configuration or
+  // This update affects only the new REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b fixture, not configuration or
   // any existing user document. It stands for stored vectors from an old model.
-  await pool.query("UPDATE knowledge_chunks SET embedding_model='synthetic-old-model-identity' WHERE document_id=$1",[document.id]);
-  const listing=(await call('GET','/knowledge')).json();assert.equal(listing.documents[0].status,'ready');assert.equal(listing.documents[0].indexCompatibility,'model_changed');assert.equal(listing.documents[0].currentChunks,0);assert.equal(JSON.stringify(listing).includes(embedding.baseUrl),false);assert.equal(JSON.stringify(listing).includes('synthetic-old-model-identity'),false);
+  await pool.query("UPDATE knowledge_chunks SET embedding_model='REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b-old-model-identity' WHERE document_id=$1",[document.id]);
+  const listing=(await call('GET','/knowledge')).json();assert.equal(listing.documents[0].status,'ready');assert.equal(listing.documents[0].indexCompatibility,'model_changed');assert.equal(listing.documents[0].currentChunks,0);assert.equal(JSON.stringify(listing).includes(embedding.baseUrl),false);assert.equal(JSON.stringify(listing).includes('REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b-old-model-identity'),false);
   assert.deepEqual(await retrieveKnowledge(pool,owner.id,text,embedding),[]);assert.deepEqual((await call('GET','/knowledge',undefined,foreign)).json().documents,[]);
   assert.equal((await call('POST',`/knowledge/${document.id}/index`,undefined,foreign)).statusCode,404);
  });

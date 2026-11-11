@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "scope": "original_synthetic_software_engineering_retrieval_not_official_benchmark",
+  "scope": "original_REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b_software_engineering_retrieval_not_official_benchmark",
   "authorship": "本项目原创合成资料和问题。标签为开发者事先编写，未经过教师盲评。",
   "documents": [
     {"id":"transaction","title":"借用业务的事务回滚 · 合成","page":1,"text":"一次设备借用需要创建借用单并扣减库存。这两项数据库写入属于同一事务：全部成功后提交，任一操作报错则回滚全部修改。不能留下已扣库存却没有借用单的半完成状态。回滚后向用户说明失败，允许其重新查看库存。"},

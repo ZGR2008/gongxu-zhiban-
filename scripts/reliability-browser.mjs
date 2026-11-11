@@ -1,6 +1,6 @@
 import { chromium, firefox, webkit } from 'playwright';
 import { mkdir, writeFile } from 'node:fs/promises';
-import {existsSync} from 'node:fs';
+import {existsSync,readFileSync} from 'node:fs';
 import { randomUUID } from 'node:crypto';
 import assert from 'node:assert/strict';
 import {longPlanningFixture} from './long-plan-browser-fixture.mjs';
@@ -222,7 +222,7 @@ async function auditAccessibility(page,name){
   await document.fonts.ready;
   return window.axe.run(document,{runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21a','wcag21aa']}});
  });
- report.accessibility??={tool:result.testEngine,scope:'WCAG 2.0/2.1 A/AA rules supported by axe; synthetic content only; not a conformance claim',screens:[]};
+ report.accessibility??={tool:result.testEngine,scope:'WCAG 2.0/2.1 A/AA rules supported by axe; REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b content only; not a conformance claim',screens:[]};
  const compact=rows=>rows.map(row=>({id:row.id,impact:row.impact,description:row.description,helpUrl:row.helpUrl,nodes:row.nodes.map(node=>({target:node.target,html:node.html,failureSummary:node.failureSummary,checks:[...node.any,...node.all,...node.none].map(check=>({id:check.id,message:check.message,data:check.data}))}))}));
  report.accessibility.screens.push({name,url:new URL(page.url()).pathname,violations:compact(result.violations),incomplete:compact(result.incomplete),passedRuleCount:result.passes.length,inapplicableRuleCount:result.inapplicable.length});
  await page.screenshot({path:new URL(`${name}.png`,directory).pathname.replace(/^\/([A-Za-z]:)/,'$1'),fullPage:true});
@@ -260,6 +260,25 @@ try{
   for(const [width,height] of [[1366,768],[1920,1080],[1000,750]]){await page.setViewportSize({width,height});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+2),false);}
   await page.getByRole('button',{name:'刷新方案与作业',exact:true}).focus();assert.equal(await page.evaluate(()=>document.activeElement.textContent),'刷新方案与作业');
   await page.screenshot({path:new URL('v5-long-planning-desktop.png',directory).pathname.replace(/^\/([A-Za-z]:)/,'$1'),fullPage:true});
+ });
+ await scenario('v10_long_plan_saved_result_validation_keeps_correction_input',async(page,state)=>{
+  const {detail}=longPlanningFixture(state,A,RA,{job:true});detail.job.error_code='part_result_invalid';state.longCorrectionError='part_result_invalid';
+  await page.goto(`${origin.origin}/projects/${A}/agent`);await page.getByRole('button',{name:'展开分段规划',exact:true}).click();
+  await page.locator('.wb-warning').filter({hasText:'历史已完成片段未通过当前一致性校验'}).waitFor();
+  await page.getByText('片段恢复：人工修正或准备重试',{exact:true}).click();
+  const note='已核对原始输出，人工修正仍须满足双向关联；此处为合成界面测试。',draft='{"tasks":[],"fragments":[],"unresolved":[]}';
+  await page.getByLabel('处理原因',{exact:true}).fill(note);await page.getByLabel('人工修正的完整片段 JSON',{exact:true}).fill(draft);await page.getByRole('button',{name:'保存人工修正',exact:true}).click();
+  await page.getByRole('alert').filter({hasText:'历史已完成片段未通过当前一致性校验'}).waitFor();
+  assert.equal(await page.getByLabel('处理原因',{exact:true}).inputValue(),note);assert.equal(await page.getByLabel('人工修正的完整片段 JSON',{exact:true}).inputValue(),draft);assert.equal(state.writes.length,1);assert.ok(state.writes[0].path.endsWith('/correct-part'));assert.equal(state.errors.length,0);
+ });
+ await scenario('v10_long_plan_86_real_candidates_show_limit_and_preserve_editable_original',async(page,state)=>{
+  const saved=JSON.parse(readFileSync(new URL('../evaluation/fixtures/long-plan-v10-merge-candidate.json',import.meta.url),'utf8')),{detail}=longPlanningFixture(state,A,RA,{job:true});
+  detail.job.status='awaiting_review';detail.job.error_code=null;detail.job.merge_draft=structuredClone(saved.draft);detail.job.scheme_snapshot=saved.scheme;detail.audit=saved.audit;
+  await page.goto(`${origin.origin}/projects/${A}/agent`);await page.getByRole('button',{name:'展开分段规划',exact:true}).click();
+  await page.getByText(/已保存 86 个候选任务，当前合并最多 80 个/).waitFor();
+  assert.equal(await page.getByRole('button',{name:'保存合并审核',exact:true}).isDisabled(),true);assert.equal(await page.getByRole('button',{name:'采纳为正式计划',exact:true}).isDisabled(),true);
+  await page.getByText('高级编辑：合并任务、依赖与条件关联',{exact:true}).click();
+  const editor=JSON.parse(await page.getByLabel('合并计划JSON',{exact:true}).inputValue());assert.equal(editor.tasks.length,86);assert.deepEqual(editor,saved.draft);assert.equal(state.writes.length,0);assert.equal(state.errors.length,0);
  });
  await scenario('accessibility_v5_long_planning',async(page,state)=>{longPlanningFixture(state,A,RA,{job:true});await page.goto(`${origin.origin}/projects/${A}/agent`);await page.getByRole('button',{name:'展开分段规划',exact:true}).click();await page.getByText('结果未知，可能已计费',{exact:true}).waitFor();await auditAccessibility(page,'accessibility_v5_long_planning');});
  await scenario('v5_long_plan_invalid_editable_merge_keeps_editor_instead_of_crashing',async(page,state)=>{
@@ -502,7 +521,7 @@ try{
  await scenario('session_new_account_cannot_see_previous_project_cache',async(page,state)=>{
   await page.goto(`${origin.origin}/dashboard`);await page.locator('.project-explorer').getByText('受控项目 A',{exact:true}).waitFor();
   await page.getByRole('link',{name:'知识库',exact:true}).first().click();await page.locator('#knowledge-name').waitFor();await page.getByRole('button',{name:/退出登录/}).click();await page.locator('#email').waitFor();
-  state.projectList=[project(B)];await page.locator('#email').fill('synthetic-b@example.invalid');await page.locator('#password').fill('fixture-password-only');await page.getByRole('button',{name:/登录工作空间/}).click();await page.locator('#knowledge-name').waitFor();
+  state.projectList=[project(B)];await page.locator('#email').fill('REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b-b@example.invalid');await page.locator('#password').fill('fixture-password-only');await page.getByRole('button',{name:/登录工作空间/}).click();await page.locator('#knowledge-name').waitFor();
   await page.keyboard.press('Control+k');await page.locator('#quick-nav-query').fill('受控项目 A');assert.equal(await page.locator('.quick-nav-results').getByText('受控项目 A',{exact:true}).count(),0);
  });
  await scenario('session_storage_change_invalidates_old_editor_and_late_response',async(page,state)=>{
@@ -558,7 +577,7 @@ try{
  });
  await scenario('knowledge_invalid_file_keeps_draft_and_replacement_is_guarded',async(page,state)=>{
   await page.goto(`${origin.origin}/knowledge`);await page.locator('#knowledge-name').fill('保留原名');await page.locator('#knowledge-content').fill('保留原稿');
-  await page.locator('#knowledge-file').setInputFiles({name:'invalid.exe',mimeType:'application/octet-stream',buffer:Buffer.from('synthetic')});await page.getByRole('alert').filter({hasText:'请选择 PDF、TXT 或 Markdown 文件。'}).waitFor();assert.equal(await page.locator('#knowledge-content').inputValue(),'保留原稿');
+  await page.locator('#knowledge-file').setInputFiles({name:'invalid.exe',mimeType:'application/octet-stream',buffer:Buffer.from('REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b')});await page.getByRole('alert').filter({hasText:'请选择 PDF、TXT 或 Markdown 文件。'}).waitFor();assert.equal(await page.locator('#knowledge-content').inputValue(),'保留原稿');
   await page.locator('#knowledge-file').setInputFiles({name:'oversized.pdf',mimeType:'application/pdf',buffer:Buffer.alloc(3_000_001)});await page.getByText(/PDF 文件不能超过 3 MB/).waitFor();assert.equal(await page.locator('#knowledge-name').inputValue(),'保留原名');
   const replacement={name:'replacement.txt',mimeType:'text/plain',buffer:Buffer.from('显式选择替换后的合成正文')};await page.locator('#knowledge-file').setInputFiles(replacement);const guard=page.getByRole('dialog',{name:'保留未保存的编辑'});await guard.waitFor();await page.keyboard.press('Escape');assert.equal(await page.locator('#knowledge-content').inputValue(),'保留原稿');
   await page.locator('#knowledge-file').setInputFiles(replacement);await guard.getByRole('button',{name:'放弃并继续'}).click();await page.waitForFunction(()=>document.querySelector('#knowledge-content')?.value==='显式选择替换后的合成正文');assert.equal(await page.locator('#knowledge-name').inputValue(),'replacement.txt');assert.equal(state.writes.length,0);
@@ -953,10 +972,14 @@ try{
   const active=page.locator('.quick-nav-results button.highlighted');assert.equal(await active.count(),1);assert.ok(await active.evaluate(el=>parseFloat(getComputedStyle(el).outlineWidth)>=2),'keyboard-selected operation needs an outline when its fill is forced');
   await page.screenshot({path:fileURLToPath(new URL('forced-colors-quick-selection.png',directory))});await page.keyboard.press('Escape');assert.ok(await page.getByRole('button',{name:'快速导航 Ctrl K',exact:true}).evaluate(el=>el===document.activeElement));
  });
- await scenario('workspace_motion_is_opt_in_and_reduced_motion_disables_playback',async(page)=>{
-  await page.emulateMedia({reducedMotion:'no-preference'});await page.goto(`${origin.origin}/dashboard`);const visual=page.locator('.workspace-visual--webgl');await visual.waitFor();assert.equal(await visual.getAttribute('data-motion'),'paused');
-  await page.getByRole('button',{name:'开启动效',exact:true}).click();assert.equal(await visual.getAttribute('data-motion'),'running');
-  await page.emulateMedia({reducedMotion:'reduce'});await page.getByRole('button',{name:'静态预览',exact:true}).waitFor();assert.ok(await page.getByRole('button',{name:'静态预览',exact:true}).isDisabled());assert.equal(await visual.getAttribute('data-motion'),'paused');
+ await scenario('workspace_motion_autoplays_without_controls_and_respects_reduced_motion',async(page)=>{
+  await page.emulateMedia({reducedMotion:'no-preference'});await page.goto(`${origin.origin}/dashboard`);const visual=page.locator('.workspace-visual--webgl');await visual.waitFor();assert.equal(await visual.getAttribute('data-motion'),'running');
+  assert.equal(await visual.locator('button,a').count(),0,'The artwork must not expose exploration or play/pause controls');
+  const scene=page.frameLocator('.workspace-orbit-frame');await scene.locator('body[data-motion="running"]').waitFor();
+  const before=await scene.locator('canvas').screenshot();await page.waitForTimeout(650);const after=await scene.locator('canvas').screenshot();assert.ok(!before.equals(after),'The actual ring must animate without a click');
+  await page.emulateMedia({reducedMotion:'reduce'});await scene.locator('body[data-motion="paused"]').waitFor();await page.waitForFunction(()=>document.querySelector('.workspace-visual')?.getAttribute('data-motion')==='paused');
+  await page.emulateMedia({reducedMotion:'no-preference'});await scene.locator('body[data-motion="running"]').waitFor();
+  await page.screenshot({path:fileURLToPath(new URL('workspace-autoplay.png',directory))});
  });
  await scenario('restoring_history_requires_a_choice_and_cancel_does_not_claim_success',async(page)=>{
   await page.goto(`${origin.origin}/projects/${A}/requirements`);await page.locator('#requirement').fill('恢复历史时不能静默覆盖的草稿');await page.getByRole('button',{name:/^版本 1\b/}).click();
@@ -1026,9 +1049,9 @@ try{
   }finally{release();}
  });
  await scenario('project_read_invalid_json_has_a_recoverable_error',async(page,state)=>{
-  let invalid=true;await page.route('**/api/projects',route=>invalid?route.fulfill({status:200,contentType:'text/html',body:'<h1>synthetic proxy response</h1>'}):route.fallback());
+  let invalid=true;await page.route('**/api/projects',route=>invalid?route.fulfill({status:200,contentType:'text/html',body:'<h1>REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b proxy response</h1>'}):route.fallback());
   await page.goto(`${origin.origin}/projects`);await page.getByRole('alert').filter({hasText:'服务响应格式无效'}).waitFor();
-  assert.equal(await page.getByText('synthetic proxy response',{exact:true}).count(),0);invalid=false;
+  assert.equal(await page.getByText('REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b proxy response',{exact:true}).count(),0);invalid=false;
   await page.getByRole('button',{name:'重试',exact:true}).click();await page.locator('.project-explorer').getByText('受控项目 A',{exact:true}).waitFor();
   assert.equal(await page.getByRole('alert').count(),0);assert.equal(await page.evaluate(()=>localStorage.getItem('gongxu_token')),'controlled-browser-fixture');
  });

@@ -18,13 +18,14 @@ const name='gx_long_v5_'+randomUUID().replaceAll('-','');assert.match(name,/^gx_
 const out=new URL(`../.runtime/long-plan-local-${randomUUID()}/`,import.meta.url);await mkdir(out,{recursive:true});
 const report={scope:'isolated_real_postgresql_actual_http_model_protocol_fixtures',...sourceProvenance(new URL('../',import.meta.url)),startedAt:new Date().toISOString(),paidModelCalls:0,checks:[],retainedSyntheticDatabase:name};
 const originalFetch=globalThis.fetch;globalThis.fetch=(input,options)=>{if(!local(input instanceof Request?input.url:String(input)))throw Error('External calls forbidden');return originalFetch(input,options);};
-let pool,app,origin,worker,user,other,stubCalls=0,mode='normal',lastPayload;const ai={baseUrl:'https://model.invalid',apiKey:'synthetic-only',model:'protocol-fixture',timeoutMs:1000,maxOutputTokens:4096};
+let pool,app,origin,worker,user,other,stubCalls=0,mode='normal',lastPayload;const ai={baseUrl:'https://model.invalid',apiKey:'REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b-only',model:'protocol-fixture',timeoutMs:1000,maxOutputTokens:4096};
 const complete=async(_config,messages,_fetcher,options)=>{
  stubCalls++;lastPayload=JSON.parse(messages[1].content);
  if(mode==='timeout')throw new AiError('ai_timeout');if(mode==='429')throw new AiError('ai_rate_limited');
  if(mode==='hold')return new Promise((_,reject)=>options.signal.addEventListener('abort',()=>reject(new AiError('ai_cancelled')),{once:true}));
  const ids=lastPayload.conditions.map(c=>c.key),output={tasks:[{key:'T1',stage:'实现',title:'核对本段业务约束',description:'按原文实现权限、状态与异常处理，人工补充业务细节。',deliverable:'使用对应条件的正常与拒绝输入核对记录；这是协议替身的验收建议。',dependsOn:[],conditionIds:ids,citations:[]}],fragments:ids.map(id=>({conditionId:id,taskKeys:['T1'],note:'协议替身将完整条件映射到候选任务；不是模型质量结果。'})),unresolved:[]};
  if(mode==='mismatch')output.tasks[0].conditionIds=ids.slice(0,1);
+ if(mode==='reverse-mismatch')output.tasks.push({...output.tasks[0],key:'T2'});
  return {content:mode==='invalid'?'{}':JSON.stringify(output),usage:{inputTokens:10,outputTokens:8,totalTokens:18,cacheHitTokens:null,cacheMissTokens:null,reasoningTokens:null},finishReason:'stop',durationMs:1};
 };
 async function start(){app=Fastify();const store=new PgProjectStore(pool);await registerProjectRoutes(app,store);await registerAgentRoutes(app,store,pool);await registerTraceRoutes(app,store,pool);app.get('/health',async()=>({status:'ok',service:'gongxu-api'}));app.get('/ready',async()=>{await pool.query('SELECT 1');return {status:'ready'};});app.get('/ai/status',async()=>({configured:false}));worker=await registerLongPlanRoutes(app,store,pool,ai,undefined,{complete});origin=await app.listen({host:'127.0.0.1',port:0});}
@@ -73,6 +74,42 @@ try{
  await check('scheme_edit_invalidates_review_and_old_job_cannot_be_adopted',async()=>{f=await setup();id=await create(f);await worker.idle();d=await review(f,id);const edited=ok(await call('PUT',f.schemePath,{expectedRevision:f.scheme.revision,scheme:f.scheme.scheme}));assert.equal(edited.reviewed_revision,null);assert.equal((await call('POST',`${f.root}/long-plans/${id}/adopt`,{expectedRevision:d.job.revision,acknowledged:true})).body.error,'scheme_revision_changed');});
  await check('requirement_replacement_blocks_old_job_adoption',async()=>{f=await setup();id=await create(f);await worker.idle();d=await review(f,id);const next=ok(await call('POST',f.root+'/requirements',{content:'新版规定双人复核，旧证据不能冒充新版验证。'}),201).requirement;ok(await call('POST',`${f.root}/requirements/${next.id}/confirm`,{expectedContent:next.content}));assert.equal((await call('POST',`${f.root}/long-plans/${id}/adopt`,{expectedRevision:d.job.revision,acknowledged:true})).body.error,'requirement_version_outdated');});
  await check('fragment_mismatch_has_actionable_code_and_raw_answer_is_retained',async()=>{mode='mismatch';f=await setup('教师确认需求。\n学生提交证据。\n保留原始输出。');f.scheme.scheme.boundaries=[f.scheme.source_content.length];f.scheme=ok(await call('PUT',f.schemePath,{expectedRevision:f.scheme.revision,scheme:f.scheme.scheme}));f.scheme=ok(await call('POST',f.schemePath+'/review',{expectedRevision:f.scheme.revision,note:'合成协议核对完整多条件片段，不代表模型质量审核',acknowledged:true}));const before=stubCalls;id=await create(f);await worker.idle();d=await read(f,id);assert.equal(d.job.error_code,'fragment_task_condition_mismatch');assert.equal(d.attempts[0].error_code,'fragment_task_condition_mismatch');assert.ok(d.attempts[0].raw_output.includes('fragments'));assert.equal(stubCalls,before+1);mode='normal';});
+ await check('reverse_fragment_mismatch_needs_audited_correction_and_stale_edit_is_rejected',async()=>{
+  mode='reverse-mismatch';f=await setup('教师确认需求并保留原始输出。');const before=stubCalls;id=await create(f);await worker.idle();d=await read(f,id);
+  assert.equal(d.job.error_code,'fragment_task_condition_mismatch');assert.equal(stubCalls,before+1);const raw=d.attempts[0].raw_output,edited=JSON.parse(raw),oldRevision=d.job.revision;
+  assert.equal((await call('POST',`${f.root}/long-plans/${id}/correct-part`,{expectedRevision:oldRevision,segmentKey:d.parts[0].segment_key,output:raw,note:'不一致原始输出不得通过人工修正接口绕过校验'})).status,422);
+  edited.fragments.forEach(fragment=>fragment.taskKeys.push('T2'));
+  d=ok(await call('POST',`${f.root}/long-plans/${id}/correct-part`,{expectedRevision:oldRevision,segmentKey:d.parts[0].segment_key,output:JSON.stringify(edited),note:'隔离测试显式修正反向映射，不冒充模型原始输出或真人质量审核'}));
+  assert.equal(stubCalls,before+1);assert.equal(d.job.status,'awaiting_review');assert.equal(d.parts[0].result_origin,'human_correction');assert.equal(d.attempts[0].raw_output,raw);assert.ok(d.events.some(e=>e.kind==='human_corrected_part'));
+  assert.equal((await call('POST',`${f.root}/long-plans/${id}/correct-part`,{expectedRevision:oldRevision,segmentKey:d.parts[0].segment_key,output:JSON.stringify(edited),note:'旧窗口重复更正必须保留新结果并返回修订冲突'})).status,409);mode='normal';
+ });
+ await check('legacy_v1_explicit_resume_keeps_snapshot_prompt_and_does_not_repeat_completed_part',async()=>{
+  mode='invalid';f=await setup();id=await create(f);await worker.idle();d=await read(f,id);const before=stubCalls;
+  // Isolated fixture only: represent a pre-upgrade durable v1 job; never edits real saved evidence.
+  await pool.query("UPDATE long_plan_jobs SET prompt_version='long-plan-fragment-v1' WHERE id=$1",[id]);
+  mode='normal';const fixed=JSON.parse((await complete(ai,d.attempts[0].request_snapshot.messages,undefined,{})).content),afterFixture=stubCalls;
+  d=ok(await call('POST',`${f.root}/long-plans/${id}/correct-part`,{expectedRevision:d.job.revision,segmentKey:d.parts[0].segment_key,output:JSON.stringify(fixed),note:'旧版作业的显式人工修正夹具，原始失败回答仍独立保留'}));
+  assert.equal(d.job.status,'paused');assert.equal(stubCalls,afterFixture);assert.equal(d.attempts[0].raw_output,'{}');
+  ok(await call('POST',`${f.root}/long-plans/${id}/resume`,{expectedRevision:d.job.revision,acknowledgeExternalCall:true}));await worker.idle();d=await read(f,id);
+  assert.equal(d.job.status,'awaiting_review');assert.equal(stubCalls,afterFixture+1);assert.equal(d.parts[0].attempts,1);assert.equal(d.attempts[1].prompt_version,'long-plan-fragment-v1');assert.match(d.attempts[1].request_snapshot.messages[0].content,/long-plan-fragment-v1/);assert.doesNotMatch(d.attempts[1].request_snapshot.messages[0].content,/双向完全一致/);assert.equal(d.attempts[0].raw_output,'{}');assert.equal(before+1,afterFixture);
+ });
+ await check('persisted_success_and_prior_review_cannot_bypass_current_checks_on_resume_or_adopt',async()=>{
+  f=await setup('教师确认需求并登记证据。');id=await create(f);await worker.idle();d=await review(f,id);const before=stubCalls,part=d.parts[0],raw=d.attempts[0].raw_output,altered=structuredClone(part.result);
+  altered.tasks.push({...altered.tasks[0],key:'T2'});await pool.query('UPDATE long_plan_parts SET result=$3::jsonb WHERE job_id=$1 AND segment_key=$2',[id,part.segment_key,JSON.stringify(altered)]);
+  assert.equal((await call('POST',`${f.root}/long-plans/${id}/adopt`,{expectedRevision:d.job.revision,acknowledged:true})).body.error,'part_result_invalid');
+  await pool.query("UPDATE long_plan_jobs SET status='paused' WHERE id=$1",[id]);
+  assert.equal((await call('POST',`${f.root}/long-plans/${id}/resume`,{expectedRevision:d.job.revision,acknowledgeExternalCall:true})).body.error,'part_result_invalid');assert.equal(stubCalls,before);
+  d=ok(await call('POST',`${f.root}/long-plans/${id}/correct-part`,{expectedRevision:d.job.revision,segmentKey:part.segment_key,output:raw,note:'隔离夹具恢复已验证的原始结构，必须重新审核合并结果'}));
+  assert.equal(d.job.status,'awaiting_review');assert.equal(d.job.merge_review,null);assert.equal(d.attempts[0].raw_output,raw);assert.equal(d.parts[0].result_origin,'human_correction');assert.equal(stubCalls,before);assert.equal((await pool.query('SELECT count(*)::int AS n FROM tasks WHERE project_id=$1',[f.project])).rows[0].n,0);
+ });
+ await check('multiple_invalid_legacy_parts_can_be_corrected_one_at_a_time_without_rollback_or_charge',async()=>{
+  f=await setup();id=await create(f);await worker.idle();d=await review(f,id);assert.equal(d.parts.length,2);const before=stubCalls,raws=d.attempts.map(a=>a.raw_output),originals=structuredClone(d.parts);
+  for(const part of originals){const altered=structuredClone(part.result);altered.tasks.push({...altered.tasks[0],key:'T2'});await pool.query('UPDATE long_plan_parts SET result=$3::jsonb WHERE job_id=$1 AND segment_key=$2',[id,part.segment_key,JSON.stringify(altered)]);}
+  d=ok(await call('POST',`${f.root}/long-plans/${id}/correct-part`,{expectedRevision:d.job.revision,segmentKey:originals[0].segment_key,output:JSON.stringify(originals[0].result),note:'隔离夹具修正首段；其余旧段不一致不得回滚本次合法更正'}));
+  assert.equal(d.job.status,'paused');assert.equal(d.job.error_code,'part_result_invalid');assert.equal(d.job.merge_draft,null);assert.equal(d.job.merge_review,null);assert.equal(d.parts[0].result_origin,'human_correction');assert.equal(d.parts[1].result.tasks.length,2);assert.equal(d.events.filter(e=>e.kind==='human_corrected_part').length,1);assert.equal(stubCalls,before);
+  d=ok(await call('POST',`${f.root}/long-plans/${id}/correct-part`,{expectedRevision:d.job.revision,segmentKey:originals[1].segment_key,output:JSON.stringify(originals[1].result),note:'隔离夹具修正第二段；只有全部候选结构一致后才重新合并'}));
+  assert.equal(d.job.status,'awaiting_review');assert.equal(d.job.merge_review,null);assert.equal(d.events.filter(e=>e.kind==='human_corrected_part').length,2);assert.deepEqual(d.attempts.map(a=>a.raw_output),raws);assert.equal(stubCalls,before);
+ });
  await check('timeout_retains_uncertain_attempt_and_never_auto_retries',async()=>{mode='timeout';f=await setup();const before=stubCalls;id=await create(f);await worker.idle();d=await read(f,id);assert.equal(stubCalls,before+1);assert.equal(d.job.status,'paused');assert.equal(d.parts[0].status,'uncertain');assert.equal(d.attempts[0].status,'uncertain');assert.equal((await call('POST',`${f.root}/long-plans/${id}/resume`,{expectedRevision:d.job.revision,acknowledgeExternalCall:true})).body.error,'part_requires_review');});
  await check('retry_requires_charge_ack_and_bounded_backoff_then_preserves_completed_parts',async()=>{
   const path=`${f.root}/long-plans/${id}/retry-part`,payload={expectedRevision:d.job.revision,segmentKey:d.parts[0].segment_key,note:'明确理解之前请求结果未知，可能产生重复费用'};

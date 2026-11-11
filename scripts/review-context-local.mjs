@@ -11,7 +11,7 @@ import {loadEmbeddingConfig,saveText,indexDocument} from '../apps/api/dist/rag/s
 import {listEmbeddingActivities} from '../apps/api/dist/rag/activity.js';
 
 // Existing config is used by the program, never printed, copied or reported.
-// Every record belongs to newly generated synthetic accounts. No cleanup deletes.
+// Every record belongs to newly generated REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b accounts. No cleanup deletes.
 const require=createRequire(new URL('../apps/api/package.json',import.meta.url));require('dotenv').config();
 const local=value=>['127.0.0.1','localhost','[::1]'].includes(new URL(value).hostname);
 const settings=loadConfig(),embedding=loadEmbeddingConfig();
@@ -20,7 +20,7 @@ const send=globalThis.fetch;globalThis.fetch=(input,init)=>{if(!local(input inst
 const {Pool}=require('pg'),Fastify=require('fastify');const pool=new Pool({connectionString:settings.DATABASE_URL,connectionTimeoutMillis:3000});
 const store=new PgProjectStore(pool),app=Fastify({logger:false});
 const output=new URL(`../.runtime/review-context-local-${randomUUID()}/`,import.meta.url);await mkdir(output,{recursive:true});
-const report={scope:'real_local_database_embedding_http_browser_with_chat_fixture',realModel:false,syntheticRecords:true,checks:[],startedAt:new Date().toISOString()};
+const report={scope:'real_local_database_embedding_http_browser_with_chat_fixture',realModel:false,REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3bRecords:true,checks:[],startedAt:new Date().toISOString()};
 let stage='setup',owner,foreign,root,version,modelCalls=0,modelHook=null,captured,browser,releaseModel,abortTransport;
 const ai={baseUrl:'https://example.invalid',apiKey:'fixture-only',model:'controlled-fixture',timeoutMs:1000};
 await registerProjectRoutes(app,store);

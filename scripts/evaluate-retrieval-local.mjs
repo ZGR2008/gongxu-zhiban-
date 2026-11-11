@@ -10,7 +10,7 @@ import {loadEmbeddingConfig,savePages,indexDocument,retrieveKnowledge} from '../
 import {validateRetrievalDataset,summarizeRetrieval,summarizeQueryStudy} from '../evaluation/retrieval.mjs';
 import {sourceProvenance} from '../evaluation/source-provenance.mjs';
 
-// Only the existing local services and new synthetic accounts are used. Never
+// Only the existing local services and new REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b accounts are used. Never
 // print configuration, identities, credentials, API responses or existing data.
 const compareInstruction=process.argv.slice(2).length===1&&process.argv[2]==='--compare-query-instruction';
 if(process.argv.length>2&&!compareInstruction)throw Error('Only the fixed local query-instruction comparison is supported');
@@ -34,13 +34,13 @@ const variants=study?study.variants:[{id:'plain',queryPrefix:''}];
 if(study){assert.deepEqual(variants.map(row=>row.id),['plain','bge_instruction']);assert.equal(variants[0].queryPrefix,'');assert.equal(study.controls.maximumCosineDistance,.5);assert.equal(study.controls.returnedChunks,5);assert.equal(study.controls.automaticProductionChange,false);}
 const expectedManifest=JSON.parse(await readFile(new URL('../apps/embedding/model-manifest.json',import.meta.url)));
 const directory=new URL(`../.runtime/retrieval-local-${randomUUID()}/`,import.meta.url);await mkdir(directory,{recursive:true});
-const report={scope:'real_local_pgvector_and_embedding_original_synthetic_corpus',datasetVersion:dataset.version,
+const report={scope:'real_local_pgvector_and_embedding_original_REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b_corpus',datasetVersion:dataset.version,
  datasetSha256:hash(datasetBytes),startedAt:new Date().toISOString(),status:'running',paidChatCalls:0,externalTransfers:0,
  source:{},limits:{returnedChunks:5,maximumCosineDistance:.5,queryTimeoutMs:45000,totalTimeoutMs:600000},
  sources:dataset.documents.map(d=>({id:d.id,title:d.title,page:d.page,sha256:hash(d.text)})),
  queries:[],checks:[],indexing:[],limitations:[
- 'Small developer-authored synthetic set; no teacher labels or student trial.',
- 'Source page numbers are synthetic fixtures; this runner does not test PDF parsing.',
+ 'Small developer-authored REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b set; no teacher labels or student trial.',
+ 'Source page numbers are REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b fixtures; this runner does not test PDF parsing.',
  'Retrieval distance and valid references do not prove semantic support.',
  compareInstruction?'Query transformation comparison only; no chat calls, generated-answer quality or full-workflow improvement claim.':'No chat calls, generated answers, prompt-injection resistance claim or baseline improvement comparison.',
  'Local timing includes actual service wait and is not a throughput benchmark.'
@@ -66,7 +66,7 @@ try{
  if(study)assert.equal(identity.model,study.requiredModel);
  report.model={id:identity.model,dimensions:identity.dimensions,revision:expectedManifest.revision,pooling:expectedManifest.pooling,normalize:expectedManifest.normalize,windowCharacters:expectedManifest.windowCharacters};
  const owner=await account(),foreign=await account(),empty=await account();
- stage='index_synthetic_corpus';
+ stage='index_REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b_corpus';
  for(const document of dataset.documents){
   total.throwIfAborted();const start=performance.now();
   const saved=await savePages(pool,owner.id,document.title,'text/plain',[{page:document.page,text:document.text}]);
@@ -104,7 +104,7 @@ try{
  await check('account_without_knowledge_receives_no_sources',async()=>{
   assert.equal((await retrieveKnowledge(pool,empty.id,dataset.queries[0].question,embedding,options())).length,0);
  });
- await check('synthetic_sources_remain_owned_ready_and_unchanged',async()=>{
+ await check('REVIEW_PLACEHOLDER_575a8dfc08a84f40bc3b_sources_remain_owned_ready_and_unchanged',async()=>{
   const rows=await pool.query('SELECT d.id,d.status,c.content,c.page,vector_dims(c.embedding) AS dimensions FROM knowledge_documents d JOIN knowledge_chunks c ON c.document_id=d.id WHERE d.owner_id=$1',[owner.id]);
   assert.equal(rows.rows.length,dataset.documents.length);
   for(const row of rows.rows){const source=idToDocument.get(row.id);assert.ok(source);assert.equal(row.status,'ready');assert.equal(row.content,source.text);assert.equal(row.page,source.page);assert.equal(row.dimensions,expectedManifest.dimensions);}

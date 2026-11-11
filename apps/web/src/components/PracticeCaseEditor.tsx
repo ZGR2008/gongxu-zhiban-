@@ -2,7 +2,7 @@ import {useEffect,useRef,useState,type FormEvent} from 'react';
 import {useUnsavedEdit} from './EditGuard';
 
 type Api=<T>(path:string,options?:RequestInit)=>Promise<T>;
-export type PracticeCase={id:string;revision?:number;executionRevision?:number;category:'normal'|'boundary'|'exception';title:string;preconditions:string;steps:string;expected:string;result:'not_run'|'passed'|'failed'|'blocked';executionNote:string;executedAt:string|null;requirementVersionId:string};
+export type PracticeCase={id:string;revision?:number;executionRevision?:number;modelName?:string;category:'normal'|'boundary'|'exception';title:string;preconditions:string;steps:string;expected:string;result:'not_run'|'passed'|'failed'|'blocked';executionNote:string;executedAt:string|null;requirementVersionId:string};
 const categories={normal:'正常',boundary:'边界',exception:'异常'};
 const outcomes={not_run:'未执行',passed:'通过',failed:'失败',blocked:'阻塞'};
 const editable=(v:PracticeCase)=>JSON.stringify([v.category,v.title,v.preconditions,v.steps,v.expected,v.result,v.executionNote||'']);
