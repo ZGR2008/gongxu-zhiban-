@@ -65,7 +65,7 @@ pnpm smoke:workbench --with-ai       # 12 组；额外调用一次真实模型�
 pnpm smoke:workbench --with-ai --webkit
 ```
 
-地址与浏览器配置沿用 README 的 `SMOKE_WEB_URL`、`SMOKE_BROWSER_CHANNEL` 和 `PLAYWRIGHT_BROWSERS_PATH` 说明。脱敏的本轮报告索引保存在 [验证摘要](verification/workbench-2026-10-31.json)，原始报告与诊断截图保留在被 Git 忽略的 `.runtime/` 中。
+地址与浏览器配置沿用 README 的 `SMOKE_WEB_URL`、`SMOKE_BROWSER_CHANNEL` 和 `PLAYWRIGHT_BROWSERS_PATH` 说明。脱敏的本轮报告索引保存在 [验证摘要](../verification/workbench-2026-10-31.json)，原始报告与诊断截图保留在被 Git 忽略的 `.runtime/` 中。
 
 调试中修复了筛选控件继承全宽样式导致的挤压、768 像素侧栏布局下的筛选溢出和时间显示在秒数进位时出现 60 秒的问题。正式构建验收在停止修改源文件后执行，避免开发热更新干扰长流程中的页面选择状态。
 
@@ -79,10 +79,10 @@ pnpm smoke:workbench --with-ai --webkit
 
 以下截图来自本机真实运行页面。运行及交付页面使用已明确标记的演示项目，其记录由之前的真实服务操作产生，不代表真实学生成果。
 
-![实训任务库与分类筛选](screenshots/mission-library.png)
+![实训任务库与分类筛选](../screenshots/mission-library.png)
 
-![原创任务书与真实项目创建入口](screenshots/mission-brief.png)
+![原创任务书与真实项目创建入口](../screenshots/mission-brief.png)
 
-![Agent 历史、阶段耗时和工具证据](screenshots/run-history.png)
+![Agent 历史、阶段耗时和工具证据](../screenshots/run-history.png)
 
-![人工交付检查与服务端成果摘要](screenshots/delivery-center.png)
+![人工交付检查与服务端成果摘要](../screenshots/delivery-center.png)

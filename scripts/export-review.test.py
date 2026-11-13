@@ -8,6 +8,35 @@ import ast,hashlib,json,runpy,sys,tempfile,unittest,zipfile
 SCRIPT=Path(__file__).with_name('export-review.py')
 
 class ExportTests(unittest.TestCase):
+    def test_current_review_excludes_document_archive_without_reading_and_preserves_runtime_fallback(self):
+        with tempfile.TemporaryDirectory(prefix='gongxu-export-fixture-') as base:
+            root=self.fixture(base)
+            required={
+                'docs/README.md':'Current review index',
+                'docs/REVIEW-STATUS.md':'Dated test scope with explicit omissions',
+                'docs/DEPLOYMENT.md':'Independent deployment instructions without credentials',
+                'scripts/production-proxy.patch':"--- a/apps/api/src/app.ts\n+++ b/apps/api/src/app.ts\n@@ -1 +1 @@\n-const options = {};\n+const options = {trustProxy: '127.0.0.1'};\n",
+                'docs/AI-LONG-PLAN-V10.md':'Synthetic long-plan boundary evidence',
+                'apps/web/public/previews/archive/planet-orbit-css-v2.html':'<!doctype html><title>CSS fallback</title>',
+                'knowledge/teaching-v6/catalog.mjs':'export const synthetic = true;',
+                'demo/recording-kit-v1.mjs':'export const synthetic = true;',
+            }
+            for relative,value in required.items():
+                path=root/relative;path.parent.mkdir(parents=True,exist_ok=True);path.write_text(value,encoding='utf-8')
+            archived=root/'docs/archive/CONTINUATION-V10.md'
+            archived.parent.mkdir(parents=True);archived.write_text('Historical internal handoff marker',encoding='utf-8')
+            old_template=root/'docs/CONTRIBUTION-RECORD-V10.md'
+            old_template.write_text('Old blank internal template',encoding='utf-8')
+            unreviewed_patch=root/'scripts/unreviewed-private.patch'
+            unreviewed_patch.write_text('Private synthetic patch marker',encoding='utf-8')
+            result=self.export(root,(archived.resolve(),old_template.resolve(),unreviewed_patch.resolve()),version='v10',profile='current')
+            with zipfile.ZipFile(result['archive']) as bundle:
+                for relative in required:self.assertIn('gongxu-zhiban/'+relative,bundle.namelist())
+                self.assertEqual(bundle.read('gongxu-zhiban/scripts/production-proxy.patch').decode('utf-8'),required['scripts/production-proxy.patch'])
+                self.assertNotIn('gongxu-zhiban/scripts/unreviewed-private.patch',bundle.namelist())
+                self.assertFalse(any('/docs/archive/' in n or n.endswith('/CONTRIBUTION-RECORD-V10.md') for n in bundle.namelist()))
+                self.assertIsNone(bundle.testzip())
+
     def test_v10_keeps_replay_and_blank_review_material_excludes_local_names_before_read(self):
         with tempfile.TemporaryDirectory(prefix='gongxu-export-fixture-') as base:
             root=self.fixture(base)
@@ -52,7 +81,7 @@ class ExportTests(unittest.TestCase):
                 self.assertFalse(any('registration/' in name for name in bundle.namelist()))
                 self.assertIsNone(bundle.testzip())
 
-    def export(self,root,forbidden=(),version=None):
+    def export(self,root,forbidden=(),version=None,profile=None):
         read_text,read_bytes=Path.read_text,Path.read_bytes
         def guarded_text(path,*args,**kwargs):
             self.assertNotIn(path.resolve(),forbidden,'Excluded sensitive files must never be opened')
@@ -61,7 +90,7 @@ class ExportTests(unittest.TestCase):
             self.assertNotIn(path.resolve(),forbidden,'Excluded sensitive files must never be opened')
             return read_bytes(path,*args,**kwargs)
         output=StringIO()
-        argv=[str(SCRIPT),'--source',str(root)]+(['--version',version] if version else [])
+        argv=[str(SCRIPT),'--source',str(root)]+(['--version',version] if version else [])+(['--profile',profile] if profile else [])
         with patch.object(sys,'argv',argv),patch.object(Path,'read_text',guarded_text),patch.object(Path,'read_bytes',guarded_bytes),redirect_stdout(output):
             runpy.run_path(str(SCRIPT),run_name='__main__')
         return json.loads(output.getvalue())

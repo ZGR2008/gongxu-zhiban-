@@ -15,7 +15,7 @@
 5. 综合验证：已完成。99项单元/规则、受控浏览器14组、真实本地10组、旧回归各组和8例离线协议检查；收费模型与语义对比未执行。
 6. 收尾：已完成。README、技术素材、截图矩阵、能力/迁移/恢复说明、报告及文件清单已整理；正式ZIP解压副本通过测试/类型/构建，CRC及逐文件SHA-256通过，已独占保存桌面，没有覆盖旧包。
 
-当前结果以 [FINAL-REVIEW-2026-11.md](FINAL-REVIEW-2026-11.md) 和 [verification/review-v2.json](verification/review-v2.json) 为准。下方保留过程记录，早期“待做/待验证”和较小测试数量是当时的阶段状态，不是最终结论。
+当前结果以 [FINAL-REVIEW-2026-11.md](FINAL-REVIEW-2026-11.md) 和 [verification/review-v2.json](../verification/review-v2.json) 为准。下方保留过程记录，早期“待做/待验证”和较小测试数量是当时的阶段状态，不是最终结论。
 
 ## 已核实的问题与验收方法
 

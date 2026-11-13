@@ -16,3 +16,5 @@ tmp/video/
 tmp/presentations/
 tmp/
 output/video/*.mp4
+# Generated review documents and recordings. Historical inputs live in docs/archive/.
+/output/

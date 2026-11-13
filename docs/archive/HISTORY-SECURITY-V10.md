@@ -21,7 +21,7 @@
 - 原始扫描基线为 `e471e12cd05e9092dff4ca032f11013e882c74b2`，包含 91 个可达提交、1,985 个对象；这些是 v9 历史范围，不作为当前重新扫描数量。
 - 本次只读取得 **110 个含候选的源码 blob**。取值范围必须同时属于 v9 已扫描对象白名单；若一个对象在历史中同时出现在受保护路径，分类器会拒绝读取。
 - 为准确定位候选，枚举了运行当时本地引用可达的 92 个提交树。该步骤只读取路径和对象关系，不检查新提交是否存在新秘密，不读取作者／提交说明正文。
-- 具体运行时 HEAD、输入报告哈希、分类器哈希、候选编号、源码路径、行号和出现提交均保存在 [history-v10.json](verification/history-v10.json)。没有记录候选原值、值哈希或原始上下文片段。
+- 具体运行时 HEAD、输入报告哈希、分类器哈希、候选编号、源码路径、行号和出现提交均保存在 [history-v10.json](../verification/history-v10.json)。没有记录候选原值、值哈希或原始上下文片段。
 - 每条候选编号为 `H9-C001` 至 `H9-C138`。`sourceFindingIndex` 指回 v9 数组下标；`objectHash` 和 `line` 指向当时源码，不能直接用当前工作区行号替代。
 - `objectLocations[objectHash].presentInCommits` 列出对象出现的提交；`earliestObservedTopologicalCommit` 只是本次引用范围的最早观察点，不证明真实创作时间、作者贡献或原始首次出现。
 - v9 的 `git fsck --connectivity-only --no-reflogs` 退出 0 仅是历史连通性证据。本次没有将它重写为当前秘密安全、资格或作者贡献证明。

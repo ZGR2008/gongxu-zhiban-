@@ -10,7 +10,7 @@ const runtime=arg('runtime'),skill=arg('skill'),python=arg('python');
 if(!runtime||!skill||!python)throw Error('Provide the verified local runtime, skill and Python paths. No downloads or remote authoring.');
 process.env.RUNTIME_NODE_MODULES=runtime;
 const {PresentationFile,FileBlob}=await import(pathToFileURL(path.join(runtime,'@oai/artifact-tool/dist/artifact_tool.mjs')).href);
-const source=path.join(root,'output/presentations/gongxu-zhiban-defense-v3-2026-11-01T02-06-24-722Z.pptx');
+const source=path.join(root,'docs/archive/generated/presentations/gongxu-zhiban-defense-v3-2026-11-01T02-06-24-722Z.pptx');
 const sourceSha=createHash('sha256').update(await fs.readFile(source)).digest('hex');
 const presentation=await PresentationFile.importPptx(await FileBlob.load(source));
 if(presentation.slides.items.length!==12)throw Error('Unexpected source deck; inspect before updating.');
@@ -52,7 +52,8 @@ await fs.writeFile(path.join(build,'after-inspect.json'),JSON.stringify(await pr
 const pages=presentation.slides.items.map(s=>({title:String(s.shapes.items.find(x=>x.name==='slide-title').text),notes:s.speakerNotes.text}));
 const candidate=path.join(build,'candidate.pptx');await(await PresentationFile.exportPptx(presentation)).save(candidate);
 for(const [i,s] of presentation.slides.items.entries()){const png=await presentation.export({slide:s,format:'png',scale:1});await fs.writeFile(path.join(build,`slide-${String(i+1).padStart(2,'0')}.png`),new Uint8Array(await png.arrayBuffer()));}
-await fs.writeFile(path.join(root,'docs/DEFENSE-SPEAKER-NOTES-V4.md'),'# 工序智伴v4答辩讲稿草稿\n\n沿用既有12页演示稿并同步本轮实现。建议口述约7分钟，未做真人试讲计时。团队信息待真实填写，合成数据和聊天替身标识必须保留。\n\n'+pages.map((p,i)=>`## ${i+1}. ${p.title}\n\n${p.notes}\n`).join('\n'));
+await fs.mkdir(path.join(root,'output/presentations'),{recursive:true});
+await fs.writeFile(path.join(root,'output/presentations',`DEFENSE-SPEAKER-NOTES-V4-${stamp}.md`),'# 工序智伴v4答辩讲稿草稿\n\n沿用既有12页演示稿并同步本轮实现。建议口述约7分钟，未做真人试讲计时。团队信息待真实填写，合成数据和聊天替身标识必须保留。\n\n'+pages.map((p,i)=>`## ${i+1}. ${p.title}\n\n${p.notes}\n`).join('\n'));
 const finalPath=path.join(root,'output/presentations',`gongxu-zhiban-defense-v4-${stamp}.pptx`);
 const {finalizePresentation}=await import(pathToFileURL(path.join(skill,'container_tools/artifact_tool_utils.mjs')).href);
 await finalizePresentation({workspaceDir:root,candidatePath:candidate,finalPath,pythonExecutable:python,integrityValidatorPath:path.join(skill,'container_tools/inspect_presentation_package_integrity.py'),layoutValidatorPath:path.join(skill,'container_tools/inspect_presentation_layout_geometry.py'),layoutArgs:['--expected-slide-size-emu','12192000,6858000','--validate-bullet-geometry','--validate-heading-fit','--require-native-table-slide','8','--require-native-table-slide','9'],explicitTotalSlideCount:12,requiredNativeTableOwnerSlides:[8,9],fontPolicy:{basis:'reference',families:['Microsoft YaHei'],referencePath:source,referenceSha256:sourceSha},verifyArtifactToolImport:true,receiptPath:path.join(build,'validation.json')});

@@ -6,8 +6,8 @@ from PIL import Image,ImageDraw
 ROOT=Path(__file__).resolve().parents[1]
 parser=argparse.ArgumentParser()
 parser.add_argument('--confirm-visual-review',action='store_true',help='Use only after inspecting every rendered page; this flag does not perform visual review.')
-parser.add_argument('--pdf',default='output/pdf/gongxu-zhiban-technical-v4.pdf')
-parser.add_argument('--render-dir',default='tmp/pdfs/v4')
+parser.add_argument('--pdf',required=True,help='Explicit newly generated PDF under output/pdf; historical PDFs are archived and are not the current default.')
+parser.add_argument('--render-dir',required=True,help='Rendered pages for the selected PDF under tmp/pdfs.')
 args=parser.parse_args()
 PDF=(ROOT/args.pdf).resolve()
 TMP=(ROOT/args.render_dir).resolve()

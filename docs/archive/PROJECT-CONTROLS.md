@@ -19,7 +19,7 @@
 
 下图来自已有的隔离演示项目，数据由真实操作产生，不是学生能力得分：
 
-![项目推进概览](screenshots/project-overview.png)
+![项目推进概览](../screenshots/project-overview.png)
 
 ### 需求版本查看与对比
 
@@ -35,7 +35,7 @@
 
 下图中的新增边界为截图时在本地编辑区输入、尚未保存的说明，背景版本为演示项目中的真实需求记录：
 
-![历史需求与当前草稿的对比](screenshots/requirement-diff.png)
+![历史需求与当前草稿的对比](../screenshots/requirement-diff.png)
 
 ## 视觉与加载
 
@@ -75,7 +75,7 @@ pnpm smoke:ui --with-ai
 
 后三项包含真实云模型调用。WebKit 缓存位置、运行前提与回环地址限制见 README。
 
-脱敏摘要见 [本轮验证摘要](verification/project-controls-2026-10-31.json)。本地原始证据：
+脱敏摘要见 [本轮验证摘要](../verification/project-controls-2026-10-31.json)。本地原始证据：
 
 - `.runtime/project-controls-b12f308d-d205-428b-8fae-cd83e6f40b13/report.json`：正式构建 Edge。
 - `.runtime/project-controls-651bc45b-f4d0-44d1-bb76-4aef3951bb15/report.json`：正式构建 Windows WebKit。

@@ -1,0 +1,12 @@
+diff --git a/apps/api/src/app.ts b/apps/api/src/app.ts
+--- a/apps/api/src/app.ts
++++ b/apps/api/src/app.ts
+@@ -28,7 +28,7 @@
+ 
+ export async function createApp(options: { database?: DatabaseCheck; pool?: Pool; projectStore?: ProjectStore; aiConfig?: AiConfig; aiGenerationStore?: AiGenerationStore; embeddingConfig?: EmbeddingConfig; corsOrigin: string; logger?: boolean }) {
+   const versions = (await migrationFiles()).map(file => file.slice(0, -4));
+-  const app = Fastify({ logger: options.logger ?? false });
++  const app = Fastify({ logger: options.logger ?? false, trustProxy: '127.0.0.1' });
+   app.setErrorHandler((error, _request, reply) => {
+     const candidate = typeof error === 'object' && error !== null && 'statusCode' in error ? error.statusCode : undefined;
+     const status = typeof candidate === 'number' && candidate >= 400 && candidate < 500 ? candidate : 500;

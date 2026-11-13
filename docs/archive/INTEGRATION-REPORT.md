@@ -6,7 +6,7 @@
 
 新增三个全局入口及六份原创任务详情，延续原有 API 和业务处理。原有 52 项测试、15 项前端规则、14 项真实接口、6 项原浏览器流程、正式构建 11 组全站 UI 回归通过；新增 10 项规则测试通过，正式构建 Edge / Windows WebKit 各 12 组页面流程通过。新页面测试包含真实 DeepSeek 规划记录与导出结果逐项比对，不自动确认计划。
 
-人工交付清单只保存在本机，不会写入服务器测试或任务结果。存储失败、服务读取失败和恶意工具摘要使用受控边界响应检查，并与真实模型联调分开记录。最新接口报告为 `.runtime/smoke-c4f6eb78-f705-411b-8351-eb4d97badff9.json`，原浏览器报告为 `.runtime/browser-ea94cf71-34fb-4a7a-86af-bbfcb7019a3d/report.json`，全站 UI 为 `.runtime/ui-128d4102-c7ee-40b0-a51a-6b14dc600854/report.json`。详细说明和报告索引见 [工作台扩展](WORKBENCH-EXPANSION.md) 与 [脱敏摘要](verification/workbench-2026-10-31.json)。
+人工交付清单只保存在本机，不会写入服务器测试或任务结果。存储失败、服务读取失败和恶意工具摘要使用受控边界响应检查，并与真实模型联调分开记录。最新接口报告为 `.runtime/smoke-c4f6eb78-f705-411b-8351-eb4d97badff9.json`，原浏览器报告为 `.runtime/browser-ea94cf71-34fb-4a7a-86af-bbfcb7019a3d/report.json`，全站 UI 为 `.runtime/ui-128d4102-c7ee-40b0-a51a-6b14dc600854/report.json`。详细说明和报告索引见 [工作台扩展](WORKBENCH-EXPANSION.md) 与 [脱敏摘要](../verification/workbench-2026-10-31.json)。
 
 以下为之前轮次的验证记录。
 

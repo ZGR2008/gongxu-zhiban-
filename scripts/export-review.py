@@ -20,7 +20,9 @@ import argparse
 parser=argparse.ArgumentParser(description='Create a local sanitized source review copy, never an external upload.')
 parser.add_argument('--source',type=Path,default=Path(__file__).resolve().parents[1],help='Source root; optional for isolated export regression fixtures.')
 parser.add_argument('--version',choices=['v4','v5','v6','v7','v8','v9','v10'],default='v4',help='Explicit edition; old export commands keep their version.')
+parser.add_argument('--profile',choices=['edition','current'],default='edition',help='current exports the current V10 review documents and excludes repository archives; edition preserves historical fixture behavior.')
 args=parser.parse_args()
+if args.profile=='current' and args.version!='v10':parser.error('The current review profile requires --version v10.')
 ROOT = args.source.resolve()
 STAMP = datetime.now().strftime('%Y%m%d-%H%M%S-%f')
 EXPORT = ROOT.parent / '.review-export' / (args.version + '-' + STAMP)
@@ -47,7 +49,7 @@ CURATED_SCREENSHOTS={'docs/screenshots/review-v2/trace-desktop.png','docs/screen
 CURATED_SCREENSHOTS.update('docs/screenshots/review-v4/'+name+'.png' for name in ['task-test-chain-desktop','documents-desktop','review-source-desktop','growth-current-desktop','workspace-desktop','requirement-segments-desktop','execution-conflict-desktop'])
 CURATED_SCREENSHOTS.add('docs/screenshots/review-v5/adopted-desktop.png')
 JSON_FILES={'package.json','evaluation/record-template.json','evaluation/cases.v1.json','evaluation/retrieval.v1.json','apps/embedding/model-manifest.json','apps/web/public/previews/vendor/manifest.json','docs/verification/review-v2.json','docs/verification/review-v3.json','docs/demo-v3/storyboard.json'}
-TEXT = {'.ts','.tsx','.js','.mjs','.cjs','.json','.yaml','.yml','.md','.css','.html','.sql','.txt','.svg','.glsl','.ps1','.py','.sh','.toml'}
+TEXT = {'.ts','.tsx','.js','.mjs','.cjs','.json','.yaml','.yml','.md','.css','.html','.sql','.txt','.svg','.glsl','.ps1','.py','.sh','.toml','.patch'}
 JSON_FILES.add('evaluation/retrieval-query-study.v1.json')
 JSON_FILES.update({'docs/verification/review-v4.json','docs/demo-v4/storyboard.json'})
 JSON_FILES.add('docs/verification/ai-evaluation-v4.json')
@@ -61,6 +63,18 @@ JSON_FILES.update({'docs/verification/review-v9.json','docs/verification/history
 JSON_FILES.update({'docs/verification/review-v10.json','docs/verification/history-v10.json','evaluation/fixtures/long-plan-v7-saved-responses.json'})
 JSON_FILES.add('docs/verification/ai-long-plan-v10.json')
 JSON_FILES.add('evaluation/fixtures/long-plan-v10-merge-candidate.json')
+if args.profile=='current':
+    DOCS={
+        'README.md','REVIEW-STATUS.md','SOURCE-PACKAGE.md','DEPLOYMENT.md',
+        'STARTUP-AND-VERIFICATION.md','STARTUP-REPAIR-2026-11-03.md',
+        'TRACEABILITY-AND-RECOVERY.md','LONG-REQUIREMENTS-V5.md',
+        'TEACHING-AND-PERMISSIONS-V6.md','TEACHING-VERSIONS-V7.md',
+        'KNOWLEDGE-CURRICULUM-V6.md','CURRICULUM-REVIEW-V7.md',
+        'AI-EVALUATION-V4-2026-11-01.md','AI-REVIEW-PACK-V5.md','AI-REVIEW-PACK-V7.md',
+        'AI-LONG-PLAN-V10.md','AI-QUALITY-PRELIMINARY-V10.md',
+        'LONG-PLAN-DIAGNOSIS-V10.md','OFFLINE-QUALITY-REVIEW-V10.md',
+        'ORIGINALITY-AND-LICENSE-V8.md','COMPLIANCE-SOURCES-V9.md',
+    }
 FORBIDDEN = {'.log','.tsbuildinfo','.pem','.key','.p12','.pfx','.jks','.keystore','.sqlite','.sqlite3','.db','.dump','.backup','.bak','.zip','.7z','.mp4','.webm','.onnx','.bin'}
 excluded = []
 redactions = []
@@ -167,13 +181,14 @@ for current, directories, names in os.walk(ROOT,followlinks=False):
     parent=Path(current)
     for name in list(directories):
         path=parent/name;relative=path.relative_to(ROOT).as_posix()
-        if name in SKIP_DIRS or path.is_symlink() or not path.resolve().is_relative_to(ROOT) or (parent==ROOT and name not in {'apps','scripts','docs','evaluation','packages','knowledge','demo'}):
+        if name in SKIP_DIRS or (args.profile=='current' and relative=='docs/archive') or path.is_symlink() or not path.resolve().is_relative_to(ROOT) or (parent==ROOT and name not in {'apps','scripts','docs','evaluation','packages','knowledge','demo'}):
             directories.remove(name);skip(relative+'/', 'dependencies_generated_data_or_unreviewed_directory')
     for name in sorted(names):
         source=parent/name;relative=source.relative_to(ROOT).as_posix()
         if source.is_symlink() or not source.resolve().is_relative_to(ROOT):skip(relative,'symlink_or_outside_root_not_followed');continue
         if '.env' in name and not name.endswith('.env.example'):skip(relative,'real_environment_never_opened');continue
         if source.suffix.lower() in FORBIDDEN:skip(relative,'generated_or_sensitive_file_type');continue
+        if source.suffix.lower()=='.patch' and relative!='scripts/production-proxy.patch':skip(relative,'unreviewed_patch_never_opened');continue
         if source.suffix.lower() in {'.json','.yaml','.yml','.txt'} and re.search(r'(?i)(credential|secret|cookie|auth[-_]?state|session|token|account[-_]?export)',name):skip(relative,'possible_credentials_never_opened');continue
         if source.suffix.lower()=='.json' and relative not in JSON_FILES and not re.fullmatch(r'apps/[^/]+/(?:package|tsconfig(?:\.test)?)\.json',relative):skip(relative,'unclassified_json_or_possible_business_data');continue
         if source.suffix.lower()=='.txt' and not (re.fullmatch(r'scripts/requirements[-\w]*\.txt',relative) or re.search(r'(?i)(license|licence|notice|copying)',name)):skip(relative,'unclassified_plain_text_or_possible_business_data');continue
